@@ -25,6 +25,8 @@ pub(open) trait MetadataProvider {
   metrics(Self) -> Metrics?
   charmap(Self) -> Charmap?
   bitmap_strikes(Self) -> BitmapStrikes
+  color_palettes(Self) -> ColorPalettes?
+  color_glyphs(Self) -> ColorGlyphCollection?
 }
 
 ///|
@@ -65,4 +67,14 @@ pub impl MetadataProvider for FontRef with charmap(font) {
 ///|
 pub impl MetadataProvider for FontRef with bitmap_strikes(font) {
   BitmapStrikes::new(font)
+}
+
+///|
+pub impl MetadataProvider for FontRef with color_palettes(font) {
+  ColorPalettes::new(font)
+}
+
+///|
+pub impl MetadataProvider for FontRef with color_glyphs(font) {
+  ColorGlyphCollection::new(font)
 }

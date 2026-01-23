@@ -67,6 +67,63 @@ pub struct Charmap {
 pub fn Charmap::glyph_id(Self, UInt) -> UInt?
 pub fn Charmap::new(FontRef) -> Self?
 
+pub struct Color {
+  r : Byte
+  g : Byte
+  b : Byte
+  a : Byte
+}
+pub fn Color::a(Self) -> Byte
+pub fn Color::b(Self) -> Byte
+pub fn Color::g(Self) -> Byte
+pub fn Color::r(Self) -> Byte
+
+pub struct ColorGlyphCollection {
+  // private fields
+}
+pub fn ColorGlyphCollection::layers(Self, UInt) -> Array[ColorLayer]?
+pub fn ColorGlyphCollection::new(FontRef) -> Self?
+
+pub struct ColorLayer {
+  glyph_id : UInt
+  palette_index : Int
+}
+pub fn ColorLayer::glyph_id(Self) -> UInt
+pub fn ColorLayer::palette_index(Self) -> Int
+
+pub struct ColorPalettes {
+  // private fields
+}
+pub fn ColorPalettes::color(Self, Int, Int) -> Color?
+pub fn ColorPalettes::entries_per_palette(Self) -> Int
+pub fn ColorPalettes::len(Self) -> Int
+pub fn ColorPalettes::new(FontRef) -> Self?
+
+pub struct Decoration {
+  offset : Double
+  thickness : Double
+}
+pub fn Decoration::offset(Self) -> Double
+pub fn Decoration::thickness(Self) -> Double
+
+pub struct FontMetrics {
+  units_per_em : UInt16
+  is_monospace : Bool
+  italic_angle : Double
+  ascent : Double
+  descent : Double
+  leading : Double
+  underline : Decoration?
+}
+pub fn FontMetrics::ascent(Self) -> Double
+pub fn FontMetrics::descent(Self) -> Double
+pub fn FontMetrics::is_monospace(Self) -> Bool
+pub fn FontMetrics::italic_angle(Self) -> Double
+pub fn FontMetrics::leading(Self) -> Double
+pub fn FontMetrics::new(FontRef, Size) -> Self
+pub fn FontMetrics::underline(Self) -> Decoration?
+pub fn FontMetrics::units_per_em(Self) -> UInt16
+
 pub struct FontRef {
   data : Bytes
   index : UInt
@@ -75,7 +132,10 @@ pub fn FontRef::attributes(Self) -> Attributes
 pub fn FontRef::axes(Self) -> AxisCollection
 pub fn FontRef::bitmap_strikes(Self) -> BitmapStrikes
 pub fn FontRef::charmap(Self) -> Charmap?
+pub fn FontRef::color_glyphs(Self) -> ColorGlyphCollection?
+pub fn FontRef::color_palettes(Self) -> ColorPalettes?
 pub fn FontRef::data(Self) -> Bytes
+pub fn FontRef::font_metrics(Self, Size) -> FontMetrics
 pub fn FontRef::from_index(Bytes, UInt) -> Self?
 pub fn FontRef::glyph_names(Self) -> GlyphNames
 pub fn FontRef::index(Self) -> UInt
@@ -224,5 +284,7 @@ pub(open) trait MetadataProvider {
   metrics(Self) -> Metrics?
   charmap(Self) -> Charmap?
   bitmap_strikes(Self) -> BitmapStrikes
+  color_palettes(Self) -> ColorPalettes?
+  color_glyphs(Self) -> ColorGlyphCollection?
 }
 

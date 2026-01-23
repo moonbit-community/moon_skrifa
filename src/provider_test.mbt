@@ -68,4 +68,6 @@ test "MetadataProvider facade basic" {
   inspect(MetadataProvider::named_instances(font).len(), content="0")
   inspect(MetadataProvider::glyph_names(font).num_glyphs(), content="0")
   inspect(MetadataProvider::bitmap_strikes(font).len(), content="0")
+  inspect(MetadataProvider::color_palettes(font) is None, content="true")
+  inspect(MetadataProvider::color_glyphs(font) is None, content="true")
 }
