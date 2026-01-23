@@ -163,8 +163,12 @@ fn glyf_simple_path(glyf : BytesView) -> Array[PathElement]? {
     None => return None
     Some(v) => v
   }
-  if number_of_contours <= 0 {
+  if number_of_contours == 0 {
     return Some(Array::new())
+  }
+  if number_of_contours < 0 {
+    // Composite glyphs are not supported by this MVP.
+    return None
   }
   // Skip bbox (xMin..yMax).
   let mut off = 10
