@@ -173,6 +173,27 @@ fn glyf_outline_test_glyph_implied_midpoint() -> Bytes {
 }
 
 ///|
+fn glyf_outline_test_glyph_composite_translate(
+  comp_gid : Int,
+  dx : Int,
+  dy : Int,
+) -> Bytes {
+  // Composite glyph with a single component using XY translation.
+  let out : Array[Byte] = Array::new()
+  glyf_outline_test_push_i16_be(out, -1)
+  glyf_outline_test_push_i16_be(out, 0)
+  glyf_outline_test_push_i16_be(out, 0)
+  glyf_outline_test_push_i16_be(out, 0)
+  glyf_outline_test_push_i16_be(out, 0)
+  // flags = ARG_1_AND_2_ARE_WORDS | ARGS_ARE_XY_VALUES
+  glyf_outline_test_push_u16_be(out, 0x0001 | 0x0002)
+  glyf_outline_test_push_u16_be(out, comp_gid)
+  glyf_outline_test_push_i16_be(out, dx)
+  glyf_outline_test_push_i16_be(out, dy)
+  Bytes::from_array(out.op_as_view())
+}
+
+///|
 test "OutlineGlyphCollection::path empty glyph is empty path" {
   let font = glyf_outline_test_make_font(
     Array::from_fixed_array([
@@ -221,6 +242,42 @@ test "glyf consecutive off-curve points insert implied on-curve midpoint" {
     PathElement::Close,
   ])
   inspect(glyf_outline_test_path_eq(path, expected), content="true")
+}
+
+///|
+test "glyf composite outline translates component path" {
+  let font = glyf_outline_test_make_font(
+    Array::from_fixed_array([
+      Bytes::from_array(Array::new().op_as_view()),
+      glyf_outline_test_glyph_simple_quad(),
+      glyf_outline_test_glyph_composite_translate(1, 10, 20),
+    ]),
+  )
+  let c = OutlineGlyphCollection::from_font(font)
+  let path = c.path(2).unwrap()
+  let expected = Array::from_fixed_array([
+    PathElement::MoveTo(10, 20),
+    PathElement::QuadTo(60, 120, 110, 20),
+    PathElement::LineTo(10, 20),
+    PathElement::Close,
+  ])
+  inspect(glyf_outline_test_path_eq(path, expected), content="true")
+}
+
+///|
+test "glyf composite recursion is guarded" {
+  let font = glyf_outline_test_make_font(
+    Array::from_fixed_array([
+      Bytes::from_array(Array::new().op_as_view()),
+      glyf_outline_test_glyph_composite_translate(1, 0, 0),
+    ]),
+  )
+  let c = OutlineGlyphCollection::from_font(font)
+  let ok = match c.path(1) {
+    None => true
+    Some(_) => false
+  }
+  inspect(ok, content="true")
 }
 
 ///|

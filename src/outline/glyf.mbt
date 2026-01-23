@@ -25,6 +25,27 @@ const TAG_LOCA : UInt = 0x6C6F6361 // "loca"
 const TAG_MAXP : UInt = 0x6D617870 // "maxp"
 
 ///|
+const COMPOSITE_ARG_1_AND_2_ARE_WORDS : Int = 0x0001
+
+///|
+const COMPOSITE_ARGS_ARE_XY_VALUES : Int = 0x0002
+
+///|
+const COMPOSITE_WE_HAVE_A_SCALE : Int = 0x0008
+
+///|
+const COMPOSITE_MORE_COMPONENTS : Int = 0x0020
+
+///|
+const COMPOSITE_WE_HAVE_AN_X_AND_Y_SCALE : Int = 0x0040
+
+///|
+const COMPOSITE_WE_HAVE_A_TWO_BY_TWO : Int = 0x0080
+
+///|
+const COMPOSITE_WE_HAVE_INSTRUCTIONS : Int = 0x0100
+
+///|
 fn glyf_read_u16_be(view : BytesView, offset : Int) -> Int? {
   if offset < 0 || offset + 2 > view.length() {
     None
@@ -57,10 +78,70 @@ fn glyf_read_u32_be(view : BytesView, offset : Int) -> UInt? {
 }
 
 ///|
+fn glyf_read_f2dot14(view : BytesView, offset : Int) -> Double? {
+  match glyf_read_i16_be(view, offset) {
+    None => None
+    Some(v) => Some(v.to_double() / 16384.0)
+  }
+}
+
+///|
 fn glyf_midpoint(a : (Int, Int), b : (Int, Int)) -> (Int, Int) {
   let (ax, ay) = a
   let (bx, by) = b
   ((ax + bx) / 2, (ay + by) / 2)
+}
+
+///|
+priv struct GlyfTransform {
+  a : Double
+  b : Double
+  c : Double
+  d : Double
+  dx : Double
+  dy : Double
+}
+
+///|
+fn glyf_transform_point(t : GlyfTransform, x : Int, y : Int) -> (Int, Int) {
+  let xf = x.to_double()
+  let yf = y.to_double()
+  let nx = (t.a * xf + t.b * yf + t.dx).round().to_int()
+  let ny = (t.c * xf + t.d * yf + t.dy).round().to_int()
+  (nx, ny)
+}
+
+///|
+fn glyf_apply_transform(
+  path : Array[PathElement],
+  t : GlyfTransform,
+) -> Array[PathElement] {
+  let out : Array[PathElement] = Array::new()
+  for e in path {
+    match e {
+      MoveTo(x, y) => {
+        let (nx, ny) = glyf_transform_point(t, x, y)
+        out.push(MoveTo(nx, ny))
+      }
+      LineTo(x, y) => {
+        let (nx, ny) = glyf_transform_point(t, x, y)
+        out.push(LineTo(nx, ny))
+      }
+      QuadTo(cx, cy, x, y) => {
+        let (ncx, ncy) = glyf_transform_point(t, cx, cy)
+        let (nx, ny) = glyf_transform_point(t, x, y)
+        out.push(QuadTo(ncx, ncy, nx, ny))
+      }
+      CurveTo(cx0, cy0, cx1, cy1, x, y) => {
+        let (ncx0, ncy0) = glyf_transform_point(t, cx0, cy0)
+        let (ncx1, ncy1) = glyf_transform_point(t, cx1, cy1)
+        let (nx, ny) = glyf_transform_point(t, x, y)
+        out.push(CurveTo(ncx0, ncy0, ncx1, ncy1, nx, ny))
+      }
+      Close => out.push(Close)
+    }
+  }
+  out
 }
 
 ///|
@@ -167,7 +248,7 @@ fn glyf_simple_path(glyf : BytesView) -> Array[PathElement]? {
     return Some(Array::new())
   }
   if number_of_contours < 0 {
-    // Composite glyphs are not supported by this MVP.
+    // Handled by composite parsing.
     return None
   }
   // Skip bbox (xMin..yMax).
@@ -291,6 +372,217 @@ fn glyf_simple_path(glyf : BytesView) -> Array[PathElement]? {
 }
 
 ///|
+priv struct GlyfCtx {
+  glyf : BytesView
+  loca : BytesView
+  num_glyphs : Int
+  index_to_loc_format : Int
+}
+
+///|
+fn glyf_glyph_slice(ctx : GlyfCtx, idx : Int) -> BytesView? {
+  if idx < 0 || idx >= ctx.num_glyphs {
+    return None
+  }
+  let (start, end) = if ctx.index_to_loc_format == 0 {
+    let need = (ctx.num_glyphs + 1) * 2
+    if ctx.loca.length() < need {
+      return None
+    }
+    let o0 = match glyf_read_u16_be(ctx.loca, idx * 2) {
+      None => return None
+      Some(v) => v
+    }
+    let o1 = match glyf_read_u16_be(ctx.loca, (idx + 1) * 2) {
+      None => return None
+      Some(v) => v
+    }
+    (o0 * 2, o1 * 2)
+  } else if ctx.index_to_loc_format == 1 {
+    let need = (ctx.num_glyphs + 1) * 4
+    if ctx.loca.length() < need {
+      return None
+    }
+    let o0 = match glyf_read_u32_be(ctx.loca, idx * 4) {
+      None => return None
+      Some(v) => v.to_uint64().to_int()
+    }
+    let o1 = match glyf_read_u32_be(ctx.loca, (idx + 1) * 4) {
+      None => return None
+      Some(v) => v.to_uint64().to_int()
+    }
+    (o0, o1)
+  } else {
+    return None
+  }
+  if start < 0 || end < start || end > ctx.glyf.length() {
+    return None
+  }
+  Some(ctx.glyf.sub(start~, end~))
+}
+
+///|
+fn glyf_composite_path(
+  ctx : GlyfCtx,
+  glyph : BytesView,
+  visited : Array[Bool],
+) -> Array[PathElement]? {
+  if glyph.length() < 10 {
+    return None
+  }
+  // Skip bbox (xMin..yMax).
+  let mut off = 10
+  let out : Array[PathElement] = Array::new()
+  let mut flags = 0
+  while true {
+    flags = match glyf_read_u16_be(glyph, off) {
+      None => return None
+      Some(v) => v
+    }
+    let comp_gid = match glyf_read_u16_be(glyph, off + 2) {
+      None => return None
+      Some(v) => v
+    }
+    off = off + 4
+    let arg_words = (flags & COMPOSITE_ARG_1_AND_2_ARE_WORDS) != 0
+    let args_xy = (flags & COMPOSITE_ARGS_ARE_XY_VALUES) != 0
+    if !args_xy {
+      // Point matching not supported by MVP.
+      return None
+    }
+    let (dx, dy) = if arg_words {
+      let a1 = match glyf_read_i16_be(glyph, off) {
+        None => return None
+        Some(v) => v
+      }
+      let a2 = match glyf_read_i16_be(glyph, off + 2) {
+        None => return None
+        Some(v) => v
+      }
+      off = off + 4
+      (a1.to_double(), a2.to_double())
+    } else {
+      if off + 2 > glyph.length() {
+        return None
+      }
+      let b1 = glyph.at(off).to_int()
+      let b2 = glyph.at(off + 1).to_int()
+      off = off + 2
+      let a1 = if b1 >= 128 { b1 - 256 } else { b1 }
+      let a2 = if b2 >= 128 { b2 - 256 } else { b2 }
+      (a1.to_double(), a2.to_double())
+    }
+    let mut a = 1.0
+    let mut b = 0.0
+    let mut c = 0.0
+    let mut d = 1.0
+    if (flags & COMPOSITE_WE_HAVE_A_SCALE) != 0 {
+      let s = match glyf_read_f2dot14(glyph, off) {
+        None => return None
+        Some(v) => v
+      }
+      off = off + 2
+      a = s
+      d = s
+    } else if (flags & COMPOSITE_WE_HAVE_AN_X_AND_Y_SCALE) != 0 {
+      let sx = match glyf_read_f2dot14(glyph, off) {
+        None => return None
+        Some(v) => v
+      }
+      let sy = match glyf_read_f2dot14(glyph, off + 2) {
+        None => return None
+        Some(v) => v
+      }
+      off = off + 4
+      a = sx
+      d = sy
+    } else if (flags & COMPOSITE_WE_HAVE_A_TWO_BY_TWO) != 0 {
+      let ca = match glyf_read_f2dot14(glyph, off) {
+        None => return None
+        Some(v) => v
+      }
+      let cb = match glyf_read_f2dot14(glyph, off + 2) {
+        None => return None
+        Some(v) => v
+      }
+      let cc = match glyf_read_f2dot14(glyph, off + 4) {
+        None => return None
+        Some(v) => v
+      }
+      let cd = match glyf_read_f2dot14(glyph, off + 6) {
+        None => return None
+        Some(v) => v
+      }
+      off = off + 8
+      a = ca
+      b = cb
+      c = cc
+      d = cd
+    }
+    let t = GlyfTransform::{ a, b, c, d, dx, dy }
+    let comp_path = match glyf_outline_path_idx(ctx, comp_gid, visited) {
+      None => return None
+      Some(p) => p
+    }
+    let transformed = glyf_apply_transform(comp_path, t)
+    for e in transformed {
+      out.push(e)
+    }
+    if (flags & COMPOSITE_MORE_COMPONENTS) == 0 {
+      break
+    }
+  }
+  if (flags & COMPOSITE_WE_HAVE_INSTRUCTIONS) != 0 {
+    if off + 2 > glyph.length() {
+      return None
+    }
+    let ins_len = match glyf_read_u16_be(glyph, off) {
+      None => return None
+      Some(v) => v
+    }
+    off = off + 2
+    if ins_len < 0 || off + ins_len > glyph.length() {
+      return None
+    }
+  }
+  Some(out)
+}
+
+///|
+fn glyf_outline_path_idx(
+  ctx : GlyfCtx,
+  idx : Int,
+  visited : Array[Bool],
+) -> Array[PathElement]? {
+  if idx < 0 || idx >= ctx.num_glyphs {
+    return None
+  }
+  if visited.at(idx) {
+    return None
+  }
+  visited.set(idx, true)
+  let res = match glyf_glyph_slice(ctx, idx) {
+    None => None
+    Some(glyph) =>
+      if glyph.length() == 0 {
+        Some(Array::new())
+      } else {
+        match glyf_read_i16_be(glyph, 0) {
+          None => None
+          Some(nc) =>
+            if nc < 0 {
+              glyf_composite_path(ctx, glyph, visited)
+            } else {
+              glyf_simple_path(glyph)
+            }
+        }
+      }
+  }
+  visited.set(idx, false)
+  res
+}
+
+///|
 fn glyf_outline_path(
   font : @moon_skrifa.FontRef,
   gid : @moon_skrifa.GlyphId,
@@ -323,43 +615,7 @@ fn glyf_outline_path(
     None => return None
     Some(v) => v
   }
-  let (start, end) = if index_to_loc_format == 0 {
-    // short offsets: u16 values multiplied by 2
-    let need = (num_glyphs + 1) * 2
-    if loca.length() < need {
-      return None
-    }
-    let o0 = match glyf_read_u16_be(loca, idx * 2) {
-      None => return None
-      Some(v) => v
-    }
-    let o1 = match glyf_read_u16_be(loca, (idx + 1) * 2) {
-      None => return None
-      Some(v) => v
-    }
-    (o0 * 2, o1 * 2)
-  } else if index_to_loc_format == 1 {
-    let need = (num_glyphs + 1) * 4
-    if loca.length() < need {
-      return None
-    }
-    let o0 = match glyf_read_u32_be(loca, idx * 4) {
-      None => return None
-      Some(v) => v.to_uint64().to_int()
-    }
-    let o1 = match glyf_read_u32_be(loca, (idx + 1) * 4) {
-      None => return None
-      Some(v) => v.to_uint64().to_int()
-    }
-    (o0, o1)
-  } else {
-    return None
-  }
-  if start < 0 || end < start || end > glyf.length() {
-    return None
-  }
-  if start == end {
-    return Some(Array::new())
-  }
-  glyf_simple_path(glyf.sub(start~, end~))
+  let ctx = GlyfCtx::{ glyf, loca, num_glyphs, index_to_loc_format }
+  let visited = Array::make(num_glyphs, false)
+  glyf_outline_path_idx(ctx, idx, visited)
 }
