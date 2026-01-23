@@ -6,22 +6,51 @@ import {
 }
 
 // Values
+pub fn require_interpreter(@moon_skrifa.FontRef) -> Bool
+
+pub fn[R] with_temporary_memory(Int, (Array[Byte]) -> R) -> R
 
 // Errors
+pub(all) suberror HintError {
+  Unsupported
+}
 
 // Types and methods
+pub(all) enum DrawError {
+  NoSources
+  GlyphNotFound(UInt)
+  HintingFailed(HintError)
+  ReadError
+  Unsupported
+}
+
+pub(all) enum Engine {
+  Interpreter
+  Auto
+  AutoFallback
+}
+
 pub struct HintingInstance {
   dummy : Int
 }
 pub fn HintingInstance::new() -> Self
 
+pub struct HintingOptions {
+  engine : Engine
+  target : Target
+}
+pub fn HintingOptions::default() -> Self
+
 pub struct OutlineGlyphCollection {
   font : @moon_skrifa.FontRef?
 }
+pub fn[P : OutlinePen] OutlineGlyphCollection::draw(Self, UInt, P) -> Bool
 pub fn OutlineGlyphCollection::format(Self) -> UInt?
 pub fn OutlineGlyphCollection::from_font(@moon_skrifa.FontRef) -> Self
 pub fn OutlineGlyphCollection::new() -> Self
 pub fn OutlineGlyphCollection::path(Self, UInt) -> Array[PathElement]?
+pub fn OutlineGlyphCollection::prefer_interpreter(Self) -> Bool
+pub fn OutlineGlyphCollection::svg_path(Self, UInt) -> String?
 
 pub(all) enum PathElement {
   MoveTo(Int, Int)
@@ -31,7 +60,36 @@ pub(all) enum PathElement {
   Close
 }
 
+pub(all) enum SmoothMode {
+  Normal
+  Light
+  Lcd
+  VerticalLcd
+}
+
+pub struct SvgPen {
+  // private fields
+}
+pub fn SvgPen::clear(Self) -> Unit
+pub fn SvgPen::new() -> Self
+pub fn SvgPen::to_string(Self) -> String
+pub impl OutlinePen for SvgPen
+
+pub(all) enum Target {
+  Mono
+  Smooth(SmoothMode)
+}
+pub fn Target::default() -> Self
+
 // Type aliases
 
 // Traits
+pub(open) trait OutlinePen {
+  move_to(Self, Int, Int) -> Unit
+  line_to(Self, Int, Int) -> Unit
+  quad_to(Self, Int, Int, Int, Int) -> Unit
+  curve_to(Self, Int, Int, Int, Int, Int, Int) -> Unit
+  close(Self) -> Unit
+}
+pub impl OutlinePen for Array[PathElement]
 

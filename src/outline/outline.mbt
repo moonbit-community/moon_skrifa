@@ -28,6 +28,12 @@ const TAG_CFF : UInt = 0x43464620 // "CFF "
 const TAG_CFF2 : UInt = 0x43464632 // "CFF2"
 
 ///|
+const TAG_FPGM : UInt = 0x6670676D // "fpgm"
+
+///|
+const TAG_PREP : UInt = 0x70726570 // "prep"
+
+///|
 pub struct OutlineGlyphCollection {
   font : @moon_skrifa.FontRef?
 }
@@ -62,6 +68,39 @@ pub fn OutlineGlyphCollection::format(self : OutlineGlyphCollection) -> UInt? {
 }
 
 ///|
+fn table_is_non_empty(font : @moon_skrifa.FontRef, tag : UInt) -> Bool {
+  match font.table(tag) {
+    None => false
+    Some(view) => view.length() > 0
+  }
+}
+
+///|
+/// Returns `true` if the embedded instruction interpreter is preferred.
+///
+/// This matches the high-level selection logic used by upstream:
+/// - CFF/CFF2 prefers the (PostScript) interpreter
+/// - glyf prefers the TrueType interpreter when fpgm/prep are non-empty, or
+///   for a small set of "tricky" fonts (stubbed by name/ID in this port)
+pub fn OutlineGlyphCollection::prefer_interpreter(
+  self : OutlineGlyphCollection,
+) -> Bool {
+  if self.font is Some(font) {
+    match self.format() {
+      Some(TAG_CFF) => true
+      Some(TAG_CFF2) => true
+      Some(TAG_GLYF) =>
+        require_interpreter(font) ||
+        table_is_non_empty(font, TAG_FPGM) ||
+        table_is_non_empty(font, TAG_PREP)
+      _ => false
+    }
+  } else {
+    false
+  }
+}
+
+///|
 /// Single path command emitted when drawing a glyph outline.
 ///
 /// Coordinate units are raw font units (design units).
@@ -91,6 +130,46 @@ pub fn OutlineGlyphCollection::path(
     } else {
       None
     }
+  } else {
+    None
+  }
+}
+
+///|
+/// Draws the outline of a glyph into a pen.
+pub fn[P : OutlinePen] OutlineGlyphCollection::draw(
+  self : OutlineGlyphCollection,
+  gid : @moon_skrifa.GlyphId,
+  pen : P,
+) -> Bool {
+  match self.path(gid) {
+    None => false
+    Some(path) => {
+      for e in path.iter() {
+        match e {
+          PathElement::MoveTo(x, y) => OutlinePen::move_to(pen, x, y)
+          PathElement::LineTo(x, y) => OutlinePen::line_to(pen, x, y)
+          PathElement::QuadTo(cx0, cy0, x, y) =>
+            OutlinePen::quad_to(pen, cx0, cy0, x, y)
+          PathElement::CurveTo(cx0, cy0, cx1, cy1, x, y) =>
+            OutlinePen::curve_to(pen, cx0, cy0, cx1, cy1, x, y)
+          PathElement::Close => OutlinePen::close(pen)
+        }
+      }
+      true
+    }
+  }
+}
+
+///|
+/// Draws the outline of a glyph into an SVG path string.
+pub fn OutlineGlyphCollection::svg_path(
+  self : OutlineGlyphCollection,
+  gid : @moon_skrifa.GlyphId,
+) -> String? {
+  let pen = SvgPen::new()
+  if self.draw(gid, pen) {
+    Some(pen.to_string())
   } else {
     None
   }
