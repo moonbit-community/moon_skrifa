@@ -65,9 +65,9 @@ fn add_delta_u16(value : Int, delta : Int) -> UInt {
 
 ///|
 pub struct Charmap {
-  cmap : BytesView
-  sub_off : Int
-  format : Int
+  priv cmap : BytesView
+  priv sub_off : Int
+  priv format : Int
 }
 
 ///|

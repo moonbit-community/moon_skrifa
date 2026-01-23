@@ -74,7 +74,7 @@ const MAX_INLINE_COORDS : Int = 8
 ///
 /// This is a minimal port of `LocationRef` from upstream.
 pub struct LocationRef {
-  coords : ArrayView[NormalizedCoord]
+  priv coords : ArrayView[NormalizedCoord]
 }
 
 ///|
@@ -110,7 +110,7 @@ pub fn LocationRef::effective_coords(
 ///|
 /// Owned ordered sequence of normalized variation coordinates.
 pub struct Location {
-  coords : SmallVec[NormalizedCoord]
+  priv coords : SmallVec[NormalizedCoord]
 }
 
 ///|

@@ -7,9 +7,7 @@ package "Milky2018/moon_skrifa"
 
 // Types and methods
 pub struct Charmap {
-  cmap : BytesView
-  sub_off : Int
-  format : Int
+  // private fields
 }
 pub fn Charmap::glyph_id(Self, UInt) -> UInt?
 pub fn Charmap::new(FontRef) -> Self?
@@ -25,19 +23,28 @@ pub fn FontRef::new(Bytes) -> Self?
 pub fn FontRef::table(Self, UInt) -> BytesView?
 
 pub struct Location {
-  coords : SmallVec[Int]
+  // private fields
 }
 pub fn Location::as_ref(Self) -> LocationRef
 pub fn Location::coords(Self) -> ArrayView[Int]
 pub fn Location::new(Int) -> Self
 
 pub struct LocationRef {
-  coords : ArrayView[Int]
+  // private fields
 }
 pub fn LocationRef::coords(Self) -> ArrayView[Int]
 pub fn LocationRef::effective_coords(Self) -> ArrayView[Int]
 pub fn LocationRef::is_default(Self) -> Bool
 pub fn LocationRef::new(ArrayView[Int]) -> Self
+
+pub struct Metrics {
+  // private fields
+}
+pub fn Metrics::advance_width(Self, UInt) -> UInt?
+pub fn Metrics::lsb(Self, UInt) -> Int?
+pub fn Metrics::new(FontRef) -> Self?
+pub fn Metrics::num_glyphs(Self) -> Int
+pub fn Metrics::number_of_hmetrics(Self) -> Int
 
 pub struct Size {
   ppem : Double?
@@ -47,8 +54,6 @@ pub fn Size::new(Double) -> Self
 pub fn Size::ppem(Self) -> Double?
 pub fn Size::unscaled() -> Self
 pub fn Size::value(Self) -> Double
-
-type SmallVec[T]
 
 // Type aliases
 pub type GlyphId = UInt

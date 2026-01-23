@@ -29,7 +29,7 @@ priv enum Storage[T] {
 /// A growable vector type with a logical "inline" storage mode.
 ///
 /// Unlike upstream, `inline_cap` is a runtime value.
-struct SmallVec[T] {
+priv struct SmallVec[T] {
   storage : Storage[T]
   inline_cap : Int
 }
