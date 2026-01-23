@@ -111,6 +111,43 @@ fn string_test_build_name_table_v0(
 }
 
 ///|
+fn string_test_build_name_table_v0_raw(
+  records : Array[(Int, Int, Int, Int, Array[Byte])],
+) -> Bytes {
+  let count = records.length()
+  let storage : Array[Byte] = Array::new()
+  let rec_meta : Array[(Int, Int)] = Array::new()
+  for r in records {
+    let (_, _, _, _, bytes) = r
+    let off = storage.length()
+    for b in bytes.iter() {
+      storage.push(b)
+    }
+    rec_meta.push((bytes.length(), off))
+  }
+  let out : Array[Byte] = Array::new()
+  // format=0
+  string_test_push_u16_be(out, 0)
+  string_test_push_u16_be(out, count)
+  let string_offset = 6 + count * 12
+  string_test_push_u16_be(out, string_offset)
+  for i in 0..<count {
+    let (platform_id, encoding_id, language_id, name_id, _) = records.at(i)
+    let (len, off) = rec_meta.at(i)
+    string_test_push_u16_be(out, platform_id)
+    string_test_push_u16_be(out, encoding_id)
+    string_test_push_u16_be(out, language_id)
+    string_test_push_u16_be(out, name_id)
+    string_test_push_u16_be(out, len)
+    string_test_push_u16_be(out, off)
+  }
+  for b in storage.iter() {
+    out.push(b)
+  }
+  Bytes::from_array(out.op_as_view())
+}
+
+///|
 fn string_test_build_name_table_v1(
   records : Array[(Int, Int, Int, Int, String)],
   lang_tags : Array[String],
@@ -228,7 +265,8 @@ test "localized() from name v0" {
     Array::from_fixed_array([
       (3, 1, 0x0401, STRING_ID_SUBFAMILY_NAME.to_int(), "عادي"),
       (3, 1, 0x0408, STRING_ID_SUBFAMILY_NAME.to_int(), "Κανονικά"),
-      (3, 1, 0x0409, STRING_ID_SUBFAMILY_NAME.to_int(), "Regular"),
+      // Prefer the Mac language-id mapping: 0 => "en".
+      (1, 0, 0x0000, STRING_ID_SUBFAMILY_NAME.to_int(), "Regular"),
       (3, 1, 0x042D, STRING_ID_SUBFAMILY_NAME.to_int(), "Arrunta"),
       (3, 1, 0x0415, STRING_ID_SUBFAMILY_NAME.to_int(), "Normalny"),
       (3, 1, 0x0804, STRING_ID_SUBFAMILY_NAME.to_int(), "正常"),
@@ -313,5 +351,43 @@ test "name v1 language tags win over langid mapping" {
     .unwrap()
     .to_string(),
     content="Regular-US",
+  )
+}
+
+///|
+test "macroman decoding (platform 1, encoding 0)" {
+  let bytes : Array[Byte] = Array::new()
+  // 0x8E in MacRoman is U+00E9 (é).
+  bytes.push(0x8E |> Int::to_byte)
+  let name = string_test_build_name_table_v0_raw(
+    Array::from_fixed_array([
+      (1, 0, 0, STRING_ID_SUBFAMILY_NAME.to_int(), bytes),
+    ]),
+  )
+  let sfnt = string_test_build_sfnt(Array::from_fixed_array([(TAG_NAME, name)]))
+  let font = FontRef::new(sfnt).unwrap()
+  inspect(
+    font.localized_strings(STRING_ID_SUBFAMILY_NAME).strings().at(0).to_string(),
+    content="é",
+  )
+}
+
+///|
+test "expanded language mapping includes de-DE" {
+  let name = string_test_build_name_table_v0(
+    Array::from_fixed_array([
+      (3, 1, 0x0407, STRING_ID_SUBFAMILY_NAME.to_int(), "Regular"),
+    ]),
+  )
+  let sfnt = string_test_build_sfnt(Array::from_fixed_array([(TAG_NAME, name)]))
+  let font = FontRef::new(sfnt).unwrap()
+  inspect(
+    font
+    .localized_strings(STRING_ID_SUBFAMILY_NAME)
+    .strings()
+    .at(0)
+    .language()
+    .unwrap(),
+    content="de-DE",
   )
 }
