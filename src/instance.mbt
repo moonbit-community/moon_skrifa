@@ -20,20 +20,47 @@ pub type NormalizedCoord = Int
 
 ///|
 pub struct Size {
-  value : Double
+  ppem : Double?
 }
 
 ///|
 pub fn Size::new(size : Double) -> Size {
-  Size::{ value: size }
+  Size::{ ppem: Some(size) }
 }
 
 ///|
 pub fn Size::unscaled() -> Size {
-  Size::{ value: 0.0 }
+  Size::{ ppem: None }
 }
 
 ///|
+pub fn Size::ppem(self : Size) -> Double? {
+  self.ppem
+}
+
+///|
+/// Computes a linear scale factor for this font size and the given units-per-em.
+///
+/// Returns 1.0 for an unscaled size or when `units_per_em` is 0.
+pub fn Size::linear_scale(self : Size, units_per_em : UInt16) -> Double {
+  match self.ppem {
+    Some(ppem) => {
+      let upem = units_per_em.to_int()
+      if upem != 0 {
+        ppem / upem.to_double()
+      } else {
+        1.0
+      }
+    }
+    None => 1.0
+  }
+}
+
+///|
+/// Legacy helper for the earlier skeleton API.
 pub fn Size::value(self : Size) -> Double {
-  self.value
+  match self.ppem {
+    Some(ppem) => ppem
+    None => 0.0
+  }
 }

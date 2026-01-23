@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "Milky2018/moon_skrifa/skrifa"
+package "Milky2018/moon_skrifa"
 
 // Values
 
@@ -14,11 +14,14 @@ pub fn FontRef::data(Self) -> Bytes
 pub fn FontRef::from_index(Bytes, UInt) -> Self?
 pub fn FontRef::index(Self) -> UInt
 pub fn FontRef::new(Bytes) -> Self?
+pub fn FontRef::table(Self, UInt) -> BytesView?
 
 pub struct Size {
-  value : Double
+  ppem : Double?
 }
+pub fn Size::linear_scale(Self, UInt16) -> Double
 pub fn Size::new(Double) -> Self
+pub fn Size::ppem(Self) -> Double?
 pub fn Size::unscaled() -> Self
 pub fn Size::value(Self) -> Double
 
