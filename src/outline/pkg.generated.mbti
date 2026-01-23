@@ -21,6 +21,15 @@ pub struct OutlineGlyphCollection {
 pub fn OutlineGlyphCollection::format(Self) -> UInt?
 pub fn OutlineGlyphCollection::from_font(@moon_skrifa.FontRef) -> Self
 pub fn OutlineGlyphCollection::new() -> Self
+pub fn OutlineGlyphCollection::path(Self, UInt) -> Array[PathElement]?
+
+pub(all) enum PathElement {
+  MoveTo(Int, Int)
+  LineTo(Int, Int)
+  QuadTo(Int, Int, Int, Int)
+  CurveTo(Int, Int, Int, Int, Int, Int)
+  Close
+}
 
 // Type aliases
 

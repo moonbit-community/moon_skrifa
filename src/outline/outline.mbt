@@ -62,6 +62,37 @@ pub fn OutlineGlyphCollection::format(self : OutlineGlyphCollection) -> UInt? {
 }
 
 ///|
+/// Single path command emitted when drawing a glyph outline.
+///
+/// Coordinate units are raw font units (design units).
+pub(all) enum PathElement {
+  MoveTo(Int, Int)
+  LineTo(Int, Int)
+  QuadTo(Int, Int, Int, Int)
+  CurveTo(Int, Int, Int, Int, Int, Int)
+  Close
+}
+
+///|
+/// Draws the outline of a glyph and returns a flat list of path elements.
+///
+/// Currently only supports TrueType outlines (`glyf`).
+pub fn OutlineGlyphCollection::path(
+  self : OutlineGlyphCollection,
+  gid : @moon_skrifa.GlyphId,
+) -> Array[PathElement]? {
+  if self.font is Some(font) {
+    if font.table(TAG_GLYF) is Some(_) {
+      glyf_outline_path(font, gid)
+    } else {
+      None
+    }
+  } else {
+    None
+  }
+}
+
+///|
 pub struct HintingInstance {
   dummy : Int
 }
