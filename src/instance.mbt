@@ -83,6 +83,12 @@ pub fn LocationRef::new(coords : ArrayView[NormalizedCoord]) -> LocationRef {
 }
 
 ///|
+pub fn LocationRef::default() -> LocationRef {
+  let empty : Array[NormalizedCoord] = Array::new()
+  LocationRef::new(empty.op_as_view())
+}
+
+///|
 pub fn LocationRef::coords(self : LocationRef) -> ArrayView[NormalizedCoord] {
   self.coords
 }
@@ -116,6 +122,16 @@ pub struct Location {
 ///|
 pub fn Location::new(len : Int) -> Location {
   Location::{ coords: SmallVec::with_len(len, 0, MAX_INLINE_COORDS) }
+}
+
+///|
+pub fn Location::from_array(coords : Array[NormalizedCoord]) -> Location {
+  let len = coords.length()
+  let mut v = SmallVec::with_len(len, 0, MAX_INLINE_COORDS)
+  for i in 0..<len {
+    v = v.set(i, coords.at(i))
+  }
+  Location::{ coords: v }
 }
 
 ///|

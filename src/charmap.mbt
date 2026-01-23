@@ -125,6 +125,11 @@ pub fn Charmap::glyph_id(self : Charmap, codepoint : UInt) -> GlyphId? {
 }
 
 ///|
+pub fn FontRef::charmap(self : FontRef) -> Charmap? {
+  Charmap::new(self)
+}
+
+///|
 fn Charmap::glyph_id_format12(self : Charmap, codepoint : UInt) -> GlyphId? {
   let base = self.sub_off
   let length = match cmap_read_u32_be_int(self.cmap, base + 4) {

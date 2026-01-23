@@ -136,3 +136,8 @@ pub fn Metrics::lsb(self : Metrics, gid : GlyphId) -> Int? {
       }
   }
 }
+
+///|
+pub fn FontRef::metrics(self : FontRef) -> Metrics? {
+  Metrics::new(self)
+}

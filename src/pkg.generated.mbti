@@ -16,6 +16,51 @@ pub fn Attributes::stretch(Self) -> Stretch
 pub fn Attributes::style(Self) -> Style
 pub fn Attributes::weight(Self) -> Weight
 
+pub struct Axis {
+  // private fields
+}
+pub fn Axis::default_value(Self) -> Double
+pub fn Axis::index(Self) -> Int
+pub fn Axis::is_hidden(Self) -> Bool
+pub fn Axis::max_value(Self) -> Double
+pub fn Axis::min_value(Self) -> Double
+pub fn Axis::name_id(Self) -> UInt16
+pub fn Axis::normalize(Self, Double) -> Int
+pub fn Axis::tag(Self) -> Tag
+
+pub struct AxisCollection {
+  // private fields
+}
+pub fn AxisCollection::get(Self, Int) -> Axis?
+pub fn AxisCollection::get_by_tag(Self, Tag) -> Axis?
+pub fn AxisCollection::is_empty(Self) -> Bool
+pub fn AxisCollection::len(Self) -> Int
+pub fn AxisCollection::location(Self, ArrayView[Setting[Double]]) -> Location
+pub fn AxisCollection::new(FontRef) -> Self
+
+pub(all) enum BitmapFormat {
+  Sbix
+  Cbdt
+  Ebdt
+}
+
+pub struct BitmapStrike {
+  // private fields
+}
+pub fn BitmapStrike::format(Self) -> BitmapFormat
+pub fn BitmapStrike::ppem_x(Self) -> Int
+pub fn BitmapStrike::ppem_y(Self) -> Int
+
+pub struct BitmapStrikes {
+  // private fields
+}
+pub fn BitmapStrikes::format(Self) -> BitmapFormat?
+pub fn BitmapStrikes::get(Self, Int) -> BitmapStrike?
+pub fn BitmapStrikes::is_empty(Self) -> Bool
+pub fn BitmapStrikes::len(Self) -> Int
+pub fn BitmapStrikes::new(FontRef) -> Self
+pub fn BitmapStrikes::with_format(FontRef, BitmapFormat) -> Self?
+
 pub struct Charmap {
   // private fields
 }
@@ -27,12 +72,39 @@ pub struct FontRef {
   index : UInt
 }
 pub fn FontRef::attributes(Self) -> Attributes
+pub fn FontRef::axes(Self) -> AxisCollection
+pub fn FontRef::bitmap_strikes(Self) -> BitmapStrikes
+pub fn FontRef::charmap(Self) -> Charmap?
 pub fn FontRef::data(Self) -> Bytes
 pub fn FontRef::from_index(Bytes, UInt) -> Self?
+pub fn FontRef::glyph_names(Self) -> GlyphNames
 pub fn FontRef::index(Self) -> UInt
 pub fn FontRef::localized_strings(Self, UInt16) -> LocalizedStrings
+pub fn FontRef::metrics(Self) -> Metrics?
+pub fn FontRef::named_instances(Self) -> NamedInstanceCollection
 pub fn FontRef::new(Bytes) -> Self?
 pub fn FontRef::table(Self, UInt) -> BytesView?
+pub impl MetadataProvider for FontRef
+
+pub struct GlyphName {
+  // private fields
+}
+pub fn GlyphName::as_str(Self) -> String
+pub fn GlyphName::is_synthesized(Self) -> Bool
+
+pub(all) enum GlyphNameSource {
+  Post
+  Cff
+  Synthesized
+}
+
+pub struct GlyphNames {
+  // private fields
+}
+pub fn GlyphNames::get(Self, UInt) -> GlyphName?
+pub fn GlyphNames::new(FontRef) -> Self
+pub fn GlyphNames::num_glyphs(Self) -> Int
+pub fn GlyphNames::source(Self) -> GlyphNameSource
 
 pub struct LocalizedString {
   // private fields
@@ -52,12 +124,14 @@ pub struct Location {
 }
 pub fn Location::as_ref(Self) -> LocationRef
 pub fn Location::coords(Self) -> ArrayView[Int]
+pub fn Location::from_array(Array[Int]) -> Self
 pub fn Location::new(Int) -> Self
 
 pub struct LocationRef {
   // private fields
 }
 pub fn LocationRef::coords(Self) -> ArrayView[Int]
+pub fn LocationRef::default() -> Self
 pub fn LocationRef::effective_coords(Self) -> ArrayView[Int]
 pub fn LocationRef::is_default(Self) -> Bool
 pub fn LocationRef::new(ArrayView[Int]) -> Self
@@ -70,6 +144,28 @@ pub fn Metrics::lsb(Self, UInt) -> Int?
 pub fn Metrics::new(FontRef) -> Self?
 pub fn Metrics::num_glyphs(Self) -> Int
 pub fn Metrics::number_of_hmetrics(Self) -> Int
+
+pub struct NamedInstance {
+  // private fields
+}
+pub fn NamedInstance::location(Self) -> Location
+pub fn NamedInstance::postscript_name_id(Self) -> UInt16?
+pub fn NamedInstance::subfamily_name_id(Self) -> UInt16
+pub fn NamedInstance::user_coords(Self) -> ArrayView[Double]
+
+pub struct NamedInstanceCollection {
+  // private fields
+}
+pub fn NamedInstanceCollection::get(Self, Int) -> NamedInstance?
+pub fn NamedInstanceCollection::is_empty(Self) -> Bool
+pub fn NamedInstanceCollection::len(Self) -> Int
+pub fn NamedInstanceCollection::new(FontRef) -> Self
+
+pub struct Setting[T] {
+  selector : Tag
+  value : T
+}
+pub fn[T] Setting::new(Tag, T) -> Self[T]
 
 pub struct Size {
   ppem : Double?
@@ -93,6 +189,16 @@ pub(all) enum Style {
   Oblique(Double?)
 }
 
+pub struct Tag {
+  // private fields
+}
+pub fn Tag::from_str(String) -> Self?
+pub fn Tag::from_str_or_default(String) -> Self
+pub fn Tag::from_uint(UInt) -> Self
+pub fn Tag::new(Int, Int, Int, Int) -> Self?
+pub fn Tag::to_string(Self) -> String
+pub fn Tag::to_uint(Self) -> UInt
+
 pub struct Weight {
   // private fields
 }
@@ -106,5 +212,17 @@ pub type NormalizedCoord = Int
 
 pub type StringId = UInt16
 
+pub type VariationSetting = Setting[Double]
+
 // Traits
+pub(open) trait MetadataProvider {
+  attributes(Self) -> Attributes
+  axes(Self) -> AxisCollection
+  named_instances(Self) -> NamedInstanceCollection
+  localized_strings(Self, UInt16) -> LocalizedStrings
+  glyph_names(Self) -> GlyphNames
+  metrics(Self) -> Metrics?
+  charmap(Self) -> Charmap?
+  bitmap_strikes(Self) -> BitmapStrikes
+}
 
