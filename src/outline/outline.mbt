@@ -84,6 +84,10 @@ pub fn OutlineGlyphCollection::path(
   if self.font is Some(font) {
     if font.table(TAG_GLYF) is Some(_) {
       glyf_outline_path(font, gid)
+    } else if font.table(TAG_CFF) is Some(_) {
+      cff_outline_path(font, gid)
+    } else if font.table(TAG_CFF2) is Some(_) {
+      cff2_outline_path(font, gid)
     } else {
       None
     }
