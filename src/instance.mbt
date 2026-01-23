@@ -64,3 +64,66 @@ pub fn Size::value(self : Size) -> Double {
     None => 0.0
   }
 }
+
+///|
+/// Maximum number of coords to store inline in a `Location` object.
+const MAX_INLINE_COORDS : Int = 8
+
+///|
+/// Reference to an ordered sequence of normalized variation coordinates.
+///
+/// This is a minimal port of `LocationRef` from upstream.
+pub struct LocationRef {
+  coords : ArrayView[NormalizedCoord]
+}
+
+///|
+pub fn LocationRef::new(coords : ArrayView[NormalizedCoord]) -> LocationRef {
+  LocationRef::{ coords, }
+}
+
+///|
+pub fn LocationRef::coords(self : LocationRef) -> ArrayView[NormalizedCoord] {
+  self.coords
+}
+
+///|
+pub fn LocationRef::is_default(self : LocationRef) -> Bool {
+  self.coords.is_empty() || self.coords.all(fn(coord) { coord == 0 })
+}
+
+///|
+/// Returns the underlying coordinate array if any entries are non-zero.
+///
+/// Otherwise returns an empty view (to bypass downstream variation logic).
+pub fn LocationRef::effective_coords(
+  self : LocationRef,
+) -> ArrayView[NormalizedCoord] {
+  if self.is_default() {
+    let empty : Array[NormalizedCoord] = Array::new()
+    empty.op_as_view()
+  } else {
+    self.coords
+  }
+}
+
+///|
+/// Owned ordered sequence of normalized variation coordinates.
+pub struct Location {
+  coords : SmallVec[NormalizedCoord]
+}
+
+///|
+pub fn Location::new(len : Int) -> Location {
+  Location::{ coords: SmallVec::with_len(len, 0, MAX_INLINE_COORDS) }
+}
+
+///|
+pub fn Location::coords(self : Location) -> ArrayView[NormalizedCoord] {
+  self.coords.as_view()
+}
+
+///|
+pub fn Location::as_ref(self : Location) -> LocationRef {
+  LocationRef::new(self.coords.as_view())
+}

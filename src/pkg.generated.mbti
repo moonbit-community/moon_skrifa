@@ -6,6 +6,14 @@ package "Milky2018/moon_skrifa"
 // Errors
 
 // Types and methods
+pub struct Charmap {
+  cmap : BytesView
+  sub_off : Int
+  format : Int
+}
+pub fn Charmap::glyph_id(Self, UInt) -> UInt?
+pub fn Charmap::new(FontRef) -> Self?
+
 pub struct FontRef {
   data : Bytes
   index : UInt
@@ -16,6 +24,21 @@ pub fn FontRef::index(Self) -> UInt
 pub fn FontRef::new(Bytes) -> Self?
 pub fn FontRef::table(Self, UInt) -> BytesView?
 
+pub struct Location {
+  coords : SmallVec[Int]
+}
+pub fn Location::as_ref(Self) -> LocationRef
+pub fn Location::coords(Self) -> ArrayView[Int]
+pub fn Location::new(Int) -> Self
+
+pub struct LocationRef {
+  coords : ArrayView[Int]
+}
+pub fn LocationRef::coords(Self) -> ArrayView[Int]
+pub fn LocationRef::effective_coords(Self) -> ArrayView[Int]
+pub fn LocationRef::is_default(Self) -> Bool
+pub fn LocationRef::new(ArrayView[Int]) -> Self
+
 pub struct Size {
   ppem : Double?
 }
@@ -24,6 +47,8 @@ pub fn Size::new(Double) -> Self
 pub fn Size::ppem(Self) -> Double?
 pub fn Size::unscaled() -> Self
 pub fn Size::value(Self) -> Double
+
+type SmallVec[T]
 
 // Type aliases
 pub type GlyphId = UInt
