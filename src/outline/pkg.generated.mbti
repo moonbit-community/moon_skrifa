@@ -1,6 +1,10 @@
 // Generated using `moon info`, DON'T EDIT IT
 package "Milky2018/moon_skrifa/outline"
 
+import {
+  "Milky2018/moon_skrifa",
+}
+
 // Values
 
 // Errors
@@ -12,9 +16,10 @@ pub struct HintingInstance {
 pub fn HintingInstance::new() -> Self
 
 pub struct OutlineGlyphCollection {
-  dummy : Int
+  font : @moon_skrifa.FontRef?
 }
 pub fn OutlineGlyphCollection::format(Self) -> UInt?
+pub fn OutlineGlyphCollection::from_font(@moon_skrifa.FontRef) -> Self
 pub fn OutlineGlyphCollection::new() -> Self
 
 // Type aliases

@@ -16,21 +16,49 @@
 /// Outline module (skeleton).
 ///
 /// Ported from `fontations/skrifa/src/outline/*` (Apache-2.0 OR MIT).
+///
+/// For now this module only exposes a minimal "outline format detection" API,
+/// based on table presence (glyf/CFF/CFF2).
+const TAG_GLYF : UInt = 0x676C7966 // "glyf"
+
+///|
+const TAG_CFF : UInt = 0x43464620 // "CFF "
+
+///|
+const TAG_CFF2 : UInt = 0x43464632 // "CFF2"
+
+///|
 pub struct OutlineGlyphCollection {
-  // Placeholder; upstream holds references to font tables.
-  dummy : Int
+  font : @moon_skrifa.FontRef?
 }
 
 ///|
 pub fn OutlineGlyphCollection::new() -> OutlineGlyphCollection {
-  OutlineGlyphCollection::{ dummy: 0 }
+  OutlineGlyphCollection::{ font: None }
+}
+
+///|
+pub fn OutlineGlyphCollection::from_font(
+  font : @moon_skrifa.FontRef,
+) -> OutlineGlyphCollection {
+  OutlineGlyphCollection::{ font: Some(font) }
 }
 
 ///|
 pub fn OutlineGlyphCollection::format(self : OutlineGlyphCollection) -> UInt? {
-  // TODO: detect outline format.
-  self.dummy |> ignore
-  None
+  if self.font is Some(font) {
+    if font.table(TAG_GLYF) is Some(_) {
+      Some(TAG_GLYF)
+    } else if font.table(TAG_CFF) is Some(_) {
+      Some(TAG_CFF)
+    } else if font.table(TAG_CFF2) is Some(_) {
+      Some(TAG_CFF2)
+    } else {
+      None
+    }
+  } else {
+    None
+  }
 }
 
 ///|

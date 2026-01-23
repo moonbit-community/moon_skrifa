@@ -1,5 +1,7 @@
 {
   "import": [
-    "moonbitlang/core/prelude"
+    "moonbitlang/core/prelude",
+    "moonbitlang/core/bytes",
+    "Milky2018/moon_skrifa"
   ]
 }
