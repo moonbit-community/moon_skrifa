@@ -61,6 +61,10 @@ pub fn BitmapStrikes::len(Self) -> Int
 pub fn BitmapStrikes::new(FontRef) -> Self
 pub fn BitmapStrikes::with_format(FontRef, BitmapFormat) -> Self?
 
+pub(all) enum Brush {
+  Solid(Int, Double)
+}
+
 pub struct Charmap {
   // private fields
 }
@@ -100,6 +104,45 @@ pub fn ColorPalettes::color(Self, Int, Int) -> Color?
 pub fn ColorPalettes::entries_per_palette(Self) -> Int
 pub fn ColorPalettes::len(Self) -> Int
 pub fn ColorPalettes::new(FontRef) -> Self?
+
+pub(all) struct ColorStop {
+  offset : Double
+  palette_index : Int
+  alpha : Double
+}
+
+pub(all) enum CompositeMode {
+  Clear
+  Src
+  Dest
+  SrcOver
+  DestOver
+  SrcIn
+  DestIn
+  SrcOut
+  DestOut
+  SrcAtop
+  DestAtop
+  Xor
+  Plus
+  Screen
+  Overlay
+  Darken
+  Lighten
+  ColorDodge
+  ColorBurn
+  HardLight
+  SoftLight
+  Difference
+  Exclusion
+  Multiply
+  HslHue
+  HslSaturation
+  HslColor
+  HslLuminosity
+  Unknown
+}
+pub fn CompositeMode::raw(Self) -> Int
 
 pub struct Decoration {
   offset : Double
@@ -145,6 +188,7 @@ pub fn FontRef::localized_strings(Self, UInt16) -> LocalizedStrings
 pub fn FontRef::metrics(Self) -> Metrics?
 pub fn FontRef::named_instances(Self) -> NamedInstanceCollection
 pub fn FontRef::new(Bytes) -> Self?
+pub fn[P : ColorPainter] FontRef::paint_colr_v1(Self, UInt, P) -> Result[Unit, PaintError]
 pub fn FontRef::table(Self, UInt) -> BytesView?
 pub impl MetadataProvider for FontRef
 
@@ -223,6 +267,19 @@ pub fn NamedInstanceCollection::is_empty(Self) -> Bool
 pub fn NamedInstanceCollection::len(Self) -> Int
 pub fn NamedInstanceCollection::new(FontRef) -> Self
 
+pub(all) enum PaintCachedColorGlyph {
+  Ok
+  Unimplemented
+}
+
+pub(all) enum PaintError {
+  ParseError
+  GlyphNotFound(UInt)
+  PaintCycleDetected
+  DepthLimitExceeded
+  UnsupportedPaintFormat(Int)
+}
+
 pub struct Setting[T] {
   selector : Tag
   value : T
@@ -289,6 +346,20 @@ pub type StringId = UInt16
 pub type VariationSetting = Setting[Double]
 
 // Traits
+pub(open) trait ColorPainter {
+  push_transform(Self, Transform) -> Unit
+  pop_transform(Self) -> Unit
+  push_clip_glyph(Self, UInt) -> Unit
+  push_clip_box(Self, (Double, Double, Double, Double)) -> Unit
+  pop_clip(Self) -> Unit
+  fill(Self, Brush) -> Unit
+  fill_glyph(Self, UInt, Transform?, Brush) -> Unit
+  paint_cached_color_glyph(Self, UInt) -> Result[PaintCachedColorGlyph, PaintError]
+  push_layer(Self, CompositeMode) -> Unit
+  pop_layer(Self) -> Unit
+  pop_layer_with_mode(Self, CompositeMode) -> Unit
+}
+
 pub(open) trait MetadataProvider {
   attributes(Self) -> Attributes
   axes(Self) -> AxisCollection
