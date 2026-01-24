@@ -2,9 +2,9 @@
   "name": "Milky2018/moon_skrifa",
   "version": "0.1.0",
   "readme": "README.mbt.md",
-  "repository": "",
+  "repository": "https://github.com/moonbit-community/moon_skrifa.git",
   "license": "Apache-2.0",
-  "keywords": [],
-  "description": "",
+  "keywords": ["font", "opentype", "truetype"],
+  "description": "MoonBit port of Fontations skrifa (font parsing, metrics, color/bitmap glyph helpers).",
   "source": "src"
 }
