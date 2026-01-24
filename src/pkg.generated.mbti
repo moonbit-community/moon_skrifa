@@ -182,6 +182,7 @@ pub fn FontRef::color_palettes(Self) -> ColorPalettes?
 pub fn FontRef::data(Self) -> Bytes
 pub fn FontRef::font_metrics(Self, Size) -> FontMetrics
 pub fn FontRef::from_index(Bytes, UInt) -> Self?
+pub fn FontRef::glyph_metrics(Self, Size, LocationRef) -> GlyphMetrics?
 pub fn FontRef::glyph_names(Self) -> GlyphNames
 pub fn FontRef::index(Self) -> UInt
 pub fn FontRef::localized_strings(Self, UInt16) -> LocalizedStrings
@@ -191,6 +192,14 @@ pub fn FontRef::new(Bytes) -> Self?
 pub fn[P : ColorPainter] FontRef::paint_colr_v1(Self, UInt, P) -> Result[Unit, PaintError]
 pub fn FontRef::table(Self, UInt) -> BytesView?
 pub impl MetadataProvider for FontRef
+
+pub struct GlyphMetrics {
+  // private fields
+}
+pub fn GlyphMetrics::advance_width(Self, UInt) -> Double?
+pub fn GlyphMetrics::glyph_count(Self) -> Int
+pub fn GlyphMetrics::left_side_bearing(Self, UInt) -> Double?
+pub fn GlyphMetrics::new(FontRef, Size, LocationRef) -> Self?
 
 pub struct GlyphName {
   // private fields
