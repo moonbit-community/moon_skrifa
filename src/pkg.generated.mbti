@@ -82,6 +82,9 @@ pub fn BitmapStrikes::with_format(FontRef, BitmapFormat) -> Self?
 
 pub(all) enum Brush {
   Solid(Int, Double)
+  LinearGradient((Double, Double), (Double, Double), Array[ColorStop], Extend)
+  RadialGradient((Double, Double), Double, (Double, Double), Double, Array[ColorStop], Extend)
+  SweepGradient((Double, Double), Double, Double, Array[ColorStop], Extend)
 }
 
 pub struct Charmap {
@@ -170,6 +173,14 @@ pub struct Decoration {
 pub fn Decoration::offset(Self) -> Double
 pub fn Decoration::thickness(Self) -> Double
 
+pub(all) enum Extend {
+  Pad
+  Repeat
+  Reflect
+  Unknown
+}
+pub fn Extend::raw(Self) -> Int
+
 pub struct FontMetrics {
   units_per_em : UInt16
   is_monospace : Bool
@@ -209,6 +220,7 @@ pub fn FontRef::metrics(Self) -> Metrics?
 pub fn FontRef::named_instances(Self) -> NamedInstanceCollection
 pub fn FontRef::new(Bytes) -> Self?
 pub fn[P : ColorPainter] FontRef::paint_colr_v1(Self, UInt, P) -> Result[Unit, PaintError]
+pub fn[P : ColorPainter] FontRef::paint_colr_v1_at(Self, UInt, LocationRef, P) -> Result[Unit, PaintError]
 pub fn FontRef::table(Self, UInt) -> BytesView?
 pub impl MetadataProvider for FontRef
 

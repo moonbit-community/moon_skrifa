@@ -265,6 +265,140 @@ fn color_trav_test_build_colr_v1_cycle() -> Bytes {
 }
 
 ///|
+fn color_trav_test_build_colr_v1_linear_gradient_with_clip() -> Bytes {
+  let out : Array[Byte] = Array::new()
+  // COLR header v1 (34 bytes)
+  color_trav_test_push_u16_be(out, 1)
+  color_trav_test_push_u16_be(out, 0)
+  color_trav_test_push_u32_be(out, 0)
+  color_trav_test_push_u32_be(out, 0)
+  color_trav_test_push_u16_be(out, 0)
+  let base_off = 34
+  // BaseGlyphList length: 4 + 6 + (PaintGlyph(6) + PaintLinearGradient(16) + ColorLine(15)) = 47
+  let layer_off = base_off + 47
+  // LayerList length: 8
+  let clip_off = layer_off + 8
+  color_trav_test_push_u32_be(out, base_off)
+  color_trav_test_push_u32_be(out, layer_off)
+  color_trav_test_push_u32_be(out, clip_off)
+  color_trav_test_push_u32_be(out, 0) // varIndexMapOffset
+  color_trav_test_push_u32_be(out, 0) // itemVariationStoreOffset
+
+  // BaseGlyphList: glyph 1 -> PaintGlyph at offset 10
+  color_trav_test_push_u32_be(out, 1)
+  color_trav_test_push_u16_be(out, 1)
+  color_trav_test_push_u32_be(out, 10)
+
+  // PaintGlyph (format 10): glyph 5, paintOffset=6 (gradient follows)
+  color_trav_test_push_u8(out, 10)
+  color_trav_test_push_u24_be(out, 6)
+  color_trav_test_push_u16_be(out, 5)
+
+  // PaintLinearGradient (format 4), ColorLine at offset 16 (after this table)
+  color_trav_test_push_u8(out, 4)
+  color_trav_test_push_u24_be(out, 16)
+  // p0=(0,0), p1=(100,0), p2=(0,100)
+  color_trav_test_push_i16_be(out, 0)
+  color_trav_test_push_i16_be(out, 0)
+  color_trav_test_push_i16_be(out, 100)
+  color_trav_test_push_i16_be(out, 0)
+  color_trav_test_push_i16_be(out, 0)
+  color_trav_test_push_i16_be(out, 100)
+
+  // ColorLine: extend=Pad(0), 2 stops
+  color_trav_test_push_u8(out, 0)
+  color_trav_test_push_u16_be(out, 2)
+  // stop0: offset=0, pi=1, alpha=1
+  color_trav_test_push_f2dot14(out, 0.0)
+  color_trav_test_push_u16_be(out, 1)
+  color_trav_test_push_f2dot14(out, 1.0)
+  // stop1: offset=1, pi=2, alpha=1
+  color_trav_test_push_f2dot14(out, 1.0)
+  color_trav_test_push_u16_be(out, 2)
+  color_trav_test_push_f2dot14(out, 1.0)
+
+  // LayerList: minimal valid table
+  color_trav_test_push_u32_be(out, 1)
+  color_trav_test_push_u32_be(out, 4)
+
+  // ClipList: one clip for glyph 1, ClipBoxFormat1 at offset 12
+  color_trav_test_push_u8(out, 1)
+  color_trav_test_push_u32_be(out, 1)
+  color_trav_test_push_u16_be(out, 1)
+  color_trav_test_push_u16_be(out, 1)
+  color_trav_test_push_u24_be(out, 12)
+  // ClipBoxFormat1: format=1, (0,0)-(50,60)
+  color_trav_test_push_u8(out, 1)
+  color_trav_test_push_i16_be(out, 0)
+  color_trav_test_push_i16_be(out, 0)
+  color_trav_test_push_i16_be(out, 50)
+  color_trav_test_push_i16_be(out, 60)
+  Bytes::from_array(out.op_as_view())
+}
+
+///|
+fn color_trav_test_build_colr_v1_var_solid_alpha() -> Bytes {
+  let out : Array[Byte] = Array::new()
+  color_trav_test_push_u16_be(out, 1)
+  color_trav_test_push_u16_be(out, 0)
+  color_trav_test_push_u32_be(out, 0)
+  color_trav_test_push_u32_be(out, 0)
+  color_trav_test_push_u16_be(out, 0)
+  let base_off = 34
+  // BaseGlyphList length: 4 + 6 + PaintVarSolid(9) = 19
+  let layer_off = base_off + 19
+  // LayerList length: 8
+  let vim_off = layer_off + 8
+  // VarIndexMap length: 6
+  let ivs_off = vim_off + 6
+  color_trav_test_push_u32_be(out, base_off)
+  color_trav_test_push_u32_be(out, layer_off)
+  color_trav_test_push_u32_be(out, 0) // clipListOffset
+  color_trav_test_push_u32_be(out, vim_off)
+  color_trav_test_push_u32_be(out, ivs_off)
+
+  // BaseGlyphList: glyph 2 -> PaintVarSolid at offset 10
+  color_trav_test_push_u32_be(out, 1)
+  color_trav_test_push_u16_be(out, 2)
+  color_trav_test_push_u32_be(out, 10)
+
+  // PaintVarSolid: paletteIndex=3, alpha=0.5, varIndexBase=0
+  color_trav_test_push_u8(out, 3)
+  color_trav_test_push_u16_be(out, 3)
+  color_trav_test_push_f2dot14(out, 0.5)
+  color_trav_test_push_u32_be(out, 0)
+
+  // LayerList: minimal valid table
+  color_trav_test_push_u32_be(out, 1)
+  color_trav_test_push_u32_be(out, 4)
+
+  // VarIndexMap (DeltaSetIndexMap): format 0, entryFormat 0x17, mapCount 1, entry 0
+  color_trav_test_push_u8(out, 0)
+  color_trav_test_push_u8(out, 0x17)
+  color_trav_test_push_u16_be(out, 1)
+  color_trav_test_push_u16_be(out, 0)
+
+  // ItemVariationStore: one region, one item delta = +8192 (0.5 in F2Dot14 units)
+  color_trav_test_push_u16_be(out, 1) // format
+  color_trav_test_push_u32_be(out, 12) // regionListOffset
+  color_trav_test_push_u16_be(out, 1) // dataCount
+  color_trav_test_push_u32_be(out, 22) // dataOffsets[0]
+  // VariationRegionList (at +12): axisCount=1, regionCount=1, start=0, peak=1, end=1
+  color_trav_test_push_u16_be(out, 1)
+  color_trav_test_push_u16_be(out, 1)
+  color_trav_test_push_i16_be(out, 0)
+  color_trav_test_push_i16_be(out, 16384)
+  color_trav_test_push_i16_be(out, 16384)
+  // ItemVariationData (at +22): itemCount=1, shortDeltaCount=1, regionIndexCount=1, regionIndex=0, delta=8192
+  color_trav_test_push_u16_be(out, 1)
+  color_trav_test_push_u16_be(out, 1)
+  color_trav_test_push_u16_be(out, 1)
+  color_trav_test_push_u16_be(out, 0)
+  color_trav_test_push_i16_be(out, 8192)
+  Bytes::from_array(out.op_as_view())
+}
+
+///|
 priv struct ColorTravTestPainter {
   ops : Array[String]
 }
@@ -315,6 +449,27 @@ impl ColorPainter for ColorTravTestPainter with fill(p, brush) {
         pi.to_string() +
         " a=" +
         (alpha * 16384.0).round().to_int().to_string(),
+      )
+    LinearGradient(_, _, stops, extend) =>
+      p.ops.push(
+        "fill_linear n=" +
+        stops.length().to_string() +
+        " e=" +
+        extend.raw().to_string(),
+      )
+    RadialGradient(_, _, _, _, stops, extend) =>
+      p.ops.push(
+        "fill_radial n=" +
+        stops.length().to_string() +
+        " e=" +
+        extend.raw().to_string(),
+      )
+    SweepGradient(_, _, _, stops, extend) =>
+      p.ops.push(
+        "fill_sweep n=" +
+        stops.length().to_string() +
+        " e=" +
+        extend.raw().to_string(),
       )
   }
 }
@@ -416,4 +571,43 @@ test "COLRv1 traversal: paint cycle detection" {
     _ => false
   }
   inspect(ok, content="true")
+}
+
+///|
+test "COLRv1 traversal: linear gradient + clip box" {
+  let colr = color_trav_test_build_colr_v1_linear_gradient_with_clip()
+  let sfnt = color_trav_test_build_sfnt(
+    Array::from_fixed_array([(COLOR_TRAV_TEST_TAG_COLR, colr)]),
+  )
+  let font = FontRef::new(sfnt).unwrap()
+  let painter = ColorTravTestPainter::new()
+  match font.paint_colr_v1(1, painter) {
+    Err(_) => inspect("err", content="ok")
+    Ok(_) =>
+      inspect(
+        painter.dump(),
+        content="push_clip_box|push_clip_glyph 5|fill_linear n=2 e=0|pop_clip|pop_clip",
+      )
+  }
+}
+
+///|
+test "COLRv1 traversal: var solid alpha delta" {
+  let colr = color_trav_test_build_colr_v1_var_solid_alpha()
+  let sfnt = color_trav_test_build_sfnt(
+    Array::from_fixed_array([(COLOR_TRAV_TEST_TAG_COLR, colr)]),
+  )
+  let font = FontRef::new(sfnt).unwrap()
+  let painter0 = ColorTravTestPainter::new()
+  match font.paint_colr_v1(2, painter0) {
+    Err(_) => inspect("err", content="ok")
+    Ok(_) => inspect(painter0.dump(), content="fill_solid pi=3 a=8192")
+  }
+  let coords = Array::from_fixed_array([16384])
+  let painter1 = ColorTravTestPainter::new()
+  match
+    font.paint_colr_v1_at(2, LocationRef::new(coords.op_as_view()), painter1) {
+    Err(_) => inspect("err", content="ok")
+    Ok(_) => inspect(painter1.dump(), content="fill_solid pi=3 a=16384")
+  }
 }
