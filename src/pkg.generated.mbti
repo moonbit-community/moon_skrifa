@@ -212,10 +212,19 @@ pub fn[P : ColorPainter] FontRef::paint_colr_v1(Self, UInt, P) -> Result[Unit, P
 pub fn FontRef::table(Self, UInt) -> BytesView?
 pub impl MetadataProvider for FontRef
 
+pub struct GlyphBounds {
+  // private fields
+}
+pub fn GlyphBounds::x_max(Self) -> Double
+pub fn GlyphBounds::x_min(Self) -> Double
+pub fn GlyphBounds::y_max(Self) -> Double
+pub fn GlyphBounds::y_min(Self) -> Double
+
 pub struct GlyphMetrics {
   // private fields
 }
 pub fn GlyphMetrics::advance_width(Self, UInt) -> Double?
+pub fn GlyphMetrics::bounds(Self, UInt) -> GlyphBounds?
 pub fn GlyphMetrics::glyph_count(Self) -> Int
 pub fn GlyphMetrics::left_side_bearing(Self, UInt) -> Double?
 pub fn GlyphMetrics::new(FontRef, Size, LocationRef) -> Self?

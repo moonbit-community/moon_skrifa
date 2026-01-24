@@ -37,7 +37,31 @@ const METRICS_TAG_POST : UInt = 0x706F7374 // "post"
 const METRICS_TAG_HVAR : UInt = 0x48564152 // "HVAR"
 
 ///|
+const METRICS_TAG_GVAR : UInt = 0x67564152 // "gvar"
+
+///|
+const METRICS_TAG_GLYF : UInt = 0x676C7966 // "glyf"
+
+///|
+const METRICS_TAG_LOCA : UInt = 0x6C6F6361 // "loca"
+
+///|
 const METRICS_F2DOT14_SCALE : Double = 16384.0
+
+///|
+const METRICS_COMPOSITE_ARG_1_AND_2_ARE_WORDS : Int = 0x0001
+
+///|
+const METRICS_COMPOSITE_MORE_COMPONENTS : Int = 0x0020
+
+///|
+const METRICS_COMPOSITE_WE_HAVE_A_SCALE : Int = 0x0008
+
+///|
+const METRICS_COMPOSITE_WE_HAVE_AN_X_AND_Y_SCALE : Int = 0x0040
+
+///|
+const METRICS_COMPOSITE_WE_HAVE_A_TWO_BY_TWO : Int = 0x0080
 
 ///|
 fn metrics_read_u16_be(view : BytesView, offset : Int) -> Int? {
@@ -387,6 +411,7 @@ pub fn FontRef::font_metrics(self : FontRef, size : Size) -> FontMetrics {
 /// - advance width + left side bearing from `hmtx`
 /// - optional metric deltas from `HVAR` + `ItemVariationStore`
 pub struct GlyphMetrics {
+  priv font : FontRef
   priv base : Metrics
   priv scale : Double
   priv coords : ArrayView[NormalizedCoord]
@@ -394,6 +419,41 @@ pub struct GlyphMetrics {
   priv hvar_store_off : Int
   priv hvar_aw_map_off : Int?
   priv hvar_lsb_map_off : Int?
+  priv gvar : BytesView?
+  priv gvar_axis_count : Int
+  priv gvar_shared_tuple_count : Int
+  priv gvar_shared_tuples_off : Int
+  priv gvar_glyph_count : Int
+  priv gvar_flags : Int
+  priv gvar_data_array_off : Int
+}
+
+///|
+pub struct GlyphBounds {
+  priv x_min : Double
+  priv y_min : Double
+  priv x_max : Double
+  priv y_max : Double
+}
+
+///|
+pub fn GlyphBounds::x_min(self : GlyphBounds) -> Double {
+  self.x_min
+}
+
+///|
+pub fn GlyphBounds::y_min(self : GlyphBounds) -> Double {
+  self.y_min
+}
+
+///|
+pub fn GlyphBounds::x_max(self : GlyphBounds) -> Double {
+  self.x_max
+}
+
+///|
+pub fn GlyphBounds::y_max(self : GlyphBounds) -> Double {
+  self.y_max
 }
 
 ///|
@@ -440,7 +500,42 @@ pub fn GlyphMetrics::new(
         }
       }
   }
+  let mut gvar : BytesView? = None
+  let mut gvar_axis_count = -1
+  let mut gvar_shared_tuple_count = -1
+  let mut gvar_shared_tuples_off = -1
+  let mut gvar_glyph_count = -1
+  let mut gvar_flags = -1
+  let mut gvar_data_array_off = -1
+  match font.table(METRICS_TAG_GVAR) {
+    None => ()
+    Some(tbl) =>
+      // gvar header is 20 bytes.
+      if tbl.length() >= 20 {
+        let axis_count = metrics_read_u16_be(tbl, 4).unwrap_or(-1)
+        let shared_tuple_count = metrics_read_u16_be(tbl, 6).unwrap_or(-1)
+        let shared_tuples_off = metrics_read_u32_be_int(tbl, 8).unwrap_or(-1)
+        let glyph_count = metrics_read_u16_be(tbl, 12).unwrap_or(-1)
+        let flags = metrics_read_u16_be(tbl, 14).unwrap_or(-1)
+        let data_array_off = metrics_read_u32_be_int(tbl, 16).unwrap_or(-1)
+        if axis_count >= 0 &&
+          shared_tuple_count >= 0 &&
+          glyph_count >= 0 &&
+          flags >= 0 &&
+          data_array_off >= 0 &&
+          data_array_off <= tbl.length() {
+          gvar = Some(tbl)
+          gvar_axis_count = axis_count
+          gvar_shared_tuple_count = shared_tuple_count
+          gvar_shared_tuples_off = shared_tuples_off
+          gvar_glyph_count = glyph_count
+          gvar_flags = flags
+          gvar_data_array_off = data_array_off
+        }
+      }
+  }
   Some(GlyphMetrics::{
+    font,
     base,
     scale,
     coords,
@@ -448,12 +543,192 @@ pub fn GlyphMetrics::new(
     hvar_store_off: store_off,
     hvar_aw_map_off: aw_map_off,
     hvar_lsb_map_off: lsb_map_off,
+    gvar,
+    gvar_axis_count,
+    gvar_shared_tuple_count,
+    gvar_shared_tuples_off,
+    gvar_glyph_count,
+    gvar_flags,
+    gvar_data_array_off,
   })
 }
 
 ///|
 pub fn GlyphMetrics::glyph_count(self : GlyphMetrics) -> Int {
   self.base.num_glyphs()
+}
+
+///|
+fn metrics_glyf_simple_bounds(
+  glyf : BytesView,
+  start : Int,
+  end : Int,
+) -> (Int, Int, Int, Int)? {
+  if start < 0 || end < start || end > glyf.length() || start + 10 > end {
+    return None
+  }
+  let contours = metrics_read_i16_be(glyf, start).unwrap_or(-32768)
+  if contours <= 0 {
+    return None
+  }
+  let end_pts_off = start + 10
+  let need_end_pts = end_pts_off + contours * 2
+  if need_end_pts < end_pts_off || need_end_pts > end {
+    return None
+  }
+  let last = metrics_read_u16_be(glyf, end_pts_off + (contours - 1) * 2).unwrap_or(
+    -1,
+  )
+  if last < 0 {
+    return None
+  }
+  let num_points = last + 1
+  let instr_len_off = end_pts_off + contours * 2
+  let instr_len = metrics_read_u16_be(glyf, instr_len_off).unwrap_or(-1)
+  if instr_len < 0 {
+    return None
+  }
+  let mut pos = instr_len_off + 2 + instr_len
+  if pos < instr_len_off || pos > end {
+    return None
+  }
+  // Flags
+  let flags : Array[Int] = Array::make(num_points, 0)
+  let mut i = 0
+  while i < num_points {
+    let f = metrics_read_u8(glyf, pos).unwrap_or(-1)
+    if f < 0 {
+      return None
+    }
+    pos = pos + 1
+    flags.set(i, f)
+    i = i + 1
+    if (f & 0x08) != 0 {
+      let rep = metrics_read_u8(glyf, pos).unwrap_or(-1)
+      if rep < 0 {
+        return None
+      }
+      pos = pos + 1
+      for _ in 0..<rep {
+        if i >= num_points {
+          break
+        }
+        flags.set(i, f)
+        i = i + 1
+      }
+    }
+  }
+  // Decode X coordinates.
+  let xs : Array[Int] = Array::make(num_points, 0)
+  let mut x = 0
+  for j in 0..<num_points {
+    let f = flags.at(j)
+    let dx = if (f & 0x02) != 0 {
+      let v = metrics_read_u8(glyf, pos).unwrap_or(-1)
+      if v < 0 {
+        return None
+      }
+      pos = pos + 1
+      if (f & 0x10) != 0 {
+        v
+      } else {
+        -v
+      }
+    } else if (f & 0x10) != 0 {
+      0
+    } else {
+      let v = metrics_read_i16_be(glyf, pos).unwrap_or(0)
+      pos = pos + 2
+      v
+    }
+    x = x + dx
+    xs.set(j, x)
+  }
+  // Decode Y coordinates and compute bounds.
+  let mut y = 0
+  let mut x_min = 0
+  let mut y_min = 0
+  let mut x_max = 0
+  let mut y_max = 0
+  for j in 0..<num_points {
+    let f = flags.at(j)
+    let dy = if (f & 0x04) != 0 {
+      let v = metrics_read_u8(glyf, pos).unwrap_or(-1)
+      if v < 0 {
+        return None
+      }
+      pos = pos + 1
+      if (f & 0x20) != 0 {
+        v
+      } else {
+        -v
+      }
+    } else if (f & 0x20) != 0 {
+      0
+    } else {
+      let v = metrics_read_i16_be(glyf, pos).unwrap_or(0)
+      pos = pos + 2
+      v
+    }
+    y = y + dy
+    let px = xs.at(j)
+    if j == 0 {
+      x_min = px
+      x_max = px
+      y_min = y
+      y_max = y
+    } else {
+      if px < x_min {
+        x_min = px
+      }
+      if px > x_max {
+        x_max = px
+      }
+      if y < y_min {
+        y_min = y
+      }
+      if y > y_max {
+        y_max = y
+      }
+    }
+  }
+  Some((x_min, y_min, x_max, y_max))
+}
+
+///|
+/// Returns scaled bounds for a glyf glyph (if present).
+pub fn GlyphMetrics::bounds(self : GlyphMetrics, gid : GlyphId) -> GlyphBounds? {
+  let idx = gid.to_uint64().to_int()
+  let (glyf, start, end) = match
+    metrics_glyf_glyph_range(self.font, self.base.num_glyphs, idx) {
+    None => return None
+    Some(v) => v
+  }
+  if start == end {
+    return None
+  }
+  let (x_min, y_min, x_max, y_max) = match
+    metrics_glyf_simple_bounds(glyf, start, end) {
+    Some(v) => v
+    None => {
+      // Fallback to the bbox fields in the glyph header.
+      if start + 10 > end {
+        return None
+      }
+      (
+        metrics_read_i16_be(glyf, start + 2).unwrap_or(0),
+        metrics_read_i16_be(glyf, start + 4).unwrap_or(0),
+        metrics_read_i16_be(glyf, start + 6).unwrap_or(0),
+        metrics_read_i16_be(glyf, start + 8).unwrap_or(0),
+      )
+    }
+  }
+  Some(GlyphBounds::{
+    x_min: x_min.to_double() * self.scale,
+    y_min: y_min.to_double() * self.scale,
+    x_max: x_max.to_double() * self.scale,
+    y_max: y_max.to_double() * self.scale,
+  })
 }
 
 ///|
@@ -672,6 +947,553 @@ fn metrics_hvar_delta(
 }
 
 ///|
+fn metrics_glyf_glyph_range(
+  font : FontRef,
+  num_glyphs : Int,
+  gid : Int,
+) -> (BytesView, Int, Int)? {
+  if gid < 0 || gid >= num_glyphs {
+    return None
+  }
+  let head = match font.table(METRICS_TAG_HEAD) {
+    None => return None
+    Some(v) => v
+  }
+  let loca = match font.table(METRICS_TAG_LOCA) {
+    None => return None
+    Some(v) => v
+  }
+  let glyf = match font.table(METRICS_TAG_GLYF) {
+    None => return None
+    Some(v) => v
+  }
+  let loca_format = metrics_read_i16_be(head, 50).unwrap_or(-1)
+  let idx = gid
+  if loca_format == 0 {
+    let need = (num_glyphs + 1) * 2
+    if need < 0 || loca.length() < need {
+      return None
+    }
+    let o0 = metrics_read_u16_be(loca, idx * 2).unwrap_or(-1)
+    let o1 = metrics_read_u16_be(loca, (idx + 1) * 2).unwrap_or(-1)
+    if o0 < 0 || o1 < o0 {
+      return None
+    }
+    let start = o0 * 2
+    let end = o1 * 2
+    if start < 0 || end < start || end > glyf.length() {
+      None
+    } else {
+      Some((glyf, start, end))
+    }
+  } else if loca_format == 1 {
+    let need = (num_glyphs + 1) * 4
+    if need < 0 || loca.length() < need {
+      return None
+    }
+    let o0 = metrics_read_u32_be_int(loca, idx * 4).unwrap_or(-1)
+    let o1 = metrics_read_u32_be_int(loca, (idx + 1) * 4).unwrap_or(-1)
+    if o0 < 0 || o1 < o0 {
+      return None
+    }
+    if o0 < 0 || o1 < 0 || o1 > glyf.length() {
+      None
+    } else {
+      Some((glyf, o0, o1))
+    }
+  } else {
+    None
+  }
+}
+
+///|
+fn metrics_glyf_point_count_idx(
+  font : FontRef,
+  num_glyphs : Int,
+  gid : Int,
+  visited : Array[Bool],
+) -> Int? {
+  if gid < 0 || gid >= num_glyphs {
+    return None
+  }
+  if visited.at(gid) {
+    return None
+  }
+  visited.set(gid, true)
+  let (glyf, start, end) = match
+    metrics_glyf_glyph_range(font, num_glyphs, gid) {
+    None => return None
+    Some(v) => v
+  }
+  if start == end {
+    return Some(0)
+  }
+  if start + 10 > end {
+    return None
+  }
+  let contours = metrics_read_i16_be(glyf, start).unwrap_or(-32768)
+  if contours >= 0 {
+    if contours == 0 {
+      return Some(0)
+    }
+    let n = contours
+    let end_pts_off = start + 10
+    let last = metrics_read_u16_be(glyf, end_pts_off + (n - 1) * 2).unwrap_or(
+      -1,
+    )
+    if last < 0 {
+      None
+    } else {
+      Some(last + 1)
+    }
+  } else {
+    // Composite glyph: sum component point counts.
+    let mut pos = start + 10
+    let mut total = 0
+    while true {
+      if pos + 4 > end {
+        return None
+      }
+      let flags = metrics_read_u16_be(glyf, pos).unwrap_or(-1)
+      let comp_gid = metrics_read_u16_be(glyf, pos + 2).unwrap_or(-1)
+      if flags < 0 || comp_gid < 0 {
+        return None
+      }
+      pos = pos + 4
+      let arg_words = (flags & METRICS_COMPOSITE_ARG_1_AND_2_ARE_WORDS) != 0
+      pos = pos + (if arg_words { 4 } else { 2 })
+      if (flags & METRICS_COMPOSITE_WE_HAVE_A_SCALE) != 0 {
+        pos = pos + 2
+      } else if (flags & METRICS_COMPOSITE_WE_HAVE_AN_X_AND_Y_SCALE) != 0 {
+        pos = pos + 4
+      } else if (flags & METRICS_COMPOSITE_WE_HAVE_A_TWO_BY_TWO) != 0 {
+        pos = pos + 8
+      }
+      let pc = match
+        metrics_glyf_point_count_idx(font, num_glyphs, comp_gid, visited) {
+        None => return None
+        Some(v) => v
+      }
+      total = total + pc
+      if (flags & METRICS_COMPOSITE_MORE_COMPONENTS) == 0 {
+        break
+      }
+    }
+    Some(total)
+  }
+}
+
+///|
+fn metrics_glyf_point_count(
+  font : FontRef,
+  num_glyphs : Int,
+  gid : GlyphId,
+) -> Int? {
+  let idx = gid.to_uint64().to_int()
+  if idx < 0 || idx >= num_glyphs {
+    return None
+  }
+  let visited : Array[Bool] = Array::make(num_glyphs, false)
+  metrics_glyf_point_count_idx(font, num_glyphs, idx, visited)
+}
+
+///|
+fn metrics_gvar_points(
+  gvar : BytesView,
+  offset : Int,
+  total_points : Int,
+) -> (Array[Int]?, Int)? {
+  let b0 = metrics_read_u8(gvar, offset).unwrap_or(-1)
+  if b0 < 0 {
+    return None
+  }
+  let mut count = 0
+  let mut off = offset
+  if (b0 & 0x80) == 0 {
+    count = b0
+    off = off + 1
+  } else {
+    let b1 = metrics_read_u8(gvar, offset + 1).unwrap_or(-1)
+    if b1 < 0 {
+      return None
+    }
+    count = ((b0 & 0x7F) << 8) | b1
+    off = off + 2
+  }
+  if count == 0 {
+    return Some((None, off))
+  }
+  let points : Array[Int] = Array::new()
+  let mut last = 0
+  while points.length() < count {
+    let ctrl = metrics_read_u8(gvar, off).unwrap_or(-1)
+    if ctrl < 0 {
+      return None
+    }
+    off = off + 1
+    let run_len = (ctrl & 0x7F) + 1
+    let words = (ctrl & 0x80) != 0
+    for _ in 0..<run_len {
+      if points.length() >= count {
+        break
+      }
+      let delta = if words {
+        metrics_read_u16_be(gvar, off).unwrap_or(-1)
+      } else {
+        metrics_read_u8(gvar, off).unwrap_or(-1)
+      }
+      if delta < 0 {
+        return None
+      }
+      off = off + (if words { 2 } else { 1 })
+      last = last + delta
+      if last < 0 || last >= total_points {
+        return None
+      }
+      points.push(last)
+    }
+  }
+  Some((Some(points), off))
+}
+
+///|
+fn metrics_gvar_deltas_capture(
+  gvar : BytesView,
+  offset : Int,
+  count : Int,
+  pos0 : Int,
+  pos1 : Int,
+) -> (Int, Int, Int)? {
+  let mut off = offset
+  let mut idx = 0
+  let mut v0 = 0
+  let mut v1 = 0
+  while idx < count {
+    let ctrl = metrics_read_u8(gvar, off).unwrap_or(-1)
+    if ctrl < 0 {
+      return None
+    }
+    off = off + 1
+    let run_len = (ctrl & 0x3F) + 1
+    if idx + run_len > count {
+      return None
+    }
+    let words = (ctrl & 0x80) != 0
+    let zeros = !words && (ctrl & 0x40) != 0
+    if zeros {
+      for _ in 0..<run_len {
+        if idx == pos0 {
+          v0 = 0
+        }
+        if idx == pos1 {
+          v1 = 0
+        }
+        idx = idx + 1
+      }
+    } else if words {
+      for _ in 0..<run_len {
+        let v = metrics_read_i16_be(gvar, off).unwrap_or(0)
+        off = off + 2
+        if idx == pos0 {
+          v0 = v
+        }
+        if idx == pos1 {
+          v1 = v
+        }
+        idx = idx + 1
+      }
+    } else {
+      for _ in 0..<run_len {
+        let v = metrics_read_i8(gvar, off).unwrap_or(0)
+        off = off + 1
+        if idx == pos0 {
+          v0 = v
+        }
+        if idx == pos1 {
+          v1 = v
+        }
+        idx = idx + 1
+      }
+    }
+  }
+  Some((v0, v1, off))
+}
+
+///|
+fn metrics_gvar_tuple_scalar(
+  coords : ArrayView[NormalizedCoord],
+  peak : Array[Int],
+  start : Array[Int]?,
+  end : Array[Int]?,
+) -> Double {
+  let axis_count = peak.length()
+  let mut scalar = 1.0
+  for i in 0..<axis_count {
+    let peak_v = peak.at(i).to_double() / METRICS_F2DOT14_SCALE
+    if peak_v == 0.0 {
+      continue
+    }
+    let coord = if i < coords.length() {
+      coords.at(i).to_double() / METRICS_F2DOT14_SCALE
+    } else {
+      0.0
+    }
+    let (start_v, end_v) = match (start, end) {
+      (Some(s), Some(e)) =>
+        (
+          s.at(i).to_double() / METRICS_F2DOT14_SCALE,
+          e.at(i).to_double() / METRICS_F2DOT14_SCALE,
+        )
+      _ => if peak_v > 0.0 { (0.0, 1.0) } else { (-1.0, 0.0) }
+    }
+    if start_v > peak_v || peak_v > end_v || (start_v < 0.0 && end_v > 0.0) {
+      continue
+    }
+    if coord < start_v || coord > end_v {
+      return 0.0
+    }
+    if coord == peak_v {
+      continue
+    }
+    if coord < peak_v {
+      scalar = scalar * (coord - start_v) / (peak_v - start_v)
+    } else {
+      scalar = scalar * (end_v - coord) / (end_v - peak_v)
+    }
+  }
+  scalar
+}
+
+///|
+fn GlyphMetrics::gvar_phantom_deltas(
+  self : GlyphMetrics,
+  gid : GlyphId,
+) -> (Int, Int) {
+  if self.gvar is None || self.coords.is_empty() {
+    return (0, 0)
+  }
+  let gvar = self.gvar.unwrap()
+  let gid_i = gid.to_uint64().to_int()
+  if gid_i < 0 || gid_i >= self.gvar_glyph_count {
+    return (0, 0)
+  }
+  let base_points = match
+    metrics_glyf_point_count(self.font, self.base.num_glyphs, gid) {
+    None => return (0, 0)
+    Some(v) => v
+  }
+  let total_points = base_points + 4
+  if total_points <= 0 {
+    return (0, 0)
+  }
+  let offsets_off = 20
+  let long_offsets = (self.gvar_flags & 1) != 0
+  let entry_size = if long_offsets { 4 } else { 2 }
+  let need = offsets_off + (self.gvar_glyph_count + 1) * entry_size
+  if need < 0 || need > gvar.length() {
+    return (0, 0)
+  }
+  let off0 = if long_offsets {
+    metrics_read_u32_be_int(gvar, offsets_off + gid_i * 4).unwrap_or(-1)
+  } else {
+    metrics_read_u16_be(gvar, offsets_off + gid_i * 2).unwrap_or(-1) * 2
+  }
+  let off1 = if long_offsets {
+    metrics_read_u32_be_int(gvar, offsets_off + (gid_i + 1) * 4).unwrap_or(-1)
+  } else {
+    metrics_read_u16_be(gvar, offsets_off + (gid_i + 1) * 2).unwrap_or(-1) * 2
+  }
+  if off0 < 0 || off1 < off0 {
+    return (0, 0)
+  }
+  let start = self.gvar_data_array_off + off0
+  let end = self.gvar_data_array_off + off1
+  if start < 0 || end < start || end > gvar.length() {
+    return (0, 0)
+  }
+  if start == end {
+    return (0, 0)
+  }
+  let tuple_count_flags = metrics_read_u16_be(gvar, start).unwrap_or(0)
+  let tuple_count = tuple_count_flags & 0x0FFF
+  let shared_points = (tuple_count_flags & 0x8000) != 0
+  let data_rel = metrics_read_u16_be(gvar, start + 2).unwrap_or(-1)
+  if tuple_count <= 0 || data_rel < 0 {
+    return (0, 0)
+  }
+  let headers_off = start + 4
+  let headers_end = headers_off + tuple_count * 4
+  if headers_end < headers_off || headers_end > end {
+    return (0, 0)
+  }
+  let sizes : Array[Int] = Array::new()
+  let tuple_indexes : Array[Int] = Array::new()
+  for i in 0..<tuple_count {
+    let h = headers_off + i * 4
+    let s = metrics_read_u16_be(gvar, h).unwrap_or(-1)
+    let ti = metrics_read_u16_be(gvar, h + 2).unwrap_or(-1)
+    if s < 0 || ti < 0 {
+      return (0, 0)
+    }
+    sizes.push(s)
+    tuple_indexes.push(ti)
+  }
+  // Tuple coordinate data (peak/start/end tuples) immediately follows the headers.
+  let mut tuple_coords_off = headers_end
+  let axis_count = self.gvar_axis_count
+  if axis_count <= 0 {
+    return (0, 0)
+  }
+  let scalars : Array[Double] = Array::new()
+  for i in 0..<tuple_count {
+    let ti = tuple_indexes.at(i)
+    // Flags used by gvar tupleIndex.
+    let embedded = (ti & 0x8000) != 0
+    let intermediate = (ti & 0x4000) != 0
+    let shared_ix = ti & 0x0FFF
+    let peak : Array[Int] = Array::make(axis_count, 0)
+    if embedded {
+      let need = tuple_coords_off + axis_count * 2
+      if need < tuple_coords_off || need > end {
+        return (0, 0)
+      }
+      for ax in 0..<axis_count {
+        peak.set(
+          ax,
+          metrics_read_i16_be(gvar, tuple_coords_off + ax * 2).unwrap_or(0),
+        )
+      }
+      tuple_coords_off = tuple_coords_off + axis_count * 2
+    } else {
+      if shared_ix < 0 || shared_ix >= self.gvar_shared_tuple_count {
+        return (0, 0)
+      }
+      let base = self.gvar_shared_tuples_off + shared_ix * axis_count * 2
+      let need = base + axis_count * 2
+      if base < 0 || need < base || need > gvar.length() {
+        return (0, 0)
+      }
+      for ax in 0..<axis_count {
+        peak.set(ax, metrics_read_i16_be(gvar, base + ax * 2).unwrap_or(0))
+      }
+    }
+    let mut start_t : Array[Int]? = None
+    let mut end_t : Array[Int]? = None
+    if intermediate {
+      let st : Array[Int] = Array::make(axis_count, 0)
+      let et : Array[Int] = Array::make(axis_count, 0)
+      let need = tuple_coords_off + axis_count * 4
+      if need < tuple_coords_off || need > end {
+        return (0, 0)
+      }
+      for ax in 0..<axis_count {
+        st.set(
+          ax,
+          metrics_read_i16_be(gvar, tuple_coords_off + ax * 2).unwrap_or(0),
+        )
+        et.set(
+          ax,
+          metrics_read_i16_be(gvar, tuple_coords_off + axis_count * 2 + ax * 2).unwrap_or(
+            0,
+          ),
+        )
+      }
+      tuple_coords_off = tuple_coords_off + axis_count * 4
+      start_t = Some(st)
+      end_t = Some(et)
+    }
+    let scalar = metrics_gvar_tuple_scalar(self.coords, peak, start_t, end_t)
+    scalars.push(scalar)
+  }
+  let data_off = start + data_rel
+  if data_off < start || data_off > end {
+    return (0, 0)
+  }
+  let phantom0 = total_points - 4
+  let phantom1 = total_points - 3
+  let mut cursor = data_off
+  let mut shared_points_list : Array[Int]? = None
+  if shared_points {
+    let (pts, off2) = match metrics_gvar_points(gvar, cursor, total_points) {
+      None => return (0, 0)
+      Some(v) => v
+    }
+    shared_points_list = pts
+    cursor = off2
+  }
+  let mut accum0 = 0.0
+  let mut accum1 = 0.0
+  for i in 0..<tuple_count {
+    let size = sizes.at(i)
+    let ti = tuple_indexes.at(i)
+    let tuple_end = cursor + size
+    if size < 0 || tuple_end < cursor || tuple_end > end {
+      return (0, 0)
+    }
+    let scalar = scalars.at(i)
+    // tupleIndex flag: PRIVATE_POINT_NUMBERS = 0x2000.
+    let private_points = (ti & 0x2000) != 0
+    let mut points : Array[Int]? = None
+    let mut after_points = cursor
+    if private_points || !shared_points {
+      let (pts, off2) = match metrics_gvar_points(gvar, cursor, total_points) {
+        None => return (0, 0)
+        Some(v) => v
+      }
+      points = pts
+      after_points = off2
+    } else {
+      points = shared_points_list
+      after_points = cursor
+    }
+    let count = match points {
+      None => total_points
+      Some(arr) => arr.length()
+    }
+    if count <= 0 {
+      cursor = tuple_end
+      continue
+    }
+    let mut pos0 = -1
+    let mut pos1 = -1
+    match points {
+      None => {
+        pos0 = phantom0
+        pos1 = phantom1
+      }
+      Some(arr) =>
+        for j in 0..<arr.length() {
+          let p = arr.at(j)
+          if p == phantom0 {
+            pos0 = j
+          } else if p == phantom1 {
+            pos1 = j
+          }
+        }
+    }
+    let (dx0, dx1, after_x) = match
+      metrics_gvar_deltas_capture(gvar, after_points, count, pos0, pos1) {
+      None => return (0, 0)
+      Some(v) => v
+    }
+    let (_, _, after_y) = match
+      metrics_gvar_deltas_capture(gvar, after_x, count, -1, -1) {
+      None => return (0, 0)
+      Some(v) => v
+    }
+    if after_y > tuple_end {
+      return (0, 0)
+    }
+    if scalar != 0.0 {
+      accum0 = accum0 + dx0.to_double() * scalar
+      accum1 = accum1 + dx1.to_double() * scalar
+    }
+    cursor = tuple_end
+  }
+  (accum0.round().to_int(), accum1.round().to_int())
+}
+
+///|
 pub fn GlyphMetrics::advance_width(
   self : GlyphMetrics,
   gid : GlyphId,
@@ -680,15 +1502,20 @@ pub fn GlyphMetrics::advance_width(
     None => None
     Some(aw_u) => {
       let mut aw = aw_u.to_uint64().to_int()
-      if self.hvar is Some(hvar) && !self.coords.is_empty() {
-        aw = aw +
-          metrics_hvar_delta(
-            hvar,
-            self.hvar_store_off,
-            self.hvar_aw_map_off,
-            gid,
-            self.coords,
-          )
+      if !self.coords.is_empty() {
+        if self.hvar is Some(hvar) && self.hvar_aw_map_off is Some(_) {
+          aw = aw +
+            metrics_hvar_delta(
+              hvar,
+              self.hvar_store_off,
+              self.hvar_aw_map_off,
+              gid,
+              self.coords,
+            )
+        } else {
+          let (dx0, dx1) = self.gvar_phantom_deltas(gid)
+          aw = aw + (dx1 - dx0)
+        }
       }
       Some(aw.to_double() * self.scale)
     }
@@ -704,15 +1531,20 @@ pub fn GlyphMetrics::left_side_bearing(
     None => None
     Some(lsb0) => {
       let mut lsb = lsb0
-      if self.hvar is Some(hvar) && !self.coords.is_empty() {
-        lsb = lsb +
-          metrics_hvar_delta(
-            hvar,
-            self.hvar_store_off,
-            self.hvar_lsb_map_off,
-            gid,
-            self.coords,
-          )
+      if !self.coords.is_empty() {
+        if self.hvar is Some(hvar) && self.hvar_lsb_map_off is Some(_) {
+          lsb = lsb +
+            metrics_hvar_delta(
+              hvar,
+              self.hvar_store_off,
+              self.hvar_lsb_map_off,
+              gid,
+              self.coords,
+            )
+        } else {
+          let (dx0, _) = self.gvar_phantom_deltas(gid)
+          lsb = lsb + dx0
+        }
       }
       Some(lsb.to_double() * self.scale)
     }
