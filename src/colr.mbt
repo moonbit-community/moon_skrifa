@@ -69,10 +69,16 @@ pub fn ColorLayer::palette_index(self : ColorLayer) -> Int {
 ///|
 pub struct ColorGlyphCollection {
   priv colr : BytesView
+  priv version : Int
   priv base_off : Int
   priv layer_off : Int
   priv num_base : Int
   priv num_layers : Int
+  priv v1_base_glyph_list_off : Int?
+  priv v1_layer_list_off : Int?
+  priv v1_clip_list_off : Int?
+  priv v1_var_index_map_off : Int?
+  priv v1_item_variation_store_off : Int?
 }
 
 ///|
@@ -85,7 +91,10 @@ pub fn ColorGlyphCollection::new(font : FontRef) -> ColorGlyphCollection? {
     return None
   }
   let version = colr_read_u16_be(colr, 0).unwrap_or(-1)
-  if version != 0 {
+  if version != 0 && version != 1 {
+    return None
+  }
+  if version == 1 && colr.length() < 34 {
     return None
   }
   let num_base = colr_read_u16_be(colr, 2).unwrap_or(-1)
@@ -103,7 +112,57 @@ pub fn ColorGlyphCollection::new(font : FontRef) -> ColorGlyphCollection? {
   if layers_end < layer_off || layers_end > colr.length() {
     return None
   }
-  Some(ColorGlyphCollection::{ colr, base_off, layer_off, num_base, num_layers })
+  let mut v1_base_glyph_list_off : Int? = None
+  let mut v1_layer_list_off : Int? = None
+  let mut v1_clip_list_off : Int? = None
+  let mut v1_var_index_map_off : Int? = None
+  let mut v1_item_variation_store_off : Int? = None
+  if version == 1 {
+    let bg = colr_read_u32_be_int(colr, 14).unwrap_or(-1)
+    let ll = colr_read_u32_be_int(colr, 18).unwrap_or(-1)
+    let cl = colr_read_u32_be_int(colr, 22).unwrap_or(-1)
+    let vim = colr_read_u32_be_int(colr, 26).unwrap_or(-1)
+    let ivs = colr_read_u32_be_int(colr, 30).unwrap_or(-1)
+    // In COLR, Offset32 uses 0 as "NULL".
+    if bg > 0 && bg < colr.length() {
+      v1_base_glyph_list_off = Some(bg)
+    }
+    if ll > 0 && ll < colr.length() {
+      v1_layer_list_off = Some(ll)
+    }
+    if cl > 0 && cl < colr.length() {
+      v1_clip_list_off = Some(cl)
+    }
+    if vim > 0 && vim < colr.length() {
+      v1_var_index_map_off = Some(vim)
+    }
+    if ivs > 0 && ivs < colr.length() {
+      v1_item_variation_store_off = Some(ivs)
+    }
+  }
+  Some(ColorGlyphCollection::{
+    colr,
+    version,
+    base_off,
+    layer_off,
+    num_base,
+    num_layers,
+    v1_base_glyph_list_off,
+    v1_layer_list_off,
+    v1_clip_list_off,
+    v1_var_index_map_off,
+    v1_item_variation_store_off,
+  })
+}
+
+///|
+pub fn ColorGlyphCollection::version(self : ColorGlyphCollection) -> Int {
+  self.version
+}
+
+///|
+pub fn ColorGlyphCollection::has_colr_v1(self : ColorGlyphCollection) -> Bool {
+  self.version == 1
 }
 
 ///|

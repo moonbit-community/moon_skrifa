@@ -81,8 +81,10 @@ pub fn Color::r(Self) -> Byte
 pub struct ColorGlyphCollection {
   // private fields
 }
+pub fn ColorGlyphCollection::has_colr_v1(Self) -> Bool
 pub fn ColorGlyphCollection::layers(Self, UInt) -> Array[ColorLayer]?
 pub fn ColorGlyphCollection::new(FontRef) -> Self?
+pub fn ColorGlyphCollection::version(Self) -> Int
 
 pub struct ColorLayer {
   glyph_id : UInt
@@ -258,6 +260,18 @@ pub fn Tag::from_uint(UInt) -> Self
 pub fn Tag::new(Int, Int, Int, Int) -> Self?
 pub fn Tag::to_string(Self) -> String
 pub fn Tag::to_uint(Self) -> UInt
+
+pub(all) struct Transform {
+  xx : Double
+  yx : Double
+  xy : Double
+  yy : Double
+  dx : Double
+  dy : Double
+}
+pub fn Transform::apply(Self, Double, Double) -> (Double, Double)
+pub fn Transform::default() -> Self
+pub fn Transform::mul(Self, Self) -> Self
 
 pub struct Weight {
   // private fields

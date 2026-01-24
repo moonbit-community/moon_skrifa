@@ -90,6 +90,26 @@ fn colr_test_build_colr() -> Bytes {
 }
 
 ///|
+fn colr_test_build_colr_v1_empty() -> Bytes {
+  let out : Array[Byte] = Array::new()
+  // header:
+  // version=1, numBaseGlyphRecords=0
+  colr_test_push_u16_be(out, 1)
+  colr_test_push_u16_be(out, 0)
+  // baseGlyphRecordsOffset=0, layerRecordsOffset=0, numLayerRecords=0
+  colr_test_push_u32_be(out, colr_test_u32(0))
+  colr_test_push_u32_be(out, colr_test_u32(0))
+  colr_test_push_u16_be(out, 0)
+  // v1 extra offsets: all NULL
+  colr_test_push_u32_be(out, colr_test_u32(0)) // baseGlyphListOffset
+  colr_test_push_u32_be(out, colr_test_u32(0)) // layerListOffset
+  colr_test_push_u32_be(out, colr_test_u32(0)) // clipListOffset
+  colr_test_push_u32_be(out, colr_test_u32(0)) // varIndexMapOffset
+  colr_test_push_u32_be(out, colr_test_u32(0)) // itemVariationStoreOffset
+  Bytes::from_array(out.op_as_view())
+}
+
+///|
 test "COLR v0 layers basic" {
   let colr = colr_test_build_colr()
   let sfnt = colr_test_build_sfnt(Array::from_fixed_array([(TAG_COLR, colr)]))
@@ -101,4 +121,15 @@ test "COLR v0 layers basic" {
   inspect(layers.at(0).palette_index(), content="1")
   inspect(layers.at(1).glyph_id().to_string(), content="11")
   inspect(layers.at(1).palette_index(), content="2")
+}
+
+///|
+test "COLR v1 skeleton: header detection" {
+  let colr = colr_test_build_colr_v1_empty()
+  let sfnt = colr_test_build_sfnt(Array::from_fixed_array([(TAG_COLR, colr)]))
+  let font = FontRef::new(sfnt).unwrap()
+  let cg = font.color_glyphs().unwrap()
+  inspect(cg.version(), content="1")
+  inspect(cg.has_colr_v1(), content="true")
+  inspect(cg.layers(5) is None, content="true")
 }
