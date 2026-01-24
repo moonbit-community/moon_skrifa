@@ -18,6 +18,22 @@
 /// Ported from `fontations/skrifa/src/outline/pen.rs` (Apache-2.0 OR MIT).
 
 ///|
+/// Style for converting glyf point streams to path commands.
+///
+/// Some glyph point streams are ambiguous when the first point is off-curve;
+/// major implementations differ. This lets callers choose which behavior to
+/// match.
+pub(all) enum PathStyle {
+  FreeType
+  HarfBuzz
+}
+
+///|
+pub fn PathStyle::default() -> PathStyle {
+  PathStyle::FreeType
+}
+
+///|
 /// Interface for accepting a sequence of path commands.
 pub(open) trait OutlinePen {
   move_to(Self, Int, Int) -> Unit

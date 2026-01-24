@@ -198,7 +198,7 @@ test "CFF2 outline path basic" {
   let sfnt = cff2_test_build_sfnt(Array::from_fixed_array([(TAG_CFF2, cff2)]))
   let font = @moon_skrifa.FontRef::new(sfnt).unwrap()
   let c = OutlineGlyphCollection::from_font(font)
-  let path = c.path(1).unwrap()
+  let path = c.path(1, DrawSettings::default()).unwrap()
   let expected = Array::from_fixed_array([
     PathElement::MoveTo(0, 0),
     PathElement::LineTo(100, 0),

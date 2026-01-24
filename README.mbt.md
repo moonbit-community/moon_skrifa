@@ -104,7 +104,11 @@ Add `Milky2018/moon_skrifa/outline` and use:
 
 ```moonbit
 let c = @moon_skrifa_outline.OutlineGlyphCollection::from_font(font)
-let svg = c.svg_path(gid)
+let settings = @moon_skrifa_outline.DrawSettings::unhinted(
+  @moon_skrifa.Size::new(16.0),
+  @moon_skrifa.LocationRef::default(),
+)
+let svg = c.svg_path(gid, settings)
 ```
 
 ## Development

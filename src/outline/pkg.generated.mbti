@@ -24,16 +24,36 @@ pub(all) enum DrawError {
   Unsupported
 }
 
+pub struct DrawSettings {
+  // private fields
+}
+pub fn DrawSettings::default() -> Self
+pub fn DrawSettings::hinted(HintingInstance, Bool) -> Self
+pub fn DrawSettings::hinting_instance(Self) -> HintingInstance?
+pub fn DrawSettings::is_pedantic(Self) -> Bool
+pub fn DrawSettings::location(Self) -> @moon_skrifa.LocationRef
+pub fn DrawSettings::path_style(Self) -> PathStyle
+pub fn DrawSettings::size(Self) -> @moon_skrifa.Size
+pub fn DrawSettings::unhinted(@moon_skrifa.Size, @moon_skrifa.LocationRef) -> Self
+pub fn DrawSettings::with_memory(Self, Array[Byte]?) -> Self
+pub fn DrawSettings::with_path_style(Self, PathStyle) -> Self
+
 pub(all) enum Engine {
   Interpreter
   Auto
   AutoFallback
 }
+pub fn Engine::resolve_auto_fallback(Self, OutlineGlyphCollection) -> Self
 
 pub struct HintingInstance {
-  dummy : Int
+  // private fields
 }
-pub fn HintingInstance::new() -> Self
+pub fn HintingInstance::is_enabled(Self) -> Bool
+pub fn HintingInstance::location(Self) -> @moon_skrifa.LocationRef
+pub fn HintingInstance::new(OutlineGlyphCollection, @moon_skrifa.Size, @moon_skrifa.LocationRef, HintingOptions) -> Result[Self, DrawError]
+pub fn HintingInstance::reconfigure(Self, OutlineGlyphCollection, @moon_skrifa.Size, @moon_skrifa.LocationRef, HintingOptions) -> Result[Unit, DrawError]
+pub fn HintingInstance::size(Self) -> @moon_skrifa.Size
+pub fn HintingInstance::target(Self) -> Target
 
 pub struct HintingOptions {
   engine : Engine
@@ -44,13 +64,16 @@ pub fn HintingOptions::default() -> Self
 pub struct OutlineGlyphCollection {
   font : @moon_skrifa.FontRef?
 }
-pub fn[P : OutlinePen] OutlineGlyphCollection::draw(Self, UInt, P) -> Bool
+pub fn[P : OutlinePen] OutlineGlyphCollection::draw(Self, UInt, DrawSettings, P) -> Bool
+pub fn[P : OutlinePen] OutlineGlyphCollection::draw_unscaled(Self, UInt, P) -> Bool
 pub fn OutlineGlyphCollection::format(Self) -> UInt?
 pub fn OutlineGlyphCollection::from_font(@moon_skrifa.FontRef) -> Self
 pub fn OutlineGlyphCollection::new() -> Self
-pub fn OutlineGlyphCollection::path(Self, UInt) -> Array[PathElement]?
+pub fn OutlineGlyphCollection::path(Self, UInt, DrawSettings) -> Array[PathElement]?
+pub fn OutlineGlyphCollection::path_unscaled(Self, UInt) -> Array[PathElement]?
 pub fn OutlineGlyphCollection::prefer_interpreter(Self) -> Bool
-pub fn OutlineGlyphCollection::svg_path(Self, UInt) -> String?
+pub fn OutlineGlyphCollection::svg_path(Self, UInt, DrawSettings) -> String?
+pub fn OutlineGlyphCollection::svg_path_unscaled(Self, UInt) -> String?
 
 pub(all) enum PathElement {
   MoveTo(Int, Int)
@@ -59,6 +82,12 @@ pub(all) enum PathElement {
   CurveTo(Int, Int, Int, Int, Int, Int)
   Close
 }
+
+pub(all) enum PathStyle {
+  FreeType
+  HarfBuzz
+}
+pub fn PathStyle::default() -> Self
 
 pub(all) enum SmoothMode {
   Normal

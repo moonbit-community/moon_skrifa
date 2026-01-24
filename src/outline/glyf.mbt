@@ -157,6 +157,7 @@ fn glyf_emit_contour(
   points : ArrayView[GlyfPoint],
   start : Int,
   end : Int,
+  path_style : PathStyle,
 ) -> Unit {
   let n = end - start + 1
   if n <= 0 {
@@ -166,11 +167,31 @@ fn glyf_emit_contour(
   let last = points.at(end)
   let (sx, sy, start_idx) = if first.on {
     (first.x, first.y, start)
-  } else if last.on {
-    (last.x, last.y, end)
   } else {
-    let (mx, my) = glyf_midpoint((last.x, last.y), (first.x, first.y))
-    (mx, my, -1)
+    match path_style {
+      PathStyle::FreeType =>
+        if last.on {
+          (last.x, last.y, end)
+        } else {
+          let (mx, my) = glyf_midpoint((last.x, last.y), (first.x, first.y))
+          (mx, my, -1)
+        }
+      PathStyle::HarfBuzz =>
+        if n >= 2 {
+          let second = points.at(start + 1)
+          if second.on {
+            (second.x, second.y, start + 1)
+          } else {
+            let (mx, my) = glyf_midpoint(
+              (first.x, first.y),
+              (second.x, second.y),
+            )
+            (mx, my, -1)
+          }
+        } else {
+          (first.x, first.y, start)
+        }
+    }
   }
   out.push(MoveTo(sx, sy))
   let mut control : (Int, Int)? = None
@@ -239,7 +260,10 @@ fn glyf_emit_contour(
 }
 
 ///|
-fn glyf_simple_path(glyf : BytesView) -> Array[PathElement]? {
+fn glyf_simple_path(
+  glyf : BytesView,
+  path_style : PathStyle,
+) -> Array[PathElement]? {
   let number_of_contours = match glyf_read_i16_be(glyf, 0) {
     None => return None
     Some(v) => v
@@ -365,7 +389,13 @@ fn glyf_simple_path(glyf : BytesView) -> Array[PathElement]? {
     if contour_end < contour_start || contour_end >= points.length() {
       return None
     }
-    glyf_emit_contour(out, points.op_as_view(), contour_start, contour_end)
+    glyf_emit_contour(
+      out,
+      points.op_as_view(),
+      contour_start,
+      contour_end,
+      path_style,
+    )
     contour_start = contour_end + 1
   }
   Some(out)
@@ -426,6 +456,7 @@ fn glyf_composite_path(
   ctx : GlyfCtx,
   glyph : BytesView,
   visited : Array[Bool],
+  path_style : PathStyle,
 ) -> Array[PathElement]? {
   if glyph.length() < 10 {
     return None
@@ -520,7 +551,8 @@ fn glyf_composite_path(
       d = cd
     }
     let t = GlyfTransform::{ a, b, c, d, dx, dy }
-    let comp_path = match glyf_outline_path_idx(ctx, comp_gid, visited) {
+    let comp_path = match
+      glyf_outline_path_idx(ctx, comp_gid, visited, path_style) {
       None => return None
       Some(p) => p
     }
@@ -553,6 +585,7 @@ fn glyf_outline_path_idx(
   ctx : GlyfCtx,
   idx : Int,
   visited : Array[Bool],
+  path_style : PathStyle,
 ) -> Array[PathElement]? {
   if idx < 0 || idx >= ctx.num_glyphs {
     return None
@@ -571,9 +604,9 @@ fn glyf_outline_path_idx(
           None => None
           Some(nc) =>
             if nc < 0 {
-              glyf_composite_path(ctx, glyph, visited)
+              glyf_composite_path(ctx, glyph, visited, path_style)
             } else {
-              glyf_simple_path(glyph)
+              glyf_simple_path(glyph, path_style)
             }
         }
       }
@@ -586,6 +619,7 @@ fn glyf_outline_path_idx(
 fn glyf_outline_path(
   font : @moon_skrifa.FontRef,
   gid : @moon_skrifa.GlyphId,
+  path_style : PathStyle,
 ) -> Array[PathElement]? {
   let glyf = match font.table(TAG_GLYF) {
     None => return None
@@ -617,5 +651,5 @@ fn glyf_outline_path(
   }
   let ctx = GlyfCtx::{ glyf, loca, num_glyphs, index_to_loc_format }
   let visited = Array::make(num_glyphs, false)
-  glyf_outline_path_idx(ctx, idx, visited)
+  glyf_outline_path_idx(ctx, idx, visited, path_style)
 }

@@ -16,9 +16,6 @@
 /// Outline module (skeleton).
 ///
 /// Ported from `fontations/skrifa/src/outline/*` (Apache-2.0 OR MIT).
-///
-/// For now this module only exposes a minimal "outline format detection" API,
-/// based on table presence (glyf/CFF/CFF2).
 const TAG_GLYF : UInt = 0x676C7966 // "glyf"
 
 ///|
@@ -48,6 +45,105 @@ pub fn OutlineGlyphCollection::from_font(
   font : @moon_skrifa.FontRef,
 ) -> OutlineGlyphCollection {
   OutlineGlyphCollection::{ font: Some(font) }
+}
+
+///|
+priv enum DrawInstance {
+  Unhinted(@moon_skrifa.Size, @moon_skrifa.LocationRef)
+  Hinted(HintingInstance, Bool)
+}
+
+///|
+/// Options that define how a glyph outline is drawn to a pen.
+pub struct DrawSettings {
+  priv instance : DrawInstance
+  priv memory : Array[Byte]?
+  priv path_style : PathStyle
+}
+
+///|
+pub fn DrawSettings::default() -> DrawSettings {
+  DrawSettings::unhinted(
+    @moon_skrifa.Size::unscaled(),
+    @moon_skrifa.LocationRef::default(),
+  )
+}
+
+///|
+pub fn DrawSettings::unhinted(
+  size : @moon_skrifa.Size,
+  location : @moon_skrifa.LocationRef,
+) -> DrawSettings {
+  DrawSettings::{
+    instance: DrawInstance::Unhinted(size, location),
+    memory: None,
+    path_style: PathStyle::default(),
+  }
+}
+
+///|
+pub fn DrawSettings::hinted(
+  instance : HintingInstance,
+  is_pedantic : Bool,
+) -> DrawSettings {
+  DrawSettings::{
+    instance: DrawInstance::Hinted(instance, is_pedantic),
+    memory: None,
+    path_style: PathStyle::default(),
+  }
+}
+
+///|
+pub fn DrawSettings::with_memory(
+  self : DrawSettings,
+  memory : Array[Byte]?,
+) -> DrawSettings {
+  DrawSettings::{ instance: self.instance, memory, path_style: self.path_style }
+}
+
+///|
+pub fn DrawSettings::with_path_style(
+  self : DrawSettings,
+  path_style : PathStyle,
+) -> DrawSettings {
+  DrawSettings::{ instance: self.instance, memory: self.memory, path_style }
+}
+
+///|
+pub fn DrawSettings::path_style(self : DrawSettings) -> PathStyle {
+  self.path_style
+}
+
+///|
+pub fn DrawSettings::size(self : DrawSettings) -> @moon_skrifa.Size {
+  match self.instance {
+    DrawInstance::Unhinted(size, _) => size
+    DrawInstance::Hinted(h, _) => h.size()
+  }
+}
+
+///|
+pub fn DrawSettings::location(self : DrawSettings) -> @moon_skrifa.LocationRef {
+  match self.instance {
+    DrawInstance::Unhinted(_, loc) => loc
+    DrawInstance::Hinted(h, _) => h.location()
+  }
+}
+
+///|
+pub fn DrawSettings::hinting_instance(self : DrawSettings) -> HintingInstance? {
+  match self.instance {
+    DrawInstance::Hinted(h, _) => Some(h)
+    _ => None
+  }
+}
+
+///|
+pub fn DrawSettings::is_pedantic(self : DrawSettings) -> Bool {
+  match self.instance {
+    DrawInstance::Hinted(_, p) => p
+    _ => false
+  }
 }
 
 ///|
@@ -113,16 +209,100 @@ pub(all) enum PathElement {
 }
 
 ///|
+/// Reads a big-endian u16 from a BytesView.
+fn outline_read_u16_be(view : BytesView, offset : Int) -> Int? {
+  if offset < 0 || offset + 2 > view.length() {
+    None
+  } else {
+    let b0 = view.at(offset).to_int()
+    let b1 = view.at(offset + 1).to_int()
+    Some((b0 << 8) | b1)
+  }
+}
+
+///|
+fn outline_units_per_em(font : @moon_skrifa.FontRef) -> UInt16 {
+  let mut upem : UInt16 = 0
+  match font.table(TAG_HEAD) {
+    None => ()
+    Some(head) => {
+      let v = outline_read_u16_be(head, 18).unwrap_or(0)
+      upem = v.to_uint16()
+    }
+  }
+  upem
+}
+
+///|
+fn outline_scale_int(v : Int, scale : Double) -> Int {
+  (v.to_double() * scale).round().to_int()
+}
+
+///|
+fn outline_scale_path(
+  path : Array[PathElement],
+  scale : Double,
+) -> Array[PathElement] {
+  if scale == 1.0 {
+    return path
+  }
+  let out : Array[PathElement] = Array::new()
+  for e in path.iter() {
+    match e {
+      PathElement::MoveTo(x, y) =>
+        out.push(
+          PathElement::MoveTo(
+            outline_scale_int(x, scale),
+            outline_scale_int(y, scale),
+          ),
+        )
+      PathElement::LineTo(x, y) =>
+        out.push(
+          PathElement::LineTo(
+            outline_scale_int(x, scale),
+            outline_scale_int(y, scale),
+          ),
+        )
+      PathElement::QuadTo(cx0, cy0, x, y) =>
+        out.push(
+          PathElement::QuadTo(
+            outline_scale_int(cx0, scale),
+            outline_scale_int(cy0, scale),
+            outline_scale_int(x, scale),
+            outline_scale_int(y, scale),
+          ),
+        )
+      PathElement::CurveTo(cx0, cy0, cx1, cy1, x, y) =>
+        out.push(
+          PathElement::CurveTo(
+            outline_scale_int(cx0, scale),
+            outline_scale_int(cy0, scale),
+            outline_scale_int(cx1, scale),
+            outline_scale_int(cy1, scale),
+            outline_scale_int(x, scale),
+            outline_scale_int(y, scale),
+          ),
+        )
+      PathElement::Close => out.push(PathElement::Close)
+    }
+  }
+  out
+}
+
+///|
 /// Draws the outline of a glyph and returns a flat list of path elements.
-///
-/// Currently only supports TrueType outlines (`glyf`).
 pub fn OutlineGlyphCollection::path(
   self : OutlineGlyphCollection,
   gid : @moon_skrifa.GlyphId,
+  settings : DrawSettings,
 ) -> Array[PathElement]? {
   if self.font is Some(font) {
-    if font.table(TAG_GLYF) is Some(_) {
-      glyf_outline_path(font, gid)
+    let upem = outline_units_per_em(font)
+    let scale = settings.size().linear_scale(upem)
+    let path_style = settings.path_style()
+    let _coords = settings.location().effective_coords()
+    let raw = if font.table(TAG_GLYF) is Some(_) {
+      glyf_outline_path(font, gid, path_style)
     } else if font.table(TAG_CFF) is Some(_) {
       cff_outline_path(font, gid)
     } else if font.table(TAG_CFF2) is Some(_) {
@@ -130,9 +310,22 @@ pub fn OutlineGlyphCollection::path(
     } else {
       None
     }
+    match raw {
+      None => None
+      Some(p) => Some(outline_scale_path(p, scale))
+    }
   } else {
     None
   }
+}
+
+///|
+/// Convenience wrapper for the previous unscaled API.
+pub fn OutlineGlyphCollection::path_unscaled(
+  self : OutlineGlyphCollection,
+  gid : @moon_skrifa.GlyphId,
+) -> Array[PathElement]? {
+  self.path(gid, DrawSettings::default())
 }
 
 ///|
@@ -140,9 +333,10 @@ pub fn OutlineGlyphCollection::path(
 pub fn[P : OutlinePen] OutlineGlyphCollection::draw(
   self : OutlineGlyphCollection,
   gid : @moon_skrifa.GlyphId,
+  settings : DrawSettings,
   pen : P,
 ) -> Bool {
-  match self.path(gid) {
+  match self.path(gid, settings) {
     None => false
     Some(path) => {
       for e in path.iter() {
@@ -162,13 +356,24 @@ pub fn[P : OutlinePen] OutlineGlyphCollection::draw(
 }
 
 ///|
+/// Convenience wrapper for the previous unscaled API.
+pub fn[P : OutlinePen] OutlineGlyphCollection::draw_unscaled(
+  self : OutlineGlyphCollection,
+  gid : @moon_skrifa.GlyphId,
+  pen : P,
+) -> Bool {
+  self.draw(gid, DrawSettings::default(), pen)
+}
+
+///|
 /// Draws the outline of a glyph into an SVG path string.
 pub fn OutlineGlyphCollection::svg_path(
   self : OutlineGlyphCollection,
   gid : @moon_skrifa.GlyphId,
+  settings : DrawSettings,
 ) -> String? {
   let pen = SvgPen::new()
-  if self.draw(gid, pen) {
+  if self.draw(gid, settings, pen) {
     Some(pen.to_string())
   } else {
     None
@@ -176,11 +381,9 @@ pub fn OutlineGlyphCollection::svg_path(
 }
 
 ///|
-pub struct HintingInstance {
-  dummy : Int
-}
-
-///|
-pub fn HintingInstance::new() -> HintingInstance {
-  HintingInstance::{ dummy: 0 }
+pub fn OutlineGlyphCollection::svg_path_unscaled(
+  self : OutlineGlyphCollection,
+  gid : @moon_skrifa.GlyphId,
+) -> String? {
+  self.svg_path(gid, DrawSettings::default())
 }
