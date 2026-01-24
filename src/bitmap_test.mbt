@@ -63,6 +63,9 @@ fn bitmap_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
 }
 
 ///|
+const BITMAP_TEST_TAG_MAXP : UInt = 0x6D617870 // "maxp"
+
+///|
 const TAG_SBIX : UInt = 0x73626978 // "sbix"
 
 ///|
@@ -86,6 +89,49 @@ fn bitmap_test_build_sbix(ppem : Int) -> Bytes {
   bitmap_test_push_u32_be(out, bitmap_test_u32(12)) // strikeOffsets[0]
   bitmap_test_push_u16_be(out, ppem) // strike.ppem
   bitmap_test_push_u16_be(out, 72) // strike.resolution
+  Bytes::from_array(out.op_as_view())
+}
+
+///|
+fn bitmap_test_build_maxp(num_glyphs : Int) -> Bytes {
+  let out : Array[Byte] = Array::new()
+  // version 1.0
+  bitmap_test_push_u32_be(out, bitmap_test_u32(0x00010000))
+  bitmap_test_push_u16_be(out, num_glyphs)
+  Bytes::from_array(out.op_as_view())
+}
+
+///|
+fn bitmap_test_build_sbix_with_glyph(
+  ppem : Int,
+  origin_x : Int,
+  origin_y : Int,
+  graphic_type : UInt,
+  payload : Bytes,
+) -> Bytes {
+  let data_len = payload.length()
+  // Header (12) + strike header (4) + offsets (8) + glyph record header (8) + payload
+  let strike_off = 12
+  let glyph_data_off = 12
+  let glyph_end_off = glyph_data_off + 8 + data_len
+  let out : Array[Byte] = Array::new()
+  bitmap_test_push_u16_be(out, 1) // version
+  bitmap_test_push_u16_be(out, 0) // flags
+  bitmap_test_push_u32_be(out, bitmap_test_u32(1)) // numStrikes
+  bitmap_test_push_u32_be(out, bitmap_test_u32(strike_off)) // strikeOffsets[0]
+  // Strike
+  bitmap_test_push_u16_be(out, ppem)
+  bitmap_test_push_u16_be(out, 72)
+  // glyphDataOffsets[numGlyphs+1] for numGlyphs=1
+  bitmap_test_push_u32_be(out, bitmap_test_u32(glyph_data_off))
+  bitmap_test_push_u32_be(out, bitmap_test_u32(glyph_end_off))
+  // Glyph data
+  bitmap_test_push_u16_be(out, origin_x & 0xFFFF)
+  bitmap_test_push_u16_be(out, origin_y & 0xFFFF)
+  bitmap_test_push_u32_be(out, graphic_type)
+  for b in payload.iter() {
+    out.push(b)
+  }
   Bytes::from_array(out.op_as_view())
 }
 
@@ -159,4 +205,89 @@ test "bitmap strikes eblc/ebdt" {
   inspect(ok, content="true")
   inspect(strikes.get(0).unwrap().ppem_x(), content="11")
   inspect(strikes.get(0).unwrap().ppem_y(), content="13")
+}
+
+///|
+test "bitmap sbix glyph png" {
+  // Minimal PNG header with IHDR width/height at bytes 16/20.
+  let png_bytes = Bytes::from_array(
+    Array::from_fixed_array([
+      0x89 |> Int::to_byte,
+      0x50 |> Int::to_byte,
+      0x4E |> Int::to_byte,
+      0x47 |> Int::to_byte,
+      0x0D |> Int::to_byte,
+      0x0A |> Int::to_byte,
+      0x1A |> Int::to_byte,
+      0x0A |> Int::to_byte,
+      0x00 |> Int::to_byte,
+      0x00 |> Int::to_byte,
+      0x00 |> Int::to_byte,
+      0x0D |> Int::to_byte,
+      0x49 |> Int::to_byte,
+      0x48 |> Int::to_byte,
+      0x44 |> Int::to_byte,
+      0x52 |> Int::to_byte,
+      0x00 |> Int::to_byte,
+      0x00 |> Int::to_byte,
+      0x00 |> Int::to_byte,
+      0x02 |> Int::to_byte,
+      0x00 |> Int::to_byte,
+      0x00 |> Int::to_byte,
+      0x00 |> Int::to_byte,
+      0x03 |> Int::to_byte,
+    ]).op_as_view(),
+  )
+  let sbix = bitmap_test_build_sbix_with_glyph(
+    16, 1, 2, 0x706E6720, // "png "
+     png_bytes,
+  )
+  let sfnt = bitmap_test_build_sfnt(
+    Array::from_fixed_array([
+      (BITMAP_TEST_TAG_MAXP, bitmap_test_build_maxp(1)),
+      (TAG_SBIX, sbix),
+    ]),
+  )
+  let font = FontRef::new(sfnt).unwrap()
+  let strikes = font.bitmap_strikes()
+  let strike = strikes.get(0).unwrap()
+  let glyph = strike.get(0).unwrap()
+  let ok = if glyph.format() is BitmapImageFormat::Png { true } else { false }
+  inspect(ok, content="true")
+  inspect(glyph.ppem_y(), content="16")
+  inspect(glyph.origin_x(), content="1")
+  inspect(glyph.origin_y(), content="2")
+  inspect(glyph.width(), content="Some(2)")
+  inspect(glyph.height(), content="Some(3)")
+  inspect(glyph.data().length(), content="24")
+}
+
+///|
+test "bitmap sbix glyph jpg" {
+  let jpg_bytes = Bytes::from_array(
+    Array::from_fixed_array([
+      0xFF |> Int::to_byte,
+      0xD8 |> Int::to_byte,
+      0xFF |> Int::to_byte,
+      0xD9 |> Int::to_byte,
+    ]).op_as_view(),
+  )
+  let sbix = bitmap_test_build_sbix_with_glyph(
+    20, 0, 0, 0x6A706720, // "jpg "
+     jpg_bytes,
+  )
+  let sfnt = bitmap_test_build_sfnt(
+    Array::from_fixed_array([
+      (BITMAP_TEST_TAG_MAXP, bitmap_test_build_maxp(1)),
+      (TAG_SBIX, sbix),
+    ]),
+  )
+  let font = FontRef::new(sfnt).unwrap()
+  let strike = font.bitmap_strikes().get(0).unwrap()
+  let glyph = strike.get(0).unwrap()
+  let ok = if glyph.format() is BitmapImageFormat::Jpeg { true } else { false }
+  inspect(ok, content="true")
+  inspect(glyph.width(), content="None")
+  inspect(glyph.height(), content="None")
+  inspect(glyph.data().length(), content="4")
 }

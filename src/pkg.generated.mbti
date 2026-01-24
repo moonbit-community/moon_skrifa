@@ -44,10 +44,29 @@ pub(all) enum BitmapFormat {
   Ebdt
 }
 
+pub struct BitmapGlyph {
+  // private fields
+}
+pub fn BitmapGlyph::data(Self) -> BytesView
+pub fn BitmapGlyph::format(Self) -> BitmapImageFormat
+pub fn BitmapGlyph::height(Self) -> Int?
+pub fn BitmapGlyph::origin_x(Self) -> Int
+pub fn BitmapGlyph::origin_y(Self) -> Int
+pub fn BitmapGlyph::ppem_x(Self) -> Int
+pub fn BitmapGlyph::ppem_y(Self) -> Int
+pub fn BitmapGlyph::width(Self) -> Int?
+
+pub(all) enum BitmapImageFormat {
+  Png
+  Jpeg
+  Unknown(UInt)
+}
+
 pub struct BitmapStrike {
   // private fields
 }
 pub fn BitmapStrike::format(Self) -> BitmapFormat
+pub fn BitmapStrike::get(Self, UInt) -> BitmapGlyph?
 pub fn BitmapStrike::ppem_x(Self) -> Int
 pub fn BitmapStrike::ppem_y(Self) -> Int
 
