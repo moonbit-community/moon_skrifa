@@ -66,7 +66,7 @@ pub struct BitmapStrike {
   // private fields
 }
 pub fn BitmapStrike::format(Self) -> BitmapFormat
-pub fn BitmapStrike::get(Self, UInt) -> BitmapGlyph?
+pub fn BitmapStrike::get(Self, UInt16) -> BitmapGlyph?
 pub fn BitmapStrike::ppem_x(Self) -> Int
 pub fn BitmapStrike::ppem_y(Self) -> Int
 
@@ -90,7 +90,7 @@ pub(all) enum Brush {
 pub struct Charmap {
   // private fields
 }
-pub fn Charmap::glyph_id(Self, UInt) -> UInt?
+pub fn Charmap::glyph_id(Self, UInt) -> UInt16?
 pub fn Charmap::new(FontRef) -> Self?
 
 pub struct Color {
@@ -108,15 +108,15 @@ pub struct ColorGlyphCollection {
   // private fields
 }
 pub fn ColorGlyphCollection::has_colr_v1(Self) -> Bool
-pub fn ColorGlyphCollection::layers(Self, UInt) -> Array[ColorLayer]?
+pub fn ColorGlyphCollection::layers(Self, UInt16) -> Array[ColorLayer]?
 pub fn ColorGlyphCollection::new(FontRef) -> Self?
 pub fn ColorGlyphCollection::version(Self) -> Int
 
 pub struct ColorLayer {
-  glyph_id : UInt
+  glyph_id : UInt16
   palette_index : Int
 }
-pub fn ColorLayer::glyph_id(Self) -> UInt
+pub fn ColorLayer::glyph_id(Self) -> UInt16
 pub fn ColorLayer::palette_index(Self) -> Int
 
 pub struct ColorPalettes {
@@ -219,8 +219,8 @@ pub fn FontRef::localized_strings(Self, UInt16) -> LocalizedStrings
 pub fn FontRef::metrics(Self) -> Metrics?
 pub fn FontRef::named_instances(Self) -> NamedInstanceCollection
 pub fn FontRef::new(Bytes) -> Self?
-pub fn[P : ColorPainter] FontRef::paint_colr_v1(Self, UInt, P) -> Result[Unit, PaintError]
-pub fn[P : ColorPainter] FontRef::paint_colr_v1_at(Self, UInt, LocationRef, P) -> Result[Unit, PaintError]
+pub fn[P : ColorPainter] FontRef::paint_colr_v1(Self, UInt16, P) -> Result[Unit, PaintError]
+pub fn[P : ColorPainter] FontRef::paint_colr_v1_at(Self, UInt16, LocationRef, P) -> Result[Unit, PaintError]
 pub fn FontRef::table(Self, UInt) -> BytesView?
 pub impl MetadataProvider for FontRef
 
@@ -235,10 +235,10 @@ pub fn GlyphBounds::y_min(Self) -> Double
 pub struct GlyphMetrics {
   // private fields
 }
-pub fn GlyphMetrics::advance_width(Self, UInt) -> Double?
-pub fn GlyphMetrics::bounds(Self, UInt) -> GlyphBounds?
+pub fn GlyphMetrics::advance_width(Self, UInt16) -> Double?
+pub fn GlyphMetrics::bounds(Self, UInt16) -> GlyphBounds?
 pub fn GlyphMetrics::glyph_count(Self) -> Int
-pub fn GlyphMetrics::left_side_bearing(Self, UInt) -> Double?
+pub fn GlyphMetrics::left_side_bearing(Self, UInt16) -> Double?
 pub fn GlyphMetrics::new(FontRef, Size, LocationRef) -> Self?
 
 pub struct GlyphName {
@@ -256,7 +256,7 @@ pub(all) enum GlyphNameSource {
 pub struct GlyphNames {
   // private fields
 }
-pub fn GlyphNames::get(Self, UInt) -> GlyphName?
+pub fn GlyphNames::get(Self, UInt16) -> GlyphName?
 pub fn GlyphNames::new(FontRef) -> Self
 pub fn GlyphNames::num_glyphs(Self) -> Int
 pub fn GlyphNames::source(Self) -> GlyphNameSource
@@ -294,8 +294,8 @@ pub fn LocationRef::new(ArrayView[Int]) -> Self
 pub struct Metrics {
   // private fields
 }
-pub fn Metrics::advance_width(Self, UInt) -> UInt?
-pub fn Metrics::lsb(Self, UInt) -> Int?
+pub fn Metrics::advance_width(Self, UInt16) -> UInt?
+pub fn Metrics::lsb(Self, UInt16) -> Int?
 pub fn Metrics::new(FontRef) -> Self?
 pub fn Metrics::num_glyphs(Self) -> Int
 pub fn Metrics::number_of_hmetrics(Self) -> Int
@@ -323,7 +323,7 @@ pub(all) enum PaintCachedColorGlyph {
 
 pub(all) enum PaintError {
   ParseError
-  GlyphNotFound(UInt)
+  GlyphNotFound(UInt16)
   PaintCycleDetected
   DepthLimitExceeded
   UnsupportedPaintFormat(Int)
@@ -386,7 +386,7 @@ pub fn Weight::new(Double) -> Self
 pub fn Weight::value(Self) -> Double
 
 // Type aliases
-pub type GlyphId = UInt
+pub type GlyphId = UInt16
 
 pub type NormalizedCoord = Int
 
@@ -398,12 +398,12 @@ pub type VariationSetting = Setting[Double]
 pub(open) trait ColorPainter {
   push_transform(Self, Transform) -> Unit
   pop_transform(Self) -> Unit
-  push_clip_glyph(Self, UInt) -> Unit
+  push_clip_glyph(Self, UInt16) -> Unit
   push_clip_box(Self, (Double, Double, Double, Double)) -> Unit
   pop_clip(Self) -> Unit
   fill(Self, Brush) -> Unit
-  fill_glyph(Self, UInt, Transform?, Brush) -> Unit
-  paint_cached_color_glyph(Self, UInt) -> Result[PaintCachedColorGlyph, PaintError]
+  fill_glyph(Self, UInt16, Transform?, Brush) -> Unit
+  paint_cached_color_glyph(Self, UInt16) -> Result[PaintCachedColorGlyph, PaintError]
   push_layer(Self, CompositeMode) -> Unit
   pop_layer(Self) -> Unit
   pop_layer_with_mode(Self, CompositeMode) -> Unit

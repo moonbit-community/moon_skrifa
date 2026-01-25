@@ -59,8 +59,8 @@ fn cmap_read_u32_be_int(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn add_delta_u16(value : Int, delta : Int) -> UInt {
-  ((value + delta) & 0xFFFF).reinterpret_as_uint()
+fn add_delta_u16(value : Int, delta : Int) -> Int {
+  (value + delta) & 0xFFFF
 }
 
 ///|
@@ -167,11 +167,11 @@ fn Charmap::glyph_id_format12(self : Charmap, codepoint : UInt) -> GlyphId? {
         Some(v) => v
       }
       let gid = start_gid + (codepoint - start)
-      if gid == (0 |> Int::reinterpret_as_uint) {
+      let gidi = gid.to_uint64().to_int()
+      if gidi <= 0 || gidi > 0xFFFF {
         return None
-      } else {
-        return Some(gid)
       }
+      return Some(gidi.to_uint16())
     }
   }
   None
@@ -222,10 +222,10 @@ fn Charmap::glyph_id_format4(self : Charmap, codepoint : Int) -> GlyphId? {
     }
     if range_off == 0 {
       let gid = add_delta_u16(codepoint, delta)
-      if gid == (0 |> Int::reinterpret_as_uint) {
+      if gid == 0 {
         return None
       } else {
-        return Some(gid)
+        return Some(gid.to_uint16())
       }
     } else {
       let ro_pos = id_range_off_base + i * 2
@@ -238,10 +238,10 @@ fn Charmap::glyph_id_format4(self : Charmap, codepoint : Int) -> GlyphId? {
         return None
       } else {
         let gid = add_delta_u16(raw_gid, delta)
-        if gid == (0 |> Int::reinterpret_as_uint) {
+        if gid == 0 {
           return None
         } else {
-          return Some(gid)
+          return Some(gid.to_uint16())
         }
       }
     }

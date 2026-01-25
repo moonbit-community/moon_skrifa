@@ -212,7 +212,7 @@ pub fn ColorGlyphCollection::layers(
       continue
     }
     out.push(ColorLayer::{
-      glyph_id: layer_gid.reinterpret_as_uint(),
+      glyph_id: layer_gid.to_uint16(),
       palette_index: palette_idx,
     })
   }

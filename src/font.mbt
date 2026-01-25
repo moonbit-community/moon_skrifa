@@ -16,7 +16,7 @@
 /// FontRef (skeleton).
 ///
 /// Ported from `fontations/skrifa/src/font.rs` (Apache-2.0 OR MIT).
-pub type GlyphId = UInt
+pub type GlyphId = UInt16
 
 ///|
 const TAG_TTCF : UInt = 0x74746366

@@ -1665,11 +1665,12 @@ fn[P : ColorPainter] color_trav_traverse_paint(
       let sub_off = color_trav_read_u24_be(ctx.colr, paint_off + 1).unwrap_or(
         -1,
       )
-      let gid = color_trav_read_u16_be(ctx.colr, paint_off + 4).unwrap_or(-1)
-      if sub_off <= 0 || gid < 0 {
+      let gid_i = color_trav_read_u16_be(ctx.colr, paint_off + 4).unwrap_or(-1)
+      if sub_off <= 0 || gid_i < 0 {
         Err(ParseError)
       } else {
-        ColorPainter::push_clip_glyph(painter, gid.reinterpret_as_uint())
+        let gid = gid_i.to_uint16()
+        ColorPainter::push_clip_glyph(painter, gid)
         let abs_sub = paint_off + sub_off
         let r = color_trav_traverse_paint(
           ctx,
@@ -1684,11 +1685,11 @@ fn[P : ColorPainter] color_trav_traverse_paint(
     }
     // PaintColrGlyph
     11 => {
-      let gid = color_trav_read_u16_be(ctx.colr, paint_off + 1).unwrap_or(-1)
-      if gid < 0 {
+      let gid_i = color_trav_read_u16_be(ctx.colr, paint_off + 1).unwrap_or(-1)
+      if gid_i < 0 {
         Err(ParseError)
       } else {
-        let target = gid.reinterpret_as_uint()
+        let target = gid_i.to_uint16()
         match ColorPainter::paint_cached_color_glyph(painter, target) {
           Err(e) => Err(e)
           Ok(PaintCachedColorGlyph::Ok) => Ok(())
