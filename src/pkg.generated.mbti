@@ -222,7 +222,9 @@ pub fn FontRef::new(Bytes) -> Self?
 pub fn[P : ColorPainter] FontRef::paint_colr_v1(Self, UInt16, P) -> Result[Unit, PaintError]
 pub fn[P : ColorPainter] FontRef::paint_colr_v1_at(Self, UInt16, LocationRef, P) -> Result[Unit, PaintError]
 pub fn FontRef::table(Self, UInt) -> BytesView?
+pub fn FontRef::table_tag(Self, Tag) -> BytesView?
 pub impl MetadataProvider for FontRef
+pub impl TableProvider for FontRef
 
 pub struct GlyphBounds {
   // private fields
@@ -420,5 +422,9 @@ pub(open) trait MetadataProvider {
   bitmap_strikes(Self) -> BitmapStrikes
   color_palettes(Self) -> ColorPalettes?
   color_glyphs(Self) -> ColorGlyphCollection?
+}
+
+pub(open) trait TableProvider {
+  table(Self, Tag) -> BytesView?
 }
 

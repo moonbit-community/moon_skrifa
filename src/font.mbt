@@ -224,3 +224,9 @@ pub fn FontRef::table(self : FontRef, tag : UInt) -> BytesView? {
     }
   }
 }
+
+///|
+/// Tag-based table lookup adapter for parity with upstream `TableProvider`.
+pub fn FontRef::table_tag(self : FontRef, tag : Tag) -> BytesView? {
+  self.table(tag.to_uint())
+}
