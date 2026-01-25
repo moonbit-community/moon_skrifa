@@ -70,41 +70,58 @@ const TAG_CFF2 : UInt = 0x43464632 // "CFF2"
 
 ///|
 test "OutlineGlyphCollection::format None when no font" {
-  let c = OutlineGlyphCollection::new()
-  inspect(c.format(), content="None")
+  let font = make_font(Array::new())
+  let c = OutlineGlyphCollection::new(font)
+  inspect(c.format() is None, content="true")
 }
 
 ///|
 test "OutlineGlyphCollection::format None when no outline tables" {
   let font = make_font(Array::new())
-  let c = OutlineGlyphCollection::from_font(font)
-  inspect(c.format(), content="None")
+  let c = OutlineGlyphCollection::new(font)
+  inspect(c.format() is None, content="true")
 }
 
 ///|
 test "OutlineGlyphCollection::format glyf" {
   let font = make_font(Array::from_fixed_array([TAG_GLYF]))
-  let c = OutlineGlyphCollection::from_font(font)
-  inspect(c.format() == Some(TAG_GLYF), content="true")
+  let c = OutlineGlyphCollection::new(font)
+  let ok = match c.format() {
+    Some(OutlineGlyphFormat::Glyf) => true
+    _ => false
+  }
+  inspect(ok, content="true")
 }
 
 ///|
 test "OutlineGlyphCollection::format CFF" {
   let font = make_font(Array::from_fixed_array([TAG_CFF]))
-  let c = OutlineGlyphCollection::from_font(font)
-  inspect(c.format() == Some(TAG_CFF), content="true")
+  let c = OutlineGlyphCollection::new(font)
+  let ok = match c.format() {
+    Some(OutlineGlyphFormat::Cff) => true
+    _ => false
+  }
+  inspect(ok, content="true")
 }
 
 ///|
 test "OutlineGlyphCollection::format CFF2" {
   let font = make_font(Array::from_fixed_array([TAG_CFF2]))
-  let c = OutlineGlyphCollection::from_font(font)
-  inspect(c.format() == Some(TAG_CFF2), content="true")
+  let c = OutlineGlyphCollection::new(font)
+  let ok = match c.format() {
+    Some(OutlineGlyphFormat::Cff2) => true
+    _ => false
+  }
+  inspect(ok, content="true")
 }
 
 ///|
 test "OutlineGlyphCollection::format prefers glyf" {
   let font = make_font(Array::from_fixed_array([TAG_CFF, TAG_GLYF, TAG_CFF2]))
-  let c = OutlineGlyphCollection::from_font(font)
-  inspect(c.format() == Some(TAG_GLYF), content="true")
+  let c = OutlineGlyphCollection::new(font)
+  let ok = match c.format() {
+    Some(OutlineGlyphFormat::Glyf) => true
+    _ => false
+  }
+  inspect(ok, content="true")
 }

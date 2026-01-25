@@ -16,6 +16,9 @@
 /// Outline module (skeleton).
 ///
 /// Ported from `fontations/skrifa/src/outline/*` (Apache-2.0 OR MIT).
+///
+/// This package is being incrementally refactored toward API/behavior parity
+/// with upstream `skrifa::outline`.
 const TAG_GLYF : UInt = 0x676C7966 // "glyf"
 
 ///|
@@ -31,20 +34,60 @@ const TAG_FPGM : UInt = 0x6670676D // "fpgm"
 const TAG_PREP : UInt = 0x70726570 // "prep"
 
 ///|
-pub struct OutlineGlyphCollection {
-  font : @moon_skrifa.FontRef?
+/// Source format for an outline glyph.
+pub(all) enum OutlineGlyphFormat {
+  Glyf
+  Cff
+  Cff2
 }
 
 ///|
-pub fn OutlineGlyphCollection::new() -> OutlineGlyphCollection {
-  OutlineGlyphCollection::{ font: None }
+/// Specifies the hinting strategy for memory size calculations.
+pub(all) enum Hinting {
+  None_
+  Embedded
+}
+
+///|
+pub fn Hinting::default() -> Hinting {
+  Hinting::None_
+}
+
+///|
+pub fn Hinting::none() -> Hinting {
+  Hinting::None_
+}
+
+///|
+/// Information and adjusted metrics generated while drawing an outline glyph.
+pub struct AdjustedMetrics {
+  has_overlaps : Bool
+  lsb : Double?
+  advance_width : Double?
+}
+
+///|
+pub fn AdjustedMetrics::default() -> AdjustedMetrics {
+  AdjustedMetrics::{ has_overlaps: false, lsb: None, advance_width: None }
+}
+
+///|
+pub struct OutlineGlyphCollection {
+  font : @moon_skrifa.FontRef
+}
+
+///|
+pub fn OutlineGlyphCollection::new(
+  font : @moon_skrifa.FontRef,
+) -> OutlineGlyphCollection {
+  OutlineGlyphCollection::{ font, }
 }
 
 ///|
 pub fn OutlineGlyphCollection::from_font(
   font : @moon_skrifa.FontRef,
 ) -> OutlineGlyphCollection {
-  OutlineGlyphCollection::{ font: Some(font) }
+  OutlineGlyphCollection::new(font)
 }
 
 ///|
@@ -147,17 +190,15 @@ pub fn DrawSettings::is_pedantic(self : DrawSettings) -> Bool {
 }
 
 ///|
-pub fn OutlineGlyphCollection::format(self : OutlineGlyphCollection) -> UInt? {
-  if self.font is Some(font) {
-    if font.table(TAG_GLYF) is Some(_) {
-      Some(TAG_GLYF)
-    } else if font.table(TAG_CFF) is Some(_) {
-      Some(TAG_CFF)
-    } else if font.table(TAG_CFF2) is Some(_) {
-      Some(TAG_CFF2)
-    } else {
-      None
-    }
+pub fn OutlineGlyphCollection::format(
+  self : OutlineGlyphCollection,
+) -> OutlineGlyphFormat? {
+  if self.font.table(TAG_GLYF) is Some(_) {
+    Some(OutlineGlyphFormat::Glyf)
+  } else if self.font.table(TAG_CFF) is Some(_) {
+    Some(OutlineGlyphFormat::Cff)
+  } else if self.font.table(TAG_CFF2) is Some(_) {
+    Some(OutlineGlyphFormat::Cff2)
   } else {
     None
   }
@@ -181,18 +222,14 @@ fn table_is_non_empty(font : @moon_skrifa.FontRef, tag : UInt) -> Bool {
 pub fn OutlineGlyphCollection::prefer_interpreter(
   self : OutlineGlyphCollection,
 ) -> Bool {
-  if self.font is Some(font) {
-    match self.format() {
-      Some(TAG_CFF) => true
-      Some(TAG_CFF2) => true
-      Some(TAG_GLYF) =>
-        require_interpreter(font) ||
-        table_is_non_empty(font, TAG_FPGM) ||
-        table_is_non_empty(font, TAG_PREP)
-      _ => false
-    }
-  } else {
-    false
+  match self.format() {
+    Some(OutlineGlyphFormat::Cff) => true
+    Some(OutlineGlyphFormat::Cff2) => true
+    Some(OutlineGlyphFormat::Glyf) =>
+      require_interpreter(self.font) ||
+      table_is_non_empty(self.font, TAG_FPGM) ||
+      table_is_non_empty(self.font, TAG_PREP)
+    _ => false
   }
 }
 
@@ -296,26 +333,23 @@ pub fn OutlineGlyphCollection::path(
   gid : @moon_skrifa.GlyphId,
   settings : DrawSettings,
 ) -> Array[PathElement]? {
-  if self.font is Some(font) {
-    let upem = outline_units_per_em(font)
-    let scale = settings.size().linear_scale(upem)
-    let path_style = settings.path_style()
-    let _coords = settings.location().effective_coords()
-    let raw = if font.table(TAG_GLYF) is Some(_) {
-      glyf_outline_path(font, gid, path_style)
-    } else if font.table(TAG_CFF) is Some(_) {
-      cff_outline_path(font, gid)
-    } else if font.table(TAG_CFF2) is Some(_) {
-      cff2_outline_path(font, gid)
-    } else {
-      None
-    }
-    match raw {
-      None => None
-      Some(p) => Some(outline_scale_path(p, scale))
-    }
+  let font = self.font
+  let upem = outline_units_per_em(font)
+  let scale = settings.size().linear_scale(upem)
+  let path_style = settings.path_style()
+  let _coords = settings.location().effective_coords()
+  let raw = if font.table(TAG_GLYF) is Some(_) {
+    glyf_outline_path(font, gid, path_style)
+  } else if font.table(TAG_CFF) is Some(_) {
+    cff_outline_path(font, gid)
+  } else if font.table(TAG_CFF2) is Some(_) {
+    cff2_outline_path(font, gid)
   } else {
     None
+  }
+  match raw {
+    None => None
+    Some(p) => Some(outline_scale_path(p, scale))
   }
 }
 

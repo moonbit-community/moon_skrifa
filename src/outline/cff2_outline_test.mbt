@@ -14,6 +14,9 @@
 
 ///|
 /// CFF2 outline extraction tests using synthetic SFNT bytes.
+const CFF2_TEST_TAG_CFF2 : UInt = 0x43464632 // "CFF2"
+
+///|
 fn cff2_test_push_u16_be(out : Array[Byte], v : Int) -> Unit {
   let u = v.reinterpret_as_uint()
   let mask = 255 |> Int::reinterpret_as_uint
@@ -195,7 +198,9 @@ fn cff2_test_path_eq(a : Array[PathElement], b : Array[PathElement]) -> Bool {
 ///|
 test "CFF2 outline path basic" {
   let cff2 = cff2_test_build_cff2_table()
-  let sfnt = cff2_test_build_sfnt(Array::from_fixed_array([(TAG_CFF2, cff2)]))
+  let sfnt = cff2_test_build_sfnt(
+    Array::from_fixed_array([(CFF2_TEST_TAG_CFF2, cff2)]),
+  )
   let font = @moon_skrifa.FontRef::new(sfnt).unwrap()
   let c = OutlineGlyphCollection::from_font(font)
   let path = c.path(1, DrawSettings::default()).unwrap()

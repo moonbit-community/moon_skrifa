@@ -16,6 +16,13 @@ pub(all) suberror HintError {
 }
 
 // Types and methods
+pub struct AdjustedMetrics {
+  has_overlaps : Bool
+  lsb : Double?
+  advance_width : Double?
+}
+pub fn AdjustedMetrics::default() -> Self
+
 pub(all) enum DrawError {
   NoSources
   GlyphNotFound(UInt)
@@ -45,6 +52,13 @@ pub(all) enum Engine {
 }
 pub fn Engine::resolve_auto_fallback(Self, OutlineGlyphCollection) -> Self
 
+pub(all) enum Hinting {
+  None_
+  Embedded
+}
+pub fn Hinting::default() -> Self
+pub fn Hinting::none() -> Self
+
 pub struct HintingInstance {
   // private fields
 }
@@ -62,18 +76,24 @@ pub struct HintingOptions {
 pub fn HintingOptions::default() -> Self
 
 pub struct OutlineGlyphCollection {
-  font : @moon_skrifa.FontRef?
+  font : @moon_skrifa.FontRef
 }
 pub fn[P : OutlinePen] OutlineGlyphCollection::draw(Self, UInt, DrawSettings, P) -> Bool
 pub fn[P : OutlinePen] OutlineGlyphCollection::draw_unscaled(Self, UInt, P) -> Bool
-pub fn OutlineGlyphCollection::format(Self) -> UInt?
+pub fn OutlineGlyphCollection::format(Self) -> OutlineGlyphFormat?
 pub fn OutlineGlyphCollection::from_font(@moon_skrifa.FontRef) -> Self
-pub fn OutlineGlyphCollection::new() -> Self
+pub fn OutlineGlyphCollection::new(@moon_skrifa.FontRef) -> Self
 pub fn OutlineGlyphCollection::path(Self, UInt, DrawSettings) -> Array[PathElement]?
 pub fn OutlineGlyphCollection::path_unscaled(Self, UInt) -> Array[PathElement]?
 pub fn OutlineGlyphCollection::prefer_interpreter(Self) -> Bool
 pub fn OutlineGlyphCollection::svg_path(Self, UInt, DrawSettings) -> String?
 pub fn OutlineGlyphCollection::svg_path_unscaled(Self, UInt) -> String?
+
+pub(all) enum OutlineGlyphFormat {
+  Glyf
+  Cff
+  Cff2
+}
 
 pub(all) enum PathElement {
   MoveTo(Int, Int)

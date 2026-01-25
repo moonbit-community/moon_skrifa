@@ -14,6 +14,9 @@
 
 ///|
 /// CFF outline extraction tests using synthetic SFNT bytes.
+const CFF_TEST_TAG_CFF : UInt = 0x43464620 // "CFF "
+
+///|
 fn cff_test_push_u16_be(out : Array[Byte], v : Int) -> Unit {
   let u = v.reinterpret_as_uint()
   let mask = 255 |> Int::reinterpret_as_uint
@@ -249,7 +252,9 @@ fn cff_test_path_eq(a : Array[PathElement], b : Array[PathElement]) -> Bool {
 ///|
 test "CFF outline path uses callsubr (local subrs)" {
   let cff = cff_test_build_cff_table()
-  let sfnt = cff_test_build_sfnt(Array::from_fixed_array([(TAG_CFF, cff)]))
+  let sfnt = cff_test_build_sfnt(
+    Array::from_fixed_array([(CFF_TEST_TAG_CFF, cff)]),
+  )
   let font = @moon_skrifa.FontRef::new(sfnt).unwrap()
   let c = OutlineGlyphCollection::from_font(font)
   let path = c.path(1, DrawSettings::default()).unwrap()
