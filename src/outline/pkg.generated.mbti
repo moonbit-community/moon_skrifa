@@ -27,11 +27,21 @@ pub(all) suberror DrawError {
 
 pub(all) suberror HintError {
   Unsupported
+  UnexpectedEndOfBytecode
   UnhandledOpcode(Int, Int)
+  DefinitionInGlyphProgram
+  NestedDefinition
+  DefinitionTooLarge
+  TooManyDefinitions
+  InvalidDefinition(Int)
   ValueStackOverflow
   ValueStackUnderflow
+  CallStackOverflow
+  CallStackUnderflow
   InvalidStackValue(Int)
   InvalidPointIndex(Int)
+  InvalidPointRange(Int, Int)
+  InvalidContourIndex(Int)
   InvalidCvtIndex(Int)
   InvalidStorageIndex(Int)
   DivideByZero
@@ -198,6 +208,12 @@ pub fn Target::is_vertical_lcd(Self) -> Bool
 pub fn Target::mode(Self) -> SmoothMode?
 pub fn Target::preserve_linear_metrics(Self) -> Bool
 pub fn Target::symmetric_rendering(Self) -> Bool
+
+type TtDecoder
+
+type TtInstruction
+
+type TtProgram
 
 // Type aliases
 

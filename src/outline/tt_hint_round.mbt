@@ -29,10 +29,10 @@ priv enum TtRoundMode {
 
 ///|
 priv struct TtRoundState {
-  mode : TtRoundMode
-  threshold : Int
-  phase : Int
-  period : Int
+  mut mode : TtRoundMode
+  mut threshold : Int
+  mut phase : Int
+  mut period : Int
 }
 
 ///|

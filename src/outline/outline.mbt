@@ -303,6 +303,28 @@ pub fn[P : OutlinePen] OutlineGlyph::draw(
     settings.path_style() is PathStyle::HarfBuzz {
     return Err(DrawError::HarfBuzzHintingUnsupported)
   }
+  if self.kind is OutlineGlyphFormat::Glyf &&
+    settings.path_style() is PathStyle::FreeType &&
+    settings.hinting_instance() is Some(h) &&
+    h.is_enabled() {
+    let (metrics, path) = match
+      h.hinted_glyf_path(self, settings.is_pedantic()) {
+      Err(e) => return Err(e)
+      Ok(v) => v
+    }
+    for e in path.iter() {
+      match e {
+        PathElement::MoveTo(x, y) => OutlinePen::move_to(pen, x, y)
+        PathElement::LineTo(x, y) => OutlinePen::line_to(pen, x, y)
+        PathElement::QuadTo(cx0, cy0, x, y) =>
+          OutlinePen::quad_to(pen, cx0, cy0, x, y)
+        PathElement::CurveTo(cx0, cy0, cx1, cy1, x, y) =>
+          OutlinePen::curve_to(pen, cx0, cy0, cx1, cy1, x, y)
+        PathElement::Close => OutlinePen::close(pen)
+      }
+    }
+    return Ok(metrics)
+  }
   let metrics0 = match self.kind {
     OutlineGlyphFormat::Glyf => {
       let has_overlaps = self.has_overlaps().unwrap_or(false)
@@ -375,34 +397,51 @@ pub fn OutlineGlyph::path(
   self : OutlineGlyph,
   settings : DrawSettings,
 ) -> Result[Array[PathElement], DrawError] {
-  let upem = outline_units_per_em(self.font)
-  let scale = settings.size().linear_scale(upem)
-  let path_style = settings.path_style()
-  let coords = settings.location().effective_coords()
-  match self.kind {
-    OutlineGlyphFormat::Glyf =>
-      match
-        glyf_outline_path(
-          self.font,
-          self.glyph_id,
-          coords,
-          path_style,
-          settings.size(),
-        ) {
-        None => Err(DrawError::GlyphNotFound(self.glyph_id))
-        Some(p) => Ok(p)
-      }
-    OutlineGlyphFormat::Cff =>
-      match cff_outline_path(self.font, self.glyph_id) {
-        None => Err(DrawError::GlyphNotFound(self.glyph_id))
-        // Upstream uses fixed-point rounding when scaling PostScript outlines.
-        Some(p) => Ok(outline_scale_path(p, scale, OutlineScaleMode::FreeType))
-      }
-    OutlineGlyphFormat::Cff2 =>
-      match cff2_outline_path(self.font, self.glyph_id, coords) {
-        None => Err(DrawError::GlyphNotFound(self.glyph_id))
-        Some(p) => Ok(outline_scale_path(p, scale, OutlineScaleMode::FreeType))
-      }
+  if settings.hinting_instance() is Some(_) &&
+    settings.path_style() is PathStyle::HarfBuzz {
+    return Err(DrawError::HarfBuzzHintingUnsupported)
+  }
+  if self.kind is OutlineGlyphFormat::Glyf &&
+    settings.path_style() is PathStyle::FreeType &&
+    settings.hinting_instance() is Some(h) &&
+    h.is_enabled() {
+    let (_, path) = match h.hinted_glyf_path(self, settings.is_pedantic()) {
+      Err(e) => return Err(e)
+      Ok(v) => v
+    }
+    Ok(path)
+  } else {
+    let upem = outline_units_per_em(self.font)
+    let scale = settings.size().linear_scale(upem)
+    let path_style = settings.path_style()
+    let coords = settings.location().effective_coords()
+    match self.kind {
+      OutlineGlyphFormat::Glyf =>
+        match
+          glyf_outline_path(
+            self.font,
+            self.glyph_id,
+            coords,
+            path_style,
+            settings.size(),
+          ) {
+          None => Err(DrawError::GlyphNotFound(self.glyph_id))
+          Some(p) => Ok(p)
+        }
+      OutlineGlyphFormat::Cff =>
+        match cff_outline_path(self.font, self.glyph_id) {
+          None => Err(DrawError::GlyphNotFound(self.glyph_id))
+          // Upstream uses fixed-point rounding when scaling PostScript outlines.
+          Some(p) =>
+            Ok(outline_scale_path(p, scale, OutlineScaleMode::FreeType))
+        }
+      OutlineGlyphFormat::Cff2 =>
+        match cff2_outline_path(self.font, self.glyph_id, coords) {
+          None => Err(DrawError::GlyphNotFound(self.glyph_id))
+          Some(p) =>
+            Ok(outline_scale_path(p, scale, OutlineScaleMode::FreeType))
+        }
+    }
   }
 }
 

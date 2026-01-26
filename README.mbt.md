@@ -7,7 +7,8 @@ Repository: https://github.com/moonbit-community/moon_skrifa
 ## Status
 
 - The public API and behavior aim to match `fontations/skrifa` (`fontations-reference/` in this repo).
-- Embedded hinting is currently a no-op skeleton (API surface exists; grid-fitting not implemented yet).
+- Embedded hinting (TrueType `glyf`) is implemented and wired into outline drawing via `HintingInstance` + `DrawSettings::hinted(...)`.
+  - Currently supports hinting **simple** `glyf` glyphs; composite hinting is still a work-in-progress.
 
 ## Packages
 
@@ -121,7 +122,23 @@ let path = outlines.path(gid, settings).unwrap()
 - `size` (`@moon_skrifa.Size`)
 - `location` (`@moon_skrifa.LocationRef`, normalized coords as `Int` in F2Dot14; `16384` == `1.0`)
 - `path_style` (`PathStyle::FreeType` or `PathStyle::HarfBuzz`)
-- optional hinting via `HintingInstance` (currently disabled/no-op)
+- optional embedded hinting via `HintingInstance` + `DrawSettings::hinted(...)`
+
+Create and use a hinting instance:
+
+```moonbit
+let outlines0 = @moon_skrifa_outline.OutlineGlyphCollection::from_font(font)
+let hinter =
+  @moon_skrifa_outline.HintingInstance::new(
+    outlines0,
+    @moon_skrifa.Size::new(16.0),
+    @moon_skrifa.LocationRef::default(),
+    @moon_skrifa_outline.HintingOptions::default(),
+  ).unwrap()
+
+let settings = @moon_skrifa_outline.DrawSettings::hinted(hinter, false)
+let svg = outlines.svg_path(gid, settings).unwrap()
+```
 
 ## Development
 

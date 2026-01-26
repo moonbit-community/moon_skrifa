@@ -173,19 +173,58 @@ fn tt_hint_u32_leading_zeros(x0 : UInt) -> Int {
 ///
 /// Ported from FreeType's fixed point normalize routine (via fontations).
 fn tt_hint_normalize14(x0 : Int, y0 : Int) -> (Int, Int) {
-  // NOTE: For now, use floating point normalization. This is sufficient for
-  // axis-aligned vectors (the most common in practice). If hinting drift is
-  // observed in tests, we should port FreeType's fixed-point normalizer.
-  if x0 == 0 && y0 == 0 {
-    return (0, 0)
+  // Port of fontations `math::normalize14` (FreeType fixed-point implementation).
+  // Returns a normalized vector in 2.14 fixed point.
+  let mut sx = 1
+  let mut sy = 1
+  let mut ux : UInt = x0.reinterpret_as_uint()
+  let mut uy : UInt = y0.reinterpret_as_uint()
+  if x0 < 0 {
+    ux = (0 : UInt) - ux
+    sx = -sx
   }
-  let xd = x0.to_double()
-  let yd = y0.to_double()
-  let len = (xd * xd + yd * yd).sqrt()
-  if len == 0.0 {
-    return (0, 0)
+  if y0 < 0 {
+    uy = (0 : UInt) - uy
+    sy = -sy
   }
-  let nx = xd / len
-  let ny = yd / len
-  ((nx * 16384.0).round().to_int(), (ny * 16384.0).round().to_int())
+  if ux == 0 {
+    return (0, if uy > 0 { sy * 0x10000 / 4 } else { 0 })
+  }
+  if uy == 0 {
+    return (if ux > 0 { sx * 0x10000 / 4 } else { 0 }, 0)
+  }
+  let mut len : UInt = if ux > uy { ux + (uy >> 1) } else { uy + (ux >> 1) }
+  let mut shift = tt_hint_u32_leading_zeros(len)
+  // len is non-zero here, so shift is in 0..31.
+  let extra = if len >= (0xAAAAAAAA : UInt) >> shift { 1 } else { 0 }
+  shift = shift - 15 - extra
+  if shift > 0 {
+    ux = ux << shift
+    uy = uy << shift
+    len = if ux > uy { ux + (uy >> 1) } else { uy + (ux >> 1) }
+  } else {
+    let s = -shift
+    ux = ux >> s
+    uy = uy >> s
+    len = len >> s
+  }
+  let x = ux.reinterpret_as_int()
+  let y = uy.reinterpret_as_int()
+  let mut b : Int = 0x10000 - len.reinterpret_as_int()
+  let mut out_x = 0
+  let mut out_y = 0
+  while true {
+    let u : UInt = (x + ((x * b) >> 16)).reinterpret_as_uint()
+    let v : UInt = (y + ((y * b) >> 16)).reinterpret_as_uint()
+    let sum : UInt = u * u + v * v
+    let mut z : Int = -sum.reinterpret_as_int() / 0x200
+    z = z * ((0x10000 + b) >> 8) / 0x10000
+    b = b + z
+    if z <= 0 {
+      out_x = u.reinterpret_as_int() * sx / 4
+      out_y = v.reinterpret_as_int() * sy / 4
+      break
+    }
+  }
+  (out_x, out_y)
 }

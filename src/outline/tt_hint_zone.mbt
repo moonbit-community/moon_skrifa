@@ -28,8 +28,22 @@ priv enum TtZonePointer {
 }
 
 ///|
+impl Eq for TtZonePointer with equal(a, b) {
+  match (a, b) {
+    (TtZonePointer::Twilight, TtZonePointer::Twilight) => true
+    (TtZonePointer::Glyph, TtZonePointer::Glyph) => true
+    _ => false
+  }
+}
+
+///|
 fn TtZonePointer::default() -> TtZonePointer {
   TtZonePointer::Glyph
+}
+
+///|
+fn TtZonePointer::is_twilight(self : TtZonePointer) -> Bool {
+  self is TtZonePointer::Twilight
 }
 
 ///|
@@ -379,81 +393,63 @@ fn TtZone::iup_interpolate(
   ref1_0 : Int,
   ref2_0 : Int,
 ) -> Result[Unit, HintError] {
-  let mut ref1 = ref1_0
-  let mut ref2 = ref2_0
   if p1 > p2 {
     return Ok(())
   }
-  if ref1 < 0 || ref2 < 0 {
+  let mut ref1 = ref1_0
+  let mut ref2 = ref2_0
+  let max_points = self.points.length()
+  if ref1 < 0 || ref2 < 0 || ref1 >= max_points || ref2 >= max_points {
     return Ok(())
   }
-  if ref1 >= self.points.length() || ref2 >= self.points.length() {
-    return Ok(())
+  // Unscaled reference coordinates in font units.
+  let mut orus1 = tt_zone_axis_coord(self.unscaled_point(ref1), axis)
+  let mut orus2 = tt_zone_axis_coord(self.unscaled_point(ref2), axis)
+  if orus1 > orus2 {
+    let tmp = orus1
+    orus1 = orus2
+    orus2 = tmp
+    let tmpr = ref1
+    ref1 = ref2
+    ref2 = tmpr
   }
-  let mut org1 = tt_zone_axis_coord(
+  // Scaled reference coordinates.
+  let org1 = tt_zone_axis_coord(
     match self.original_point(ref1) {
       Err(e) => return Err(e)
       Ok(v) => v
     },
     axis,
   )
-  let mut org2 = tt_zone_axis_coord(
+  let org2 = tt_zone_axis_coord(
     match self.original_point(ref2) {
       Err(e) => return Err(e)
       Ok(v) => v
     },
     axis,
   )
-  let mut cur1 = tt_zone_axis_coord(
+  let cur1 = tt_zone_axis_coord(
     match self.point(ref1) {
       Err(e) => return Err(e)
       Ok(v) => v
     },
     axis,
   )
-  let mut cur2 = tt_zone_axis_coord(
+  let cur2 = tt_zone_axis_coord(
     match self.point(ref2) {
       Err(e) => return Err(e)
       Ok(v) => v
     },
     axis,
   )
-  if org1 == org2 {
-    // If both reference points are the same, just shift.
-    let delta = cur1 - org1
-    for i in p1..<(p2 + 1) {
-      let org = tt_zone_axis_coord(
-        match self.original_point(i) {
-          Err(e) => return Err(e)
-          Ok(v) => v
-        },
-        axis,
-      )
-      let pt = match self.point(i) {
-        Err(e) => return Err(e)
-        Ok(v) => v
-      }
-      match self.set_point(i, tt_zone_set_axis_coord(pt, axis, org + delta)) {
-        Err(e) => return Err(e)
-        Ok(_) => ()
-      }
-    }
-    return Ok(())
+  let delta1 = cur1 - org1
+  let delta2 = cur2 - org2
+  let use_simple = cur1 == cur2 || orus1 == orus2
+  let scale = if use_simple {
+    0
+  } else {
+    tt_hint_div_16_16(cur2 - cur1, orus2 - orus1)
   }
-  // Make sure org1 < org2.
-  if org1 > org2 {
-    let tmp = org1
-    org1 = org2
-    org2 = tmp
-    let tmpc = cur1
-    cur1 = cur2
-    cur2 = tmpc
-    let tmpr = ref1
-    ref1 = ref2
-    ref2 = tmpr
-  }
-  let org_delta = org2 - org1
-  let cur_delta = cur2 - cur1
   for i in p1..<(p2 + 1) {
     let org = tt_zone_axis_coord(
       match self.original_point(i) {
@@ -467,19 +463,14 @@ fn TtZone::iup_interpolate(
       Ok(v) => v
     }
     let new_coord = if org <= org1 {
-      cur1 + (org - org1)
+      org + delta1
     } else if org >= org2 {
-      cur2 + (org - org2)
+      org + delta2
+    } else if use_simple {
+      cur1
     } else {
-      // Interpolate between (match the FreeType scheme closely but keep the
-      // implementation simple for now).
-      let t_num = (org - org1).to_int64()
-      let t_den = org_delta.to_int64()
-      if t_den == 0 {
-        cur1
-      } else {
-        cur1 + (cur_delta.to_int64() * t_num / t_den).to_int()
-      }
+      let unscaled = tt_zone_axis_coord(self.unscaled_point(i), axis)
+      cur1 + tt_hint_mul_16_16(unscaled - orus1, scale)
     }
     match self.set_point(i, tt_zone_set_axis_coord(pt, axis, new_coord)) {
       Err(e) => return Err(e)
