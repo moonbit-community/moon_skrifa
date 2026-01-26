@@ -20,6 +20,19 @@
 ///|
 pub(all) suberror HintError {
   Unsupported
+  /// Execution stopped on an opcode that this port does not yet implement.
+  UnhandledOpcode(Int, Int)
+  ValueStackOverflow
+  ValueStackUnderflow
+  InvalidStackValue(Int)
+  InvalidPointIndex(Int)
+  InvalidCvtIndex(Int)
+  InvalidStorageIndex(Int)
+  DivideByZero
+  InvalidZoneIndex(Int)
+  NegativeLoopCounter
+  InvalidJump
+  ExceededExecutionBudget
 }
 
 ///|
@@ -36,7 +49,11 @@ pub fn HintingOptions::default() -> HintingOptions {
 ///|
 pub(all) enum Engine {
   Interpreter
-  Auto
+  /// Automatic hinter that adjusts outlines without embedded instructions.
+  ///
+  /// Glyph styles can be precomputed per font and may be provided here as an
+  /// optimization to avoid recomputing them for each instance.
+  Auto(GlyphStyles?)
   AutoFallback
 }
 
@@ -51,7 +68,7 @@ pub fn Engine::resolve_auto_fallback(
       if outlines.prefer_interpreter() {
         Engine::Interpreter
       } else {
-        Engine::Auto
+        Engine::Auto(None)
       }
     _ => self
   }
@@ -60,12 +77,12 @@ pub fn Engine::resolve_auto_fallback(
 ///|
 pub(all) enum Target {
   Mono
-  Smooth(SmoothMode)
+  Smooth(SmoothMode, Bool, Bool)
 }
 
 ///|
 pub fn Target::default() -> Target {
-  Target::Smooth(SmoothMode::Normal)
+  SmoothMode::Normal.into()
 }
 
 ///|
@@ -74,6 +91,109 @@ pub(all) enum SmoothMode {
   Light
   Lcd
   VerticalLcd
+}
+
+///|
+pub fn SmoothMode::into(self : SmoothMode) -> Target {
+  Target::Smooth(self, true, false)
+}
+
+///|
+/// Modes that control hinting when using embedded instructions.
+///
+/// This mirrors the legacy FreeType hinting mode selector and is intentionally
+/// undocumented upstream.
+pub(all) enum HintingMode {
+  Strong
+  Smooth(LcdLayout?, Bool)
+}
+
+///|
+/// Specifies direction of pixel layout for LCD-based subpixel hinting.
+pub(all) enum LcdLayout {
+  Horizontal
+  Vertical
+}
+
+///|
+pub fn HintingMode::into(self : HintingMode) -> HintingOptions {
+  let target = match self {
+    HintingMode::Strong => Target::Mono
+    HintingMode::Smooth(lcd_subpixel, preserve_linear_metrics) => {
+      let mode = match lcd_subpixel {
+        None => SmoothMode::Normal
+        Some(LcdLayout::Horizontal) => SmoothMode::Lcd
+        Some(LcdLayout::Vertical) => SmoothMode::VerticalLcd
+      }
+      Target::Smooth(mode, true, preserve_linear_metrics)
+    }
+  }
+  HintingOptions::{ engine: Engine::AutoFallback, target }
+}
+
+///|
+pub fn Target::mode(self : Target) -> SmoothMode? {
+  match self {
+    Target::Smooth(mode, _, _) => Some(mode)
+    _ => None
+  }
+}
+
+///|
+pub fn Target::symmetric_rendering(self : Target) -> Bool {
+  match self {
+    Target::Smooth(_, symmetric, _) => symmetric
+    _ => false
+  }
+}
+
+///|
+pub fn Target::preserve_linear_metrics(self : Target) -> Bool {
+  match self {
+    Target::Smooth(_, _, preserve) => preserve
+    _ => false
+  }
+}
+
+///|
+pub fn Target::is_smooth(self : Target) -> Bool {
+  match self {
+    Target::Smooth(_, _, _) => true
+    _ => false
+  }
+}
+
+///|
+pub fn Target::is_grayscale_cleartype(self : Target) -> Bool {
+  match self {
+    Target::Smooth(SmoothMode::Normal, _, _) => true
+    Target::Smooth(SmoothMode::Light, _, _) => true
+    _ => false
+  }
+}
+
+///|
+pub fn Target::is_light(self : Target) -> Bool {
+  match self {
+    Target::Smooth(SmoothMode::Light, _, _) => true
+    _ => false
+  }
+}
+
+///|
+pub fn Target::is_lcd(self : Target) -> Bool {
+  match self {
+    Target::Smooth(SmoothMode::Lcd, _, _) => true
+    _ => false
+  }
+}
+
+///|
+pub fn Target::is_vertical_lcd(self : Target) -> Bool {
+  match self {
+    Target::Smooth(SmoothMode::VerticalLcd, _, _) => true
+    _ => false
+  }
 }
 
 ///|

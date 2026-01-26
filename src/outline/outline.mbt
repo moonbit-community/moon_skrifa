@@ -480,9 +480,20 @@ pub fn OutlineGlyphCollection::require_interpreter(
 pub fn OutlineGlyphCollection::fractional_size_hinting(
   self : OutlineGlyphCollection,
 ) -> Bool {
-  self |> ignore
-  // TODO: implement FreeType parity for glyf. For now, allow fractional sizes.
-  true
+  match self.kind {
+    Some(OutlineGlyphFormat::Glyf) =>
+      // head.flags bit 3 (0x0008) == FORCE_INTEGER_PPEM
+      match self.font.table(TAG_HEAD) {
+        None => true
+        Some(head) =>
+          if outline_read_u16_be(head, 16) is Some(flags) {
+            (flags & 0x0008) == 0
+          } else {
+            true
+          }
+      }
+    _ => true
+  }
 }
 
 ///|

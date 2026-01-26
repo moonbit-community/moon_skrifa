@@ -27,6 +27,18 @@ pub(all) suberror DrawError {
 
 pub(all) suberror HintError {
   Unsupported
+  UnhandledOpcode(Int, Int)
+  ValueStackOverflow
+  ValueStackUnderflow
+  InvalidStackValue(Int)
+  InvalidPointIndex(Int)
+  InvalidCvtIndex(Int)
+  InvalidStorageIndex(Int)
+  DivideByZero
+  InvalidZoneIndex(Int)
+  NegativeLoopCounter
+  InvalidJump
+  ExceededExecutionBudget
 }
 
 pub(all) suberror ToPathError {
@@ -57,10 +69,13 @@ pub fn DrawSettings::with_path_style(Self, PathStyle) -> Self
 
 pub(all) enum Engine {
   Interpreter
-  Auto
+  Auto(GlyphStyles?)
   AutoFallback
 }
 pub fn Engine::resolve_auto_fallback(Self, OutlineGlyphCollection) -> Self
+
+pub struct GlyphStyles {
+}
 
 pub(all) enum Hinting {
   None_
@@ -79,11 +94,22 @@ pub fn HintingInstance::reconfigure(Self, OutlineGlyphCollection, @moon_skrifa.S
 pub fn HintingInstance::size(Self) -> @moon_skrifa.Size
 pub fn HintingInstance::target(Self) -> Target
 
+pub(all) enum HintingMode {
+  Strong
+  Smooth(LcdLayout?, Bool)
+}
+pub fn HintingMode::into(Self) -> HintingOptions
+
 pub struct HintingOptions {
   engine : Engine
   target : Target
 }
 pub fn HintingOptions::default() -> Self
+
+pub(all) enum LcdLayout {
+  Horizontal
+  Vertical
+}
 
 pub struct NullPen {
 }
@@ -148,6 +174,7 @@ pub(all) enum SmoothMode {
   Lcd
   VerticalLcd
 }
+pub fn SmoothMode::into(Self) -> Target
 
 pub struct SvgPen {
   // private fields
@@ -160,9 +187,17 @@ pub impl OutlinePen for SvgPen
 
 pub(all) enum Target {
   Mono
-  Smooth(SmoothMode)
+  Smooth(SmoothMode, Bool, Bool)
 }
 pub fn Target::default() -> Self
+pub fn Target::is_grayscale_cleartype(Self) -> Bool
+pub fn Target::is_lcd(Self) -> Bool
+pub fn Target::is_light(Self) -> Bool
+pub fn Target::is_smooth(Self) -> Bool
+pub fn Target::is_vertical_lcd(Self) -> Bool
+pub fn Target::mode(Self) -> SmoothMode?
+pub fn Target::preserve_linear_metrics(Self) -> Bool
+pub fn Target::symmetric_rendering(Self) -> Bool
 
 // Type aliases
 
