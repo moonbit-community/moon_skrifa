@@ -179,6 +179,7 @@ fn TtGraphicsState::default() -> TtGraphicsState {
 /// Resets transient graphics state and keeps retained fields.
 fn TtGraphicsState::reset(self : TtGraphicsState) -> Unit {
   let v = TtVec14::default()
+  let is_composite = self.is_composite
   self.proj_vector = v
   self.dual_proj_vector = v
   self.freedom_vector = v
@@ -190,7 +191,7 @@ fn TtGraphicsState::reset(self : TtGraphicsState) -> Unit {
   self.zp0 = TtZonePointer::default()
   self.zp1 = TtZonePointer::default()
   self.zp2 = TtZonePointer::default()
-  self.is_composite = false
+  self.is_composite = is_composite
   self.backward_compatibility = true
   self.did_iup_x = false
   self.did_iup_y = false

@@ -82,6 +82,7 @@ pub(all) enum Engine {
   Auto(GlyphStyles?)
   AutoFallback
 }
+pub fn Engine::into(Self) -> HintingOptions
 pub fn Engine::resolve_auto_fallback(Self, OutlineGlyphCollection) -> Self
 
 pub struct GlyphStyles {

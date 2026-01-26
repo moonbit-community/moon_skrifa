@@ -85,6 +85,12 @@ pub fn Engine::resolve_auto_fallback(
 }
 
 ///|
+/// Converts an engine selection into `HintingOptions` with default target.
+pub fn Engine::into(self : Engine) -> HintingOptions {
+  HintingOptions::{ engine: self, target: Target::default() }
+}
+
+///|
 pub(all) enum Target {
   Mono
   Smooth(SmoothMode, Bool, Bool)
@@ -506,15 +512,20 @@ fn HintingInstance::hinted_glyf_path(
   let font = glyph.font
   let gid = glyph.glyph_id
   let scale_bits = tt.retained.scale
-  let (zone0, code) = match
-    tt_load_simple_glyph_zone_for_hinting(font, gid, scale_bits) {
-    None => return Err(DrawError::GlyphNotFound(gid))
-    Some(v) => v
-  }
   let fpgm = font.table(TAG_FPGM_TT).unwrap_or(tt_empty_bytes_view())
   let prep = font.table(TAG_PREP_TT).unwrap_or(tt_empty_bytes_view())
-  let zone = match tt.hint_glyph(fpgm, prep, code, zone0, is_pedantic) {
-    Err(e) => return Err(DrawError::HintingFailed(e))
+  let zone = match
+    tt_load_glyph_zone_for_hinting(
+      font,
+      gid,
+      self.coords.op_as_view(),
+      scale_bits,
+      tt,
+      fpgm,
+      prep,
+      is_pedantic,
+    ) {
+    Err(e) => return Err(e)
     Ok(z) => z
   }
   if zone.contours.length() == 0 {

@@ -257,6 +257,7 @@ fn TtHintInstance::hint_glyph(
   prep : BytesView,
   glyph_code : BytesView,
   glyph_zone : TtZone,
+  is_composite : Bool,
   is_pedantic : Bool,
 ) -> Result[TtZone, HintError] {
   // Clone mutable state per glyph (matches upstream's copy-on-write behavior).
@@ -288,9 +289,15 @@ fn TtHintInstance::hint_glyph(
   }
   engine.graphics.twilight = tz
   engine.graphics.glyph = glyph_zone
+  engine.graphics.is_composite = is_composite
   engine.program.set_glyph_code(glyph_code)
   match engine.run_program(TtProgram::Glyph, is_pedantic) {
-    Err(e) => return Err(e)
+    Err(e) =>
+      if is_pedantic {
+        return Err(e)
+      } else {
+        return Ok(engine.graphics.glyph)
+      }
     Ok(_) => ()
   }
   Ok(engine.graphics.glyph)

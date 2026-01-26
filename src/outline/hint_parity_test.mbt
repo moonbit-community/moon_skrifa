@@ -488,3 +488,36 @@ test "hint: fractional font size rounds MPPEM" {
     }
   }
 }
+
+///|
+test "hint: composite glyf instructions (vazirmatn gid=2)" {
+  let font = golden_font(font_vazirmatn_var_trimmed_b64())
+  let gid : @moon_skrifa.GlyphId = (2).to_uint16()
+  let size = @moon_skrifa.Size::new(16.0)
+  let coords : Array[@moon_skrifa.NormalizedCoord] = Array::from_fixed_array([0])
+  let loc = @moon_skrifa.LocationRef::new(coords.op_as_view())
+  let opts = Engine::Interpreter.into()
+  let outlines0 = OutlineGlyphCollection::from_font(font)
+  let hinter = HintingInstance::new(outlines0, size, loc, opts).unwrap()
+  let outlines = OutlineGlyphCollection::from_font(font)
+  let glyph = outlines.get(gid).unwrap()
+  let pen = SvgPen::new()
+  match
+    glyph.draw(
+      DrawSettings::hinted(hinter, false).with_path_style(PathStyle::FreeType),
+      pen,
+    ) {
+    Err(DrawError::HintingFailed(e)) =>
+      inspect("HintingFailed " + hint_parity_hint_error_tag(e), content="Ok")
+    Err(DrawError::GlyphNotFound(_)) => inspect("GlyphNotFound", content="Ok")
+    Err(DrawError::NoSources) => inspect("NoSources", content="Ok")
+    Err(DrawError::HarfBuzzHintingUnsupported) =>
+      inspect("HarfBuzzHintingUnsupported", content="Ok")
+    Err(_) => inspect("Err", content="Ok")
+    Ok(_) =>
+      inspect(
+        pen.to_string(),
+        content="M5.53125,10.375 L1.765625,0 L0.234375,0 L4.5625,11.375 L5.5625,11.375 Z M8.6875,0 L4.921875,10.375 L4.890625,11.375 L5.890625,11.375 L10.234375,0 Z M8.5,4.21875 L8.5,2.984375 L2.109375,2.984375 L2.109375,4.21875 Z M4.578125,14 L6.078125,11.703125 L4.84375,11.703125 L2.828125,14 Z",
+      )
+  }
+}

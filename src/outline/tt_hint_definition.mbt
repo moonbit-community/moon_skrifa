@@ -21,16 +21,21 @@ priv struct TtDefinition {
   mut code : BytesView?
   mut start : Int
   mut end_ : Int
+  mut key : Int
+  mut active : Bool
 }
 
 ///|
 fn TtDefinition::default() -> TtDefinition {
-  TtDefinition::{ code: None, start: -1, end_: -1 }
+  TtDefinition::{ code: None, start: -1, end_: -1, key: 0, active: false }
 }
 
 ///|
 fn TtDefinition::is_defined(self : TtDefinition) -> Bool {
-  self.code is Some(_) && self.start >= 0 && self.end_ >= self.start
+  self.active &&
+  self.code is Some(_) &&
+  self.start >= 0 &&
+  self.end_ >= self.start
 }
 
 ///|
@@ -39,10 +44,13 @@ fn TtDefinition::set(
   code : BytesView,
   start : Int,
   end_ : Int,
+  key : Int,
 ) -> Unit {
   self.code = Some(code)
   self.start = start
   self.end_ = end_
+  self.key = key
+  self.active = true
 }
 
 ///|
@@ -78,16 +86,21 @@ fn TtDefinitionSet::reset(self : TtDefinitionSet) -> Unit {
 
 ///|
 fn TtDefinitionSet::get(self : TtDefinitionSet, index : Int) -> TtDefinition? {
-  if index < 0 || index >= self.defs.length() {
-    None
-  } else {
+  let n = self.defs.length()
+  if index >= 0 && index < n {
     let d = self.defs.at(index)
-    if d.is_defined() {
-      Some(d)
-    } else {
-      None
+    if d.is_defined() && d.key == index {
+      return Some(d)
     }
   }
+  for j in 0..<n {
+    let i = n - 1 - j
+    let d = self.defs.at(i)
+    if d.is_defined() && d.key == index {
+      return Some(d)
+    }
+  }
+  None
 }
 
 ///|
@@ -98,14 +111,43 @@ fn TtDefinitionSet::set_definition(
   start : Int,
   end_ : Int,
 ) -> Result[Unit, HintError] {
-  if index < 0 || index >= self.defs.length() {
-    return Err(HintError::InvalidDefinition(index))
-  }
   if start < 0 || end_ < start || end_ > code.length() {
     return Err(HintError::InvalidDefinition(index))
   }
-  let d = self.defs.at(index)
-  d.set(code, start, end_)
-  self.defs.set(index, d)
+  let n = self.defs.length()
+  if n == 0 {
+    return Err(HintError::TooManyDefinitions)
+  }
+  let mut chosen : Int? = None
+  if index >= 0 && index < n {
+    let d = self.defs.at(index)
+    if !d.active || d.key == index {
+      chosen = Some(index)
+    }
+  }
+  if chosen is None {
+    let mut last_inactive : Int? = None
+    for j in 0..<n {
+      let i = n - 1 - j
+      let d = self.defs.at(i)
+      if d.active {
+        if d.key == index {
+          last_inactive = Some(i)
+          break
+        }
+      } else if last_inactive is None {
+        last_inactive = Some(i)
+      }
+    }
+    chosen = last_inactive
+  }
+  match chosen {
+    None => return Err(HintError::TooManyDefinitions)
+    Some(ix) => {
+      let d = self.defs.at(ix)
+      d.set(code, start, end_, index)
+      self.defs.set(ix, d)
+    }
+  }
   Ok(())
 }
