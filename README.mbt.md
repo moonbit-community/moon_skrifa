@@ -6,8 +6,8 @@ Repository: https://github.com/moonbit-community/moon_skrifa
 
 ## Status
 
-- The tracked porting tasks in this repo are complete and pushed to `main`.
-- This is still an incremental port: API/behavior may differ from upstream in places.
+- The public API and behavior aim to match `fontations/skrifa` (`fontations-reference/` in this repo).
+- Embedded hinting is currently a no-op skeleton (API surface exists; grid-fitting not implemented yet).
 
 ## Packages
 
@@ -23,15 +23,17 @@ Add the dependency to your package `moon.pkg.json`:
   "import": [
     "moonbitlang/core/prelude",
     "moonbitlang/core/bytes",
-    "Milky2018/moon_skrifa"
+    "Milky2018/moon_skrifa",
+    "Milky2018/moon_skrifa/outline"
   ]
 }
 ```
 
-Then use the package via `@moon_skrifa`:
+Then use the package via `@moon_skrifa` / `@moon_skrifa_outline`:
 
 ```moonbit
 let font = @moon_skrifa.FontRef::new(font_bytes).unwrap()
+let outlines = @moon_skrifa_outline.OutlineGlyphCollection::from_font(font)
 ```
 
 ## Core APIs
@@ -100,16 +102,26 @@ Brush variants include:
 
 ## Outline Package
 
-Add `Milky2018/moon_skrifa/outline` and use:
+Use `OutlineGlyphCollection` to get outlines from `glyf`/`CFF`/`CFF2`:
 
 ```moonbit
-let c = @moon_skrifa_outline.OutlineGlyphCollection::from_font(font)
-let settings = @moon_skrifa_outline.DrawSettings::unhinted(
-  @moon_skrifa.Size::new(16.0),
-  @moon_skrifa.LocationRef::default(),
-)
-let svg = c.svg_path(gid, settings)
+let gid = 1
+
+let settings =
+  @moon_skrifa_outline.DrawSettings::unhinted(
+    @moon_skrifa.Size::new(16.0),
+    @moon_skrifa.LocationRef::default(),
+  )
+
+let svg = outlines.svg_path(gid, settings).unwrap()
+let path = outlines.path(gid, settings).unwrap()
 ```
+
+`DrawSettings` controls:
+- `size` (`@moon_skrifa.Size`)
+- `location` (`@moon_skrifa.LocationRef`, normalized coords as `Int` in F2Dot14; `16384` == `1.0`)
+- `path_style` (`PathStyle::FreeType` or `PathStyle::HarfBuzz`)
+- optional hinting via `HintingInstance` (currently disabled/no-op)
 
 ## Development
 

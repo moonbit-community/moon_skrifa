@@ -18,10 +18,34 @@
 /// Ported from `fontations/skrifa/src/outline/error.rs` (Apache-2.0 OR MIT).
 
 ///|
-pub(all) enum DrawError {
-  NoSources
-  GlyphNotFound(@moon_skrifa.GlyphId)
-  HintingFailed(HintError)
-  ReadError
+/// Errors that can occur when converting an outline to a path.
+pub(all) suberror ToPathError {
   Unsupported
+}
+
+///|
+/// Errors that may occur when drawing glyphs.
+pub(all) suberror DrawError {
+  /// No viable sources were available.
+  NoSources
+  /// The requested glyph was not present in the font.
+  GlyphNotFound(@moon_skrifa.GlyphId)
+  /// Exceeded memory limits when loading a glyph.
+  InsufficientMemory
+  /// Exceeded a recursion limit when loading a glyph.
+  RecursionLimitExceeded(@moon_skrifa.GlyphId)
+  /// Glyph outline contains too many points.
+  TooManyPoints(@moon_skrifa.GlyphId)
+  /// Error occurred during hinting.
+  HintingFailed(HintError)
+  /// An anchor point had invalid indices.
+  InvalidAnchorPoint(@moon_skrifa.GlyphId, UInt16)
+  /// Error occurred while loading a PostScript (CFF/CFF2) glyph.
+  PostScript
+  /// Conversion from outline to path failed.
+  ToPath(ToPathError)
+  /// Error occurred when reading font data.
+  Read
+  /// HarfBuzz style drawing with hints is not supported.
+  HarfBuzzHintingUnsupported
 }

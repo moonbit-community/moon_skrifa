@@ -162,5 +162,89 @@ fn cff_outline_path(
       }
     _ => None
   }
-  type2_path(charstring, Some(global_ix), local_ix)
+  type2_path(charstring, Some(global_ix), local_ix, None)
+}
+
+///|
+fn cff_glyph_count(font : @moon_skrifa.FontRef) -> Int? {
+  let cff = match font.table(TAG_CFF) {
+    None => return None
+    Some(v) => v
+  }
+  if cff.length() < CFF_HEADER_MIN_SIZE {
+    return None
+  }
+  let hdr_size = cff.at(2).to_int()
+  if hdr_size < CFF_HEADER_MIN_SIZE || hdr_size > cff.length() {
+    return None
+  }
+  // Name INDEX
+  let name_ix = match cff_slice(cff, hdr_size) {
+    None => return None
+    Some(s) =>
+      match type2_index1_read(s) {
+        None => return None
+        Some(ix) => ix
+      }
+  }
+  let name_size = match cff_index1_total_size(name_ix) {
+    None => return None
+    Some(v) => v
+  }
+  let mut pos = hdr_size + name_size
+  // Top DICT INDEX
+  let top_ix = match cff_slice(cff, pos) {
+    None => return None
+    Some(s) =>
+      match type2_index1_read(s) {
+        None => return None
+        Some(ix) => ix
+      }
+  }
+  let top_size = match cff_index1_total_size(top_ix) {
+    None => return None
+    Some(v) => v
+  }
+  let top_dict = match type2_index_get(top_ix, 0) {
+    None => return None
+    Some(v) => v
+  }
+  pos = pos + top_size
+  // String INDEX
+  let str_ix = match cff_slice(cff, pos) {
+    None => return None
+    Some(s) =>
+      match type2_index1_read(s) {
+        None => return None
+        Some(ix) => ix
+      }
+  }
+  let str_size = match cff_index1_total_size(str_ix) {
+    None => return None
+    Some(v) => v
+  }
+  pos = pos + str_size
+  // Global Subrs INDEX (skip over it, but validate)
+  match cff_slice(cff, pos) {
+    None => return None
+    Some(s) =>
+      match type2_index1_read(s) {
+        None => return None
+        Some(_) => ()
+      }
+  }
+  let dict = cff_dict_parse(top_dict)
+  let charstrings_off = match dict.charstrings_offset {
+    None => return None
+    Some(v) => v
+  }
+  let charstrings_ix = match cff_slice(cff, charstrings_off) {
+    None => return None
+    Some(s) =>
+      match type2_index1_read(s) {
+        None => return None
+        Some(ix) => ix
+      }
+  }
+  Some(charstrings_ix.count)
 }

@@ -11,7 +11,25 @@ pub fn require_interpreter(@moon_skrifa.FontRef) -> Bool
 pub fn[R] with_temporary_memory(Int, (Array[Byte]) -> R) -> R
 
 // Errors
+pub(all) suberror DrawError {
+  NoSources
+  GlyphNotFound(UInt16)
+  InsufficientMemory
+  RecursionLimitExceeded(UInt16)
+  TooManyPoints(UInt16)
+  HintingFailed(HintError)
+  InvalidAnchorPoint(UInt16, UInt16)
+  PostScript
+  ToPath(ToPathError)
+  Read
+  HarfBuzzHintingUnsupported
+}
+
 pub(all) suberror HintError {
+  Unsupported
+}
+
+pub(all) suberror ToPathError {
   Unsupported
 }
 
@@ -22,14 +40,6 @@ pub struct AdjustedMetrics {
   advance_width : Double?
 }
 pub fn AdjustedMetrics::default() -> Self
-
-pub(all) enum DrawError {
-  NoSources
-  GlyphNotFound(UInt16)
-  HintingFailed(HintError)
-  ReadError
-  Unsupported
-}
 
 pub struct DrawSettings {
   // private fields
@@ -75,19 +85,42 @@ pub struct HintingOptions {
 }
 pub fn HintingOptions::default() -> Self
 
+pub struct NullPen {
+}
+pub fn NullPen::new() -> Self
+pub impl OutlinePen for NullPen
+
+pub struct OutlineGlyph {
+  // private fields
+}
+pub fn[P : OutlinePen] OutlineGlyph::draw(Self, DrawSettings, P) -> Result[AdjustedMetrics, DrawError]
+pub fn OutlineGlyph::draw_memory_size(Self, Hinting) -> Int
+pub fn OutlineGlyph::format(Self) -> OutlineGlyphFormat
+pub fn OutlineGlyph::glyph_id(Self) -> UInt16
+pub fn OutlineGlyph::has_hinting(Self) -> Bool?
+pub fn OutlineGlyph::has_overlaps(Self) -> Bool?
+pub fn OutlineGlyph::path(Self, DrawSettings) -> Result[Array[PathElement], DrawError]
+
 pub struct OutlineGlyphCollection {
   font : @moon_skrifa.FontRef
+  // private fields
 }
 pub fn[P : OutlinePen] OutlineGlyphCollection::draw(Self, UInt16, DrawSettings, P) -> Bool
 pub fn[P : OutlinePen] OutlineGlyphCollection::draw_unscaled(Self, UInt16, P) -> Bool
 pub fn OutlineGlyphCollection::format(Self) -> OutlineGlyphFormat?
+pub fn OutlineGlyphCollection::fractional_size_hinting(Self) -> Bool
 pub fn OutlineGlyphCollection::from_font(@moon_skrifa.FontRef) -> Self
+pub fn OutlineGlyphCollection::get(Self, UInt16) -> OutlineGlyph?
+pub fn OutlineGlyphCollection::glyph_count(Self) -> Int
+pub fn OutlineGlyphCollection::iter(Self) -> Array[(UInt16, OutlineGlyph)]
 pub fn OutlineGlyphCollection::new(@moon_skrifa.FontRef) -> Self
 pub fn OutlineGlyphCollection::path(Self, UInt16, DrawSettings) -> Array[PathElement]?
 pub fn OutlineGlyphCollection::path_unscaled(Self, UInt16) -> Array[PathElement]?
 pub fn OutlineGlyphCollection::prefer_interpreter(Self) -> Bool
+pub fn OutlineGlyphCollection::require_interpreter(Self) -> Bool
 pub fn OutlineGlyphCollection::svg_path(Self, UInt16, DrawSettings) -> String?
 pub fn OutlineGlyphCollection::svg_path_unscaled(Self, UInt16) -> String?
+pub fn OutlineGlyphCollection::with_format(@moon_skrifa.FontRef, OutlineGlyphFormat) -> Self?
 
 pub(all) enum OutlineGlyphFormat {
   Glyf
@@ -96,10 +129,10 @@ pub(all) enum OutlineGlyphFormat {
 }
 
 pub(all) enum PathElement {
-  MoveTo(Int, Int)
-  LineTo(Int, Int)
-  QuadTo(Int, Int, Int, Int)
-  CurveTo(Int, Int, Int, Int, Int, Int)
+  MoveTo(Double, Double)
+  LineTo(Double, Double)
+  QuadTo(Double, Double, Double, Double)
+  CurveTo(Double, Double, Double, Double, Double, Double)
   Close
 }
 
@@ -122,6 +155,7 @@ pub struct SvgPen {
 pub fn SvgPen::clear(Self) -> Unit
 pub fn SvgPen::new() -> Self
 pub fn SvgPen::to_string(Self) -> String
+pub fn SvgPen::with_precision(Int) -> Self
 pub impl OutlinePen for SvgPen
 
 pub(all) enum Target {
@@ -134,10 +168,10 @@ pub fn Target::default() -> Self
 
 // Traits
 pub(open) trait OutlinePen {
-  move_to(Self, Int, Int) -> Unit
-  line_to(Self, Int, Int) -> Unit
-  quad_to(Self, Int, Int, Int, Int) -> Unit
-  curve_to(Self, Int, Int, Int, Int, Int, Int) -> Unit
+  move_to(Self, Double, Double) -> Unit
+  line_to(Self, Double, Double) -> Unit
+  quad_to(Self, Double, Double, Double, Double) -> Unit
+  curve_to(Self, Double, Double, Double, Double, Double, Double) -> Unit
   close(Self) -> Unit
 }
 pub impl OutlinePen for Array[PathElement]

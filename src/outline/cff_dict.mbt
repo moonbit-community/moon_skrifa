@@ -18,6 +18,7 @@
 ///|
 priv struct CffDictInfo {
   mut charstrings_offset : Int?
+  mut var_store_offset : Int?
   mut private_size : Int?
   mut private_offset : Int?
   mut subrs_offset : Int?
@@ -78,6 +79,7 @@ fn cff_dict_parse_int(data : BytesView, pos : Int, b0 : Int) -> (Int, Int)? {
 fn cff_dict_parse(data : BytesView) -> CffDictInfo {
   let info = CffDictInfo::{
     charstrings_offset: None,
+    var_store_offset: None,
     private_size: None,
     private_offset: None,
     subrs_offset: None,
@@ -112,6 +114,11 @@ fn cff_dict_parse(data : BytesView) -> CffDictInfo {
       17 =>
         if stack.length() >= 1 {
           info.charstrings_offset = Some(stack.at(stack.length() - 1))
+        }
+      // CFF2 VarStore offset (ItemVariationStore)
+      24 =>
+        if stack.length() >= 1 {
+          info.var_store_offset = Some(stack.at(stack.length() - 1))
         }
       // Private DICT range: size, offset
       18 =>

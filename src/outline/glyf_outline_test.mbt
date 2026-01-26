@@ -99,6 +99,31 @@ fn glyf_outline_test_make_head_long_loca_with_upem(upem : Int) -> Bytes {
 }
 
 ///|
+fn glyf_outline_test_make_hhea(num_hmetrics : Int) -> Bytes {
+  // hhea table needs at least 36 bytes; numberOfHMetrics is u16 at offset 34.
+  let out : Array[Byte] = Array::make(36, 0 |> Int::to_byte)
+  out.set(34, ((num_hmetrics >> 8) & 0xFF).to_byte())
+  out.set(35, (num_hmetrics & 0xFF).to_byte())
+  Bytes::from_array(out.op_as_view())
+}
+
+///|
+fn glyf_outline_test_make_hmtx(
+  advances : Array[Int],
+  lsbs : Array[Int],
+) -> Bytes {
+  let out : Array[Byte] = Array::new()
+  let n = advances.length()
+  for i in 0..<n {
+    let aw = advances.at(i)
+    let lsb = if i < lsbs.length() { lsbs.at(i) } else { 0 }
+    glyf_outline_test_push_u16_be(out, aw)
+    glyf_outline_test_push_i16_be(out, lsb)
+  }
+  Bytes::from_array(out.op_as_view())
+}
+
+///|
 fn glyf_outline_test_make_loca_long(offsets : Array[Int]) -> Bytes {
   let out : Array[Byte] = Array::new()
   for off in offsets {
@@ -284,9 +309,8 @@ test "glyf simple outline uses MoveTo/QuadTo/Close" {
   let c = OutlineGlyphCollection::from_font(font)
   let path = c.path(1, DrawSettings::default()).unwrap()
   let expected = Array::from_fixed_array([
-    PathElement::MoveTo(0, 0),
-    PathElement::QuadTo(50, 100, 100, 0),
-    PathElement::LineTo(0, 0),
+    PathElement::MoveTo(0.0, 0.0),
+    PathElement::QuadTo(50.0, 100.0, 100.0, 0.0),
     PathElement::Close,
   ])
   inspect(glyf_outline_test_path_eq(path, expected), content="true")
@@ -303,10 +327,9 @@ test "glyf consecutive off-curve points insert implied on-curve midpoint" {
   let c = OutlineGlyphCollection::from_font(font)
   let path = c.path(1, DrawSettings::default()).unwrap()
   let expected = Array::from_fixed_array([
-    PathElement::MoveTo(0, 0),
-    PathElement::QuadTo(50, 100, 75, 100),
-    PathElement::QuadTo(100, 100, 150, 0),
-    PathElement::LineTo(0, 0),
+    PathElement::MoveTo(0.0, 0.0),
+    PathElement::QuadTo(50.0, 100.0, 75.0, 100.0),
+    PathElement::QuadTo(100.0, 100.0, 150.0, 0.0),
     PathElement::Close,
   ])
   inspect(glyf_outline_test_path_eq(path, expected), content="true")
@@ -324,9 +347,8 @@ test "glyf composite outline translates component path" {
   let c = OutlineGlyphCollection::from_font(font)
   let path = c.path(2, DrawSettings::default()).unwrap()
   let expected = Array::from_fixed_array([
-    PathElement::MoveTo(10, 20),
-    PathElement::QuadTo(60, 120, 110, 20),
-    PathElement::LineTo(10, 20),
+    PathElement::MoveTo(10.0, 20.0),
+    PathElement::QuadTo(60.0, 120.0, 110.0, 20.0),
     PathElement::Close,
   ])
   inspect(glyf_outline_test_path_eq(path, expected), content="true")
@@ -364,12 +386,86 @@ test "path scales with size when unitsPerEm is available" {
   )
   let path = c.path(1, settings).unwrap()
   let expected = Array::from_fixed_array([
-    PathElement::MoveTo(0, 0),
-    PathElement::QuadTo(1, 2, 2, 0),
-    PathElement::LineTo(0, 0),
+    PathElement::MoveTo(0.0, 0.0),
+    // FreeType-style scaling quantizes to 1/64 pixels.
+    PathElement::QuadTo(0.796875, 1.59375, 1.59375, 0.0),
     PathElement::Close,
   ])
   inspect(glyf_outline_test_path_eq(path, expected), content="true")
+}
+
+///|
+test "HarfBuzz path_style uses 16.16 fixed-point scaling when size is set" {
+  let font = glyf_outline_test_make_font_with_head(
+    glyf_outline_test_make_head_long_loca_with_upem(1000),
+    Array::from_fixed_array([
+      Bytes::from_array(Array::new().op_as_view()),
+      glyf_outline_test_glyph_simple_quad(),
+    ]),
+  )
+  let c = OutlineGlyphCollection::from_font(font)
+  let settings = DrawSettings::unhinted(
+    @moon_skrifa.Size::new(16.0),
+    @moon_skrifa.LocationRef::default(),
+  ).with_path_style(PathStyle::HarfBuzz)
+  let path = c.path(1, settings).unwrap()
+  let expected = Array::from_fixed_array([
+    PathElement::MoveTo(0.0, 0.0),
+    // HarfBuzz-style scaling uses 16.16 fixed-point (multiplied by 65536).
+    PathElement::QuadTo(52428.8, 104857.6, 104857.6, 0.0),
+    PathElement::Close,
+  ])
+  inspect(glyf_outline_test_path_eq(path, expected), content="true")
+}
+
+///|
+test "hinted (disabled instance) rounds advance width to integer pixels" {
+  let glyph0 = Bytes::from_array(Array::new().op_as_view())
+  let glyph1 = glyf_outline_test_glyph_simple_quad()
+  let glyf_out : Array[Byte] = Array::new()
+  for b in glyph0.iter() {
+    glyf_out.push(b)
+  }
+  let off0 = 0
+  let off1 = off0 + glyph0.length()
+  for b in glyph1.iter() {
+    glyf_out.push(b)
+  }
+  let off2 = off1 + glyph1.length()
+  let loca = glyf_outline_test_make_loca_long(
+    Array::from_fixed_array([off0, off1, off2]),
+  )
+  let sfnt = glyf_outline_test_build_sfnt(
+    Array::from_fixed_array([
+      (0x6D617870, glyf_outline_test_make_maxp(2)), // "maxp"
+      (0x68656164, glyf_outline_test_make_head_long_loca_with_upem(1000)), // "head"
+      (0x68686561, glyf_outline_test_make_hhea(2)), // "hhea"
+      (
+        0x686D7478, // "hmtx"
+        glyf_outline_test_make_hmtx(
+          Array::from_fixed_array([0, 500]),
+          Array::from_fixed_array([0, 0]),
+        ),
+      ),
+      (0x6C6F6361, loca), // "loca"
+      (0x676C7966, Bytes::from_array(glyf_out.op_as_view())), // "glyf"
+    ]),
+  )
+  let font = @moon_skrifa.FontRef::new(sfnt).unwrap()
+  let outlines0 = OutlineGlyphCollection::from_font(font)
+  let h = HintingInstance::new(
+    outlines0,
+    @moon_skrifa.Size::new(17.0),
+    @moon_skrifa.LocationRef::default(),
+    HintingOptions::default(),
+  ).unwrap()
+  let settings = DrawSettings::hinted(h, false)
+  let outlines = OutlineGlyphCollection::from_font(font)
+  let g = outlines.get(1).unwrap()
+  let metrics = g.draw(settings, NullPen::new()).unwrap()
+  // advance = 500 * (17/1000) = 8.5 => rounded to 9.0
+  let ok = (metrics.advance_width.unwrap() - 9.0).abs() <= 0.000001
+  inspect(ok, content="true")
 }
 
 ///|
@@ -383,9 +479,8 @@ test "path_style affects start point selection when first point is off-curve" {
   let c = OutlineGlyphCollection::from_font(font)
   let free = c.path(1, DrawSettings::default()).unwrap()
   let expected_free = Array::from_fixed_array([
-    PathElement::MoveTo(0, 0),
-    PathElement::QuadTo(50, 100, 100, 0),
-    PathElement::LineTo(0, 0),
+    PathElement::MoveTo(0.0, 0.0),
+    PathElement::QuadTo(50.0, 100.0, 100.0, 0.0),
     PathElement::Close,
   ])
   inspect(glyf_outline_test_path_eq(free, expected_free), content="true")
@@ -394,9 +489,9 @@ test "path_style affects start point selection when first point is off-curve" {
     DrawSettings::default().with_path_style(PathStyle::HarfBuzz),
   )
   let expected_hb = Array::from_fixed_array([
-    PathElement::MoveTo(100, 0),
-    PathElement::LineTo(0, 0),
-    PathElement::QuadTo(50, 100, 100, 0),
+    PathElement::MoveTo(100.0, 0.0),
+    PathElement::LineTo(0.0, 0.0),
+    PathElement::QuadTo(50.0, 100.0, 100.0, 0.0),
     PathElement::Close,
   ])
   inspect(glyf_outline_test_path_eq(hb.unwrap(), expected_hb), content="true")
@@ -421,25 +516,29 @@ fn glyf_outline_test_path_eq(
 
 ///|
 fn glyf_outline_test_elem_eq(a : PathElement, b : PathElement) -> Bool {
+  fn feq(a : Double, b : Double) -> Bool {
+    (a - b).abs() <= 0.000001
+  }
+
   match (a, b) {
     (PathElement::MoveTo(ax, ay), PathElement::MoveTo(bx, by)) =>
-      ax == bx && ay == by
+      feq(ax, bx) && feq(ay, by)
     (PathElement::LineTo(ax, ay), PathElement::LineTo(bx, by)) =>
-      ax == bx && ay == by
+      feq(ax, bx) && feq(ay, by)
     (
       PathElement::QuadTo(ax0, ay0, ax, ay),
       PathElement::QuadTo(bx0, by0, bx, by),
-    ) => ax0 == bx0 && ay0 == by0 && ax == bx && ay == by
+    ) => feq(ax0, bx0) && feq(ay0, by0) && feq(ax, bx) && feq(ay, by)
     (
       PathElement::CurveTo(ax0, ay0, ax1, ay1, ax, ay),
       PathElement::CurveTo(bx0, by0, bx1, by1, bx, by),
     ) =>
-      ax0 == bx0 &&
-      ay0 == by0 &&
-      ax1 == bx1 &&
-      ay1 == by1 &&
-      ax == bx &&
-      ay == by
+      feq(ax0, bx0) &&
+      feq(ay0, by0) &&
+      feq(ax1, bx1) &&
+      feq(ay1, by1) &&
+      feq(ax, bx) &&
+      feq(ay, by)
     (PathElement::Close, PathElement::Close) => true
     _ => false
   }

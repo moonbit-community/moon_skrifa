@@ -74,13 +74,24 @@ pub fn AdjustedMetrics::default() -> AdjustedMetrics {
 ///|
 pub struct OutlineGlyphCollection {
   font : @moon_skrifa.FontRef
+  priv kind : OutlineGlyphFormat?
 }
 
 ///|
 pub fn OutlineGlyphCollection::new(
   font : @moon_skrifa.FontRef,
 ) -> OutlineGlyphCollection {
-  OutlineGlyphCollection::{ font, }
+  // Upstream selection order: glyf first, then CFF2, then CFF.
+  let kind = if font.table(TAG_GLYF) is Some(_) {
+    Some(OutlineGlyphFormat::Glyf)
+  } else if font.table(TAG_CFF2) is Some(_) {
+    Some(OutlineGlyphFormat::Cff2)
+  } else if font.table(TAG_CFF) is Some(_) {
+    Some(OutlineGlyphFormat::Cff)
+  } else {
+    None
+  }
+  OutlineGlyphCollection::{ font, kind }
 }
 
 ///|
@@ -88,6 +99,37 @@ pub fn OutlineGlyphCollection::from_font(
   font : @moon_skrifa.FontRef,
 ) -> OutlineGlyphCollection {
   OutlineGlyphCollection::new(font)
+}
+
+///|
+/// Creates a new outline collection for the given font and outline format.
+///
+/// Returns `None` if the font does not contain outlines in the requested
+/// format.
+pub fn OutlineGlyphCollection::with_format(
+  font : @moon_skrifa.FontRef,
+  format : OutlineGlyphFormat,
+) -> OutlineGlyphCollection? {
+  match format {
+    OutlineGlyphFormat::Glyf =>
+      if font.table(TAG_GLYF) is Some(_) {
+        Some(OutlineGlyphCollection::{ font, kind: Some(format) })
+      } else {
+        None
+      }
+    OutlineGlyphFormat::Cff =>
+      if font.table(TAG_CFF) is Some(_) {
+        Some(OutlineGlyphCollection::{ font, kind: Some(format) })
+      } else {
+        None
+      }
+    OutlineGlyphFormat::Cff2 =>
+      if font.table(TAG_CFF2) is Some(_) {
+        Some(OutlineGlyphCollection::{ font, kind: Some(format) })
+      } else {
+        None
+      }
+  }
 }
 
 ///|
@@ -190,18 +232,257 @@ pub fn DrawSettings::is_pedantic(self : DrawSettings) -> Bool {
 }
 
 ///|
+/// A scalable glyph outline.
+///
+/// This can be sourced from the `glyf`, `CFF` or `CFF2` tables.
+pub struct OutlineGlyph {
+  priv font : @moon_skrifa.FontRef
+  priv glyph_id : @moon_skrifa.GlyphId
+  priv kind : OutlineGlyphFormat
+}
+
+///|
+pub fn OutlineGlyph::format(self : OutlineGlyph) -> OutlineGlyphFormat {
+  self.kind
+}
+
+///|
+pub fn OutlineGlyph::glyph_id(self : OutlineGlyph) -> @moon_skrifa.GlyphId {
+  self.glyph_id
+}
+
+///|
+/// Returns a value indicating if the outline may contain overlapping contours
+/// or components.
+///
+/// For CFF outlines, returns `None` since this information is unavailable.
+pub fn OutlineGlyph::has_overlaps(self : OutlineGlyph) -> Bool? {
+  match self.kind {
+    OutlineGlyphFormat::Glyf =>
+      Some(glyf_has_overlaps(self.font, self.glyph_id).unwrap_or(false))
+    _ => None
+  }
+}
+
+///|
+/// Returns a value indicating whether the outline has hinting instructions.
+///
+/// For CFF outlines, returns `None` since this is unknown prior to loading the
+/// outline.
+pub fn OutlineGlyph::has_hinting(self : OutlineGlyph) -> Bool? {
+  match self.kind {
+    OutlineGlyphFormat::Glyf =>
+      Some(glyf_has_hinting(self.font, self.glyph_id).unwrap_or(false))
+    _ => None
+  }
+}
+
+///|
+/// Returns the size (in bytes) of the temporary memory required to draw this
+/// outline.
+///
+/// This port currently returns 0 until the full glyf scaler/hinter is
+/// implemented.
+pub fn OutlineGlyph::draw_memory_size(
+  self : OutlineGlyph,
+  _hinting : Hinting,
+) -> Int {
+  self |> ignore
+  0
+}
+
+///|
+/// Draws the outline glyph with the given settings and emits the resulting
+/// path commands to the specified pen.
+pub fn[P : OutlinePen] OutlineGlyph::draw(
+  self : OutlineGlyph,
+  settings : DrawSettings,
+  pen : P,
+) -> Result[AdjustedMetrics, DrawError] {
+  if settings.hinting_instance() is Some(_) &&
+    settings.path_style() is PathStyle::HarfBuzz {
+    return Err(DrawError::HarfBuzzHintingUnsupported)
+  }
+  let metrics0 = match self.kind {
+    OutlineGlyphFormat::Glyf => {
+      let has_overlaps = self.has_overlaps().unwrap_or(false)
+      let (lsb0, advance_width0) = match
+        @moon_skrifa.FontRef::glyph_metrics(
+          self.font,
+          settings.size(),
+          settings.location(),
+        ) {
+        None => (None, None)
+        Some(gm) =>
+          (gm.left_side_bearing(self.glyph_id), gm.advance_width(self.glyph_id))
+      }
+      let (lsb, advance_width) = if settings.path_style() is PathStyle::FreeType {
+        (
+          match lsb0 {
+            None => None
+            Some(v) => Some(outline_quantize_freetype(v))
+          },
+          match advance_width0 {
+            None => None
+            Some(v) => Some(outline_quantize_freetype(v))
+          },
+        )
+      } else {
+        (lsb0, advance_width0)
+      }
+      AdjustedMetrics::{ has_overlaps, lsb, advance_width }
+    }
+    _ => AdjustedMetrics::default()
+  }
+  // Match upstream behavior: when drawing via a (possibly disabled) hinting
+  // instance, advance width is rounded to the nearest pixel even if we fall
+  // back to the unhinted path.
+  let metrics = if settings.hinting_instance() is Some(h) &&
+    settings.path_style() is PathStyle::FreeType &&
+    !h.is_enabled() {
+    AdjustedMetrics::{
+      has_overlaps: metrics0.has_overlaps,
+      lsb: metrics0.lsb,
+      advance_width: match metrics0.advance_width {
+        None => None
+        Some(v) => Some(v.round())
+      },
+    }
+  } else {
+    metrics0
+  }
+  let path = match self.path(settings) {
+    Err(e) => return Err(e)
+    Ok(p) => p
+  }
+  for e in path.iter() {
+    match e {
+      PathElement::MoveTo(x, y) => OutlinePen::move_to(pen, x, y)
+      PathElement::LineTo(x, y) => OutlinePen::line_to(pen, x, y)
+      PathElement::QuadTo(cx0, cy0, x, y) =>
+        OutlinePen::quad_to(pen, cx0, cy0, x, y)
+      PathElement::CurveTo(cx0, cy0, cx1, cy1, x, y) =>
+        OutlinePen::curve_to(pen, cx0, cy0, cx1, cy1, x, y)
+      PathElement::Close => OutlinePen::close(pen)
+    }
+  }
+  Ok(metrics)
+}
+
+///|
+/// Draws the outline glyph and returns a flat list of path elements.
+pub fn OutlineGlyph::path(
+  self : OutlineGlyph,
+  settings : DrawSettings,
+) -> Result[Array[PathElement], DrawError] {
+  let upem = outline_units_per_em(self.font)
+  let scale = settings.size().linear_scale(upem)
+  let path_style = settings.path_style()
+  let coords = settings.location().effective_coords()
+  match self.kind {
+    OutlineGlyphFormat::Glyf =>
+      match
+        glyf_outline_path(
+          self.font,
+          self.glyph_id,
+          coords,
+          path_style,
+          settings.size(),
+        ) {
+        None => Err(DrawError::GlyphNotFound(self.glyph_id))
+        Some(p) => Ok(p)
+      }
+    OutlineGlyphFormat::Cff =>
+      match cff_outline_path(self.font, self.glyph_id) {
+        None => Err(DrawError::GlyphNotFound(self.glyph_id))
+        // Upstream uses fixed-point rounding when scaling PostScript outlines.
+        Some(p) => Ok(outline_scale_path(p, scale, OutlineScaleMode::FreeType))
+      }
+    OutlineGlyphFormat::Cff2 =>
+      match cff2_outline_path(self.font, self.glyph_id, coords) {
+        None => Err(DrawError::GlyphNotFound(self.glyph_id))
+        Some(p) => Ok(outline_scale_path(p, scale, OutlineScaleMode::FreeType))
+      }
+  }
+}
+
+///|
 pub fn OutlineGlyphCollection::format(
   self : OutlineGlyphCollection,
 ) -> OutlineGlyphFormat? {
-  if self.font.table(TAG_GLYF) is Some(_) {
-    Some(OutlineGlyphFormat::Glyf)
-  } else if self.font.table(TAG_CFF) is Some(_) {
-    Some(OutlineGlyphFormat::Cff)
-  } else if self.font.table(TAG_CFF2) is Some(_) {
-    Some(OutlineGlyphFormat::Cff2)
-  } else {
-    None
+  self.kind
+}
+
+///|
+/// Returns the outline for the given glyph identifier.
+pub fn OutlineGlyphCollection::get(
+  self : OutlineGlyphCollection,
+  gid : @moon_skrifa.GlyphId,
+) -> OutlineGlyph? {
+  match self.kind {
+    None => None
+    Some(kind) => {
+      let idx = gid.to_uint64().to_int()
+      let n = self.glyph_count()
+      if idx < 0 || idx >= n {
+        None
+      } else {
+        Some(OutlineGlyph::{ font: self.font, glyph_id: gid, kind })
+      }
+    }
   }
+}
+
+///|
+/// Returns an iterator-like list of all outline glyphs in the collection.
+pub fn OutlineGlyphCollection::iter(
+  self : OutlineGlyphCollection,
+) -> Array[(@moon_skrifa.GlyphId, OutlineGlyph)] {
+  let out : Array[(@moon_skrifa.GlyphId, OutlineGlyph)] = Array::new()
+  let n = self.glyph_count()
+  for i in 0..<n {
+    let gid : @moon_skrifa.GlyphId = i.to_uint16()
+    match self.get(gid) {
+      None => ()
+      Some(g) => out.push((gid, g))
+    }
+  }
+  out
+}
+
+///|
+/// Returns the number of glyphs addressable by this outline source.
+pub fn OutlineGlyphCollection::glyph_count(
+  self : OutlineGlyphCollection,
+) -> Int {
+  match self.kind {
+    None => 0
+    Some(OutlineGlyphFormat::Glyf) => glyf_glyph_count(self.font).unwrap_or(0)
+    Some(OutlineGlyphFormat::Cff) => cff_glyph_count(self.font).unwrap_or(0)
+    Some(OutlineGlyphFormat::Cff2) => cff2_glyph_count(self.font).unwrap_or(0)
+  }
+}
+
+///|
+/// Returns true when the interpreter engine must be used for hinting this set
+/// of outlines to produce correct results.
+pub fn OutlineGlyphCollection::require_interpreter(
+  self : OutlineGlyphCollection,
+) -> Bool {
+  match self.kind {
+    None => false
+    _ => require_interpreter(self.font)
+  }
+}
+
+///|
+/// Returns true when the font supports hinting at fractional sizes.
+pub fn OutlineGlyphCollection::fractional_size_hinting(
+  self : OutlineGlyphCollection,
+) -> Bool {
+  self |> ignore
+  // TODO: implement FreeType parity for glyf. For now, allow fractional sizes.
+  true
 }
 
 ///|
@@ -238,10 +519,10 @@ pub fn OutlineGlyphCollection::prefer_interpreter(
 ///
 /// Coordinate units are raw font units (design units).
 pub(all) enum PathElement {
-  MoveTo(Int, Int)
-  LineTo(Int, Int)
-  QuadTo(Int, Int, Int, Int)
-  CurveTo(Int, Int, Int, Int, Int, Int)
+  MoveTo(Double, Double)
+  LineTo(Double, Double)
+  QuadTo(Double, Double, Double, Double)
+  CurveTo(Double, Double, Double, Double, Double, Double)
   Close
 }
 
@@ -271,55 +552,119 @@ fn outline_units_per_em(font : @moon_skrifa.FontRef) -> UInt16 {
 }
 
 ///|
-fn outline_scale_int(v : Int, scale : Double) -> Int {
-  (v.to_double() * scale).round().to_int()
+
+///|
+fn outline_round_ties_even_pos(x : Double) -> Int {
+  let i = x.to_int()
+  let frac = x - i.to_double()
+  let diff = frac - 0.5
+  if diff.abs() <= 0.000000000001 {
+    if i % 2 == 0 {
+      i
+    } else {
+      i + 1
+    }
+  } else if frac < 0.5 {
+    i
+  } else {
+    i + 1
+  }
+}
+
+///|
+fn outline_quantize_freetype(v : Double) -> Double {
+  let sign = if v < 0.0 { -1.0 } else { 1.0 }
+  let scaled = v.abs() * 64.0
+  sign * outline_round_ties_even_pos(scaled).to_double() / 64.0
+}
+
+///|
+priv enum OutlineScaleMode {
+  Float
+  FreeType
+  HarfBuzz
 }
 
 ///|
 fn outline_scale_path(
   path : Array[PathElement],
   scale : Double,
+  mode : OutlineScaleMode,
 ) -> Array[PathElement] {
-  if scale == 1.0 {
+  if mode is OutlineScaleMode::Float && scale == 1.0 {
     return path
+  }
+  if mode is OutlineScaleMode::FreeType && scale == 1.0 {
+    return path
+  }
+  let scale = match mode {
+    OutlineScaleMode::HarfBuzz => scale * 65536.0
+    _ => scale
   }
   let out : Array[PathElement] = Array::new()
   for e in path.iter() {
     match e {
       PathElement::MoveTo(x, y) =>
-        out.push(
-          PathElement::MoveTo(
-            outline_scale_int(x, scale),
-            outline_scale_int(y, scale),
-          ),
-        )
+        if mode is OutlineScaleMode::FreeType {
+          out.push(
+            PathElement::MoveTo(
+              outline_quantize_freetype(x * scale),
+              outline_quantize_freetype(y * scale),
+            ),
+          )
+        } else {
+          out.push(PathElement::MoveTo(x * scale, y * scale))
+        }
       PathElement::LineTo(x, y) =>
-        out.push(
-          PathElement::LineTo(
-            outline_scale_int(x, scale),
-            outline_scale_int(y, scale),
-          ),
-        )
+        if mode is OutlineScaleMode::FreeType {
+          out.push(
+            PathElement::LineTo(
+              outline_quantize_freetype(x * scale),
+              outline_quantize_freetype(y * scale),
+            ),
+          )
+        } else {
+          out.push(PathElement::LineTo(x * scale, y * scale))
+        }
       PathElement::QuadTo(cx0, cy0, x, y) =>
-        out.push(
-          PathElement::QuadTo(
-            outline_scale_int(cx0, scale),
-            outline_scale_int(cy0, scale),
-            outline_scale_int(x, scale),
-            outline_scale_int(y, scale),
-          ),
-        )
+        if mode is OutlineScaleMode::FreeType {
+          out.push(
+            PathElement::QuadTo(
+              outline_quantize_freetype(cx0 * scale),
+              outline_quantize_freetype(cy0 * scale),
+              outline_quantize_freetype(x * scale),
+              outline_quantize_freetype(y * scale),
+            ),
+          )
+        } else {
+          out.push(
+            PathElement::QuadTo(cx0 * scale, cy0 * scale, x * scale, y * scale),
+          )
+        }
       PathElement::CurveTo(cx0, cy0, cx1, cy1, x, y) =>
-        out.push(
-          PathElement::CurveTo(
-            outline_scale_int(cx0, scale),
-            outline_scale_int(cy0, scale),
-            outline_scale_int(cx1, scale),
-            outline_scale_int(cy1, scale),
-            outline_scale_int(x, scale),
-            outline_scale_int(y, scale),
-          ),
-        )
+        if mode is OutlineScaleMode::FreeType {
+          out.push(
+            PathElement::CurveTo(
+              outline_quantize_freetype(cx0 * scale),
+              outline_quantize_freetype(cy0 * scale),
+              outline_quantize_freetype(cx1 * scale),
+              outline_quantize_freetype(cy1 * scale),
+              outline_quantize_freetype(x * scale),
+              outline_quantize_freetype(y * scale),
+            ),
+          )
+        } else {
+          out.push(
+            PathElement::CurveTo(
+              cx0 * scale,
+              cy0 * scale,
+              cx1 * scale,
+              cy1 * scale,
+              x * scale,
+              y * scale,
+            ),
+          )
+        }
       PathElement::Close => out.push(PathElement::Close)
     }
   }
@@ -333,23 +678,13 @@ pub fn OutlineGlyphCollection::path(
   gid : @moon_skrifa.GlyphId,
   settings : DrawSettings,
 ) -> Array[PathElement]? {
-  let font = self.font
-  let upem = outline_units_per_em(font)
-  let scale = settings.size().linear_scale(upem)
-  let path_style = settings.path_style()
-  let _coords = settings.location().effective_coords()
-  let raw = if font.table(TAG_GLYF) is Some(_) {
-    glyf_outline_path(font, gid, path_style)
-  } else if font.table(TAG_CFF) is Some(_) {
-    cff_outline_path(font, gid)
-  } else if font.table(TAG_CFF2) is Some(_) {
-    cff2_outline_path(font, gid)
-  } else {
-    None
-  }
-  match raw {
+  match self.get(gid) {
     None => None
-    Some(p) => Some(outline_scale_path(p, scale))
+    Some(g) =>
+      match g.path(settings) {
+        Err(_) => None
+        Ok(p) => Some(p)
+      }
   }
 }
 
@@ -370,22 +705,13 @@ pub fn[P : OutlinePen] OutlineGlyphCollection::draw(
   settings : DrawSettings,
   pen : P,
 ) -> Bool {
-  match self.path(gid, settings) {
+  match self.get(gid) {
     None => false
-    Some(path) => {
-      for e in path.iter() {
-        match e {
-          PathElement::MoveTo(x, y) => OutlinePen::move_to(pen, x, y)
-          PathElement::LineTo(x, y) => OutlinePen::line_to(pen, x, y)
-          PathElement::QuadTo(cx0, cy0, x, y) =>
-            OutlinePen::quad_to(pen, cx0, cy0, x, y)
-          PathElement::CurveTo(cx0, cy0, cx1, cy1, x, y) =>
-            OutlinePen::curve_to(pen, cx0, cy0, cx1, cy1, x, y)
-          PathElement::Close => OutlinePen::close(pen)
-        }
+    Some(g) =>
+      match g.draw(settings, pen) {
+        Err(_) => false
+        Ok(_) => true
       }
-      true
-    }
   }
 }
 

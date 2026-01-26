@@ -54,28 +54,34 @@ fn type2_read_i32_be(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn type2_parse_int(data : BytesView, pos : Int, b0 : Int) -> (Int, Int)? {
+fn type2_parse_number(data : BytesView, pos : Int, b0 : Int) -> (Double, Int)? {
   // Returns (value, new_pos).
   match b0 {
     28 =>
       match type2_read_i16_be(data, pos) {
         None => None
-        Some(v) => Some((v, pos + 2))
+        Some(v) => Some((v.to_double(), pos + 2))
       }
-    32..=246 => Some((b0 - 139, pos))
+    // 16.16 fixed point (CFF2).
+    255 =>
+      match type2_read_i32_be(data, pos) {
+        None => None
+        Some(bits) => Some((bits.to_double() / 65536.0, pos + 4))
+      }
+    32..=246 => Some(((b0 - 139).to_double(), pos))
     247..=250 =>
       if pos >= data.length() {
         None
       } else {
         let b1 = data.at(pos).to_int()
-        Some(((b0 - 247) * 256 + b1 + 108, pos + 1))
+        Some((((b0 - 247) * 256 + b1 + 108).to_double(), pos + 1))
       }
     251..=254 =>
       if pos >= data.length() {
         None
       } else {
         let b1 = data.at(pos).to_int()
-        Some((-(b0 - 251) * 256 - b1 - 108, pos + 1))
+        Some(((-(b0 - 251) * 256 - b1 - 108).to_double(), pos + 1))
       }
     _ => None
   }
@@ -243,18 +249,252 @@ fn type2_index_subr(ix : Type2Index, subr_number : Int) -> BytesView? {
 }
 
 ///|
+const TYPE2_F2DOT14_SCALE : Double = 16384.0
+
+///|
+fn type2_read_u32_be_int(view : BytesView, offset : Int) -> Int? {
+  if offset < 0 || offset + 4 > view.length() {
+    None
+  } else {
+    let b0 = view.at(offset).to_int()
+    let b1 = view.at(offset + 1).to_int()
+    let b2 = view.at(offset + 2).to_int()
+    let b3 = view.at(offset + 3).to_int()
+    Some((b0 << 24) | (b1 << 16) | (b2 << 8) | b3)
+  }
+}
+
+///|
+/// Parsed view of an ItemVariationStore (used by CFF2 `vsindex`/`blend`).
+priv struct Type2IvsCtx {
+  store : BytesView
+  store_off : Int
+  axis_count : Int
+  region_count : Int
+  region_list_off : Int
+  data_count : Int
+  data_offsets_off : Int
+}
+
+///|
+fn type2_ivs_ctx(store : BytesView, store_off : Int) -> Type2IvsCtx? {
+  // ItemVariationStore header:
+  // u16 format, u32 regionListOff, u16 dataCount, u32[dataCount] dataOffsets
+  let format = type2_read_u16_be(store, store_off).unwrap_or(-1)
+  if format != 1 {
+    return None
+  }
+  let region_list_rel = type2_read_u32_be_int(store, store_off + 2).unwrap_or(
+    -1,
+  )
+  let data_count = type2_read_u16_be(store, store_off + 6).unwrap_or(-1)
+  if region_list_rel <= 0 || data_count <= 0 {
+    return None
+  }
+  let data_offsets_off = store_off + 8
+  let region_list_off = store_off + region_list_rel
+  if region_list_off < 0 || region_list_off + 4 > store.length() {
+    return None
+  }
+  let axis_count = type2_read_u16_be(store, region_list_off).unwrap_or(-1)
+  let region_count = type2_read_u16_be(store, region_list_off + 2).unwrap_or(-1)
+  if axis_count <= 0 || region_count <= 0 {
+    return None
+  }
+  // Each region has axis_count AxisRegion records: start/peak/end i16 => 6 bytes.
+  let regions_len = 4 + region_count * axis_count * 6
+  if regions_len < 0 || region_list_off + regions_len > store.length() {
+    return None
+  }
+  // Validate dataOffsets array bounds.
+  let need_offsets = data_offsets_off + data_count * 4
+  if need_offsets < data_offsets_off || need_offsets > store.length() {
+    return None
+  }
+  Some(Type2IvsCtx::{
+    store,
+    store_off,
+    axis_count,
+    region_count,
+    region_list_off,
+    data_count,
+    data_offsets_off,
+  })
+}
+
+///|
+fn type2_ivs_item_region_indices(
+  ctx : Type2IvsCtx,
+  store_index : Int,
+) -> Array[Int]? {
+  if store_index < 0 || store_index >= ctx.data_count {
+    return None
+  }
+  let data_rel = type2_read_u32_be_int(
+    ctx.store,
+    ctx.data_offsets_off + store_index * 4,
+  ).unwrap_or(-1)
+  if data_rel <= 0 {
+    return None
+  }
+  let data_off = ctx.store_off + data_rel
+  if data_off < 0 || data_off + 6 > ctx.store.length() {
+    return None
+  }
+  // ItemVariationData header:
+  // u16 itemCount, u16 shortDeltaCount, u16 regionIndexCount, u16[regionIndexCount] regionIndexes, deltaSets...
+  let region_index_count = type2_read_u16_be(ctx.store, data_off + 4).unwrap_or(
+    -1,
+  )
+  if region_index_count <= 0 {
+    return None
+  }
+  let region_indexes_off = data_off + 6
+  let need = region_indexes_off + region_index_count * 2
+  if need < region_indexes_off || need > ctx.store.length() {
+    return None
+  }
+  let out : Array[Int] = Array::new()
+  for i in 0..<region_index_count {
+    out.push(
+      type2_read_u16_be(ctx.store, region_indexes_off + i * 2).unwrap_or(-1),
+    )
+  }
+  Some(out)
+}
+
+///|
+fn type2_ivs_region_scalar(
+  ctx : Type2IvsCtx,
+  region_index : Int,
+  coords : ArrayView[@moon_skrifa.NormalizedCoord],
+) -> Double {
+  if coords.is_empty() {
+    return 0.0
+  }
+  if region_index < 0 || region_index >= ctx.region_count {
+    return 0.0
+  }
+  let region_off = ctx.region_list_off + 4 + region_index * ctx.axis_count * 6
+  if region_off < 0 || region_off + ctx.axis_count * 6 > ctx.store.length() {
+    return 0.0
+  }
+  let mut scalar = 1.0
+  for i in 0..<ctx.axis_count {
+    let ax = region_off + i * 6
+    let start = type2_read_i16_be(ctx.store, ax).unwrap_or(0).to_double() /
+      TYPE2_F2DOT14_SCALE
+    let peak = type2_read_i16_be(ctx.store, ax + 2).unwrap_or(0).to_double() /
+      TYPE2_F2DOT14_SCALE
+    let end = type2_read_i16_be(ctx.store, ax + 4).unwrap_or(0).to_double() /
+      TYPE2_F2DOT14_SCALE
+    if peak == 0.0 {
+      continue
+    }
+    if start > peak || peak > end || (start < 0.0 && end > 0.0) {
+      continue
+    }
+    let coord = if i < coords.length() {
+      coords.at(i).to_double() / TYPE2_F2DOT14_SCALE
+    } else {
+      0.0
+    }
+    if coord < start || coord > end {
+      return 0.0
+    }
+    if coord == peak {
+      continue
+    }
+    if coord < peak {
+      scalar = scalar * (coord - start) / (peak - start)
+    } else {
+      scalar = scalar * (end - coord) / (end - peak)
+    }
+  }
+  scalar
+}
+
+///|
+/// State for evaluating CFF2 `vsindex`/`blend` operators.
+priv struct Type2BlendState {
+  ctx : Type2IvsCtx
+  coords : ArrayView[@moon_skrifa.NormalizedCoord]
+  mut store_index : Int
+  mut region_indices : Array[Int]
+  mut scalars : Array[Double]
+}
+
+///|
+fn Type2BlendState::new(
+  ctx : Type2IvsCtx,
+  coords : ArrayView[@moon_skrifa.NormalizedCoord],
+  store_index : Int,
+) -> Type2BlendState? {
+  let s = Type2BlendState::{
+    ctx,
+    coords,
+    store_index: 0,
+    region_indices: Array::new(),
+    scalars: Array::new(),
+  }
+  if Type2BlendState::set_store_index(s, store_index) {
+    Some(s)
+  } else {
+    None
+  }
+}
+
+///|
+fn Type2BlendState::set_store_index(
+  self : Type2BlendState,
+  store_index : Int,
+) -> Bool {
+  if self.store_index == store_index && !self.region_indices.is_empty() {
+    return true
+  }
+  let indices = match type2_ivs_item_region_indices(self.ctx, store_index) {
+    None => return false
+    Some(v) => v
+  }
+  let scalars : Array[Double] = Array::new()
+  for ix in indices.iter() {
+    scalars.push(type2_ivs_region_scalar(self.ctx, ix, self.coords))
+  }
+  self.store_index = store_index
+  self.region_indices = indices
+  self.scalars = scalars
+  true
+}
+
+///|
+fn Type2BlendState::region_count(self : Type2BlendState) -> Int {
+  self.region_indices.length()
+}
+
+///|
+fn type2_blend_state_new(
+  store : BytesView,
+  store_off : Int,
+  coords : ArrayView[@moon_skrifa.NormalizedCoord],
+) -> Type2BlendState? {
+  match type2_ivs_ctx(store, store_off) {
+    None => None
+    Some(ctx) => Type2BlendState::new(ctx, coords, 0)
+  }
+}
+
+///|
 priv struct Type2Eval {
   global_subrs : Type2Index?
   local_subrs : Type2Index?
+  blend_state : Type2BlendState?
   out : Array[PathElement]
   mut is_open : Bool
   mut have_read_width : Bool
   mut stem_count : Int
-  mut x : Int
-  mut y : Int
-  mut start_x : Int
-  mut start_y : Int
-  stack : Array[Int]
+  mut x : Double
+  mut y : Double
+  stack : Array[Double]
   mut stack_ix : Int
 }
 
@@ -262,18 +502,18 @@ priv struct Type2Eval {
 fn Type2Eval::new(
   global_subrs : Type2Index?,
   local_subrs : Type2Index?,
+  blend_state : Type2BlendState?,
 ) -> Type2Eval {
   Type2Eval::{
     global_subrs,
     local_subrs,
+    blend_state,
     out: Array::new(),
     is_open: false,
     have_read_width: false,
     stem_count: 0,
-    x: 0,
-    y: 0,
-    start_x: 0,
-    start_y: 0,
+    x: 0.0,
+    y: 0.0,
     stack: Array::new(),
     stack_ix: 0,
   }
@@ -283,6 +523,28 @@ fn Type2Eval::new(
 fn Type2Eval::reset_stack(self : Type2Eval) -> Unit {
   self.stack.clear()
   self.stack_ix = 0
+}
+
+///|
+fn type2_number_to_int(v : Double) -> Int? {
+  // Charstring stack values are typically integers; reject non-integral values
+  // for operators that require integer operands (e.g. subr indices).
+  let r = v.round()
+  if (v - r).abs() <= 0.000001 {
+    Some(r.to_int())
+  } else {
+    None
+  }
+}
+
+///|
+fn Type2Eval::pop_int(self : Type2Eval) -> Int? {
+  if self.stack.length() <= 0 {
+    return None
+  }
+  let v = self.stack.at(self.stack.length() - 1)
+  self.stack.pop() |> ignore
+  type2_number_to_int(v)
 }
 
 ///|
@@ -297,11 +559,50 @@ fn Type2Eval::coords_remaining(self : Type2Eval) -> Int {
 }
 
 ///|
+fn Type2Eval::apply_blend(self : Type2Eval) -> Bool {
+  let blend_state = match self.blend_state {
+    None => return false
+    Some(s) => s
+  }
+  let target_value_count = match Type2Eval::pop_int(self) {
+    None => return false
+    Some(v) => v
+  }
+  if target_value_count < 0 {
+    return false
+  }
+  let region_count = Type2BlendState::region_count(blend_state)
+  let operand_count = target_value_count * (region_count + 1)
+  if operand_count < 0 || self.stack.length() < operand_count {
+    return false
+  }
+  let start = self.stack.length() - operand_count
+  let values_start = start
+  let deltas_start = start + target_value_count
+  for region_ix in 0..<region_count {
+    let scalar = blend_state.scalars.at(region_ix)
+    if scalar == 0.0 {
+      continue
+    }
+    for value_ix in 0..<target_value_count {
+      let delta_ix = deltas_start + value_ix * region_count + region_ix
+      let v_ix = values_start + value_ix
+      self.stack.set(
+        v_ix,
+        self.stack.at(v_ix) + self.stack.at(delta_ix) * scalar,
+      )
+    }
+  }
+  let new_len = start + target_value_count
+  while self.stack.length() > new_len {
+    self.stack.pop() |> ignore
+  }
+  true
+}
+
+///|
 fn Type2Eval::close_path(self : Type2Eval) -> Unit {
   if self.is_open {
-    if self.x != self.start_x || self.y != self.start_y {
-      self.out.push(LineTo(self.start_x, self.start_y))
-    }
     self.out.push(Close)
     self.is_open = false
   }
@@ -326,10 +627,10 @@ fn Type2Eval::emit_curves(
   let initial_x = self.x
   let initial_y = self.y
   let mut count = 0
-  let mut cx0 = 0
-  let mut cy0 = 0
-  let mut cx1 = 0
-  let mut cy1 = 0
+  let mut cx0 = 0.0
+  let mut cy0 = 0.0
+  let mut cx1 = 0.0
+  let mut cy1 = 0.0
   for mode in modes.iter() {
     let used = match mode {
       DxDy => {
@@ -436,23 +737,12 @@ fn Type2Eval::eval(self : Type2Eval, data : BytesView, depth : Int) -> Bool {
   while pos < data.length() {
     let b0 = data.at(pos).to_int()
     pos = pos + 1
-    if b0 == 28 || (b0 >= 32 && b0 <= 254) {
-      match type2_parse_int(data, pos, b0) {
+    if b0 == 28 || b0 == 255 || (b0 >= 32 && b0 <= 254) {
+      match type2_parse_number(data, pos, b0) {
         None => return false
         Some((v, p)) => {
           self.stack.push(v)
           pos = p
-        }
-      }
-      continue
-    }
-    if b0 == 255 {
-      match type2_read_i32_be(data, pos) {
-        None => return false
-        Some(bits) => {
-          // 16.16 fixed point.
-          self.stack.push((bits.to_double() / 65536.0).round().to_int())
-          pos = pos + 4
         }
       }
       continue
@@ -473,6 +763,9 @@ fn Type2Eval::eval(self : Type2Eval, data : BytesView, depth : Int) -> Bool {
       }
     }
   }
+  // Some CFF/CFF2 charstrings may terminate without an explicit endchar.
+  // Upstream closes any pending subpath in this case.
+  Type2Eval::close_path(self)
   true
 }
 
@@ -542,8 +835,6 @@ fn Type2Eval::eval_operator(
       let dy = self.stack.at(i + 1)
       self.x = self.x + dx
       self.y = self.y + dy
-      self.start_x = self.x
-      self.start_y = self.y
       self.out.push(MoveTo(self.x, self.y))
       self.reset_stack()
       Some((true, new_pos))
@@ -563,8 +854,6 @@ fn Type2Eval::eval_operator(
       } else {
         self.y = self.y + delta
       }
-      self.start_x = self.x
-      self.start_y = self.y
       self.out.push(MoveTo(self.x, self.y))
       self.reset_stack()
       Some((true, new_pos))
@@ -721,11 +1010,10 @@ fn Type2Eval::eval_operator(
     }
     // callsubr / callgsubr
     10 | 29 => {
-      if self.stack.length() <= 0 {
-        return None
+      let subr_number = match Type2Eval::pop_int(self) {
+        None => return None
+        Some(v) => v
       }
-      let subr_number = self.stack.at(self.stack.length() - 1)
-      self.stack.pop() |> ignore
       let ix = if op == 10 { self.local_subrs } else { self.global_subrs }
       match ix {
         None => None
@@ -741,8 +1029,28 @@ fn Type2Eval::eval_operator(
           }
       }
     }
-    // vsindex/blend are not supported in this MVP.
-    15 | 16 => None
+    // vsindex (variation store index)
+    15 =>
+      match self.blend_state {
+        None => None
+        Some(s) =>
+          match Type2Eval::pop_int(self) {
+            None => None
+            Some(v) =>
+              if Type2BlendState::set_store_index(s, v) {
+                Some((true, new_pos))
+              } else {
+                None
+              }
+          }
+      }
+    // blend
+    16 =>
+      if Type2Eval::apply_blend(self) {
+        Some((true, new_pos))
+      } else {
+        None
+      }
     _ => Some((true, new_pos))
   }
 }
@@ -752,8 +1060,9 @@ fn type2_path(
   charstring : BytesView,
   global_subrs : Type2Index?,
   local_subrs : Type2Index?,
+  blend_state : Type2BlendState?,
 ) -> Array[PathElement]? {
-  let eval = Type2Eval::new(global_subrs, local_subrs)
+  let eval = Type2Eval::new(global_subrs, local_subrs, blend_state)
   if Type2Eval::eval(eval, charstring, 0) {
     Some(eval.out)
   } else {

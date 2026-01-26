@@ -211,25 +211,29 @@ fn cff_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
 
 ///|
 fn cff_test_elem_eq(a : PathElement, b : PathElement) -> Bool {
+  fn feq(a : Double, b : Double) -> Bool {
+    (a - b).abs() <= 0.000001
+  }
+
   match (a, b) {
     (PathElement::MoveTo(ax, ay), PathElement::MoveTo(bx, by)) =>
-      ax == bx && ay == by
+      feq(ax, bx) && feq(ay, by)
     (PathElement::LineTo(ax, ay), PathElement::LineTo(bx, by)) =>
-      ax == bx && ay == by
+      feq(ax, bx) && feq(ay, by)
     (
       PathElement::QuadTo(ax0, ay0, ax, ay),
       PathElement::QuadTo(bx0, by0, bx, by),
-    ) => ax0 == bx0 && ay0 == by0 && ax == bx && ay == by
+    ) => feq(ax0, bx0) && feq(ay0, by0) && feq(ax, bx) && feq(ay, by)
     (
       PathElement::CurveTo(ax0, ay0, ax1, ay1, ax, ay),
       PathElement::CurveTo(bx0, by0, bx1, by1, bx, by),
     ) =>
-      ax0 == bx0 &&
-      ay0 == by0 &&
-      ax1 == bx1 &&
-      ay1 == by1 &&
-      ax == bx &&
-      ay == by
+      feq(ax0, bx0) &&
+      feq(ay0, by0) &&
+      feq(ax1, bx1) &&
+      feq(ay1, by1) &&
+      feq(ax, bx) &&
+      feq(ay, by)
     (PathElement::Close, PathElement::Close) => true
     _ => false
   }
@@ -259,9 +263,8 @@ test "CFF outline path uses callsubr (local subrs)" {
   let c = OutlineGlyphCollection::from_font(font)
   let path = c.path(1, DrawSettings::default()).unwrap()
   let expected = Array::from_fixed_array([
-    PathElement::MoveTo(0, 0),
-    PathElement::LineTo(100, 0),
-    PathElement::LineTo(0, 0),
+    PathElement::MoveTo(0.0, 0.0),
+    PathElement::LineTo(100.0, 0.0),
     PathElement::Close,
   ])
   inspect(cff_test_path_eq(path, expected), content="true")
