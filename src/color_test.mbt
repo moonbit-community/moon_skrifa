@@ -98,7 +98,7 @@ test "CPAL palettes basic" {
   let cpal = color_test_build_cpal()
   let sfnt = color_test_build_sfnt(Array::from_fixed_array([(TAG_CPAL, cpal)]))
   let font = FontRef::new(sfnt).unwrap()
-  let palettes = font.color_palettes().unwrap()
+  let palettes = font.color_palettes()
   inspect(palettes.len(), content="1")
   inspect(palettes.entries_per_palette(), content="2")
   let c0 = palettes.color(0, 0).unwrap()

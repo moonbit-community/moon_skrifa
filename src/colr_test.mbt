@@ -114,8 +114,8 @@ test "COLR v0 layers basic" {
   let colr = colr_test_build_colr()
   let sfnt = colr_test_build_sfnt(Array::from_fixed_array([(TAG_COLR, colr)]))
   let font = FontRef::new(sfnt).unwrap()
-  let cg = font.color_glyphs().unwrap()
-  let layers = cg.layers(5).unwrap()
+  let cg = font.color_glyphs()
+  let layers = cg.layers(GlyphId::new((5).to_uint16())).unwrap()
   inspect(layers.length(), content="2")
   inspect(layers.at(0).glyph_id().to_string(), content="10")
   inspect(layers.at(0).palette_index(), content="1")
@@ -124,12 +124,12 @@ test "COLR v0 layers basic" {
 }
 
 ///|
-test "COLR v1 skeleton: header detection" {
+test "COLR v1: header detection" {
   let colr = colr_test_build_colr_v1_empty()
   let sfnt = colr_test_build_sfnt(Array::from_fixed_array([(TAG_COLR, colr)]))
   let font = FontRef::new(sfnt).unwrap()
-  let cg = font.color_glyphs().unwrap()
+  let cg = font.color_glyphs()
   inspect(cg.version(), content="1")
   inspect(cg.has_colr_v1(), content="true")
-  inspect(cg.layers(5) is None, content="true")
+  inspect(cg.layers(GlyphId::new((5).to_uint16())) is None, content="true")
 }

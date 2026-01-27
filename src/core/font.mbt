@@ -13,10 +13,62 @@
 // limitations under the License.
 
 ///|
-/// FontRef (skeleton).
+/// Basic representation of an in-memory font resource.
 ///
 /// Ported from `fontations/skrifa/src/font.rs` (Apache-2.0 OR MIT).
-pub type GlyphId = UInt16
+pub struct GlyphId {
+  priv value : UInt16
+}
+
+///|
+pub fn GlyphId::new(value : UInt16) -> GlyphId {
+  GlyphId::{ value, }
+}
+
+///|
+pub fn GlyphId::default() -> GlyphId {
+  GlyphId::new(0)
+}
+
+///|
+pub fn GlyphId::notdef() -> GlyphId {
+  GlyphId::default()
+}
+
+///|
+pub fn GlyphId::to_u16(self : GlyphId) -> UInt16 {
+  self.value
+}
+
+///|
+pub fn GlyphId::to_int(self : GlyphId) -> Int {
+  self.value.to_int()
+}
+
+///|
+pub fn GlyphId::to_uint64(self : GlyphId) -> UInt64 {
+  self.value.to_uint64()
+}
+
+///|
+pub fn GlyphId::to_string(self : GlyphId) -> String {
+  self.value.to_string()
+}
+
+///|
+pub impl Show for GlyphId with output(self, logger) {
+  logger.write_string(self.value.to_string())
+}
+
+///|
+pub impl Eq for GlyphId with equal(self, other) {
+  self.value == other.value
+}
+
+///|
+pub impl Compare for GlyphId with compare(self, other) {
+  self.value.to_int() - other.value.to_int()
+}
 
 ///|
 const TAG_TTCF : UInt = 0x74746366

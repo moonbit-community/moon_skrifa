@@ -2,23 +2,23 @@
 package "Milky2018/moon_skrifa/outline"
 
 import {
-  "Milky2018/moon_skrifa",
+  "Milky2018/moon_skrifa/core",
 }
 
 // Values
-pub fn require_interpreter(@moon_skrifa.FontRef) -> Bool
+pub fn require_interpreter(@core.FontRef) -> Bool
 
 pub fn[R] with_temporary_memory(Int, (Array[Byte]) -> R) -> R
 
 // Errors
 pub(all) suberror DrawError {
   NoSources
-  GlyphNotFound(UInt16)
+  GlyphNotFound(@core.GlyphId)
   InsufficientMemory
-  RecursionLimitExceeded(UInt16)
-  TooManyPoints(UInt16)
+  RecursionLimitExceeded(@core.GlyphId)
+  TooManyPoints(@core.GlyphId)
   HintingFailed(HintError)
-  InvalidAnchorPoint(UInt16, UInt16)
+  InvalidAnchorPoint(@core.GlyphId, UInt16)
   PostScript
   ToPath(ToPathError)
   Read
@@ -70,10 +70,10 @@ pub fn DrawSettings::default() -> Self
 pub fn DrawSettings::hinted(HintingInstance, Bool) -> Self
 pub fn DrawSettings::hinting_instance(Self) -> HintingInstance?
 pub fn DrawSettings::is_pedantic(Self) -> Bool
-pub fn DrawSettings::location(Self) -> @moon_skrifa.LocationRef
+pub fn DrawSettings::location(Self) -> @core.LocationRef
 pub fn DrawSettings::path_style(Self) -> PathStyle
-pub fn DrawSettings::size(Self) -> @moon_skrifa.Size
-pub fn DrawSettings::unhinted(@moon_skrifa.Size, @moon_skrifa.LocationRef) -> Self
+pub fn DrawSettings::size(Self) -> @core.Size
+pub fn DrawSettings::unhinted(@core.Size, @core.LocationRef) -> Self
 pub fn DrawSettings::with_memory(Self, Array[Byte]?) -> Self
 pub fn DrawSettings::with_path_style(Self, PathStyle) -> Self
 
@@ -86,7 +86,9 @@ pub fn Engine::into(Self) -> HintingOptions
 pub fn Engine::resolve_auto_fallback(Self, OutlineGlyphCollection) -> Self
 
 pub struct GlyphStyles {
+  // private fields
 }
+pub fn GlyphStyles::new(OutlineGlyphCollection) -> Self
 
 pub(all) enum Hinting {
   None_
@@ -99,10 +101,10 @@ pub struct HintingInstance {
   // private fields
 }
 pub fn HintingInstance::is_enabled(Self) -> Bool
-pub fn HintingInstance::location(Self) -> @moon_skrifa.LocationRef
-pub fn HintingInstance::new(OutlineGlyphCollection, @moon_skrifa.Size, @moon_skrifa.LocationRef, HintingOptions) -> Result[Self, DrawError]
-pub fn HintingInstance::reconfigure(Self, OutlineGlyphCollection, @moon_skrifa.Size, @moon_skrifa.LocationRef, HintingOptions) -> Result[Unit, DrawError]
-pub fn HintingInstance::size(Self) -> @moon_skrifa.Size
+pub fn HintingInstance::location(Self) -> @core.LocationRef
+pub fn HintingInstance::new(OutlineGlyphCollection, @core.Size, @core.LocationRef, HintingOptions) -> Result[Self, DrawError]
+pub fn HintingInstance::reconfigure(Self, OutlineGlyphCollection, @core.Size, @core.LocationRef, HintingOptions) -> Result[Unit, DrawError]
+pub fn HintingInstance::size(Self) -> @core.Size
 pub fn HintingInstance::target(Self) -> Target
 
 pub(all) enum HintingMode {
@@ -134,31 +136,31 @@ pub struct OutlineGlyph {
 pub fn[P : OutlinePen] OutlineGlyph::draw(Self, DrawSettings, P) -> Result[AdjustedMetrics, DrawError]
 pub fn OutlineGlyph::draw_memory_size(Self, Hinting) -> Int
 pub fn OutlineGlyph::format(Self) -> OutlineGlyphFormat
-pub fn OutlineGlyph::glyph_id(Self) -> UInt16
+pub fn OutlineGlyph::glyph_id(Self) -> @core.GlyphId
 pub fn OutlineGlyph::has_hinting(Self) -> Bool?
 pub fn OutlineGlyph::has_overlaps(Self) -> Bool?
 pub fn OutlineGlyph::path(Self, DrawSettings) -> Result[Array[PathElement], DrawError]
 
 pub struct OutlineGlyphCollection {
-  font : @moon_skrifa.FontRef
+  font : @core.FontRef
   // private fields
 }
-pub fn[P : OutlinePen] OutlineGlyphCollection::draw(Self, UInt16, DrawSettings, P) -> Bool
-pub fn[P : OutlinePen] OutlineGlyphCollection::draw_unscaled(Self, UInt16, P) -> Bool
+pub fn[P : OutlinePen] OutlineGlyphCollection::draw(Self, @core.GlyphId, DrawSettings, P) -> Bool
+pub fn[P : OutlinePen] OutlineGlyphCollection::draw_unscaled(Self, @core.GlyphId, P) -> Bool
 pub fn OutlineGlyphCollection::format(Self) -> OutlineGlyphFormat?
 pub fn OutlineGlyphCollection::fractional_size_hinting(Self) -> Bool
-pub fn OutlineGlyphCollection::from_font(@moon_skrifa.FontRef) -> Self
-pub fn OutlineGlyphCollection::get(Self, UInt16) -> OutlineGlyph?
+pub fn OutlineGlyphCollection::from_font(@core.FontRef) -> Self
+pub fn OutlineGlyphCollection::get(Self, @core.GlyphId) -> OutlineGlyph?
 pub fn OutlineGlyphCollection::glyph_count(Self) -> Int
-pub fn OutlineGlyphCollection::iter(Self) -> Array[(UInt16, OutlineGlyph)]
-pub fn OutlineGlyphCollection::new(@moon_skrifa.FontRef) -> Self
-pub fn OutlineGlyphCollection::path(Self, UInt16, DrawSettings) -> Array[PathElement]?
-pub fn OutlineGlyphCollection::path_unscaled(Self, UInt16) -> Array[PathElement]?
+pub fn OutlineGlyphCollection::iter(Self) -> Array[(@core.GlyphId, OutlineGlyph)]
+pub fn OutlineGlyphCollection::new(@core.FontRef) -> Self
+pub fn OutlineGlyphCollection::path(Self, @core.GlyphId, DrawSettings) -> Array[PathElement]?
+pub fn OutlineGlyphCollection::path_unscaled(Self, @core.GlyphId) -> Array[PathElement]?
 pub fn OutlineGlyphCollection::prefer_interpreter(Self) -> Bool
 pub fn OutlineGlyphCollection::require_interpreter(Self) -> Bool
-pub fn OutlineGlyphCollection::svg_path(Self, UInt16, DrawSettings) -> String?
-pub fn OutlineGlyphCollection::svg_path_unscaled(Self, UInt16) -> String?
-pub fn OutlineGlyphCollection::with_format(@moon_skrifa.FontRef, OutlineGlyphFormat) -> Self?
+pub fn OutlineGlyphCollection::svg_path(Self, @core.GlyphId, DrawSettings) -> String?
+pub fn OutlineGlyphCollection::svg_path_unscaled(Self, @core.GlyphId) -> String?
+pub fn OutlineGlyphCollection::with_format(@core.FontRef, OutlineGlyphFormat) -> Self?
 
 pub(all) enum OutlineGlyphFormat {
   Glyf

@@ -105,3 +105,10 @@ test "FontRef::from_index bounds" {
   }
   inspect(ok, content="true")
 }
+
+///|
+test "GlyphId helpers" {
+  let gid : GlyphId = GlyphId::new(5)
+  inspect(gid.to_u16().to_int(), content="5")
+  inspect(GlyphId::notdef().to_u16().to_int(), content="0")
+}

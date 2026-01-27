@@ -68,7 +68,7 @@ pub fn ColorLayer::palette_index(self : ColorLayer) -> Int {
 
 ///|
 pub struct ColorGlyphCollection {
-  priv colr : BytesView
+  priv colr : BytesView?
   priv version : Int
   priv base_off : Int
   priv layer_off : Int
@@ -82,35 +82,35 @@ pub struct ColorGlyphCollection {
 }
 
 ///|
-pub fn ColorGlyphCollection::new(font : FontRef) -> ColorGlyphCollection? {
+pub fn ColorGlyphCollection::new(font : FontRef) -> ColorGlyphCollection {
   let colr = match font.table(COLR_TAG_COLR) {
-    None => return None
+    None => return ColorGlyphCollection::empty()
     Some(v) => v
   }
   if colr.length() < 14 {
-    return None
+    return ColorGlyphCollection::empty()
   }
   let version = colr_read_u16_be(colr, 0).unwrap_or(-1)
   if version != 0 && version != 1 {
-    return None
+    return ColorGlyphCollection::empty()
   }
   if version == 1 && colr.length() < 34 {
-    return None
+    return ColorGlyphCollection::empty()
   }
   let num_base = colr_read_u16_be(colr, 2).unwrap_or(-1)
   let base_off = colr_read_u32_be_int(colr, 4).unwrap_or(-1)
   let layer_off = colr_read_u32_be_int(colr, 8).unwrap_or(-1)
   let num_layers = colr_read_u16_be(colr, 12).unwrap_or(-1)
   if num_base < 0 || base_off < 0 || layer_off < 0 || num_layers < 0 {
-    return None
+    return ColorGlyphCollection::empty()
   }
   let base_end = base_off + num_base * 6
   let layers_end = layer_off + num_layers * 4
   if base_end < base_off || base_end > colr.length() {
-    return None
+    return ColorGlyphCollection::empty()
   }
   if layers_end < layer_off || layers_end > colr.length() {
-    return None
+    return ColorGlyphCollection::empty()
   }
   let mut v1_base_glyph_list_off : Int? = None
   let mut v1_layer_list_off : Int? = None
@@ -140,8 +140,8 @@ pub fn ColorGlyphCollection::new(font : FontRef) -> ColorGlyphCollection? {
       v1_item_variation_store_off = Some(ivs)
     }
   }
-  Some(ColorGlyphCollection::{
-    colr,
+  ColorGlyphCollection::{
+    colr: Some(colr),
     version,
     base_off,
     layer_off,
@@ -152,7 +152,24 @@ pub fn ColorGlyphCollection::new(font : FontRef) -> ColorGlyphCollection? {
     v1_clip_list_off,
     v1_var_index_map_off,
     v1_item_variation_store_off,
-  })
+  }
+}
+
+///|
+fn ColorGlyphCollection::empty() -> ColorGlyphCollection {
+  ColorGlyphCollection::{
+    colr: None,
+    version: 0,
+    base_off: 0,
+    layer_off: 0,
+    num_base: 0,
+    num_layers: 0,
+    v1_base_glyph_list_off: None,
+    v1_layer_list_off: None,
+    v1_clip_list_off: None,
+    v1_var_index_map_off: None,
+    v1_item_variation_store_off: None,
+  }
 }
 
 ///|
@@ -162,7 +179,7 @@ pub fn ColorGlyphCollection::version(self : ColorGlyphCollection) -> Int {
 
 ///|
 pub fn ColorGlyphCollection::has_colr_v1(self : ColorGlyphCollection) -> Bool {
-  self.version == 1
+  self.colr is Some(_) && self.version == 1
 }
 
 ///|
@@ -170,6 +187,10 @@ pub fn ColorGlyphCollection::layers(
   self : ColorGlyphCollection,
   glyph_id : GlyphId,
 ) -> Array[ColorLayer]? {
+  let colr = match self.colr {
+    None => return None
+    Some(v) => v
+  }
   let gid = glyph_id.to_uint64().to_int()
   if gid < 0 {
     return None
@@ -180,7 +201,7 @@ pub fn ColorGlyphCollection::layers(
   while lo < hi {
     let mid = (lo + hi) / 2
     let pos = self.base_off + mid * 6
-    let mgid = colr_read_u16_be(self.colr, pos).unwrap_or(-1)
+    let mgid = colr_read_u16_be(colr, pos).unwrap_or(-1)
     if mgid < gid {
       lo = mid + 1
     } else {
@@ -191,12 +212,12 @@ pub fn ColorGlyphCollection::layers(
     return None
   }
   let pos = self.base_off + lo * 6
-  let found = colr_read_u16_be(self.colr, pos).unwrap_or(-1)
+  let found = colr_read_u16_be(colr, pos).unwrap_or(-1)
   if found != gid {
     return None
   }
-  let first_layer = colr_read_u16_be(self.colr, pos + 2).unwrap_or(-1)
-  let num = colr_read_u16_be(self.colr, pos + 4).unwrap_or(-1)
+  let first_layer = colr_read_u16_be(colr, pos + 2).unwrap_or(-1)
+  let num = colr_read_u16_be(colr, pos + 4).unwrap_or(-1)
   if first_layer < 0 || num < 0 {
     return None
   }
@@ -206,13 +227,13 @@ pub fn ColorGlyphCollection::layers(
   let out : Array[ColorLayer] = Array::new(capacity=num)
   for i in 0..<num {
     let lpos = self.layer_off + (first_layer + i) * 4
-    let layer_gid = colr_read_u16_be(self.colr, lpos).unwrap_or(-1)
-    let palette_idx = colr_read_u16_be(self.colr, lpos + 2).unwrap_or(-1)
+    let layer_gid = colr_read_u16_be(colr, lpos).unwrap_or(-1)
+    let palette_idx = colr_read_u16_be(colr, lpos + 2).unwrap_or(-1)
     if layer_gid < 0 || palette_idx < 0 {
       continue
     }
     out.push(ColorLayer::{
-      glyph_id: layer_gid.to_uint16(),
+      glyph_id: GlyphId::new(layer_gid.to_uint16()),
       palette_index: palette_idx,
     })
   }
@@ -220,6 +241,6 @@ pub fn ColorGlyphCollection::layers(
 }
 
 ///|
-pub fn FontRef::color_glyphs(self : FontRef) -> ColorGlyphCollection? {
+pub fn FontRef::color_glyphs(self : FontRef) -> ColorGlyphCollection {
   ColorGlyphCollection::new(self)
 }

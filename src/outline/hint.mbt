@@ -13,7 +13,7 @@
 // limitations under the License.
 
 ///|
-/// Support for applying embedded hinting instructions (no-op skeleton).
+/// Support for applying embedded hinting instructions.
 ///
 /// Ported from `fontations/skrifa/src/outline/hint.rs` (Apache-2.0 OR MIT).
 
@@ -236,6 +236,21 @@ pub struct HintingInstance {
 priv enum HinterKind {
   None_
   Glyf(TtHintInstance)
+  Auto(AutoHintInstance)
+}
+
+///|
+/// Placeholder for the runtime autohinter instance.
+///
+/// The full implementation is tracked separately; this type is used to wire
+/// `Engine::Auto` through `HintingInstance` and `DrawSettings`.
+priv struct AutoHintInstance {
+  priv _private : Unit
+}
+
+///|
+fn AutoHintInstance::default() -> AutoHintInstance {
+  AutoHintInstance::{ _private: () }
 }
 
 ///|
@@ -286,6 +301,7 @@ pub fn HintingInstance::is_enabled(self : HintingInstance) -> Bool {
   match self.kind {
     HinterKind::None_ => false
     HinterKind::Glyf(tt) => tt.is_enabled()
+    HinterKind::Auto(_) => true
   }
 }
 
@@ -351,6 +367,11 @@ pub fn HintingInstance::reconfigure(
           self.kind = HinterKind::Glyf(tt)
         }
         _ => ()
+      }
+    Engine::Auto(_styles) =>
+      match outlines.format() {
+        None => ()
+        Some(_) => self.kind = HinterKind::Auto(AutoHintInstance::default())
       }
     _ => ()
   }
@@ -588,6 +609,72 @@ fn hint_hdmx_width(
     }
   }
   None
+}
+
+///|
+fn HintingInstance::hinted_path(
+  self : HintingInstance,
+  glyph : OutlineGlyph,
+  is_pedantic : Bool,
+  path_style : PathStyle,
+) -> Result[(AdjustedMetrics, Array[PathElement]), DrawError] {
+  match self.kind {
+    HinterKind::None_ => Err(DrawError::NoSources)
+    HinterKind::Auto(_) => {
+      let settings = DrawSettings::unhinted(
+        self.size,
+        @moon_skrifa.LocationRef::new(self.coords.op_as_view()),
+      ).with_path_style(path_style)
+      let metrics = match glyph.draw(settings, NullPen::new()) {
+        Err(e) => return Err(e)
+        Ok(m) => m
+      }
+      // Match upstream: when hinting is requested, advance width is rounded to
+      // integer pixels.
+      let metrics = AdjustedMetrics::{
+        has_overlaps: metrics.has_overlaps,
+        lsb: metrics.lsb,
+        advance_width: match metrics.advance_width {
+          None => None
+          Some(v) => Some(v.round())
+        },
+      }
+      let path = match glyph.path(settings) {
+        Err(e) => return Err(e)
+        Ok(p) => p
+      }
+      Ok((metrics, path))
+    }
+    HinterKind::Glyf(tt) => {
+      if path_style is PathStyle::HarfBuzz {
+        return Err(DrawError::HarfBuzzHintingUnsupported)
+      }
+      if !tt.is_enabled() {
+        let settings = DrawSettings::unhinted(
+          self.size,
+          @moon_skrifa.LocationRef::new(self.coords.op_as_view()),
+        ).with_path_style(path_style)
+        let metrics0 = match glyph.draw(settings, NullPen::new()) {
+          Err(e) => return Err(e)
+          Ok(m) => m
+        }
+        let metrics = AdjustedMetrics::{
+          has_overlaps: metrics0.has_overlaps,
+          lsb: metrics0.lsb,
+          advance_width: match metrics0.advance_width {
+            None => None
+            Some(v) => Some(v.round())
+          },
+        }
+        let path = match glyph.path(settings) {
+          Err(e) => return Err(e)
+          Ok(p) => p
+        }
+        return Ok((metrics, path))
+      }
+      self.hinted_glyf_path(glyph, is_pedantic)
+    }
+  }
 }
 
 ///|

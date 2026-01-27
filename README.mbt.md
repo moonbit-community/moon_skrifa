@@ -10,10 +10,12 @@ Repository: https://github.com/moonbit-community/moon_skrifa
 - Embedded hinting (TrueType `glyf`) is implemented and wired into outline drawing via `HintingInstance` + `DrawSettings::hinted(...)`.
   - Supports both simple and composite `glyf` glyphs (FreeType-style path building).
   - Non-pedantic hinting matches fontations behavior (interpreter errors may be ignored); pedantic mode returns errors.
+- Runtime autohinting (for fonts without embedded instructions) is not yet implemented.
 
 ## Packages
 
-- `Milky2018/moon_skrifa`: core (FontRef, charmap, names/strings, metrics, bitmaps, COLR traversal)
+- `Milky2018/moon_skrifa`: facade re-exporting `Milky2018/moon_skrifa/core` (+ `OutlineGlyph*`)
+- `Milky2018/moon_skrifa/core`: core metadata (FontRef, charmap, names/strings, metrics, bitmaps, COLR traversal)
 - `Milky2018/moon_skrifa/outline`: outline extraction (glyf/CFF/CFF2), pens + SVG path output
 
 ## Install / Import
@@ -25,8 +27,8 @@ Add the dependency to your package `moon.pkg.json`:
   "import": [
     "moonbitlang/core/prelude",
     "moonbitlang/core/bytes",
-    "Milky2018/moon_skrifa",
-    "Milky2018/moon_skrifa/outline"
+    { "path": "Milky2018/moon_skrifa", "alias": "moon_skrifa" },
+    { "path": "Milky2018/moon_skrifa/outline", "alias": "moon_skrifa_outline" }
   ]
 }
 ```
@@ -77,8 +79,8 @@ match family.english_or_first() {
 ### Font / Glyph Metrics
 
 ```moonbit
-let fm = font.font_metrics(@moon_skrifa.Size::new(16.0))
-let gm = font.glyph_metrics(@moon_skrifa.Size::unscaled(), @moon_skrifa.LocationRef::default()).unwrap()
+let fm = font.metrics(@moon_skrifa.Size::new(16.0), @moon_skrifa.LocationRef::default())
+let gm = font.glyph_metrics(@moon_skrifa.Size::unscaled(), @moon_skrifa.LocationRef::default())
 
 let aw = gm.advance_width(gid).unwrap()
 let lsb = gm.left_side_bearing(gid).unwrap()

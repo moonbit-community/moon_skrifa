@@ -1,7 +1,9 @@
 {
   "import": [
     "moonbitlang/core/prelude",
+    "moonbitlang/core/array",
     "moonbitlang/core/bytes",
-    { "path": "Milky2018/moon_skrifa/core", "alias": "moon_skrifa" }
+    "moonbitlang/core/math"
   ]
 }
+

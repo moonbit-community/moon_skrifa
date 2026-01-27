@@ -267,17 +267,44 @@ test "GlyphMetrics basic + HVAR deltas" {
     ]),
   )
   let font = FontRef::new(sfnt).unwrap()
-  let gm0 = font
-    .glyph_metrics(Size::unscaled(), LocationRef::default())
+  let gm0 = font.glyph_metrics(Size::unscaled(), LocationRef::default())
+  inspect(
+    gm0
+    .advance_width(GlyphId::new((0).to_uint16()))
     .unwrap()
-  inspect(gm0.advance_width(0).unwrap().to_int().to_string(), content="500")
-  inspect(gm0.left_side_bearing(0).unwrap().to_int().to_string(), content="10")
+    .to_int()
+    .to_string(),
+    content="500",
+  )
+  inspect(
+    gm0
+    .left_side_bearing(GlyphId::new((0).to_uint16()))
+    .unwrap()
+    .to_int()
+    .to_string(),
+    content="10",
+  )
   let coords = Array::from_fixed_array([16384])
-  let gm1 = font
-    .glyph_metrics(Size::unscaled(), LocationRef::new(coords.op_as_view()))
+  let gm1 = font.glyph_metrics(
+    Size::unscaled(),
+    LocationRef::new(coords.op_as_view()),
+  )
+  inspect(
+    gm1
+    .advance_width(GlyphId::new((0).to_uint16()))
     .unwrap()
-  inspect(gm1.advance_width(0).unwrap().to_int().to_string(), content="550")
-  inspect(gm1.left_side_bearing(0).unwrap().to_int().to_string(), content="60")
+    .to_int()
+    .to_string(),
+    content="550",
+  )
+  inspect(
+    gm1
+    .left_side_bearing(GlyphId::new((0).to_uint16()))
+    .unwrap()
+    .to_int()
+    .to_string(),
+    content="60",
+  )
 }
 
 ///|
@@ -297,8 +324,8 @@ test "GlyphMetrics bounds from outline path" {
     ]),
   )
   let font = FontRef::new(sfnt).unwrap()
-  let gm = font.glyph_metrics(Size::unscaled(), LocationRef::default()).unwrap()
-  let b = gm.bounds(0).unwrap()
+  let gm = font.glyph_metrics(Size::unscaled(), LocationRef::default())
+  let b = gm.bounds(GlyphId::new((0).to_uint16())).unwrap()
   inspect(b.x_min().to_int().to_string(), content="0")
   inspect(b.y_min().to_int().to_string(), content="0")
   inspect(b.x_max().to_int().to_string(), content="100")
@@ -322,15 +349,42 @@ test "GlyphMetrics gvar phantom deltas fallback" {
     ]),
   )
   let font = FontRef::new(sfnt).unwrap()
-  let gm0 = font
-    .glyph_metrics(Size::unscaled(), LocationRef::default())
+  let gm0 = font.glyph_metrics(Size::unscaled(), LocationRef::default())
+  inspect(
+    gm0
+    .advance_width(GlyphId::new((0).to_uint16()))
     .unwrap()
-  inspect(gm0.advance_width(0).unwrap().to_int().to_string(), content="500")
-  inspect(gm0.left_side_bearing(0).unwrap().to_int().to_string(), content="10")
+    .to_int()
+    .to_string(),
+    content="500",
+  )
+  inspect(
+    gm0
+    .left_side_bearing(GlyphId::new((0).to_uint16()))
+    .unwrap()
+    .to_int()
+    .to_string(),
+    content="10",
+  )
   let coords = Array::from_fixed_array([16384])
-  let gm1 = font
-    .glyph_metrics(Size::unscaled(), LocationRef::new(coords.op_as_view()))
+  let gm1 = font.glyph_metrics(
+    Size::unscaled(),
+    LocationRef::new(coords.op_as_view()),
+  )
+  inspect(
+    gm1
+    .advance_width(GlyphId::new((0).to_uint16()))
     .unwrap()
-  inspect(gm1.advance_width(0).unwrap().to_int().to_string(), content="520")
-  inspect(gm1.left_side_bearing(0).unwrap().to_int().to_string(), content="20")
+    .to_int()
+    .to_string(),
+    content="520",
+  )
+  inspect(
+    gm1
+    .left_side_bearing(GlyphId::new((0).to_uint16()))
+    .unwrap()
+    .to_int()
+    .to_string(),
+    content="20",
+  )
 }

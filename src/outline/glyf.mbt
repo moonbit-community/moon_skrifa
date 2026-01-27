@@ -693,6 +693,7 @@ priv struct GlyfCtx {
   index_to_loc_format : Int
   coords : ArrayView[@moon_skrifa.NormalizedCoord]
   is_scaled : Bool
+  is_hinted : Bool
   scale_bits : Int
   hb_scale : Double
 }
@@ -924,10 +925,17 @@ fn glyf_composite_path(
         } else {
           dx_i * 64
         }
-        let dy_bits = if ctx.is_scaled {
+        let mut dy_bits = if ctx.is_scaled {
           glyf_mul_16_16(dy_i, ctx.scale_bits)
         } else {
           dy_i * 64
+        }
+        if ctx.is_scaled &&
+          ctx.is_hinted &&
+          (comp.flags & COMPOSITE_ROUND_XY_TO_GRID) != 0 {
+          // Match fontations-reference (FreeType behavior): only round the y
+          // component, and only when hinting is enabled.
+          dy_bits = (dy_bits + 32) & -64
         }
         (
           glyf_f26dot6_bits_to_double(dx_bits),
@@ -939,9 +947,6 @@ fn glyf_composite_path(
         // applied without scaling, even when points are scaled to 16.16.
         (dx, dy)
     }
-
-    // TODO: apply ROUND_XY_TO_GRID only when hinting is enabled.
-    COMPOSITE_ROUND_XY_TO_GRID |> ignore
     let t = GlyfTransform::{
       a: comp.a,
       b: comp.b,
@@ -990,12 +995,17 @@ fn glyf_outline_path_idx(
               glyf_composite_path(
                 ctx,
                 glyph,
-                idx.to_uint16(),
+                @moon_skrifa.GlyphId::new(idx.to_uint16()),
                 visited,
                 path_style,
               )
             } else {
-              glyf_simple_path(ctx, glyph, idx.to_uint16(), path_style)
+              glyf_simple_path(
+                ctx,
+                glyph,
+                @moon_skrifa.GlyphId::new(idx.to_uint16()),
+                path_style,
+              )
             }
         }
       }
@@ -1011,6 +1021,7 @@ fn glyf_outline_path(
   coords : ArrayView[@moon_skrifa.NormalizedCoord],
   path_style : PathStyle,
   size : @moon_skrifa.Size,
+  is_hinted : Bool,
 ) -> Array[PathElement]? {
   let upem = glyf_units_per_em(font)
   let (is_scaled, scale_bits) = glyf_compute_scale_bits(size, upem)
@@ -1063,6 +1074,7 @@ fn glyf_outline_path(
     index_to_loc_format,
     coords,
     is_scaled,
+    is_hinted,
     scale_bits,
     hb_scale,
   }
@@ -1229,6 +1241,7 @@ fn glyf_outline_info(
     index_to_loc_format,
     coords: empty.op_as_view(),
     is_scaled: false,
+    is_hinted: false,
     scale_bits: 0x10000,
     hb_scale: 1.0,
   }

@@ -1669,7 +1669,7 @@ fn[P : ColorPainter] color_trav_traverse_paint(
       if sub_off <= 0 || gid_i < 0 {
         Err(ParseError)
       } else {
-        let gid = gid_i.to_uint16()
+        let gid = GlyphId::new(gid_i.to_uint16())
         ColorPainter::push_clip_glyph(painter, gid)
         let abs_sub = paint_off + sub_off
         let r = color_trav_traverse_paint(
@@ -1689,7 +1689,7 @@ fn[P : ColorPainter] color_trav_traverse_paint(
       if gid_i < 0 {
         Err(ParseError)
       } else {
-        let target = gid_i.to_uint16()
+        let target = GlyphId::new(gid_i.to_uint16())
         match ColorPainter::paint_cached_color_glyph(painter, target) {
           Err(e) => Err(e)
           Ok(PaintCachedColorGlyph::Ok) => Ok(())

@@ -62,7 +62,18 @@ test "MetadataProvider facade basic" {
   let attrs = MetadataProvider::attributes(font)
   inspect(attrs.weight().value(), content="400")
   inspect(attrs.stretch().ratio(), content="1")
-  inspect(MetadataProvider::metrics(font) is None, content="true")
+  let metrics = MetadataProvider::metrics(
+    font,
+    Size::unscaled(),
+    LocationRef::default(),
+  )
+  inspect(metrics.units_per_em().to_int(), content="0")
+  let gm = MetadataProvider::glyph_metrics(
+    font,
+    Size::unscaled(),
+    LocationRef::default(),
+  )
+  inspect(gm.glyph_count(), content="0")
   let cmap = MetadataProvider::charmap(font)
   inspect(!cmap.has_map(), content="true")
   inspect(!cmap.has_variant_map(), content="true")
@@ -70,6 +81,9 @@ test "MetadataProvider facade basic" {
   inspect(MetadataProvider::named_instances(font).len(), content="0")
   inspect(MetadataProvider::glyph_names(font).num_glyphs(), content="0")
   inspect(MetadataProvider::bitmap_strikes(font).len(), content="0")
-  inspect(MetadataProvider::color_palettes(font) is None, content="true")
-  inspect(MetadataProvider::color_glyphs(font) is None, content="true")
+  inspect(MetadataProvider::color_palettes(font).len(), content="0")
+  inspect(
+    MetadataProvider::color_glyphs(font).layers(GlyphId::default()) is None,
+    content="true",
+  )
 }

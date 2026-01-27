@@ -13,12 +13,11 @@
 // limitations under the License.
 
 ///|
-/// Outline module (skeleton).
+/// Outline module.
 ///
 /// Ported from `fontations/skrifa/src/outline/*` (Apache-2.0 OR MIT).
 ///
-/// This package is being incrementally refactored toward API/behavior parity
-/// with upstream `skrifa::outline`.
+/// This package targets API/behavior parity with upstream `skrifa::outline`.
 const TAG_GLYF : UInt = 0x676C7966 // "glyf"
 
 ///|
@@ -299,16 +298,9 @@ pub fn[P : OutlinePen] OutlineGlyph::draw(
   settings : DrawSettings,
   pen : P,
 ) -> Result[AdjustedMetrics, DrawError] {
-  if settings.hinting_instance() is Some(_) &&
-    settings.path_style() is PathStyle::HarfBuzz {
-    return Err(DrawError::HarfBuzzHintingUnsupported)
-  }
-  if self.kind is OutlineGlyphFormat::Glyf &&
-    settings.path_style() is PathStyle::FreeType &&
-    settings.hinting_instance() is Some(h) &&
-    h.is_enabled() {
+  if settings.hinting_instance() is Some(h) {
     let (metrics, path) = match
-      h.hinted_glyf_path(self, settings.is_pedantic()) {
+      h.hinted_path(self, settings.is_pedantic(), settings.path_style()) {
       Err(e) => return Err(e)
       Ok(v) => v
     }
@@ -328,16 +320,13 @@ pub fn[P : OutlinePen] OutlineGlyph::draw(
   let metrics0 = match self.kind {
     OutlineGlyphFormat::Glyf => {
       let has_overlaps = self.has_overlaps().unwrap_or(false)
-      let (lsb0, advance_width0) = match
-        @moon_skrifa.FontRef::glyph_metrics(
-          self.font,
-          settings.size(),
-          settings.location(),
-        ) {
-        None => (None, None)
-        Some(gm) =>
-          (gm.left_side_bearing(self.glyph_id), gm.advance_width(self.glyph_id))
-      }
+      let gm = @moon_skrifa.FontRef::glyph_metrics(
+        self.font,
+        settings.size(),
+        settings.location(),
+      )
+      let lsb0 = gm.left_side_bearing(self.glyph_id)
+      let advance_width0 = gm.advance_width(self.glyph_id)
       let (lsb, advance_width) = if settings.path_style() is PathStyle::FreeType {
         (
           match lsb0 {
@@ -356,23 +345,7 @@ pub fn[P : OutlinePen] OutlineGlyph::draw(
     }
     _ => AdjustedMetrics::default()
   }
-  // Match upstream behavior: when drawing via a (possibly disabled) hinting
-  // instance, advance width is rounded to the nearest pixel even if we fall
-  // back to the unhinted path.
-  let metrics = if settings.hinting_instance() is Some(h) &&
-    settings.path_style() is PathStyle::FreeType &&
-    !h.is_enabled() {
-    AdjustedMetrics::{
-      has_overlaps: metrics0.has_overlaps,
-      lsb: metrics0.lsb,
-      advance_width: match metrics0.advance_width {
-        None => None
-        Some(v) => Some(v.round())
-      },
-    }
-  } else {
-    metrics0
-  }
+  let metrics = metrics0
   let path = match self.path(settings) {
     Err(e) => return Err(e)
     Ok(p) => p
@@ -397,15 +370,9 @@ pub fn OutlineGlyph::path(
   self : OutlineGlyph,
   settings : DrawSettings,
 ) -> Result[Array[PathElement], DrawError] {
-  if settings.hinting_instance() is Some(_) &&
-    settings.path_style() is PathStyle::HarfBuzz {
-    return Err(DrawError::HarfBuzzHintingUnsupported)
-  }
-  if self.kind is OutlineGlyphFormat::Glyf &&
-    settings.path_style() is PathStyle::FreeType &&
-    settings.hinting_instance() is Some(h) &&
-    h.is_enabled() {
-    let (_, path) = match h.hinted_glyf_path(self, settings.is_pedantic()) {
+  if settings.hinting_instance() is Some(h) {
+    let (_, path) = match
+      h.hinted_path(self, settings.is_pedantic(), settings.path_style()) {
       Err(e) => return Err(e)
       Ok(v) => v
     }
@@ -424,6 +391,7 @@ pub fn OutlineGlyph::path(
             coords,
             path_style,
             settings.size(),
+            false,
           ) {
           None => Err(DrawError::GlyphNotFound(self.glyph_id))
           Some(p) => Ok(p)
@@ -480,7 +448,7 @@ pub fn OutlineGlyphCollection::iter(
   let out : Array[(@moon_skrifa.GlyphId, OutlineGlyph)] = Array::new()
   let n = self.glyph_count()
   for i in 0..<n {
-    let gid : @moon_skrifa.GlyphId = i.to_uint16()
+    let gid : @moon_skrifa.GlyphId = @moon_skrifa.GlyphId::new(i.to_uint16())
     match self.get(gid) {
       None => ()
       Some(g) => out.push((gid, g))
@@ -549,7 +517,7 @@ fn table_is_non_empty(font : @moon_skrifa.FontRef, tag : UInt) -> Bool {
 /// This matches the high-level selection logic used by upstream:
 /// - CFF/CFF2 prefers the (PostScript) interpreter
 /// - glyf prefers the TrueType interpreter when fpgm/prep are non-empty, or
-///   for a small set of "tricky" fonts (stubbed by name/ID in this port)
+///   for a small set of "tricky" fonts (by name/ID heuristics)
 pub fn OutlineGlyphCollection::prefer_interpreter(
   self : OutlineGlyphCollection,
 ) -> Bool {

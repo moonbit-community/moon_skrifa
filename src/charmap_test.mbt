@@ -278,7 +278,7 @@ test "charmap: format 14 map_variant + variant_mappings" {
   inspect(v0 is Some(UseDefault), content="true")
   let v1 = cmap.map_variant(0x4E08, selector.reinterpret_as_uint())
   let v1_ok = match v1 {
-    Some(Variant(gid)) => gid == 25
+    Some(Variant(gid)) => gid.to_u16() == (25).to_uint16()
     _ => false
   }
   inspect(v1_ok, content="true")
@@ -305,7 +305,7 @@ test "charmap: mappings are consistent with map()" {
   let cmap = font.charmap()
   for m in cmap.mappings() {
     let (cp, gid) = m
-    inspect(gid != 0, content="true")
+    inspect(gid.to_u16() != 0, content="true")
     inspect(cmap.map(cp), content="Some(" + gid.to_string() + ")")
   }
 }

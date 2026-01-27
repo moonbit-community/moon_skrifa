@@ -58,7 +58,7 @@ fn gvar_test_font_avar2checker_b64() -> String {
 ///|
 test "hint: gvar deltas applied in hinted glyf load (avar2checker gid=0)" {
   let font = golden_font(gvar_test_font_avar2checker_b64())
-  let gid : @moon_skrifa.GlyphId = (0).to_uint16()
+  let gid : @moon_skrifa.GlyphId = @moon_skrifa.GlyphId::default()
   let size = @moon_skrifa.Size::new(16.0)
   let coords : Array[@moon_skrifa.NormalizedCoord] = Array::from_fixed_array([
     16384, 0,

@@ -3,6 +3,8 @@
     "moonbitlang/core/prelude",
     "moonbitlang/core/array",
     "moonbitlang/core/bytes",
-    "moonbitlang/core/math"
+    "moonbitlang/core/math",
+    { "path": "Milky2018/moon_skrifa/core", "alias": "skrifa_core" },
+    { "path": "Milky2018/moon_skrifa/outline", "alias": "skrifa_outline" }
   ]
 }

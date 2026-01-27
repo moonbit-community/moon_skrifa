@@ -226,7 +226,10 @@ test "glyph_names from post v2 custom string" {
   let names = font.glyph_names()
   let ok = if names.source() is GlyphNameSource::Post { true } else { false }
   inspect(ok, content="true")
-  inspect(names.get(0).unwrap().as_str(), content="Test")
+  inspect(
+    names.get(GlyphId::new((0).to_uint16())).unwrap().as_str(),
+    content="Test",
+  )
 }
 
 ///|
@@ -243,5 +246,8 @@ test "glyph_names from CFF custom charset + string index" {
   let names = font.glyph_names()
   let ok = if names.source() is GlyphNameSource::Cff { true } else { false }
   inspect(ok, content="true")
-  inspect(names.get(1).unwrap().as_str(), content="A")
+  inspect(
+    names.get(GlyphId::new((1).to_uint16())).unwrap().as_str(),
+    content="A",
+  )
 }

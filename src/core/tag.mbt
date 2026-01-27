@@ -36,7 +36,21 @@ pub fn Tag::to_uint(self : Tag) -> UInt {
 }
 
 ///|
-pub fn Tag::new(b0 : Int, b1 : Int, b2 : Int, b3 : Int) -> Tag? {
+/// Creates a tag from 4 ASCII bytes (e.g. `b"wght"`). Returns default on invalid length.
+pub fn Tag::new(bytes : Bytes) -> Tag {
+  if bytes.length() != 4 {
+    Tag::default()
+  } else {
+    let b0 = bytes.at(0).to_int()
+    let b1 = bytes.at(1).to_int()
+    let b2 = bytes.at(2).to_int()
+    let b3 = bytes.at(3).to_int()
+    Tag::from_u8s(b0, b1, b2, b3).unwrap_or(Tag::default())
+  }
+}
+
+///|
+pub fn Tag::from_u8s(b0 : Int, b1 : Int, b2 : Int, b3 : Int) -> Tag? {
   if b0 < 0 ||
     b0 > 255 ||
     b1 < 0 ||
@@ -64,7 +78,7 @@ pub fn Tag::from_str(s : String) -> Tag? {
   let c1 = s.code_unit_at(1).to_int()
   let c2 = s.code_unit_at(2).to_int()
   let c3 = s.code_unit_at(3).to_int()
-  Tag::new(c0, c1, c2, c3)
+  Tag::from_u8s(c0, c1, c2, c3)
 }
 
 ///|

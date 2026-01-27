@@ -184,7 +184,7 @@ fn CodepointSubtable::map_impl(
   }
   match gid {
     None => None
-    Some(g) => if g == 0 { None } else { Some(g) }
+    Some(g) => if g.to_u16() == 0 { None } else { Some(g) }
   }
 }
 
@@ -551,7 +551,7 @@ fn cmap_map_format12(
       if gidi < 0 || gidi > 0xFFFF {
         return None
       }
-      return Some(gidi.to_uint16())
+      return Some(GlyphId::new(gidi.to_uint16()))
     }
   }
   None
@@ -597,7 +597,7 @@ fn cmap_map_format4(cmap : BytesView, base : Int, codepoint : Int) -> GlyphId? {
     }
     if range_off == 0 {
       let gid = add_delta_u16(codepoint, delta)
-      return Some(gid.to_uint16())
+      return Some(GlyphId::new(gid.to_uint16()))
     } else {
       let ro_pos = id_range_off_base + i * 2
       let glyph_pos = ro_pos + range_off + 2 * (codepoint - start_code)
@@ -606,10 +606,10 @@ fn cmap_map_format4(cmap : BytesView, base : Int, codepoint : Int) -> GlyphId? {
         return None
       }
       if raw_gid == 0 {
-        return Some(0)
+        return Some(GlyphId::default())
       } else {
         let gid = add_delta_u16(raw_gid, delta)
-        return Some(gid.to_uint16())
+        return Some(GlyphId::new(gid.to_uint16()))
       }
     }
   }
@@ -646,7 +646,7 @@ fn cmap_iter_format12(
       let gid = start_gid + (cp - start)
       let gidi = gid.to_uint64().to_int()
       if gidi > 0 && gidi <= 0xFFFF {
-        out.push((cp, gidi.to_uint16()))
+        out.push((cp, GlyphId::new(gidi.to_uint16())))
         produced = produced + 1
         if produced >= limits.max_mappings {
           return out
@@ -666,7 +666,10 @@ fn cmap_iter_format4(cmap : BytesView, base : Int) -> Array[(UInt, GlyphId)] {
   for cp in 0..<0x10000 {
     match cmap_map_format4(cmap, base, cp) {
       None => ()
-      Some(gid) => if gid != 0 { out.push((cp.reinterpret_as_uint(), gid)) }
+      Some(gid) =>
+        if gid.to_u16() != 0 {
+          out.push((cp.reinterpret_as_uint(), gid))
+        }
     }
   }
   out
@@ -760,7 +763,7 @@ fn cmap_map_non_default_uvs(
     if gid <= 0 || gid > 0xFFFF {
       return None
     }
-    return Some(gid.to_uint16())
+    return Some(GlyphId::new(gid.to_uint16()))
   }
   None
 }
@@ -824,7 +827,11 @@ fn cmap_iter_variants(
           let gid = cmap_read_u16_be(cmap, m + 3).unwrap_or(-1)
           if cp >= 0 && gid > 0 && gid <= 0xFFFF {
             out.push(
-              (cp.reinterpret_as_uint(), sel_u, Variant(gid.to_uint16())),
+              (
+                cp.reinterpret_as_uint(),
+                sel_u,
+                Variant(GlyphId::new(gid.to_uint16())),
+              ),
             )
           }
         }

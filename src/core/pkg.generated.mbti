@@ -1,0 +1,551 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/moon_skrifa/core"
+
+// Values
+pub const STRING_ID_COMPATIBLE_FULL_NAME : UInt16 = 18
+
+pub const STRING_ID_COPYRIGHT_NOTICE : UInt16 = 0
+
+pub const STRING_ID_DARK_BACKGROUND_PALETTE : UInt16 = 24
+
+pub const STRING_ID_DESCRIPTION : UInt16 = 10
+
+pub const STRING_ID_DESIGNER : UInt16 = 9
+
+pub const STRING_ID_DESIGNER_URL : UInt16 = 12
+
+pub const STRING_ID_FAMILY_NAME : UInt16 = 1
+
+pub const STRING_ID_FULL_NAME : UInt16 = 4
+
+pub const STRING_ID_LAST_ALLOWED_NAME_ID : UInt16 = 32767
+
+pub const STRING_ID_LAST_RESERVED_NAME_ID : UInt16 = 255
+
+pub const STRING_ID_LICENSE_DESCRIPTION : UInt16 = 13
+
+pub const STRING_ID_LICENSE_URL : UInt16 = 14
+
+pub const STRING_ID_LIGHT_BACKGROUND_PALETTE : UInt16 = 23
+
+pub const STRING_ID_MANUFACTURER : UInt16 = 8
+
+pub const STRING_ID_POSTSCRIPT_CID_NAME : UInt16 = 20
+
+pub const STRING_ID_POSTSCRIPT_NAME : UInt16 = 6
+
+pub const STRING_ID_SAMPLE_TEXT : UInt16 = 19
+
+pub const STRING_ID_SUBFAMILY_NAME : UInt16 = 2
+
+pub const STRING_ID_TRADEMARK : UInt16 = 7
+
+pub const STRING_ID_TYPOGRAPHIC_FAMILY_NAME : UInt16 = 16
+
+pub const STRING_ID_TYPOGRAPHIC_SUBFAMILY_NAME : UInt16 = 17
+
+pub const STRING_ID_UNIQUE_ID : UInt16 = 3
+
+pub const STRING_ID_VARIATIONS_POSTSCRIPT_NAME_PREFIX : UInt16 = 25
+
+pub const STRING_ID_VENDOR_URL : UInt16 = 11
+
+pub const STRING_ID_VERSION_STRING : UInt16 = 5
+
+pub const STRING_ID_WWS_FAMILY_NAME : UInt16 = 21
+
+pub const STRING_ID_WWS_SUBFAMILY_NAME : UInt16 = 22
+
+pub fn string_id_checked_add(UInt16, UInt16) -> UInt16?
+
+pub fn string_id_is_reserved(UInt16) -> Bool
+
+pub fn string_id_predefined() -> Array[UInt16]
+
+// Errors
+
+// Types and methods
+pub struct Attributes {
+  stretch : Stretch
+  style : Style
+  weight : Weight
+}
+pub fn Attributes::new(FontRef) -> Self
+pub fn Attributes::stretch(Self) -> Stretch
+pub fn Attributes::style(Self) -> Style
+pub fn Attributes::weight(Self) -> Weight
+
+pub struct Axis {
+  // private fields
+}
+pub fn Axis::default_value(Self) -> Double
+pub fn Axis::index(Self) -> Int
+pub fn Axis::is_hidden(Self) -> Bool
+pub fn Axis::max_value(Self) -> Double
+pub fn Axis::min_value(Self) -> Double
+pub fn Axis::name_id(Self) -> UInt16
+pub fn Axis::normalize(Self, Double) -> Int
+pub fn Axis::tag(Self) -> Tag
+
+pub struct AxisCollection {
+  // private fields
+}
+pub fn AxisCollection::get(Self, Int) -> Axis?
+pub fn AxisCollection::get_by_tag(Self, Tag) -> Axis?
+pub fn AxisCollection::is_empty(Self) -> Bool
+pub fn AxisCollection::len(Self) -> Int
+pub fn AxisCollection::location(Self, ArrayView[Setting[Double]]) -> Location
+pub fn AxisCollection::new(FontRef) -> Self
+
+pub(all) enum BitmapFormat {
+  Sbix
+  Cbdt
+  Ebdt
+}
+
+pub struct BitmapGlyph {
+  // private fields
+}
+pub fn BitmapGlyph::data(Self) -> BytesView
+pub fn BitmapGlyph::format(Self) -> BitmapImageFormat
+pub fn BitmapGlyph::height(Self) -> Int?
+pub fn BitmapGlyph::origin_x(Self) -> Int
+pub fn BitmapGlyph::origin_y(Self) -> Int
+pub fn BitmapGlyph::ppem_x(Self) -> Int
+pub fn BitmapGlyph::ppem_y(Self) -> Int
+pub fn BitmapGlyph::width(Self) -> Int?
+
+pub(all) enum BitmapImageFormat {
+  Png
+  Jpeg
+  Unknown(UInt)
+}
+
+pub struct BitmapStrike {
+  // private fields
+}
+pub fn BitmapStrike::format(Self) -> BitmapFormat
+pub fn BitmapStrike::get(Self, GlyphId) -> BitmapGlyph?
+pub fn BitmapStrike::ppem_x(Self) -> Int
+pub fn BitmapStrike::ppem_y(Self) -> Int
+
+pub struct BitmapStrikes {
+  // private fields
+}
+pub fn BitmapStrikes::format(Self) -> BitmapFormat?
+pub fn BitmapStrikes::get(Self, Int) -> BitmapStrike?
+pub fn BitmapStrikes::is_empty(Self) -> Bool
+pub fn BitmapStrikes::len(Self) -> Int
+pub fn BitmapStrikes::new(FontRef) -> Self
+pub fn BitmapStrikes::with_format(FontRef, BitmapFormat) -> Self?
+
+pub(all) enum Brush {
+  Solid(Int, Double)
+  LinearGradient((Double, Double), (Double, Double), Array[ColorStop], Extend)
+  RadialGradient((Double, Double), Double, (Double, Double), Double, Array[ColorStop], Extend)
+  SweepGradient((Double, Double), Double, Double, Array[ColorStop], Extend)
+}
+
+pub struct Charmap {
+  // private fields
+}
+pub fn Charmap::default() -> Self
+pub fn Charmap::glyph_id(Self, UInt) -> GlyphId?
+pub fn Charmap::has_map(Self) -> Bool
+pub fn Charmap::has_variant_map(Self) -> Bool
+pub fn Charmap::is_symbol(Self) -> Bool
+pub fn Charmap::map(Self, UInt) -> GlyphId?
+pub fn Charmap::map_variant(Self, UInt, UInt) -> MapVariant?
+pub fn Charmap::mappings(Self) -> Array[(UInt, GlyphId)]
+pub fn Charmap::new(FontRef) -> Self
+pub fn Charmap::variant_mappings(Self) -> Array[(UInt, UInt, MapVariant)]
+
+pub struct Color {
+  r : Byte
+  g : Byte
+  b : Byte
+  a : Byte
+}
+pub fn Color::a(Self) -> Byte
+pub fn Color::b(Self) -> Byte
+pub fn Color::g(Self) -> Byte
+pub fn Color::r(Self) -> Byte
+
+pub struct ColorGlyphCollection {
+  // private fields
+}
+pub fn ColorGlyphCollection::has_colr_v1(Self) -> Bool
+pub fn ColorGlyphCollection::layers(Self, GlyphId) -> Array[ColorLayer]?
+pub fn ColorGlyphCollection::new(FontRef) -> Self
+pub fn ColorGlyphCollection::version(Self) -> Int
+
+pub struct ColorLayer {
+  glyph_id : GlyphId
+  palette_index : Int
+}
+pub fn ColorLayer::glyph_id(Self) -> GlyphId
+pub fn ColorLayer::palette_index(Self) -> Int
+
+pub struct ColorPalettes {
+  // private fields
+}
+pub fn ColorPalettes::color(Self, Int, Int) -> Color?
+pub fn ColorPalettes::entries_per_palette(Self) -> Int
+pub fn ColorPalettes::len(Self) -> Int
+pub fn ColorPalettes::new(FontRef) -> Self
+
+pub(all) struct ColorStop {
+  offset : Double
+  palette_index : Int
+  alpha : Double
+}
+
+pub(all) enum CompositeMode {
+  Clear
+  Src
+  Dest
+  SrcOver
+  DestOver
+  SrcIn
+  DestIn
+  SrcOut
+  DestOut
+  SrcAtop
+  DestAtop
+  Xor
+  Plus
+  Screen
+  Overlay
+  Darken
+  Lighten
+  ColorDodge
+  ColorBurn
+  HardLight
+  SoftLight
+  Difference
+  Exclusion
+  Multiply
+  HslHue
+  HslSaturation
+  HslColor
+  HslLuminosity
+  Unknown
+}
+pub fn CompositeMode::raw(Self) -> Int
+
+pub struct Decoration {
+  offset : Double
+  thickness : Double
+}
+pub fn Decoration::offset(Self) -> Double
+pub fn Decoration::thickness(Self) -> Double
+
+pub(all) enum Extend {
+  Pad
+  Repeat
+  Reflect
+  Unknown
+}
+pub fn Extend::raw(Self) -> Int
+
+pub struct FontRef {
+  data : Bytes
+  index : UInt
+}
+pub fn FontRef::attributes(Self) -> Attributes
+pub fn FontRef::axes(Self) -> AxisCollection
+pub fn FontRef::bitmap_strikes(Self) -> BitmapStrikes
+pub fn FontRef::charmap(Self) -> Charmap
+pub fn FontRef::color_glyphs(Self) -> ColorGlyphCollection
+pub fn FontRef::color_palettes(Self) -> ColorPalettes
+pub fn FontRef::data(Self) -> Bytes
+pub fn FontRef::font_metrics(Self, Size) -> Metrics
+pub fn FontRef::font_metrics_at(Self, Size, LocationRef) -> Metrics
+pub fn FontRef::from_index(Bytes, UInt) -> Self?
+pub fn FontRef::glyph_metrics(Self, Size, LocationRef) -> GlyphMetrics
+pub fn FontRef::glyph_names(Self) -> GlyphNames
+pub fn FontRef::hmtx_metrics(Self) -> HmtxMetrics?
+pub fn FontRef::index(Self) -> UInt
+pub fn FontRef::localized_strings(Self, UInt16) -> LocalizedStrings
+pub fn FontRef::metrics(Self, Size, LocationRef) -> Metrics
+pub fn FontRef::named_instances(Self) -> NamedInstanceCollection
+pub fn FontRef::new(Bytes) -> Self?
+pub fn[P : ColorPainter] FontRef::paint_colr_v1(Self, GlyphId, P) -> Result[Unit, PaintError]
+pub fn[P : ColorPainter] FontRef::paint_colr_v1_at(Self, GlyphId, LocationRef, P) -> Result[Unit, PaintError]
+pub fn FontRef::table(Self, UInt) -> BytesView?
+pub fn FontRef::table_tag(Self, Tag) -> BytesView?
+pub impl TableProvider for FontRef
+
+pub struct GlyphBounds {
+  // private fields
+}
+pub fn GlyphBounds::x_max(Self) -> Double
+pub fn GlyphBounds::x_min(Self) -> Double
+pub fn GlyphBounds::y_max(Self) -> Double
+pub fn GlyphBounds::y_min(Self) -> Double
+
+pub struct GlyphId {
+  // private fields
+}
+pub fn GlyphId::default() -> Self
+pub fn GlyphId::new(UInt16) -> Self
+pub fn GlyphId::notdef() -> Self
+pub fn GlyphId::to_int(Self) -> Int
+pub fn GlyphId::to_string(Self) -> String
+pub fn GlyphId::to_u16(Self) -> UInt16
+pub fn GlyphId::to_uint64(Self) -> UInt64
+pub impl Compare for GlyphId
+pub impl Eq for GlyphId
+pub impl Show for GlyphId
+
+pub struct GlyphMetrics {
+  // private fields
+}
+pub fn GlyphMetrics::advance_width(Self, GlyphId) -> Double?
+pub fn GlyphMetrics::bounds(Self, GlyphId) -> GlyphBounds?
+pub fn GlyphMetrics::glyph_count(Self) -> Int
+pub fn GlyphMetrics::left_side_bearing(Self, GlyphId) -> Double?
+pub fn GlyphMetrics::new(FontRef, Size, LocationRef) -> Self
+
+pub struct GlyphName {
+  // private fields
+}
+pub fn GlyphName::as_str(Self) -> String
+pub fn GlyphName::is_synthesized(Self) -> Bool
+
+pub(all) enum GlyphNameSource {
+  Post
+  Cff
+  Synthesized
+}
+
+pub struct GlyphNames {
+  // private fields
+}
+pub fn GlyphNames::get(Self, GlyphId) -> GlyphName?
+pub fn GlyphNames::new(FontRef) -> Self
+pub fn GlyphNames::num_glyphs(Self) -> Int
+pub fn GlyphNames::source(Self) -> GlyphNameSource
+
+pub struct HmtxMetrics {
+  // private fields
+}
+pub fn HmtxMetrics::advance_width(Self, GlyphId) -> UInt?
+pub fn HmtxMetrics::lsb(Self, GlyphId) -> Int?
+pub fn HmtxMetrics::new(FontRef) -> Self?
+pub fn HmtxMetrics::num_glyphs(Self) -> Int
+pub fn HmtxMetrics::number_of_hmetrics(Self) -> Int
+
+pub struct LocalizedString {
+  // private fields
+}
+pub fn LocalizedString::language(Self) -> String?
+pub fn LocalizedString::to_string(Self) -> String
+
+pub struct LocalizedStrings {
+  // private fields
+}
+pub fn LocalizedStrings::english_or_first(Self) -> LocalizedString?
+pub fn LocalizedStrings::id(Self) -> UInt16
+pub fn LocalizedStrings::strings(Self) -> ArrayView[LocalizedString]
+
+pub struct Location {
+  // private fields
+}
+pub fn Location::as_ref(Self) -> LocationRef
+pub fn Location::coords(Self) -> ArrayView[Int]
+pub fn Location::from_array(Array[Int]) -> Self
+pub fn Location::new(Int) -> Self
+
+pub struct LocationRef {
+  // private fields
+}
+pub fn LocationRef::coords(Self) -> ArrayView[Int]
+pub fn LocationRef::default() -> Self
+pub fn LocationRef::effective_coords(Self) -> ArrayView[Int]
+pub fn LocationRef::is_default(Self) -> Bool
+pub fn LocationRef::new(ArrayView[Int]) -> Self
+
+pub(all) enum MapVariant {
+  UseDefault
+  Variant(GlyphId)
+}
+
+pub struct MappingIndex {
+  // private fields
+}
+pub fn MappingIndex::charmap(Self, FontRef) -> Charmap
+pub fn MappingIndex::default() -> Self
+pub fn MappingIndex::new(FontRef) -> Self
+
+pub struct Metrics {
+  units_per_em : UInt16
+  glyph_count : UInt16
+  is_monospace : Bool
+  italic_angle : Double
+  ascent : Double
+  descent : Double
+  leading : Double
+  cap_height : Double?
+  x_height : Double?
+  average_width : Double?
+  max_width : Double?
+  underline : Decoration?
+  strikeout : Decoration?
+  bounds : GlyphBounds?
+}
+pub fn Metrics::ascent(Self) -> Double
+pub fn Metrics::average_width(Self) -> Double?
+pub fn Metrics::bounds(Self) -> GlyphBounds?
+pub fn Metrics::cap_height(Self) -> Double?
+pub fn Metrics::descent(Self) -> Double
+pub fn Metrics::glyph_count(Self) -> UInt16
+pub fn Metrics::is_monospace(Self) -> Bool
+pub fn Metrics::italic_angle(Self) -> Double
+pub fn Metrics::leading(Self) -> Double
+pub fn Metrics::max_width(Self) -> Double?
+pub fn Metrics::new(FontRef, Size, LocationRef) -> Self
+pub fn Metrics::strikeout(Self) -> Decoration?
+pub fn Metrics::underline(Self) -> Decoration?
+pub fn Metrics::units_per_em(Self) -> UInt16
+pub fn Metrics::x_height(Self) -> Double?
+
+pub struct NamedInstance {
+  // private fields
+}
+pub fn NamedInstance::location(Self) -> Location
+pub fn NamedInstance::postscript_name_id(Self) -> UInt16?
+pub fn NamedInstance::subfamily_name_id(Self) -> UInt16
+pub fn NamedInstance::user_coords(Self) -> ArrayView[Double]
+
+pub struct NamedInstanceCollection {
+  // private fields
+}
+pub fn NamedInstanceCollection::get(Self, Int) -> NamedInstance?
+pub fn NamedInstanceCollection::is_empty(Self) -> Bool
+pub fn NamedInstanceCollection::len(Self) -> Int
+pub fn NamedInstanceCollection::new(FontRef) -> Self
+
+pub(all) enum PaintCachedColorGlyph {
+  Ok
+  Unimplemented
+}
+
+pub(all) enum PaintError {
+  ParseError
+  GlyphNotFound(GlyphId)
+  PaintCycleDetected
+  DepthLimitExceeded
+  UnsupportedPaintFormat(Int)
+}
+
+pub struct Setting[T] {
+  selector : Tag
+  value : T
+}
+pub fn[T] Setting::from_str(String, T) -> Self[T]
+pub fn[T] Setting::from_str_tuple((String, T)) -> Self[T]
+pub fn[T] Setting::from_tuple((Tag, T)) -> Self[T]
+pub fn[T] Setting::new(Tag, T) -> Self[T]
+
+pub struct Size {
+  ppem : Double?
+}
+pub fn Size::fixed_linear_scale(Self, UInt16) -> Int
+pub fn Size::linear_scale(Self, UInt16) -> Double
+pub fn Size::new(Double) -> Self
+pub fn Size::ppem(Self) -> Double?
+pub fn Size::unscaled() -> Self
+pub fn Size::value(Self) -> Double
+
+pub struct Stretch {
+  // private fields
+}
+pub fn Stretch::condensed() -> Self
+pub fn Stretch::default() -> Self
+pub fn Stretch::expanded() -> Self
+pub fn Stretch::extra_condensed() -> Self
+pub fn Stretch::extra_expanded() -> Self
+pub fn Stretch::new(Double) -> Self
+pub fn Stretch::normal() -> Self
+pub fn Stretch::percentage(Self) -> Double
+pub fn Stretch::ratio(Self) -> Double
+pub fn Stretch::semi_condensed() -> Self
+pub fn Stretch::semi_expanded() -> Self
+pub fn Stretch::ultra_condensed() -> Self
+pub fn Stretch::ultra_expanded() -> Self
+
+pub(all) enum Style {
+  Normal
+  Italic
+  Oblique(Double?)
+}
+
+pub struct Tag {
+  // private fields
+}
+pub fn Tag::default() -> Self
+pub fn Tag::from_str(String) -> Self?
+pub fn Tag::from_str_or_default(String) -> Self
+pub fn Tag::from_u8s(Int, Int, Int, Int) -> Self?
+pub fn Tag::from_uint(UInt) -> Self
+pub fn Tag::new(Bytes) -> Self
+pub fn Tag::to_string(Self) -> String
+pub fn Tag::to_uint(Self) -> UInt
+
+pub(all) struct Transform {
+  xx : Double
+  yx : Double
+  xy : Double
+  yy : Double
+  dx : Double
+  dy : Double
+}
+pub fn Transform::apply(Self, Double, Double) -> (Double, Double)
+pub fn Transform::default() -> Self
+pub fn Transform::mul(Self, Self) -> Self
+
+pub struct Weight {
+  // private fields
+}
+pub fn Weight::black() -> Self
+pub fn Weight::bold() -> Self
+pub fn Weight::default() -> Self
+pub fn Weight::extra_black() -> Self
+pub fn Weight::extra_bold() -> Self
+pub fn Weight::extra_light() -> Self
+pub fn Weight::light() -> Self
+pub fn Weight::medium() -> Self
+pub fn Weight::new(Double) -> Self
+pub fn Weight::normal() -> Self
+pub fn Weight::semi_bold() -> Self
+pub fn Weight::semi_light() -> Self
+pub fn Weight::thin() -> Self
+pub fn Weight::value(Self) -> Double
+
+// Type aliases
+pub type NormalizedCoord = Int
+
+pub type StringId = UInt16
+
+pub type VariationSetting = Setting[Double]
+
+// Traits
+pub(open) trait ColorPainter {
+  push_transform(Self, Transform) -> Unit
+  pop_transform(Self) -> Unit
+  push_clip_glyph(Self, GlyphId) -> Unit
+  push_clip_box(Self, (Double, Double, Double, Double)) -> Unit
+  pop_clip(Self) -> Unit
+  fill(Self, Brush) -> Unit
+  fill_glyph(Self, GlyphId, Transform?, Brush) -> Unit
+  paint_cached_color_glyph(Self, GlyphId) -> Result[PaintCachedColorGlyph, PaintError]
+  push_layer(Self, CompositeMode) -> Unit
+  pop_layer(Self) -> Unit
+  pop_layer_with_mode(Self, CompositeMode) -> Unit
+}
+
+pub(open) trait TableProvider {
+  table(Self, Tag) -> BytesView?
+}
+

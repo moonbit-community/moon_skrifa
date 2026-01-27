@@ -467,7 +467,7 @@ test "hint: round advance when prep disables hinting" {
     HintingOptions::default(),
   ).unwrap()
   let outlines = OutlineGlyphCollection::from_font(font)
-  let glyph = outlines.get(1).unwrap()
+  let glyph = outlines.get(@moon_skrifa.GlyphId::new((1).to_uint16())).unwrap()
   let metrics = glyph
     .draw(DrawSettings::hinted(hinter, false), NullPen::new())
     .unwrap()
@@ -482,7 +482,7 @@ test "hint: round advance when prep disables hinting" {
 ///|
 test "hint: fractional font size rounds MPPEM" {
   let font = golden_font(hint_parity_font_cousine_hint_subset_b64())
-  let gid : @moon_skrifa.GlyphId = (1).to_uint16()
+  let gid : @moon_skrifa.GlyphId = @moon_skrifa.GlyphId::new((1).to_uint16())
   let size = @moon_skrifa.Size::new(24.8)
   let loc = @moon_skrifa.LocationRef::default()
   let outlines0 = OutlineGlyphCollection::from_font(font)
@@ -512,7 +512,7 @@ test "hint: fractional font size rounds MPPEM" {
 ///|
 test "hint: composite glyf instructions (vazirmatn gid=2)" {
   let font = golden_font(font_vazirmatn_var_trimmed_b64())
-  let gid : @moon_skrifa.GlyphId = (2).to_uint16()
+  let gid : @moon_skrifa.GlyphId = @moon_skrifa.GlyphId::new((2).to_uint16())
   let size = @moon_skrifa.Size::new(16.0)
   let coords : Array[@moon_skrifa.NormalizedCoord] = Array::from_fixed_array([0])
   let loc = @moon_skrifa.LocationRef::new(coords.op_as_view())

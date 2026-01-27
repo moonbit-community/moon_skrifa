@@ -80,7 +80,7 @@ pub fn Color::a(self : Color) -> Byte {
 
 ///|
 pub struct ColorPalettes {
-  priv cpal : BytesView
+  priv cpal : BytesView?
   priv num_entries : Int
   priv num_palettes : Int
   priv num_records : Int
@@ -89,38 +89,78 @@ pub struct ColorPalettes {
 }
 
 ///|
-pub fn ColorPalettes::new(font : FontRef) -> ColorPalettes? {
-  let cpal = match font.table(COLOR_TAG_CPAL) {
-    None => return None
-    Some(v) => v
+pub fn ColorPalettes::new(font : FontRef) -> ColorPalettes {
+  match font.table(COLOR_TAG_CPAL) {
+    None =>
+      ColorPalettes::{
+        cpal: None,
+        num_entries: 0,
+        num_palettes: 0,
+        num_records: 0,
+        color_records_off: 0,
+        indices_off: 0,
+      }
+    Some(cpal) => {
+      if cpal.length() < 12 {
+        return ColorPalettes::{
+          cpal: None,
+          num_entries: 0,
+          num_palettes: 0,
+          num_records: 0,
+          color_records_off: 0,
+          indices_off: 0,
+        }
+      }
+      let num_entries = color_read_u16_be(cpal, 2).unwrap_or(-1)
+      let num_palettes = color_read_u16_be(cpal, 4).unwrap_or(-1)
+      let num_records = color_read_u16_be(cpal, 6).unwrap_or(-1)
+      let records_off = color_read_u32_be_int(cpal, 8).unwrap_or(-1)
+      if num_entries < 0 ||
+        num_palettes < 0 ||
+        num_records < 0 ||
+        records_off < 0 {
+        return ColorPalettes::{
+          cpal: None,
+          num_entries: 0,
+          num_palettes: 0,
+          num_records: 0,
+          color_records_off: 0,
+          indices_off: 0,
+        }
+      }
+      let indices_off = 12
+      let indices_end = indices_off + num_palettes * 2
+      let records_end = records_off + num_records * 4
+      if indices_end < indices_off || indices_end > cpal.length() {
+        return ColorPalettes::{
+          cpal: None,
+          num_entries: 0,
+          num_palettes: 0,
+          num_records: 0,
+          color_records_off: 0,
+          indices_off: 0,
+        }
+      }
+      if records_end < records_off || records_end > cpal.length() {
+        return ColorPalettes::{
+          cpal: None,
+          num_entries: 0,
+          num_palettes: 0,
+          num_records: 0,
+          color_records_off: 0,
+          indices_off: 0,
+        }
+      }
+      ColorPalettes::{
+        cpal: Some(cpal),
+        num_entries,
+        num_palettes,
+        num_records,
+        color_records_off: records_off,
+        indices_off,
+      }
+    }
   }
-  if cpal.length() < 12 {
-    return None
-  }
-  let num_entries = color_read_u16_be(cpal, 2).unwrap_or(-1)
-  let num_palettes = color_read_u16_be(cpal, 4).unwrap_or(-1)
-  let num_records = color_read_u16_be(cpal, 6).unwrap_or(-1)
-  let records_off = color_read_u32_be_int(cpal, 8).unwrap_or(-1)
-  if num_entries < 0 || num_palettes < 0 || num_records < 0 || records_off < 0 {
-    return None
-  }
-  let indices_off = 12
-  let indices_end = indices_off + num_palettes * 2
-  let records_end = records_off + num_records * 4
-  if indices_end < indices_off || indices_end > cpal.length() {
-    return None
-  }
-  if records_end < records_off || records_end > cpal.length() {
-    return None
-  }
-  Some(ColorPalettes::{
-    cpal,
-    num_entries,
-    num_palettes,
-    num_records,
-    color_records_off: records_off,
-    indices_off,
-  })
 }
 
 ///|
@@ -139,13 +179,17 @@ pub fn ColorPalettes::color(
   palette : Int,
   entry : Int,
 ) -> Color? {
+  let cpal = match self.cpal {
+    None => return None
+    Some(v) => v
+  }
   if palette < 0 || palette >= self.num_palettes {
     return None
   }
   if entry < 0 || entry >= self.num_entries {
     return None
   }
-  let idx = color_read_u16_be(self.cpal, self.indices_off + palette * 2).unwrap_or(
+  let idx = color_read_u16_be(cpal, self.indices_off + palette * 2).unwrap_or(
     -1,
   )
   if idx < 0 {
@@ -156,14 +200,14 @@ pub fn ColorPalettes::color(
     return None
   }
   let pos = self.color_records_off + rec * 4
-  let b = self.cpal.at(pos)
-  let g = self.cpal.at(pos + 1)
-  let r = self.cpal.at(pos + 2)
-  let a = self.cpal.at(pos + 3)
+  let b = cpal.at(pos)
+  let g = cpal.at(pos + 1)
+  let r = cpal.at(pos + 2)
+  let a = cpal.at(pos + 3)
   Some(Color::{ r, g, b, a })
 }
 
 ///|
-pub fn FontRef::color_palettes(self : FontRef) -> ColorPalettes? {
+pub fn FontRef::color_palettes(self : FontRef) -> ColorPalettes {
   ColorPalettes::new(self)
 }

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 ///|
-test "OutlineGlyphCollection skeleton" {
+test "OutlineGlyphCollection basic" {
   fn push_u16_be(out : Array[Byte], v : Int) -> Unit {
     let u = v.reinterpret_as_uint()
     let mask = 255 |> Int::reinterpret_as_uint

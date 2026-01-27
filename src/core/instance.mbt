@@ -77,7 +77,7 @@ pub fn Size::fixed_linear_scale(self : Size, units_per_em : UInt16) -> Int {
 }
 
 ///|
-/// Legacy helper for the earlier skeleton API.
+/// Legacy helper for the earlier API.
 pub fn Size::value(self : Size) -> Double {
   match self.ppem {
     Some(ppem) => ppem

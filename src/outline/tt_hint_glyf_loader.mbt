@@ -759,7 +759,7 @@ fn tt2_load_glyph_zone_for_hinting_impl(
       }
       comps.push(Tt2Component::{
         flags: flags_last,
-        gid: comp_gid_i.to_uint16(),
+        gid: @moon_skrifa.GlyphId::new(comp_gid_i.to_uint16()),
         anchor,
         xx16: tt2_f2dot14_to_16_16(xx14),
         yx16: tt2_f2dot14_to_16_16(yx14),
@@ -913,7 +913,7 @@ fn tt2_load_glyph_zone_for_hinting_impl(
                 dy = gvar_fixed16_16_to_i32(dy_bits.at(i))
               }
           }
-          tt2_component_offset_bits(comp, scale_bits, ins.length() > 0, dx, dy)
+          tt2_component_offset_bits(comp, scale_bits, true, dx, dy)
         }
         Tt2Anchor::Point(base, component) => {
           if base < 0 || base >= points_out.length() {

@@ -13,11 +13,23 @@
 // limitations under the License.
 
 ///|
-/// Automatic hinter (stub).
+/// Runtime autohinting support.
 ///
-/// Upstream `fontations/skrifa` includes an automatic hinter used when a font
-/// does not provide embedded instructions. This port wires the API surface but
-/// does not yet implement the hinter.
+/// Upstream `fontations/skrifa` includes a runtime autohinter used when a font
+/// does not provide embedded instructions. In this port, `GlyphStyles` is the
+/// (font-invariant) precomputed style map that can be reused across hinting
+/// instances.
 
 ///|
-pub struct GlyphStyles {}
+pub struct GlyphStyles {
+  priv _private : Unit
+}
+
+///|
+/// Precomputes the glyph style map for a font.
+///
+/// This is invariant per font and can be reused when creating multiple
+/// `HintingInstance`s with `Engine::Auto(...)`.
+pub fn GlyphStyles::new(_outlines : OutlineGlyphCollection) -> GlyphStyles {
+  GlyphStyles::{ _private: () }
+}

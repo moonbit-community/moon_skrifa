@@ -293,7 +293,7 @@ test "CFF2 outline path basic" {
   )
   let font = @moon_skrifa.FontRef::new(sfnt).unwrap()
   let c = OutlineGlyphCollection::from_font(font)
-  let path = c.path(1, DrawSettings::default()).unwrap()
+  let path = c.path(outline_test_gid(1), DrawSettings::default()).unwrap()
   let expected = Array::from_fixed_array([
     PathElement::MoveTo(0.0, 0.0),
     PathElement::LineTo(100.0, 0.0),
@@ -312,7 +312,7 @@ test "CFF2 blend applies var store region scalar" {
   let c = OutlineGlyphCollection::from_font(font)
 
   // Default coords => base outline (dx=100).
-  let base = c.path(1, DrawSettings::default()).unwrap()
+  let base = c.path(outline_test_gid(1), DrawSettings::default()).unwrap()
   let expected_base = Array::from_fixed_array([
     PathElement::MoveTo(0.0, 0.0),
     PathElement::LineTo(100.0, 0.0),
@@ -328,7 +328,7 @@ test "CFF2 blend applies var store region scalar" {
     @moon_skrifa.Size::unscaled(),
     @moon_skrifa.LocationRef::new(coords.op_as_view()),
   )
-  let varied = c.path(1, settings).unwrap()
+  let varied = c.path(outline_test_gid(1), settings).unwrap()
   let expected_varied = Array::from_fixed_array([
     PathElement::MoveTo(0.0, 0.0),
     PathElement::LineTo(120.0, 0.0),

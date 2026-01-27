@@ -333,7 +333,7 @@ test "bitmap sbix glyph png" {
   let font = FontRef::new(sfnt).unwrap()
   let strikes = font.bitmap_strikes()
   let strike = strikes.get(0).unwrap()
-  let glyph = strike.get(0).unwrap()
+  let glyph = strike.get(GlyphId::new((0).to_uint16())).unwrap()
   let ok = if glyph.format() is BitmapImageFormat::Png { true } else { false }
   inspect(ok, content="true")
   inspect(glyph.ppem_y(), content="16")
@@ -366,7 +366,7 @@ test "bitmap sbix glyph jpg" {
   )
   let font = FontRef::new(sfnt).unwrap()
   let strike = font.bitmap_strikes().get(0).unwrap()
-  let glyph = strike.get(0).unwrap()
+  let glyph = strike.get(GlyphId::new((0).to_uint16())).unwrap()
   let ok = if glyph.format() is BitmapImageFormat::Jpeg { true } else { false }
   inspect(ok, content="true")
   inspect(glyph.width(), content="None")
@@ -425,7 +425,7 @@ test "bitmap cbdt/cblc glyph png (format 17 + indexSubTable1)" {
   }
   inspect(ok, content="true")
   let strike = strikes.get(0).unwrap()
-  let glyph = strike.get(0).unwrap()
+  let glyph = strike.get(GlyphId::new((0).to_uint16())).unwrap()
   let ok2 = if glyph.format() is BitmapImageFormat::Png { true } else { false }
   inspect(ok2, content="true")
   inspect(glyph.ppem_y(), content="16")
@@ -468,7 +468,11 @@ test "bitmap ebdt/eblc glyph (format 1 + indexSubTable1)" {
     false
   }
   inspect(ok, content="true")
-  let glyph = strikes.get(0).unwrap().get(0).unwrap()
+  let glyph = strikes
+    .get(0)
+    .unwrap()
+    .get(GlyphId::new((0).to_uint16()))
+    .unwrap()
   inspect(glyph.width(), content="Some(8)")
   inspect(glyph.height(), content="Some(1)")
   inspect(glyph.origin_x(), content="-1")

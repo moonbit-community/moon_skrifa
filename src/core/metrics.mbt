@@ -141,7 +141,7 @@ fn metrics_read_u24_be(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-pub struct Metrics {
+pub struct HmtxMetrics {
   priv num_glyphs : Int
   priv num_hmetrics : Int
   priv hmtx : BytesView
@@ -149,7 +149,7 @@ pub struct Metrics {
 
 ///|
 /// Parses required tables (maxp/hhea/hmtx) from the font.
-pub fn Metrics::new(font : FontRef) -> Metrics? {
+pub fn HmtxMetrics::new(font : FontRef) -> HmtxMetrics? {
   let maxp = match font.table(TAG_MAXP) {
     None => return None
     Some(v) => v
@@ -177,21 +177,21 @@ pub fn Metrics::new(font : FontRef) -> Metrics? {
   if need < 0 || hmtx.length() < need {
     return None
   }
-  Some(Metrics::{ num_glyphs, num_hmetrics, hmtx })
+  Some(HmtxMetrics::{ num_glyphs, num_hmetrics, hmtx })
 }
 
 ///|
-pub fn Metrics::num_glyphs(self : Metrics) -> Int {
+pub fn HmtxMetrics::num_glyphs(self : HmtxMetrics) -> Int {
   self.num_glyphs
 }
 
 ///|
-pub fn Metrics::number_of_hmetrics(self : Metrics) -> Int {
+pub fn HmtxMetrics::number_of_hmetrics(self : HmtxMetrics) -> Int {
   self.num_hmetrics
 }
 
 ///|
-fn Metrics::glyph_index(self : Metrics, gid : GlyphId) -> Int? {
+fn HmtxMetrics::glyph_index(self : HmtxMetrics, gid : GlyphId) -> Int? {
   let idx = gid.to_uint64().to_int()
   if idx < 0 || idx >= self.num_glyphs {
     None
@@ -202,7 +202,7 @@ fn Metrics::glyph_index(self : Metrics, gid : GlyphId) -> Int? {
 
 ///|
 /// Returns advance width for a glyph in font units.
-pub fn Metrics::advance_width(self : Metrics, gid : GlyphId) -> UInt? {
+pub fn HmtxMetrics::advance_width(self : HmtxMetrics, gid : GlyphId) -> UInt? {
   match self.glyph_index(gid) {
     None => None
     Some(idx) => {
@@ -221,7 +221,7 @@ pub fn Metrics::advance_width(self : Metrics, gid : GlyphId) -> UInt? {
 
 ///|
 /// Returns left side bearing for a glyph in font units.
-pub fn Metrics::lsb(self : Metrics, gid : GlyphId) -> Int? {
+pub fn HmtxMetrics::lsb(self : HmtxMetrics, gid : GlyphId) -> Int? {
   match self.glyph_index(gid) {
     None => None
     Some(idx) =>
@@ -235,8 +235,8 @@ pub fn Metrics::lsb(self : Metrics, gid : GlyphId) -> Int? {
 }
 
 ///|
-pub fn FontRef::metrics(self : FontRef) -> Metrics? {
-  Metrics::new(self)
+pub fn FontRef::hmtx_metrics(self : FontRef) -> HmtxMetrics? {
+  HmtxMetrics::new(self)
 }
 
 ///|
@@ -256,7 +256,7 @@ pub fn Decoration::thickness(self : Decoration) -> Double {
 }
 
 ///|
-pub struct FontMetrics {
+pub struct Metrics {
   units_per_em : UInt16
   glyph_count : UInt16
   is_monospace : Bool
@@ -274,77 +274,81 @@ pub struct FontMetrics {
 }
 
 ///|
-pub fn FontMetrics::units_per_em(self : FontMetrics) -> UInt16 {
+pub fn Metrics::units_per_em(self : Metrics) -> UInt16 {
   self.units_per_em
 }
 
 ///|
-pub fn FontMetrics::glyph_count(self : FontMetrics) -> UInt16 {
+pub fn Metrics::glyph_count(self : Metrics) -> UInt16 {
   self.glyph_count
 }
 
 ///|
-pub fn FontMetrics::is_monospace(self : FontMetrics) -> Bool {
+pub fn Metrics::is_monospace(self : Metrics) -> Bool {
   self.is_monospace
 }
 
 ///|
-pub fn FontMetrics::italic_angle(self : FontMetrics) -> Double {
+pub fn Metrics::italic_angle(self : Metrics) -> Double {
   self.italic_angle
 }
 
 ///|
-pub fn FontMetrics::ascent(self : FontMetrics) -> Double {
+pub fn Metrics::ascent(self : Metrics) -> Double {
   self.ascent
 }
 
 ///|
-pub fn FontMetrics::descent(self : FontMetrics) -> Double {
+pub fn Metrics::descent(self : Metrics) -> Double {
   self.descent
 }
 
 ///|
-pub fn FontMetrics::leading(self : FontMetrics) -> Double {
+pub fn Metrics::leading(self : Metrics) -> Double {
   self.leading
 }
 
 ///|
-pub fn FontMetrics::cap_height(self : FontMetrics) -> Double? {
+pub fn Metrics::cap_height(self : Metrics) -> Double? {
   self.cap_height
 }
 
 ///|
-pub fn FontMetrics::x_height(self : FontMetrics) -> Double? {
+pub fn Metrics::x_height(self : Metrics) -> Double? {
   self.x_height
 }
 
 ///|
-pub fn FontMetrics::average_width(self : FontMetrics) -> Double? {
+pub fn Metrics::average_width(self : Metrics) -> Double? {
   self.average_width
 }
 
 ///|
-pub fn FontMetrics::max_width(self : FontMetrics) -> Double? {
+pub fn Metrics::max_width(self : Metrics) -> Double? {
   self.max_width
 }
 
 ///|
-pub fn FontMetrics::underline(self : FontMetrics) -> Decoration? {
+pub fn Metrics::underline(self : Metrics) -> Decoration? {
   self.underline
 }
 
 ///|
-pub fn FontMetrics::strikeout(self : FontMetrics) -> Decoration? {
+pub fn Metrics::strikeout(self : Metrics) -> Decoration? {
   self.strikeout
 }
 
 ///|
-pub fn FontMetrics::bounds(self : FontMetrics) -> GlyphBounds? {
+pub fn Metrics::bounds(self : Metrics) -> GlyphBounds? {
   self.bounds
 }
 
 ///|
-pub fn FontMetrics::new(font : FontRef, size : Size) -> FontMetrics {
+pub fn Metrics::new(
+  font : FontRef,
+  size : Size,
+  _location : LocationRef,
+) -> Metrics {
   let mut units_per_em : UInt16 = 0
   let mut bounds : GlyphBounds? = None
   match font.table(METRICS_TAG_HEAD) {
@@ -484,7 +488,7 @@ pub fn FontMetrics::new(font : FontRef, size : Size) -> FontMetrics {
       }
     }
   }
-  FontMetrics::{
+  Metrics::{
     units_per_em,
     glyph_count,
     is_monospace,
@@ -503,18 +507,26 @@ pub fn FontMetrics::new(font : FontRef, size : Size) -> FontMetrics {
 }
 
 ///|
-pub fn FontRef::font_metrics(self : FontRef, size : Size) -> FontMetrics {
-  FontMetrics::new(self, size)
+pub fn FontRef::metrics(
+  self : FontRef,
+  size : Size,
+  location : LocationRef,
+) -> Metrics {
+  Metrics::new(self, size, location)
 }
 
 ///|
-/// Location-aware metrics (currently ignores location, reserved for MVAR parity).
+pub fn FontRef::font_metrics(self : FontRef, size : Size) -> Metrics {
+  Metrics::new(self, size, LocationRef::default())
+}
+
+///|
 pub fn FontRef::font_metrics_at(
   self : FontRef,
   size : Size,
-  _location : LocationRef,
-) -> FontMetrics {
-  FontMetrics::new(self, size)
+  location : LocationRef,
+) -> Metrics {
+  Metrics::new(self, size, location)
 }
 
 ///|
@@ -525,7 +537,8 @@ pub fn FontRef::font_metrics_at(
 /// - optional metric deltas from `HVAR` + `ItemVariationStore`
 pub struct GlyphMetrics {
   priv font : FontRef
-  priv base : Metrics
+  priv glyph_count : Int
+  priv base : HmtxMetrics?
   priv scale : Double
   priv coords : ArrayView[NormalizedCoord]
   priv hvar : BytesView?
@@ -574,11 +587,13 @@ pub fn GlyphMetrics::new(
   font : FontRef,
   size : Size,
   location : LocationRef,
-) -> GlyphMetrics? {
-  let base = match Metrics::new(font) {
-    None => return None
-    Some(m) => m
+) -> GlyphMetrics {
+  let mut glyph_count = 0
+  match font.table(TAG_MAXP) {
+    None => ()
+    Some(maxp) => glyph_count = metrics_read_u16_be(maxp, 4).unwrap_or(0)
   }
+  let base = HmtxMetrics::new(font)
   let mut upem : UInt16 = 0
   match font.table(METRICS_TAG_HEAD) {
     None => ()
@@ -647,8 +662,9 @@ pub fn GlyphMetrics::new(
         }
       }
   }
-  Some(GlyphMetrics::{
+  GlyphMetrics::{
     font,
+    glyph_count,
     base,
     scale,
     coords,
@@ -663,12 +679,12 @@ pub fn GlyphMetrics::new(
     gvar_glyph_count,
     gvar_flags,
     gvar_data_array_off,
-  })
+  }
 }
 
 ///|
 pub fn GlyphMetrics::glyph_count(self : GlyphMetrics) -> Int {
-  self.base.num_glyphs()
+  self.glyph_count
 }
 
 ///|
@@ -813,7 +829,7 @@ fn metrics_glyf_simple_bounds(
 pub fn GlyphMetrics::bounds(self : GlyphMetrics, gid : GlyphId) -> GlyphBounds? {
   let idx = gid.to_uint64().to_int()
   let (glyf, start, end) = match
-    metrics_glyf_glyph_range(self.font, self.base.num_glyphs, idx) {
+    metrics_glyf_glyph_range(self.font, self.glyph_count, idx) {
     None => return None
     Some(v) => v
   }
@@ -1391,7 +1407,7 @@ fn GlyphMetrics::gvar_phantom_deltas(
     return (0, 0)
   }
   let base_points = match
-    metrics_glyf_point_count(self.font, self.base.num_glyphs, gid) {
+    metrics_glyf_point_count(self.font, self.glyph_count, gid) {
     None => return (0, 0)
     Some(v) => v
   }
@@ -1611,28 +1627,30 @@ pub fn GlyphMetrics::advance_width(
   self : GlyphMetrics,
   gid : GlyphId,
 ) -> Double? {
-  match self.base.advance_width(gid) {
-    None => None
-    Some(aw_u) => {
-      let mut aw = aw_u.to_uint64().to_int()
-      if !self.coords.is_empty() {
-        if self.hvar is Some(hvar) && self.hvar_aw_map_off is Some(_) {
-          aw = aw +
-            metrics_hvar_delta(
-              hvar,
-              self.hvar_store_off,
-              self.hvar_aw_map_off,
-              gid,
-              self.coords,
-            )
-        } else {
-          let (dx0, dx1) = self.gvar_phantom_deltas(gid)
-          aw = aw + (dx1 - dx0)
-        }
-      }
-      Some(aw.to_double() * self.scale)
+  let idx = gid.to_uint64().to_int()
+  if idx < 0 || idx >= self.glyph_count {
+    return None
+  }
+  let mut aw = match self.base {
+    None => 0
+    Some(base) => base.advance_width(gid).unwrap_or(0).to_uint64().to_int()
+  }
+  if !self.coords.is_empty() {
+    if self.hvar is Some(hvar) && self.hvar_aw_map_off is Some(_) {
+      aw = aw +
+        metrics_hvar_delta(
+          hvar,
+          self.hvar_store_off,
+          self.hvar_aw_map_off,
+          gid,
+          self.coords,
+        )
+    } else {
+      let (dx0, dx1) = self.gvar_phantom_deltas(gid)
+      aw = aw + (dx1 - dx0)
     }
   }
+  Some(aw.to_double() * self.scale)
 }
 
 ///|
@@ -1640,28 +1658,30 @@ pub fn GlyphMetrics::left_side_bearing(
   self : GlyphMetrics,
   gid : GlyphId,
 ) -> Double? {
-  match self.base.lsb(gid) {
-    None => None
-    Some(lsb0) => {
-      let mut lsb = lsb0
-      if !self.coords.is_empty() {
-        if self.hvar is Some(hvar) && self.hvar_lsb_map_off is Some(_) {
-          lsb = lsb +
-            metrics_hvar_delta(
-              hvar,
-              self.hvar_store_off,
-              self.hvar_lsb_map_off,
-              gid,
-              self.coords,
-            )
-        } else {
-          let (dx0, _) = self.gvar_phantom_deltas(gid)
-          lsb = lsb + dx0
-        }
-      }
-      Some(lsb.to_double() * self.scale)
+  let idx = gid.to_uint64().to_int()
+  if idx < 0 || idx >= self.glyph_count {
+    return None
+  }
+  let mut lsb = match self.base {
+    None => 0
+    Some(base) => base.lsb(gid).unwrap_or(0)
+  }
+  if !self.coords.is_empty() {
+    if self.hvar is Some(hvar) && self.hvar_lsb_map_off is Some(_) {
+      lsb = lsb +
+        metrics_hvar_delta(
+          hvar,
+          self.hvar_store_off,
+          self.hvar_lsb_map_off,
+          gid,
+          self.coords,
+        )
+    } else {
+      let (dx0, _) = self.gvar_phantom_deltas(gid)
+      lsb = lsb + dx0
     }
   }
+  Some(lsb.to_double() * self.scale)
 }
 
 ///|
@@ -1669,6 +1689,6 @@ pub fn FontRef::glyph_metrics(
   self : FontRef,
   size : Size,
   location : LocationRef,
-) -> GlyphMetrics? {
+) -> GlyphMetrics {
   GlyphMetrics::new(self, size, location)
 }

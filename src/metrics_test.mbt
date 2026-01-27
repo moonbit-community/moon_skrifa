@@ -125,15 +125,15 @@ test "Metrics basic accessors and lookup" {
     ]),
   )
   let font = FontRef::new(sfnt).unwrap()
-  let m = Metrics::new(font).unwrap()
+  let m = HmtxMetrics::new(font).unwrap()
   inspect(m.num_glyphs(), content="3")
   inspect(m.number_of_hmetrics(), content="2")
-  inspect(m.advance_width(0), content="Some(500)")
-  inspect(m.lsb(0), content="Some(-10)")
-  inspect(m.advance_width(1), content="Some(600)")
-  inspect(m.lsb(1), content="Some(20)")
-  inspect(m.advance_width(2), content="Some(600)")
-  inspect(m.lsb(2), content="Some(30)")
+  inspect(m.advance_width(GlyphId::new((0).to_uint16())), content="Some(500)")
+  inspect(m.lsb(GlyphId::new((0).to_uint16())), content="Some(-10)")
+  inspect(m.advance_width(GlyphId::new((1).to_uint16())), content="Some(600)")
+  inspect(m.lsb(GlyphId::new((1).to_uint16())), content="Some(20)")
+  inspect(m.advance_width(GlyphId::new((2).to_uint16())), content="Some(600)")
+  inspect(m.lsb(GlyphId::new((2).to_uint16())), content="Some(30)")
 }
 
 ///|
@@ -156,9 +156,9 @@ test "Metrics out of range glyph id" {
     ]),
   )
   let font = FontRef::new(sfnt).unwrap()
-  let m = Metrics::new(font).unwrap()
-  inspect(m.advance_width(1), content="None")
-  inspect(m.lsb(1), content="None")
+  let m = HmtxMetrics::new(font).unwrap()
+  inspect(m.advance_width(GlyphId::new((1).to_uint16())), content="None")
+  inspect(m.lsb(GlyphId::new((1).to_uint16())), content="None")
 }
 
 ///|
@@ -170,7 +170,7 @@ test "Metrics::new returns None when table missing" {
     ]),
   )
   let font = FontRef::new(sfnt).unwrap()
-  let ok = match Metrics::new(font) {
+  let ok = match HmtxMetrics::new(font) {
     None => true
     Some(_) => false
   }

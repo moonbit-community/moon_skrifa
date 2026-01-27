@@ -164,7 +164,7 @@ fn golden_font(b64 : String) -> @moon_skrifa.FontRef {
 test "golden: glyf Vazirmatn gid=2 size=16 ft coords=0" {
   let font = golden_font(font_vazirmatn_var_trimmed_b64())
   let outlines = OutlineGlyphCollection::from_font(font)
-  let glyph = outlines.get(2).unwrap()
+  let glyph = outlines.get(@moon_skrifa.GlyphId::new((2).to_uint16())).unwrap()
   let coords : Array[@moon_skrifa.NormalizedCoord] = Array::from_fixed_array([0])
   let settings = DrawSettings::unhinted(
     @moon_skrifa.Size::new(16.0),
@@ -182,7 +182,7 @@ test "golden: glyf Vazirmatn gid=2 size=16 ft coords=0" {
 test "golden: glyf Vazirmatn gid=2 size=16 ft coords=0.5" {
   let font = golden_font(font_vazirmatn_var_trimmed_b64())
   let outlines = OutlineGlyphCollection::from_font(font)
-  let glyph = outlines.get(2).unwrap()
+  let glyph = outlines.get(@moon_skrifa.GlyphId::new((2).to_uint16())).unwrap()
   let coords : Array[@moon_skrifa.NormalizedCoord] = Array::from_fixed_array([
     8192,
   ])
@@ -202,7 +202,7 @@ test "golden: glyf Vazirmatn gid=2 size=16 ft coords=0.5" {
 test "golden: glyf Vazirmatn gid=2 size=16 hb coords=0 (16.16 fixed)" {
   let font = golden_font(font_vazirmatn_var_trimmed_b64())
   let outlines = OutlineGlyphCollection::from_font(font)
-  let glyph = outlines.get(2).unwrap()
+  let glyph = outlines.get(@moon_skrifa.GlyphId::new((2).to_uint16())).unwrap()
   let coords : Array[@moon_skrifa.NormalizedCoord] = Array::from_fixed_array([0])
   let settings = DrawSettings::unhinted(
     @moon_skrifa.Size::new(16.0),
@@ -220,7 +220,7 @@ test "golden: glyf Vazirmatn gid=2 size=16 hb coords=0 (16.16 fixed)" {
 test "golden: glyf Vazirmatn gid=2 size=16 hb coords=0.5 (16.16 fixed)" {
   let font = golden_font(font_vazirmatn_var_trimmed_b64())
   let outlines = OutlineGlyphCollection::from_font(font)
-  let glyph = outlines.get(2).unwrap()
+  let glyph = outlines.get(@moon_skrifa.GlyphId::new((2).to_uint16())).unwrap()
   let coords : Array[@moon_skrifa.NormalizedCoord] = Array::from_fixed_array([
     8192,
   ])
@@ -240,7 +240,7 @@ test "golden: glyf Vazirmatn gid=2 size=16 hb coords=0.5 (16.16 fixed)" {
 test "golden: CFF2 NotoSansJP-VF gid=0 size=16" {
   let font = golden_font(font_notosansjp_vf_subset_otf_b64())
   let outlines = OutlineGlyphCollection::from_font(font)
-  let glyph = outlines.get(0).unwrap()
+  let glyph = outlines.get(@moon_skrifa.GlyphId::new((0).to_uint16())).unwrap()
   let settings = DrawSettings::unhinted(
     @moon_skrifa.Size::new(16.0),
     @moon_skrifa.LocationRef::default(),

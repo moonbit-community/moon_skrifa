@@ -22,11 +22,13 @@ pub(open) trait MetadataProvider {
   named_instances(Self) -> NamedInstanceCollection
   localized_strings(Self, StringId) -> LocalizedStrings
   glyph_names(Self) -> GlyphNames
-  metrics(Self) -> Metrics?
+  metrics(Self, Size, LocationRef) -> Metrics
+  glyph_metrics(Self, Size, LocationRef) -> GlyphMetrics
   charmap(Self) -> Charmap
+  outline_glyphs(Self) -> @skrifa_outline.OutlineGlyphCollection
   bitmap_strikes(Self) -> BitmapStrikes
-  color_palettes(Self) -> ColorPalettes?
-  color_glyphs(Self) -> ColorGlyphCollection?
+  color_glyphs(Self) -> ColorGlyphCollection
+  color_palettes(Self) -> ColorPalettes
 }
 
 ///|
@@ -55,13 +57,23 @@ pub impl MetadataProvider for FontRef with glyph_names(font) {
 }
 
 ///|
-pub impl MetadataProvider for FontRef with metrics(font) {
-  Metrics::new(font)
+pub impl MetadataProvider for FontRef with metrics(font, size, location) {
+  FontRef::metrics(font, size, location)
+}
+
+///|
+pub impl MetadataProvider for FontRef with glyph_metrics(font, size, location) {
+  FontRef::glyph_metrics(font, size, location)
 }
 
 ///|
 pub impl MetadataProvider for FontRef with charmap(font) {
   Charmap::new(font)
+}
+
+///|
+pub impl MetadataProvider for FontRef with outline_glyphs(font) {
+  @skrifa_outline.OutlineGlyphCollection::from_font(font)
 }
 
 ///|

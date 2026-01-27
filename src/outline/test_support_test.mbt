@@ -13,20 +13,6 @@
 // limitations under the License.
 
 ///|
-test "Tag parse + roundtrip" {
-  let tag = Tag::from_str("fvar").unwrap()
-  inspect(tag.to_uint().to_string(), content="1719034226")
-  inspect(tag.to_string(), content="fvar")
-}
-
-///|
-test "Tag::new from bytes" {
-  let tag = Tag::new(b"wght")
-  inspect(tag.to_string(), content="wght")
-  inspect(Tag::new(b"abc").to_uint(), content="0")
-}
-
-///|
-test "Tag invalid string length" {
-  inspect(Tag::from_str("abc") is None, content="true")
+fn outline_test_gid(n : Int) -> @moon_skrifa.GlyphId {
+  @moon_skrifa.GlyphId::new(n.to_uint16())
 }
