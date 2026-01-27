@@ -25,10 +25,141 @@ const TAG_NAME : UInt = 0x6E616D65 // "name"
 pub type StringId = UInt16
 
 ///|
+/// Copyright notice.
+pub const STRING_ID_COPYRIGHT_NOTICE : StringId = 0
+
+///|
 pub const STRING_ID_FAMILY_NAME : StringId = 1
 
 ///|
 pub const STRING_ID_SUBFAMILY_NAME : StringId = 2
+
+///|
+/// Unique font identifier.
+pub const STRING_ID_UNIQUE_ID : StringId = 3
+
+///|
+/// Full font name.
+pub const STRING_ID_FULL_NAME : StringId = 4
+
+///|
+/// Version string.
+pub const STRING_ID_VERSION_STRING : StringId = 5
+
+///|
+/// PostScript name.
+pub const STRING_ID_POSTSCRIPT_NAME : StringId = 6
+
+///|
+/// Trademark.
+pub const STRING_ID_TRADEMARK : StringId = 7
+
+///|
+/// Manufacturer name.
+pub const STRING_ID_MANUFACTURER : StringId = 8
+
+///|
+/// Designer name.
+pub const STRING_ID_DESIGNER : StringId = 9
+
+///|
+/// Description.
+pub const STRING_ID_DESCRIPTION : StringId = 10
+
+///|
+/// Vendor URL.
+pub const STRING_ID_VENDOR_URL : StringId = 11
+
+///|
+/// Designer URL.
+pub const STRING_ID_DESIGNER_URL : StringId = 12
+
+///|
+/// License description.
+pub const STRING_ID_LICENSE_DESCRIPTION : StringId = 13
+
+///|
+/// License URL.
+pub const STRING_ID_LICENSE_URL : StringId = 14
+
+///|
+/// Typographic family name.
+pub const STRING_ID_TYPOGRAPHIC_FAMILY_NAME : StringId = 16
+
+///|
+/// Typographic subfamily name.
+pub const STRING_ID_TYPOGRAPHIC_SUBFAMILY_NAME : StringId = 17
+
+///|
+/// Compatible full name (Macintosh only).
+pub const STRING_ID_COMPATIBLE_FULL_NAME : StringId = 18
+
+///|
+/// Sample text.
+pub const STRING_ID_SAMPLE_TEXT : StringId = 19
+
+///|
+/// PostScript CID findfont name.
+pub const STRING_ID_POSTSCRIPT_CID_NAME : StringId = 20
+
+///|
+/// WWS family name.
+pub const STRING_ID_WWS_FAMILY_NAME : StringId = 21
+
+///|
+/// WWS subfamily name.
+pub const STRING_ID_WWS_SUBFAMILY_NAME : StringId = 22
+
+///|
+/// Light background palette label.
+pub const STRING_ID_LIGHT_BACKGROUND_PALETTE : StringId = 23
+
+///|
+/// Dark background palette label.
+pub const STRING_ID_DARK_BACKGROUND_PALETTE : StringId = 24
+
+///|
+/// Variations PostScript name prefix.
+pub const STRING_ID_VARIATIONS_POSTSCRIPT_NAME_PREFIX : StringId = 25
+
+///|
+/// The last value that is explicitly reserved for standard names.
+pub const STRING_ID_LAST_RESERVED_NAME_ID : StringId = 255
+
+///|
+/// The last value that is available for font-specific names.
+pub const STRING_ID_LAST_ALLOWED_NAME_ID : StringId = 32767
+
+///|
+pub fn string_id_is_reserved(id : StringId) -> Bool {
+  id.to_uint64() <= STRING_ID_LAST_RESERVED_NAME_ID.to_uint64()
+}
+
+///|
+pub fn string_id_checked_add(id : StringId, rhs : UInt16) -> StringId? {
+  let sum = id.to_uint64().to_int() + rhs.to_uint64().to_int()
+  if sum < 0 || sum > STRING_ID_LAST_ALLOWED_NAME_ID.to_int() {
+    None
+  } else {
+    Some(sum.to_uint16())
+  }
+}
+
+///|
+/// Returns the set of predefined name identifiers according to the OpenType spec.
+///
+/// This matches `fontations/font-types::NameId::predefined()`: IDs `0..15` and
+/// `16..=25` (note: ID 15 is not assigned).
+pub fn string_id_predefined() -> Array[StringId] {
+  let out : Array[StringId] = Array::new()
+  for i in 0..<15 {
+    out.push(i.to_uint16())
+  }
+  for i in 16..<26 {
+    out.push(i.to_uint16())
+  }
+  out
+}
 
 ///|
 fn string_read_u16_be(view : BytesView, offset : Int) -> Int? {
@@ -731,7 +862,7 @@ pub fn FontRef::localized_strings(
       off < 0 {
       continue
     }
-    if name_id != id.to_uint64().to_int() {
+    if name_id != id.to_int() {
       continue
     }
     let start = string_offset + off

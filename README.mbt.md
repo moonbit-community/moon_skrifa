@@ -8,7 +8,8 @@ Repository: https://github.com/moonbit-community/moon_skrifa
 
 - The public API and behavior aim to match `fontations/skrifa` (`fontations-reference/` in this repo).
 - Embedded hinting (TrueType `glyf`) is implemented and wired into outline drawing via `HintingInstance` + `DrawSettings::hinted(...)`.
-  - Currently supports hinting **simple** `glyf` glyphs; composite hinting is still a work-in-progress.
+  - Supports both simple and composite `glyf` glyphs (FreeType-style path building).
+  - Non-pedantic hinting matches fontations behavior (interpreter errors may be ignored); pedantic mode returns errors.
 
 ## Packages
 

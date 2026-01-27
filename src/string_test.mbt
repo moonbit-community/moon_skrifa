@@ -391,3 +391,13 @@ test "expanded language mapping includes de-DE" {
     content="de-DE",
   )
 }
+
+///|
+test "StringId::predefined" {
+  let ids = string_id_predefined()
+  inspect(ids.length(), content="25")
+  inspect(ids.at(0).to_int(), content="0")
+  inspect(ids.at(14).to_int(), content="14")
+  inspect(ids.at(15).to_int(), content="16")
+  inspect(ids.at(24).to_int(), content="25")
+}
