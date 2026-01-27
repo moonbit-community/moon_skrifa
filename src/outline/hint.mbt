@@ -630,6 +630,7 @@ fn HintingInstance::hinted_path(
         self.size,
         @moon_skrifa.LocationRef::new(self.coords.op_as_view()),
         path_style,
+        self.target,
       )
     HinterKind::Glyf(tt) => {
       if path_style is PathStyle::HarfBuzz {
@@ -670,11 +671,64 @@ fn AutoHintInstance::hinted_path(
   size : @moon_skrifa.Size,
   location : @moon_skrifa.LocationRef,
   path_style : PathStyle,
+  target : Target,
 ) -> Result[(AdjustedMetrics, Array[PathElement]), DrawError] {
-  let unscaled = DrawSettings::unhinted(@moon_skrifa.Size::unscaled(), location).with_path_style(
-    path_style,
-  )
-  let unscaled_path = match glyph.path(unscaled) {
+  // We currently only support autohinting using the quadratic ("FreeType")
+  // path style. If the caller asks for HarfBuzz-style contours, fall back
+  // to the unhinted outline.
+  if path_style is PathStyle::HarfBuzz {
+    let settings = DrawSettings::unhinted(size, location).with_path_style(
+      path_style,
+    )
+    let metrics0 = match glyph.draw(settings, NullPen::new()) {
+      Err(e) => return Err(e)
+      Ok(m) => m
+    }
+    let metrics = AdjustedMetrics::{
+      has_overlaps: metrics0.has_overlaps,
+      lsb: metrics0.lsb,
+      advance_width: match metrics0.advance_width {
+        None => None
+        Some(v) => Some(v.round())
+      },
+    }
+    let path = match glyph.path(settings) {
+      Err(e) => return Err(e)
+      Ok(p) => p
+    }
+    return Ok((metrics, path))
+  }
+  let ppem = match size.ppem() {
+    None => {
+      // Unscaled size: return unhinted path.
+      let settings = DrawSettings::unhinted(size, location).with_path_style(
+        path_style,
+      )
+      let metrics0 = match glyph.draw(settings, NullPen::new()) {
+        Err(e) => return Err(e)
+        Ok(m) => m
+      }
+      let metrics = AdjustedMetrics::{
+        has_overlaps: metrics0.has_overlaps,
+        lsb: metrics0.lsb,
+        advance_width: match metrics0.advance_width {
+          None => None
+          Some(v) => Some(v.round())
+        },
+      }
+      let path = match glyph.path(settings) {
+        Err(e) => return Err(e)
+        Ok(p) => p
+      }
+      return Ok((metrics, path))
+    }
+    Some(v) => v
+  }
+  let unscaled_settings = DrawSettings::unhinted(
+    @moon_skrifa.Size::unscaled(),
+    location,
+  ).with_path_style(PathStyle::FreeType)
+  let unscaled_path = match glyph.path(unscaled_settings) {
     Err(e) => return Err(e)
     Ok(p) => p
   }
@@ -691,24 +745,60 @@ fn AutoHintInstance::hinted_path(
   if outline.is_empty() {
     return Ok((AdjustedMetrics::default(), Array::new()))
   }
-  outline.stats() |> ignore
-  let axis_h = AutoHintAxis::default()
-  axis_h.reset(AUTOHINT_DIM_HORIZONTAL, outline.orientation)
-  autohint_compute_segments(outline, axis_h, AutoHintScriptGroup::Default)
-  |> ignore
-  autohint_link_segments(outline, axis_h, 0, AutoHintScriptGroup::Default, None)
-  for seg in axis_h.segments.iter() {
-    seg.delta |> ignore
-    seg.serif_ix |> ignore
+  let upem = outline_units_per_em(glyph.font).to_int()
+  let group = match self.styles.style_index(glyph.glyph_id) {
+    Some(style_ix) =>
+      if style_ix == AUTOHINT_STYLE_HANI {
+        AutoHintScriptGroup::Cjk
+      } else {
+        AutoHintScriptGroup::Default
+      }
+    None => AutoHintScriptGroup::Default
   }
-  let axis_v = AutoHintAxis::default()
-  axis_v.reset(AUTOHINT_DIM_VERTICAL, outline.orientation)
-  autohint_compute_segments(outline, axis_v, AutoHintScriptGroup::Default)
-  |> ignore
-  autohint_link_segments(outline, axis_v, 0, AutoHintScriptGroup::Default, None)
-  for seg in axis_v.segments.iter() {
-    seg.delta |> ignore
-    seg.serif_ix |> ignore
+  let scale = AutoHintScale::new(
+    ppem,
+    upem,
+    @moon_skrifa.Style::Normal,
+    target,
+    group,
+  )
+  outline.scale(scale.x_scale, scale.y_scale, scale.x_delta, scale.y_delta)
+  // Conservative fallback for missing width metrics; this matches FreeType's
+  // derived constant usage in its default-case widths code paths.
+  let edge_distance_threshold = autohint_derived_constant(upem, 50) / 5
+  let axis = AutoHintAxis::default()
+  for dim in 0..<2 {
+    if dim == AUTOHINT_DIM_HORIZONTAL &&
+      (scale.flags & AUTOHINT_SCALE_NO_HORIZONTAL) != 0 {
+      continue
+    }
+    if dim == AUTOHINT_DIM_VERTICAL &&
+      (scale.flags & AUTOHINT_SCALE_NO_VERTICAL) != 0 {
+      continue
+    }
+    axis.reset(dim, outline.orientation)
+    let ok = autohint_compute_segments(outline, axis, group)
+    if !ok {
+      continue
+    }
+    let axis_scale = if dim == AUTOHINT_DIM_HORIZONTAL {
+      scale.x_scale
+    } else {
+      scale.y_scale
+    }
+    autohint_link_segments(outline, axis, axis_scale, group, None)
+    autohint_compute_edges(
+      axis,
+      edge_distance_threshold,
+      false,
+      scale.y_scale,
+      axis_scale,
+      group,
+    )
+    autohint_hint_edges_simple(axis, group, false)
+    autohint_align_edge_points(outline, axis, group, scale.flags)
+    autohint_align_strong_points(outline, axis)
+    autohint_align_weak_points(outline, dim)
   }
   let settings = DrawSettings::unhinted(size, location).with_path_style(
     path_style,
@@ -725,12 +815,7 @@ fn AutoHintInstance::hinted_path(
       Some(v) => Some(v.round())
     },
   }
-  let path = match glyph.path(settings) {
-    Err(e) => return Err(e)
-    Ok(p) => p
-  }
-  self.styles |> ignore
-  Ok((metrics, path))
+  Ok((metrics, autohint_outline_to_path(outline, path_style)))
 }
 
 ///|

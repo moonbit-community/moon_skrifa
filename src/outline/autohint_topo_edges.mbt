@@ -45,7 +45,7 @@ priv struct AutoHintEdge {
   mut dir : AutoHintDirection
   mut link_ix : Int?
   mut serif_ix : Int?
-  scale : Int
+  mut scale : Int
   mut first_ix : Int
   mut last_ix : Int
 }

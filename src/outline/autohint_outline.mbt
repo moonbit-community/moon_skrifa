@@ -116,6 +116,8 @@ fn AutoHintPointFlags::default() -> AutoHintPointFlags {
 priv enum AutoHintPointMarker {
   Near
   WeakInterpolation
+  TouchedX
+  TouchedY
 }
 
 ///|
@@ -123,6 +125,8 @@ fn AutoHintPointMarker::bit(self : AutoHintPointMarker) -> Int {
   match self {
     AutoHintPointMarker::Near => 1 << 1
     AutoHintPointMarker::WeakInterpolation => 1 << 2
+    AutoHintPointMarker::TouchedX => 1 << 3
+    AutoHintPointMarker::TouchedY => 1 << 4
   }
 }
 
@@ -153,12 +157,20 @@ fn AutoHintPointFlags::has_marker(
 }
 
 ///|
+fn AutoHintPointFlags::has_marker_mask(
+  self : AutoHintPointFlags,
+  mask : Int,
+) -> Bool {
+  (self.bits & mask) != 0
+}
+
+///|
 priv struct AutoHintPoint {
   mut flags : AutoHintPointFlags
   mut fx : Int
   mut fy : Int
-  mut _ox : Int
-  mut _oy : Int
+  mut ox : Int
+  mut oy : Int
   mut x : Int
   mut y : Int
   mut in_dir : AutoHintDirection
@@ -175,8 +187,8 @@ fn AutoHintPoint::default() -> AutoHintPoint {
     flags: AutoHintPointFlags::default(),
     fx: 0,
     fy: 0,
-    _ox: 0,
-    _oy: 0,
+    ox: 0,
+    oy: 0,
     x: 0,
     y: 0,
     in_dir: AutoHintDirection::None_,
@@ -245,7 +257,6 @@ fn AutoHintContour::length(self : AutoHintContour) -> Int {
 priv struct AutoHintOutline {
   mut units_per_em : Int
   mut orientation : AutoHintOrientation?
-  mut advance : Int
   points : Array[AutoHintPoint]
   contours : Array[AutoHintContour]
 }
@@ -277,8 +288,8 @@ fn AutoHintOutline::from_path(path : Array[PathElement]) -> AutoHintOutline {
         p.flags = AutoHintPointFlags::with_on_curve(true)
         p.fx = px
         p.fy = py
-        p._ox = px
-        p._oy = py
+        p.ox = px
+        p.oy = py
         p.x = px
         p.y = py
         points.push(p)
@@ -292,8 +303,8 @@ fn AutoHintOutline::from_path(path : Array[PathElement]) -> AutoHintOutline {
           p.flags = AutoHintPointFlags::with_on_curve(true)
           p.fx = px
           p.fy = py
-          p._ox = px
-          p._oy = py
+          p.ox = px
+          p.oy = py
           p.x = px
           p.y = py
           points.push(p)
@@ -306,8 +317,8 @@ fn AutoHintOutline::from_path(path : Array[PathElement]) -> AutoHintOutline {
           c.flags = AutoHintPointFlags::with_on_curve(false)
           c.fx = cpx
           c.fy = cpy
-          c._ox = cpx
-          c._oy = cpy
+          c.ox = cpx
+          c.oy = cpy
           c.x = cpx
           c.y = cpy
           points.push(c)
@@ -317,8 +328,8 @@ fn AutoHintOutline::from_path(path : Array[PathElement]) -> AutoHintOutline {
           p.flags = AutoHintPointFlags::with_on_curve(true)
           p.fx = px
           p.fy = py
-          p._ox = px
-          p._oy = py
+          p.ox = px
+          p.oy = py
           p.x = px
           p.y = py
           points.push(p)
@@ -331,8 +342,8 @@ fn AutoHintOutline::from_path(path : Array[PathElement]) -> AutoHintOutline {
           c0.flags = AutoHintPointFlags::with_on_curve(false)
           c0.fx = c0x
           c0.fy = c0y
-          c0._ox = c0x
-          c0._oy = c0y
+          c0.ox = c0x
+          c0.oy = c0y
           c0.x = c0x
           c0.y = c0y
           points.push(c0)
@@ -342,8 +353,8 @@ fn AutoHintOutline::from_path(path : Array[PathElement]) -> AutoHintOutline {
           c1.flags = AutoHintPointFlags::with_on_curve(false)
           c1.fx = c1x
           c1.fy = c1y
-          c1._ox = c1x
-          c1._oy = c1y
+          c1.ox = c1x
+          c1.oy = c1y
           c1.x = c1x
           c1.y = c1y
           points.push(c1)
@@ -353,8 +364,8 @@ fn AutoHintOutline::from_path(path : Array[PathElement]) -> AutoHintOutline {
           p.flags = AutoHintPointFlags::with_on_curve(true)
           p.fx = px
           p.fy = py
-          p._ox = px
-          p._oy = py
+          p.ox = px
+          p.oy = py
           p.x = px
           p.y = py
           points.push(p)
@@ -380,7 +391,6 @@ fn AutoHintOutline::from_path(path : Array[PathElement]) -> AutoHintOutline {
   let outline = AutoHintOutline::{
     units_per_em: 0,
     orientation: None,
-    advance: 0,
     points,
     contours,
   }
@@ -399,7 +409,6 @@ fn AutoHintOutline::is_empty(self : AutoHintOutline) -> Bool {
 fn AutoHintOutline::clear(self : AutoHintOutline) -> Unit {
   self.units_per_em = 0
   self.orientation = None
-  self.advance = 0
   self.points.clear()
   self.contours.clear()
 }
@@ -589,8 +598,8 @@ fn autohint_outline_apply_transform(
       dy
     p.fx = x1
     p.fy = y1
-    p._ox = x1
-    p._oy = y1
+    p.ox = x1
+    p.oy = y1
     p.x = x1
     p.y = y1
   }
@@ -701,8 +710,8 @@ fn autohint_outline_decode_simple_glyf(
     p.flags = AutoHintPointFlags::with_on_curve(on)
     p.fx = x
     p.fy = y
-    p._ox = x
-    p._oy = y
+    p.ox = x
+    p.oy = y
     p.x = x
     p.y = y
     data.points.push(p)
@@ -1154,32 +1163,25 @@ fn AutoHintOutline::compute_orientation(self : AutoHintOutline) -> Unit {
 /// This is used by the autohinter pipeline (bounds-based heuristics). Keeping
 /// it here also avoids unused-field warnings while the full hinting passes are
 /// being ported.
-fn AutoHintOutline::stats(self : AutoHintOutline) -> (Int, Int, Int, Int, Int) {
-  if self.points.length() == 0 {
-    return (0, 0, 0, 0, 0)
+
+///|
+/// Applies 16.16 scale factors and 26.6 deltas to each point.
+///
+/// This matches upstream `skrifa::outline::autohint::outline::Outline::scale`.
+fn AutoHintOutline::scale(
+  self : AutoHintOutline,
+  x_scale : Int,
+  y_scale : Int,
+  x_delta : Int,
+  y_delta : Int,
+) -> Unit {
+  for i in 0..<self.points.length() {
+    let p = self.points.at(i)
+    let x = autohint_fixed_mul(p.fx, x_scale) + x_delta
+    let y = autohint_fixed_mul(p.fy, y_scale) + y_delta
+    p.ox = x
+    p.x = x
+    p.oy = y
+    p.y = y
   }
-  self.advance |> ignore
-  let mut min_x = self.points.at(0).x
-  let mut min_y = self.points.at(0).y
-  let mut max_x = min_x
-  let mut max_y = min_y
-  let mut on_curve = 0
-  for p in self.points.iter() {
-    if p.x < min_x {
-      min_x = p.x
-    }
-    if p.y < min_y {
-      min_y = p.y
-    }
-    if p.x > max_x {
-      max_x = p.x
-    }
-    if p.y > max_y {
-      max_y = p.y
-    }
-    if p.is_on_curve() {
-      on_curve = on_curve + 1
-    }
-  }
-  (min_x, min_y, max_x, max_y, on_curve)
 }
