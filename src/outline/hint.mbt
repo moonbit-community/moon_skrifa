@@ -763,10 +763,8 @@ fn AutoHintInstance::hinted_path(
     group,
   )
   outline.scale(scale.x_scale, scale.y_scale, scale.x_delta, scale.y_delta)
-  // Conservative fallback for missing width metrics; this matches FreeType's
-  // derived constant usage in its default-case widths code paths.
-  let edge_distance_threshold = autohint_derived_constant(upem, 50) / 5
   let axis = AutoHintAxis::default()
+  let standard_width = autohint_derived_constant(upem, 50).max(1)
   for dim in 0..<2 {
     if dim == AUTOHINT_DIM_HORIZONTAL &&
       (scale.flags & AUTOHINT_SCALE_NO_HORIZONTAL) != 0 {
@@ -786,6 +784,14 @@ fn AutoHintInstance::hinted_path(
     } else {
       scale.y_scale
     }
+    let edge_distance_threshold = standard_width / 5
+    let std_scaled = autohint_fixed_mul(standard_width, axis_scale)
+    let width_metrics = AutoHintWidthMetrics::{
+      is_extra_light: std_scaled < 32 + 8,
+    }
+    let widths : Array[AutoHintScaledWidth] = Array::new()
+    widths.push(AutoHintScaledWidth::{ scaled: std_scaled })
+    let axis_metrics = AutoHintScaledAxisMetrics::{ dim, widths, width_metrics }
     autohint_link_segments(outline, axis, axis_scale, group, None)
     autohint_compute_edges(
       axis,
@@ -795,7 +801,7 @@ fn AutoHintInstance::hinted_path(
       axis_scale,
       group,
     )
-    autohint_hint_edges_simple(axis, group, false)
+    autohint_hint_edges(axis, axis_metrics, group, scale, false)
     autohint_align_edge_points(outline, axis, group, scale.flags)
     autohint_align_strong_points(outline, axis)
     autohint_align_weak_points(outline, dim)
