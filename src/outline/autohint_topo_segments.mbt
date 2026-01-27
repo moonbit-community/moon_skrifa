@@ -39,6 +39,12 @@ fn autohint_fixed_div(a : Int, b : Int) -> Int {
   }
 }
 
+///|
+fn autohint_fixed_mul(a : Int, b : Int) -> Int {
+  let prod = a.to_int64() * b.to_int64()
+  (prod >> 16).to_int()
+}
+
 // Bounds for score, position and coordinate values.
 
 ///|
@@ -52,6 +58,7 @@ priv struct AutoHintAxis {
   mut dim : Int
   mut major_dir : AutoHintDirection
   segments : Array[AutoHintSegment]
+  edges : Array[AutoHintEdge]
 }
 
 ///|
@@ -60,6 +67,7 @@ fn AutoHintAxis::default() -> AutoHintAxis {
     dim: 0,
     major_dir: AutoHintDirection::None_,
     segments: Array::new(),
+    edges: Array::new(),
   }
 }
 
@@ -86,6 +94,7 @@ fn AutoHintAxis::reset(
     _ => AutoHintDirection::None_
   }
   self.segments.clear()
+  self.edges.clear()
 }
 
 ///|
@@ -103,6 +112,8 @@ priv struct AutoHintSegment {
   mut serif_ix : Int?
   mut first_ix : Int
   mut last_ix : Int
+  mut edge_ix : Int?
+  mut edge_next_ix : Int?
 }
 
 ///|
@@ -121,6 +132,8 @@ fn AutoHintSegment::default() -> AutoHintSegment {
     serif_ix: None,
     first_ix: 0,
     last_ix: 0,
+    edge_ix: None,
+    edge_next_ix: None,
   }
 }
 
