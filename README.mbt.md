@@ -11,8 +11,10 @@ Repository: https://github.com/moonbit-community/moon_skrifa
   - Supports both simple and composite `glyf` glyphs (FreeType-style path building).
   - Non-pedantic hinting matches fontations behavior (interpreter errors may be ignored); pedantic mode returns errors.
 - Runtime autohinting (for fonts without embedded instructions) is still WIP:
-  - style classification + outline topology (segments) are ported
-  - edge building / metrics / hint application are not yet implemented
+  - style classification + outline topology (segments/edges) are ported
+  - edge fitting + point alignment are integrated for `PathStyle::FreeType`
+  - missing: blue zones + full metrics-based fitting (parity tests still skipped)
+  - `PathStyle::HarfBuzz` currently falls back to the unhinted outline
 - CFF/CFF2 outlines are supported; CFF/CFF2 hinting for `Engine::Interpreter` is not yet implemented.
 
 ## Packages
