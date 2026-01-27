@@ -57,6 +57,12 @@ pub fn HintingOptions::default() -> HintingOptions {
 }
 
 ///|
+/// Creates hinting options with explicit engine + target.
+pub fn HintingOptions::new(engine : Engine, target : Target) -> HintingOptions {
+  HintingOptions::{ engine, target }
+}
+
+///|
 pub(all) enum Engine {
   Interpreter
   /// Automatic hinter that adjusts outlines without embedded instructions.
@@ -87,7 +93,7 @@ pub fn Engine::resolve_auto_fallback(
 ///|
 /// Converts an engine selection into `HintingOptions` with default target.
 pub fn Engine::into(self : Engine) -> HintingOptions {
-  HintingOptions::{ engine: self, target: Target::default() }
+  HintingOptions::new(self, Target::default())
 }
 
 ///|
@@ -500,6 +506,85 @@ fn tt_zone_to_path_freetype(zone : TtZone) -> Array[PathElement] {
 }
 
 ///|
+const TAG_HDMX_TT_HINT : UInt = 0x68646D78 // "hdmx"
+
+///|
+const TAG_MAXP_TT_HINT : UInt = 0x6D617870 // "maxp"
+
+///|
+fn hint_read_u16_be(view : BytesView, offset : Int) -> Int? {
+  if offset < 0 || offset + 2 > view.length() {
+    None
+  } else {
+    let b0 = view.at(offset).to_int()
+    let b1 = view.at(offset + 1).to_int()
+    Some((b0 << 8) | b1)
+  }
+}
+
+///|
+fn hint_read_u32_be(view : BytesView, offset : Int) -> UInt? {
+  if offset < 0 || offset + 4 > view.length() {
+    None
+  } else {
+    let b0 = view.at(offset).to_uint()
+    let b1 = view.at(offset + 1).to_uint()
+    let b2 = view.at(offset + 2).to_uint()
+    let b3 = view.at(offset + 3).to_uint()
+    Some((b0 << 24) | (b1 << 16) | (b2 << 8) | b3)
+  }
+}
+
+///|
+fn hint_hdmx_width(
+  font : @moon_skrifa.FontRef,
+  ppem : Int,
+  gid : @moon_skrifa.GlyphId,
+) -> Int? {
+  let hdmx = match font.table(TAG_HDMX_TT_HINT) {
+    None => return None
+    Some(v) => v
+  }
+  if hdmx.length() < 8 {
+    return None
+  }
+  let maxp = match font.table(TAG_MAXP_TT_HINT) {
+    None => return None
+    Some(v) => v
+  }
+  let num_glyphs = hint_read_u16_be(maxp, 4).unwrap_or(0)
+  if num_glyphs <= 0 {
+    return None
+  }
+  let idx = gid.to_uint64().to_int()
+  if idx < 0 || idx >= num_glyphs {
+    return None
+  }
+  let num_records = hint_read_u16_be(hdmx, 2).unwrap_or(0)
+  let rec_size = hint_read_u32_be(hdmx, 4).unwrap_or(0).to_uint64().to_int()
+  if rec_size <= 0 {
+    return None
+  }
+  let base = 8
+  for i in 0..<num_records {
+    let off = base + i * rec_size
+    if off < 0 || off + rec_size > hdmx.length() {
+      continue
+    }
+    // record: ppem (u8), max_width (u8), widths[num_glyphs]
+    if off + 2 + num_glyphs > hdmx.length() {
+      continue
+    }
+    let pix = hdmx.at(off).to_int()
+    if pix == ppem {
+      let widths_off = off + 2
+      return Some(hdmx.at(widths_off + idx).to_int())
+    }
+  }
+  None
+}
+
+///|
 fn HintingInstance::hinted_glyf_path(
   self : HintingInstance,
   glyph : OutlineGlyph,
@@ -538,7 +623,23 @@ fn HintingInstance::hinted_glyf_path(
   }
   let phantom0 = zone.points.at(num_points)
   let phantom1 = zone.points.at(num_points + 1)
-  let advance = tt_bits_to_double(phantom1.x - phantom0.x).round()
+  let mut hdmx : Int? = None
+  if !tt.backward_compatibility() {
+    match self.size.ppem() {
+      None => ()
+      Some(ppem) => {
+        let ip = ppem.to_int()
+        if ip.to_double() == ppem && ip >= 0 && ip <= 255 {
+          hdmx = hint_hdmx_width(font, ip, gid)
+        }
+      }
+    }
+  }
+  let advance0 = match hdmx {
+    Some(w) => w.to_double()
+    None => tt_bits_to_double(phantom1.x - phantom0.x)
+  }
+  let advance = advance0.round()
   let lsb = tt_bits_to_double(phantom0.x)
   let metrics = AdjustedMetrics::{
     has_overlaps: glyph.has_overlaps().unwrap_or(false),

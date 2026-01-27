@@ -116,6 +116,7 @@ pub struct HintingOptions {
   target : Target
 }
 pub fn HintingOptions::default() -> Self
+pub fn HintingOptions::new(Engine, Target) -> Self
 
 pub(all) enum LcdLayout {
   Horizontal

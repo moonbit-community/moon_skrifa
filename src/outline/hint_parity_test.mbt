@@ -393,6 +393,34 @@ test "hint: ignore hdmx when back compat enabled" {
 }
 
 ///|
+test "hint: use hdmx when back compat disabled" {
+  let font = golden_font(hint_parity_font_tinos_subset_b64())
+  let gid = font
+    .charmap()
+    .unwrap()
+    .glyph_id((34).reinterpret_as_uint())
+    .unwrap()
+  let outlines0 = OutlineGlyphCollection::from_font(font)
+  let hinter = HintingInstance::new(
+    outlines0,
+    @moon_skrifa.Size::new(16.0),
+    @moon_skrifa.LocationRef::default(),
+    HintingOptions::new(Engine::Interpreter, Target::Mono),
+  ).unwrap()
+  let outlines = OutlineGlyphCollection::from_font(font)
+  let glyph = outlines.get(gid).unwrap()
+  let metrics = glyph
+    .draw(DrawSettings::hinted(hinter, false), NullPen::new())
+    .unwrap()
+  inspect(
+    hint_parity_hdmx_width(font, 16, gid).unwrap_or(-1) == 5,
+    content="true",
+  )
+  let ok = (metrics.advance_width.unwrap() - 5.0).abs() <= 0.000001
+  inspect(ok, content="true")
+}
+
+///|
 test "hint: round advance when prep disables hinting" {
   // Build a minimal glyf font where the prep program disables hinting via
   // the INSTRCTRL instruction (selector=1, value=1).
