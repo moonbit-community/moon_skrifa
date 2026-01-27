@@ -214,6 +214,31 @@ fn glyf_outline_test_glyph_simple_quad() -> Bytes {
 }
 
 ///|
+fn glyf_outline_test_glyph_simple_quad_hinted() -> Bytes {
+  // Same as `glyf_outline_test_glyph_simple_quad` but with a single bytecode
+  // instruction to enable embedded hinting.
+  let out : Array[Byte] = Array::new()
+  glyf_outline_test_push_i16_be(out, 1)
+  glyf_outline_test_push_i16_be(out, 0)
+  glyf_outline_test_push_i16_be(out, 0)
+  glyf_outline_test_push_i16_be(out, 100)
+  glyf_outline_test_push_i16_be(out, 100)
+  glyf_outline_test_push_u16_be(out, 2) // endPts[0]
+  glyf_outline_test_push_u16_be(out, 1) // instructionLength
+  out.push(0 |> Int::to_byte)
+  out.push(0x31 |> Int::to_byte)
+  out.push(0x36 |> Int::to_byte)
+  out.push(0x17 |> Int::to_byte)
+  // x bytes: 50, 50
+  out.push(50 |> Int::to_byte)
+  out.push(50 |> Int::to_byte)
+  // y bytes: 100, 100 (second is negative)
+  out.push(100 |> Int::to_byte)
+  out.push(100 |> Int::to_byte)
+  Bytes::from_array(out.op_as_view())
+}
+
+///|
 fn glyf_outline_test_glyph_implied_midpoint() -> Bytes {
   // One contour with 4 points:
   // (0,0) on, (50,100) off, (100,100) off, (150,0) on.
@@ -433,6 +458,23 @@ test "HarfBuzz path_style uses 16.16 fixed-point scaling when size is set" {
     PathElement::Close,
   ])
   inspect(glyf_outline_test_path_eq(path, expected), content="true")
+}
+
+///|
+test "glyf draw_memory_size matches upstream sizing" {
+  let font = glyf_outline_test_make_font(
+    Array::from_fixed_array([
+      Bytes::from_array(Array::new().op_as_view()),
+      glyf_outline_test_glyph_simple_quad(),
+      glyf_outline_test_glyph_simple_quad_hinted(),
+    ]),
+  )
+  let outlines = OutlineGlyphCollection::from_font(font)
+  let g1 = outlines.get(@moon_skrifa.GlyphId::new((1).to_uint16())).unwrap()
+  let g2 = outlines.get(@moon_skrifa.GlyphId::new((2).to_uint16())).unwrap()
+  // Computed against fontations-reference formula with Point=8, flags=1, align=4.
+  inspect(g1.draw_memory_size(Hinting::none()), content="125")
+  inspect(g2.draw_memory_size(Hinting::Embedded), content="377")
 }
 
 ///|

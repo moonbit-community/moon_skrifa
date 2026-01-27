@@ -671,8 +671,6 @@ fn AutoHintInstance::hinted_path(
   location : @moon_skrifa.LocationRef,
   path_style : PathStyle,
 ) -> Result[(AdjustedMetrics, Array[PathElement]), DrawError] {
-  // Extract unscaled outline geometry (used by the real autohinter).
-  // This is currently best-effort and will be refined as parity work lands.
   let unscaled = DrawSettings::unhinted(@moon_skrifa.Size::unscaled(), location).with_path_style(
     path_style,
   )
@@ -680,12 +678,38 @@ fn AutoHintInstance::hinted_path(
     Err(e) => return Err(e)
     Ok(p) => p
   }
-  let outline = AutoHintOutline::from_path(unscaled_path)
+  let outline = match glyph.kind {
+    OutlineGlyphFormat::Glyf => {
+      let o = AutoHintOutline::from_path(Array::new())
+      match o.fill_glyf(glyph.font, glyph.glyph_id) {
+        Ok(_) => o
+        Err(_) => AutoHintOutline::from_path(unscaled_path)
+      }
+    }
+    _ => AutoHintOutline::from_path(unscaled_path)
+  }
   if outline.is_empty() {
     return Ok((AdjustedMetrics::default(), Array::new()))
   }
   outline.stats() |> ignore
-  // Placeholder behavior: draw unhinted but round advances like upstream.
+  let axis_h = AutoHintAxis::default()
+  axis_h.reset(AUTOHINT_DIM_HORIZONTAL, outline.orientation)
+  autohint_compute_segments(outline, axis_h, AutoHintScriptGroup::Default)
+  |> ignore
+  autohint_link_segments(outline, axis_h, 0, AutoHintScriptGroup::Default, None)
+  for seg in axis_h.segments.iter() {
+    seg.delta |> ignore
+    seg.serif_ix |> ignore
+  }
+  let axis_v = AutoHintAxis::default()
+  axis_v.reset(AUTOHINT_DIM_VERTICAL, outline.orientation)
+  autohint_compute_segments(outline, axis_v, AutoHintScriptGroup::Default)
+  |> ignore
+  autohint_link_segments(outline, axis_v, 0, AutoHintScriptGroup::Default, None)
+  for seg in axis_v.segments.iter() {
+    seg.delta |> ignore
+    seg.serif_ix |> ignore
+  }
   let settings = DrawSettings::unhinted(size, location).with_path_style(
     path_style,
   )
@@ -705,7 +729,6 @@ fn AutoHintInstance::hinted_path(
     Err(e) => return Err(e)
     Ok(p) => p
   }
-  // Use the extracted outline to avoid unused warnings until full autohint lands.
   self.styles |> ignore
   Ok((metrics, path))
 }

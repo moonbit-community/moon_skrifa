@@ -1272,3 +1272,395 @@ fn glyf_has_hinting(
     Some((_, has_hinting)) => Some(has_hinting)
   }
 }
+
+///|
+const GLYF_MEM_PHANTOM_POINT_COUNT : Int = 4
+
+///|
+const GLYF_MEM_TAG_GVAR : UInt = 0x67766172 // "gvar"
+
+///|
+const GLYF_MEM_TAG_CVT : UInt = 0x63767420 // "cvt "
+
+///|
+const GLYF_MEM_COMPOSITE_RECURSION_LIMIT : Int = 32
+
+///|
+// These sizes match upstream read-fonts layouts:
+// Point<T> => 2x i32 = 8 bytes, PointFlags => u8 = 1 byte.
+const GLYF_MEM_SIZE_POINT : Int = 8
+
+///|
+const GLYF_MEM_SIZE_POINT_FLAGS : Int = 1
+
+///|
+const GLYF_MEM_SIZE_U16 : Int = 2
+
+///|
+const GLYF_MEM_SIZE_I32 : Int = 4
+
+///|
+const GLYF_MEM_SIZE_ALIGN_I32 : Int = 4
+
+///|
+priv struct GlyfDrawMemorySummary {
+  mut points : Int
+  mut contours : Int
+  mut max_simple_points : Int
+  mut max_other_points : Int
+  mut max_component_delta_stack : Int
+  mut has_hinting : Bool
+  mut has_overlaps : Bool
+  has_variations : Bool
+  max_stack : Int
+  cvt_count : Int
+  storage_count : Int
+  max_twilight_points : Int
+}
+
+///|
+fn glyf_draw_memory_summary_default(
+  font : @moon_skrifa.FontRef,
+) -> GlyfDrawMemorySummary {
+  let has_variations = font.table(GLYF_MEM_TAG_GVAR) is Some(_)
+  GlyfDrawMemorySummary::{
+    points: 0,
+    contours: 0,
+    max_simple_points: 0,
+    max_other_points: 0,
+    max_component_delta_stack: 0,
+    has_hinting: false,
+    has_overlaps: false,
+    has_variations,
+    max_stack: 0,
+    cvt_count: 0,
+    storage_count: 0,
+    max_twilight_points: 0,
+  }
+}
+
+///|
+fn glyf_draw_memory_summary_with_limits(
+  font : @moon_skrifa.FontRef,
+  max_stack : Int,
+  cvt_count : Int,
+  storage_count : Int,
+  max_twilight_points : Int,
+) -> GlyfDrawMemorySummary {
+  let base = glyf_draw_memory_summary_default(font)
+  GlyfDrawMemorySummary::{
+    points: base.points,
+    contours: base.contours,
+    max_simple_points: base.max_simple_points,
+    max_other_points: base.max_other_points,
+    max_component_delta_stack: base.max_component_delta_stack,
+    has_hinting: base.has_hinting,
+    has_overlaps: base.has_overlaps,
+    has_variations: base.has_variations,
+    max_stack,
+    cvt_count,
+    storage_count,
+    max_twilight_points,
+  }
+}
+
+///|
+fn glyf_draw_memory_required_size(
+  sum : GlyfDrawMemorySummary,
+  hinting : Hinting,
+) -> Int {
+  let hinted = sum.has_hinting && hinting is Hinting::Embedded
+  let mut size = 0
+  // Scaled points.
+  size = size + sum.points * GLYF_MEM_SIZE_POINT
+  // Unscaled and (if hinted) original scaled points.
+  size = size +
+    sum.max_other_points * GLYF_MEM_SIZE_POINT * (if hinted { 2 } else { 1 })
+  // Contour end points.
+  size = size + sum.contours * GLYF_MEM_SIZE_U16
+  // Point flags.
+  size = size + sum.points * GLYF_MEM_SIZE_POINT_FLAGS
+  if sum.has_variations {
+    // IUP buffer + delta buffers.
+    size = size + sum.max_simple_points * GLYF_MEM_SIZE_POINT
+    size = size + sum.max_simple_points * GLYF_MEM_SIZE_POINT
+    size = size + sum.max_component_delta_stack * GLYF_MEM_SIZE_POINT
+  }
+  if hinted {
+    size = size + sum.max_stack * GLYF_MEM_SIZE_I32
+    size = size + (sum.cvt_count + sum.storage_count) * GLYF_MEM_SIZE_I32
+    size = size +
+      sum.max_twilight_points *
+      (GLYF_MEM_SIZE_POINT * 2 + GLYF_MEM_SIZE_POINT_FLAGS)
+  }
+  if size != 0 {
+    size = size + GLYF_MEM_SIZE_ALIGN_I32
+  }
+  size
+}
+
+///|
+fn glyf_draw_memory_summary_rec(
+  ctx : GlyfCtx,
+  idx : Int,
+  visited : Array[Bool],
+  sum : GlyfDrawMemorySummary,
+  component_depth : Int,
+  recurse_depth : Int,
+) -> Bool {
+  if recurse_depth > GLYF_MEM_COMPOSITE_RECURSION_LIMIT {
+    return false
+  }
+  if idx < 0 || idx >= ctx.num_glyphs {
+    return false
+  }
+  if visited.at(idx) {
+    return false
+  }
+  visited.set(idx, true)
+  let glyph = match glyf_glyph_slice(ctx, idx) {
+    None => {
+      visited.set(idx, false)
+      return false
+    }
+    Some(g) => g
+  }
+  // Empty glyph is valid (loca start==end).
+  if glyph.length() == 0 {
+    visited.set(idx, false)
+    return true
+  }
+  if glyph.length() < 10 {
+    visited.set(idx, false)
+    return false
+  }
+  let number_of_contours = match glyf_read_i16_be(glyph, 0) {
+    None => {
+      visited.set(idx, false)
+      return false
+    }
+    Some(v) => v
+  }
+  if number_of_contours == 0 {
+    visited.set(idx, false)
+    return true
+  }
+  if number_of_contours > 0 {
+    // Simple glyph.
+    let mut off = 10
+    let mut last_end = -1
+    for _ in 0..<number_of_contours {
+      let v = match glyf_read_u16_be(glyph, off) {
+        None => {
+          visited.set(idx, false)
+          return false
+        }
+        Some(u) => u
+      }
+      last_end = v
+      off = off + 2
+    }
+    let instruction_len = match glyf_read_u16_be(glyph, off) {
+      None => {
+        visited.set(idx, false)
+        return false
+      }
+      Some(v) => v
+    }
+    off = off + 2
+    if instruction_len < 0 || off + instruction_len > glyph.length() {
+      visited.set(idx, false)
+      return false
+    }
+    let has_hinting = instruction_len > 0
+    off = off + instruction_len
+    let num_points = last_end + 1
+    if num_points > 0 {
+      let num_points_with_phantom = num_points + GLYF_MEM_PHANTOM_POINT_COUNT
+      sum.max_simple_points = sum.max_simple_points.max(num_points_with_phantom)
+      sum.max_other_points = sum.max_other_points.max(num_points_with_phantom)
+      sum.points = sum.points + num_points
+      sum.contours = sum.contours + number_of_contours
+      sum.has_hinting = sum.has_hinting || has_hinting
+      // Scan flags for overlap bit.
+      let mut seen = 0
+      while seen < num_points {
+        if off >= glyph.length() {
+          visited.set(idx, false)
+          return false
+        }
+        let flag = glyph.at(off).to_int()
+        off = off + 1
+        sum.has_overlaps = sum.has_overlaps || (flag & SIMPLE_OVERLAP_FLAG) != 0
+        seen = seen + 1
+        if (flag & 0x08) != 0 {
+          if off >= glyph.length() {
+            visited.set(idx, false)
+            return false
+          }
+          let repeat = glyph.at(off).to_int()
+          off = off + 1
+          for _ in 0..<repeat {
+            sum.has_overlaps = sum.has_overlaps ||
+              (flag & SIMPLE_OVERLAP_FLAG) != 0
+            seen = seen + 1
+          }
+        }
+      }
+    } else {
+      sum.contours = sum.contours + number_of_contours
+      sum.has_hinting = sum.has_hinting || has_hinting
+    }
+    visited.set(idx, false)
+    return true
+  }
+  // Composite glyph.
+  let mut off = 10
+  let point_base = sum.points
+  let comp_ids : Array[Int] = Array::new()
+  let mut flags = 0
+  let mut component_count = 0
+  while true {
+    flags = match glyf_read_u16_be(glyph, off) {
+      None => {
+        visited.set(idx, false)
+        return false
+      }
+      Some(v) => v
+    }
+    sum.has_overlaps = sum.has_overlaps ||
+      (flags & COMPOSITE_OVERLAP_COMPOUND) != 0
+    let comp_gid = match glyf_read_u16_be(glyph, off + 2) {
+      None => {
+        visited.set(idx, false)
+        return false
+      }
+      Some(v) => v
+    }
+    comp_ids.push(comp_gid)
+    component_count = component_count + 1
+    off = off + 4
+    let arg_words = (flags & COMPOSITE_ARG_1_AND_2_ARE_WORDS) != 0
+    let args_len = if arg_words { 4 } else { 2 }
+    if off + args_len > glyph.length() {
+      visited.set(idx, false)
+      return false
+    }
+    off = off + args_len
+    if (flags & COMPOSITE_WE_HAVE_A_SCALE) != 0 {
+      off = off + 2
+    } else if (flags & COMPOSITE_WE_HAVE_AN_X_AND_Y_SCALE) != 0 {
+      off = off + 4
+    } else if (flags & COMPOSITE_WE_HAVE_A_TWO_BY_TWO) != 0 {
+      off = off + 8
+    }
+    if off < 0 || off > glyph.length() {
+      visited.set(idx, false)
+      return false
+    }
+    if (flags & COMPOSITE_MORE_COMPONENTS) == 0 {
+      break
+    }
+  }
+  let has_hinting = (flags & COMPOSITE_WE_HAVE_INSTRUCTIONS) != 0
+  let count = component_count + GLYF_MEM_PHANTOM_POINT_COUNT
+  sum.max_component_delta_stack = sum.max_component_delta_stack.max(
+    component_depth + count,
+  )
+  for cg in comp_ids.iter() {
+    // Missing component glyphs are treated as empty.
+    if cg >= 0 && cg < ctx.num_glyphs {
+      if !glyf_draw_memory_summary_rec(
+          ctx,
+          cg,
+          visited,
+          sum,
+          component_depth + count,
+          recurse_depth + 1,
+        ) {
+        visited.set(idx, false)
+        return false
+      }
+    }
+  }
+  if has_hinting {
+    let num_points_in_composite = sum.points -
+      point_base +
+      GLYF_MEM_PHANTOM_POINT_COUNT
+    sum.max_other_points = sum.max_other_points.max(num_points_in_composite)
+  }
+  sum.has_hinting = sum.has_hinting || has_hinting
+  visited.set(idx, false)
+  true
+}
+
+///|
+/// Returns the required temporary memory size (in bytes) for drawing a glyf
+/// outline, matching upstream `skrifa::outline::glyf::Outline::required_buffer_size`.
+fn glyf_draw_memory_size(
+  font : @moon_skrifa.FontRef,
+  gid : @moon_skrifa.GlyphId,
+  hinting : Hinting,
+) -> Int? {
+  // Build a context for slice access.
+  let glyf = match font.table(TAG_GLYF) {
+    None => return None
+    Some(v) => v
+  }
+  let maxp = match font.table(TAG_MAXP) {
+    None => return None
+    Some(v) => v
+  }
+  let head = match font.table(TAG_HEAD) {
+    None => return None
+    Some(v) => v
+  }
+  let loca = match font.table(TAG_LOCA) {
+    None => return None
+    Some(v) => v
+  }
+  let num_glyphs = match glyf_read_u16_be(maxp, 4) {
+    None => return None
+    Some(v) => v
+  }
+  let idx = gid.to_uint64().to_int()
+  if idx < 0 || idx >= num_glyphs {
+    return None
+  }
+  let index_to_loc_format = match glyf_read_i16_be(head, 50) {
+    None => return None
+    Some(v) => v
+  }
+  let empty : Array[@moon_skrifa.NormalizedCoord] = Array::new()
+  let ctx = GlyfCtx::{
+    font,
+    glyf,
+    loca,
+    num_glyphs,
+    index_to_loc_format,
+    coords: empty.op_as_view(),
+    is_scaled: false,
+    is_hinted: false,
+    scale_bits: 0x10000,
+    hb_scale: 1.0,
+  }
+
+  // Parse maxp-derived hinting limits and CVT size.
+  let max_twilight_points = glyf_read_u16_be(maxp, 16).unwrap_or(0) + 4
+  let max_stack = glyf_read_u16_be(maxp, 24).unwrap_or(0) + 32
+  let max_storage = glyf_read_u16_be(maxp, 18).unwrap_or(0)
+  let cvt_count = match font.table(GLYF_MEM_TAG_CVT) {
+    None => 0
+    Some(cvt) => cvt.length() / 2
+  }
+  let sum = glyf_draw_memory_summary_with_limits(
+    font, max_stack, cvt_count, max_storage, max_twilight_points,
+  )
+  let visited = Array::make(num_glyphs, false)
+  if !glyf_draw_memory_summary_rec(ctx, idx, visited, sum, 0, 0) {
+    return None
+  }
+  // Add phantom points at top-level.
+  sum.points = sum.points + GLYF_MEM_PHANTOM_POINT_COUNT
+  Some(glyf_draw_memory_required_size(sum, hinting))
+}

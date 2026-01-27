@@ -183,18 +183,6 @@ fn TtZone::touch(
 }
 
 ///|
-fn TtZone::untouch(
-  self : TtZone,
-  index : Int,
-  axis : TtAxis,
-) -> Result[Unit, HintError] {
-  if index < 0 || index >= self.flags.length() {
-    return Err(HintError::InvalidPointIndex(index))
-  }
-  let mask = axis.touched_mask()
-  self.flags.set(index, self.flags.at(index) & (mask ^ -1))
-  Ok(())
-}
 
 ///|
 fn TtZone::is_touched(
@@ -210,41 +198,8 @@ fn TtZone::is_touched(
 }
 
 ///|
-fn TtZone::flip_on_curve(self : TtZone, index : Int) -> Result[Unit, HintError] {
-  if index < 0 || index >= self.flags.length() {
-    return Err(HintError::InvalidPointIndex(index))
-  }
-  let f = self.flags.at(index)
-  let nf = if (f & TT_POINT_ON_CURVE) != 0 {
-    f & (TT_POINT_ON_CURVE ^ -1)
-  } else {
-    f | TT_POINT_ON_CURVE
-  }
-  self.flags.set(index, nf)
-  Ok(())
-}
 
 ///|
-fn TtZone::set_on_curve(
-  self : TtZone,
-  start : Int,
-  end : Int,
-  on : Bool,
-) -> Result[Unit, HintError] {
-  if start < 0 || end < start || end > self.flags.length() {
-    return Err(HintError::InvalidPointIndex(start))
-  }
-  for i in start..<end {
-    let f = self.flags.at(i)
-    let nf = if on {
-      f | TT_POINT_ON_CURVE
-    } else {
-      f & (TT_POINT_ON_CURVE ^ -1)
-    }
-    self.flags.set(i, nf)
-  }
-  Ok(())
-}
 
 ///|
 /// Interpolate untouched points (IUP).

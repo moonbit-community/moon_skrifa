@@ -32,11 +32,6 @@ priv struct TtInstruction {
 }
 
 ///|
-fn TtInstruction::default() -> TtInstruction {
-  TtInstruction::{ pc: 0, opcode: 0, inline_operands: Array::new() }
-}
-
-///|
 priv struct TtDecoder {
   code : BytesView
   mut pc : Int

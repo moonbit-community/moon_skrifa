@@ -406,21 +406,6 @@ fn tt2_decode_simple_glyph_for_hinting(
 }
 
 ///|
-fn tt_load_simple_glyph_zone_for_hinting(
-  font : @moon_skrifa.FontRef,
-  gid : @moon_skrifa.GlyphId,
-  scale_bits : Int,
-) -> (TtZone, BytesView)? {
-  let glyph = match tt2_glyph_slice(font, gid) {
-    Err(_) => return None
-    Ok(v) => v
-  }
-  let (aw, lsb) = tt2_hmtx_metrics(font, gid).unwrap_or((0, 0))
-  let (os2_ascent, os2_descent) = tt2_os2_vmetrics(font)
-  tt2_decode_simple_glyph_for_hinting(
-    glyph, scale_bits, aw, lsb, os2_ascent, os2_descent,
-  )
-}
 
 ///|
 const TT2_COMPOSITE_USE_MY_METRICS : Int = 0x0200

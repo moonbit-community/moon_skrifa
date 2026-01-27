@@ -23,13 +23,6 @@
 const TT_MAX_RUN_INSTRUCTIONS : Int = 1_000_000
 
 ///|
-priv enum TtDefKind {
-  None_
-  Fdef
-  Idef
-}
-
-///|
 priv struct TtEngine {
   program : TtProgramState
   value_stack : TtValueStack
@@ -38,9 +31,7 @@ priv struct TtEngine {
   graphics : TtGraphicsState
   cvt : Array[Int]
   storage : Array[Int]
-  mut in_definition : TtDefKind
   axis_count : Int
-  coords : Array[Int]
 }
 
 ///|
@@ -74,9 +65,7 @@ fn TtEngine::new(
     graphics,
     cvt,
     storage,
-    in_definition: TtDefKind::None_,
     axis_count: 0,
-    coords: Array::new(),
   }
 }
 
@@ -88,7 +77,6 @@ fn TtEngine::reset(
 ) -> Unit {
   self.program.reset(program)
   self.value_stack.clear()
-  self.in_definition = TtDefKind::None_
   self.graphics.reset()
   self.graphics.is_pedantic = is_pedantic
   match program {
@@ -706,7 +694,7 @@ fn TtEngine::op_else(self : TtEngine, _pc : Int) -> Result[Unit, HintError] {
 }
 
 ///|
-fn TtEngine::op_eif(self : TtEngine, _pc : Int) -> Result[Unit, HintError] {
+fn TtEngine::op_eif(_self : TtEngine, _pc : Int) -> Result[Unit, HintError] {
   // No-op: handled by skip logic.
   Ok(())
 }
@@ -790,7 +778,6 @@ fn TtEngine::op_jrof(self : TtEngine, pc : Int) -> Result[Unit, HintError] {
 ///|
 fn tt_engine_find_endf(code : BytesView, start : Int) -> Result[Int, HintError] {
   let dec = TtDecoder::{ code, pc: start }
-  let mut depth = 0
   while true {
     let ins = match dec.decode() {
       Err(e) => return Err(e)
@@ -798,14 +785,10 @@ fn tt_engine_find_endf(code : BytesView, start : Int) -> Result[Int, HintError] 
       Ok(Some(i)) => i
     }
     if ins.opcode == 0x2C || ins.opcode == 0x89 {
-      // Nested definitions are not allowed by upstream.
-      depth = depth + 1
+      return Err(HintError::NestedDefinition)
     } else if ins.opcode == 0x2D {
-      if depth == 0 {
-        // Return the end offset (pc after ENDF).
-        return Ok(dec.pc)
-      }
-      depth = depth - 1
+      // Return the end offset (pc after ENDF).
+      return Ok(dec.pc)
     }
   }
   Err(HintError::UnexpectedEndOfBytecode)
@@ -815,10 +798,6 @@ fn tt_engine_find_endf(code : BytesView, start : Int) -> Result[Int, HintError] 
 fn TtEngine::op_fdef(self : TtEngine, pc : Int) -> Result[Unit, HintError] {
   if self.program.current is TtProgram::Glyph {
     return Err(HintError::DefinitionInGlyphProgram)
-  }
-  if self.in_definition is TtDefKind::Fdef ||
-    self.in_definition is TtDefKind::Idef {
-    return Err(HintError::NestedDefinition)
   }
   let fn_id = match self.value_stack.pop() {
     Err(e) => return Err(e)
@@ -850,10 +829,6 @@ fn TtEngine::op_fdef(self : TtEngine, pc : Int) -> Result[Unit, HintError] {
 fn TtEngine::op_idef(self : TtEngine, pc : Int) -> Result[Unit, HintError] {
   if self.program.current is TtProgram::Glyph {
     return Err(HintError::DefinitionInGlyphProgram)
-  }
-  if self.in_definition is TtDefKind::Fdef ||
-    self.in_definition is TtDefKind::Idef {
-    return Err(HintError::NestedDefinition)
   }
   let opcode = match self.value_stack.pop() {
     Err(e) => return Err(e)

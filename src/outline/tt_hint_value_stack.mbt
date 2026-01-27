@@ -102,19 +102,3 @@ fn TtValueStack::peek(
 }
 
 ///|
-fn TtValueStack::set_from_top(
-  self : TtValueStack,
-  depth_from_top : Int,
-  value : Int,
-) -> Result[Unit, HintError] {
-  if depth_from_top < 0 {
-    return Err(HintError::InvalidStackValue(depth_from_top))
-  }
-  let idx = self.len - 1 - depth_from_top
-  if idx < 0 || idx >= self.len {
-    Err(HintError::ValueStackUnderflow)
-  } else {
-    self.buf.set(idx, value)
-    Ok(())
-  }
-}

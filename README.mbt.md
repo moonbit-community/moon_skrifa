@@ -10,7 +10,10 @@ Repository: https://github.com/moonbit-community/moon_skrifa
 - Embedded hinting (TrueType `glyf`) is implemented and wired into outline drawing via `HintingInstance` + `DrawSettings::hinted(...)`.
   - Supports both simple and composite `glyf` glyphs (FreeType-style path building).
   - Non-pedantic hinting matches fontations behavior (interpreter errors may be ignored); pedantic mode returns errors.
-- Runtime autohinting (for fonts without embedded instructions) is not yet implemented.
+- Runtime autohinting (for fonts without embedded instructions) is still WIP:
+  - style classification + outline topology (segments) are ported
+  - edge building / metrics / hint application are not yet implemented
+- CFF/CFF2 outlines are supported; CFF/CFF2 hinting for `Engine::Interpreter` is not yet implemented.
 
 ## Packages
 

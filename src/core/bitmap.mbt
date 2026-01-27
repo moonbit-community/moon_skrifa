@@ -206,7 +206,6 @@ priv enum BitmapStrikesKind {
 ///|
 pub struct BitmapStrikes {
   priv kind : BitmapStrikesKind
-  priv font : FontRef
   priv num_glyphs : Int
 }
 
@@ -226,7 +225,7 @@ pub fn BitmapStrikes::new(font : FontRef) -> BitmapStrikes {
       match BitmapStrikes::with_format(font, BitmapFormat::Cbdt) {
         None =>
           match BitmapStrikes::with_format(font, BitmapFormat::Ebdt) {
-            None => BitmapStrikes::{ kind: NoStrikes, font, num_glyphs }
+            None => BitmapStrikes::{ kind: NoStrikes, num_glyphs }
             Some(v) => v
           }
         Some(v) => v
@@ -245,19 +244,18 @@ pub fn BitmapStrikes::with_format(
     BitmapFormat::Sbix =>
       match font.table(TAG_SBIX) {
         None => None
-        Some(sbix) =>
-          Some(BitmapStrikes::{ kind: Sbix(sbix), font, num_glyphs })
+        Some(sbix) => Some(BitmapStrikes::{ kind: Sbix(sbix), num_glyphs })
       }
     BitmapFormat::Cbdt =>
       match (font.table(TAG_CBLC), font.table(TAG_CBDT)) {
         (Some(cblc), Some(cbdt)) =>
-          Some(BitmapStrikes::{ kind: Cbdt(cblc, cbdt), font, num_glyphs })
+          Some(BitmapStrikes::{ kind: Cbdt(cblc, cbdt), num_glyphs })
         _ => None
       }
     BitmapFormat::Ebdt =>
       match (font.table(TAG_EBLC), font.table(TAG_EBDT)) {
         (Some(eblc), Some(ebdt)) =>
-          Some(BitmapStrikes::{ kind: Ebdt(eblc, ebdt), font, num_glyphs })
+          Some(BitmapStrikes::{ kind: Ebdt(eblc, ebdt), num_glyphs })
         _ => None
       }
   }

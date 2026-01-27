@@ -20,16 +20,234 @@
 /// source representation.
 
 ///|
+priv enum AutoHintDirection {
+  None_
+  Right
+  Left
+  Up
+  Down
+}
+
+///|
+impl Eq for AutoHintDirection with equal(a, b) {
+  match (a, b) {
+    (AutoHintDirection::None_, AutoHintDirection::None_) => true
+    (AutoHintDirection::Right, AutoHintDirection::Right) => true
+    (AutoHintDirection::Left, AutoHintDirection::Left) => true
+    (AutoHintDirection::Up, AutoHintDirection::Up) => true
+    (AutoHintDirection::Down, AutoHintDirection::Down) => true
+    _ => false
+  }
+}
+
+///|
+fn AutoHintDirection::to_int(self : AutoHintDirection) -> Int {
+  match self {
+    AutoHintDirection::None_ => 4
+    AutoHintDirection::Right => 1
+    AutoHintDirection::Left => -1
+    AutoHintDirection::Up => 2
+    AutoHintDirection::Down => -2
+  }
+}
+
+///|
+fn AutoHintDirection::new(dx : Int, dy : Int) -> AutoHintDirection {
+  let (dir, long_arm, short_arm) = if dy >= dx {
+    if dy >= -dx {
+      (AutoHintDirection::Up, dy, dx)
+    } else {
+      (AutoHintDirection::Left, -dx, dy)
+    }
+  } else if dy >= -dx {
+    (AutoHintDirection::Right, dx, dy)
+  } else {
+    (AutoHintDirection::Down, -dy, dx)
+  }
+  if long_arm <= 14 * short_arm.abs() {
+    AutoHintDirection::None_
+  } else {
+    dir
+  }
+}
+
+///|
+fn AutoHintDirection::is_opposite(
+  self : AutoHintDirection,
+  other : AutoHintDirection,
+) -> Bool {
+  self.to_int() + other.to_int() == 0
+}
+
+///|
+fn AutoHintDirection::is_same_axis(
+  self : AutoHintDirection,
+  other : AutoHintDirection,
+) -> Bool {
+  self.to_int().abs() == other.to_int().abs()
+}
+
+///|
+fn AutoHintDirection::normalize(self : AutoHintDirection) -> AutoHintDirection {
+  match self {
+    AutoHintDirection::Left => AutoHintDirection::Right
+    AutoHintDirection::Down => AutoHintDirection::Up
+    _ => self
+  }
+}
+
+///|
+priv enum AutoHintOrientation {
+  Clockwise
+  CounterClockwise
+}
+
+///|
+priv struct AutoHintPointFlags {
+  mut bits : Int
+}
+
+///|
+fn AutoHintPointFlags::default() -> AutoHintPointFlags {
+  AutoHintPointFlags::{ bits: 0 }
+}
+
+///|
+priv enum AutoHintPointMarker {
+  Near
+  WeakInterpolation
+}
+
+///|
+fn AutoHintPointMarker::bit(self : AutoHintPointMarker) -> Int {
+  match self {
+    AutoHintPointMarker::Near => 1 << 1
+    AutoHintPointMarker::WeakInterpolation => 1 << 2
+  }
+}
+
+///|
+fn AutoHintPointFlags::with_on_curve(on_curve : Bool) -> AutoHintPointFlags {
+  AutoHintPointFlags::{ bits: if on_curve { 1 } else { 0 } }
+}
+
+///|
+fn AutoHintPointFlags::is_on_curve(self : AutoHintPointFlags) -> Bool {
+  (self.bits & 1) != 0
+}
+
+///|
+fn AutoHintPointFlags::set_marker(
+  self : AutoHintPointFlags,
+  marker : AutoHintPointMarker,
+) -> Unit {
+  self.bits = self.bits | marker.bit()
+}
+
+///|
+fn AutoHintPointFlags::has_marker(
+  self : AutoHintPointFlags,
+  marker : AutoHintPointMarker,
+) -> Bool {
+  (self.bits & marker.bit()) != 0
+}
+
+///|
 priv struct AutoHintPoint {
-  x : Int
-  y : Int
-  on_curve : Bool
+  mut flags : AutoHintPointFlags
+  mut fx : Int
+  mut fy : Int
+  mut _ox : Int
+  mut _oy : Int
+  mut x : Int
+  mut y : Int
+  mut in_dir : AutoHintDirection
+  mut out_dir : AutoHintDirection
+  mut u : Int
+  mut v : Int
+  mut next_ix : Int
+  mut prev_ix : Int
+}
+
+///|
+fn AutoHintPoint::default() -> AutoHintPoint {
+  AutoHintPoint::{
+    flags: AutoHintPointFlags::default(),
+    fx: 0,
+    fy: 0,
+    _ox: 0,
+    _oy: 0,
+    x: 0,
+    y: 0,
+    in_dir: AutoHintDirection::None_,
+    out_dir: AutoHintDirection::None_,
+    u: 0,
+    v: 0,
+    next_ix: 0,
+    prev_ix: 0,
+  }
+}
+
+///|
+fn AutoHintPoint::is_on_curve(self : AutoHintPoint) -> Bool {
+  self.flags.is_on_curve()
+}
+
+///|
+fn AutoHintPoint::next(self : AutoHintPoint) -> Int {
+  self.next_ix
+}
+
+///|
+fn AutoHintPoint::prev(self : AutoHintPoint) -> Int {
+  self.prev_ix
+}
+
+///|
+priv struct AutoHintContour {
+  first_ix : Int
+  last_ix : Int
+}
+
+///|
+fn AutoHintContour::first(self : AutoHintContour) -> Int {
+  self.first_ix
+}
+
+///|
+fn AutoHintContour::next(self : AutoHintContour, index : Int) -> Int {
+  if index >= self.last_ix {
+    self.first_ix
+  } else {
+    index + 1
+  }
+}
+
+///|
+fn AutoHintContour::prev(self : AutoHintContour, index : Int) -> Int {
+  if index <= self.first_ix {
+    self.last_ix
+  } else {
+    index - 1
+  }
+}
+
+///|
+fn AutoHintContour::length(self : AutoHintContour) -> Int {
+  if self.last_ix < self.first_ix {
+    0
+  } else {
+    self.last_ix - self.first_ix + 1
+  }
 }
 
 ///|
 priv struct AutoHintOutline {
+  mut units_per_em : Int
+  mut orientation : AutoHintOrientation?
+  mut advance : Int
   points : Array[AutoHintPoint]
-  contours : Array[Int]
+  contours : Array[AutoHintContour]
 }
 
 ///|
@@ -40,78 +258,894 @@ fn autohint_round_font_units(v : Double) -> Int {
 ///|
 fn AutoHintOutline::from_path(path : Array[PathElement]) -> AutoHintOutline {
   let points : Array[AutoHintPoint] = Array::new()
-  let contours : Array[Int] = Array::new()
+  let contours : Array[AutoHintContour] = Array::new()
   let mut in_contour = false
+  let mut contour_start = 0
   for e in path.iter() {
     match e {
       PathElement::MoveTo(x, y) => {
-        if in_contour && points.length() > 0 {
-          contours.push(points.length() - 1)
+        if in_contour && points.length() > contour_start {
+          contours.push(AutoHintContour::{
+            first_ix: contour_start,
+            last_ix: points.length() - 1,
+          })
         }
-        points.push(AutoHintPoint::{
-          x: autohint_round_font_units(x),
-          y: autohint_round_font_units(y),
-          on_curve: true,
-        })
+        contour_start = points.length()
+        let px = autohint_round_font_units(x)
+        let py = autohint_round_font_units(y)
+        let p = AutoHintPoint::default()
+        p.flags = AutoHintPointFlags::with_on_curve(true)
+        p.fx = px
+        p.fy = py
+        p._ox = px
+        p._oy = py
+        p.x = px
+        p.y = py
+        points.push(p)
         in_contour = true
       }
       PathElement::LineTo(x, y) =>
         if in_contour {
-          points.push(AutoHintPoint::{
-            x: autohint_round_font_units(x),
-            y: autohint_round_font_units(y),
-            on_curve: true,
-          })
+          let px = autohint_round_font_units(x)
+          let py = autohint_round_font_units(y)
+          let p = AutoHintPoint::default()
+          p.flags = AutoHintPointFlags::with_on_curve(true)
+          p.fx = px
+          p.fy = py
+          p._ox = px
+          p._oy = py
+          p.x = px
+          p.y = py
+          points.push(p)
         }
       PathElement::QuadTo(cx0, cy0, x, y) =>
         if in_contour {
-          points.push(AutoHintPoint::{
-            x: autohint_round_font_units(cx0),
-            y: autohint_round_font_units(cy0),
-            on_curve: false,
-          })
-          points.push(AutoHintPoint::{
-            x: autohint_round_font_units(x),
-            y: autohint_round_font_units(y),
-            on_curve: true,
-          })
+          let cpx = autohint_round_font_units(cx0)
+          let cpy = autohint_round_font_units(cy0)
+          let c = AutoHintPoint::default()
+          c.flags = AutoHintPointFlags::with_on_curve(false)
+          c.fx = cpx
+          c.fy = cpy
+          c._ox = cpx
+          c._oy = cpy
+          c.x = cpx
+          c.y = cpy
+          points.push(c)
+          let px = autohint_round_font_units(x)
+          let py = autohint_round_font_units(y)
+          let p = AutoHintPoint::default()
+          p.flags = AutoHintPointFlags::with_on_curve(true)
+          p.fx = px
+          p.fy = py
+          p._ox = px
+          p._oy = py
+          p.x = px
+          p.y = py
+          points.push(p)
         }
       PathElement::CurveTo(cx0, cy0, cx1, cy1, x, y) =>
         if in_contour {
-          points.push(AutoHintPoint::{
-            x: autohint_round_font_units(cx0),
-            y: autohint_round_font_units(cy0),
-            on_curve: false,
-          })
-          points.push(AutoHintPoint::{
-            x: autohint_round_font_units(cx1),
-            y: autohint_round_font_units(cy1),
-            on_curve: false,
-          })
-          points.push(AutoHintPoint::{
-            x: autohint_round_font_units(x),
-            y: autohint_round_font_units(y),
-            on_curve: true,
-          })
+          let c0x = autohint_round_font_units(cx0)
+          let c0y = autohint_round_font_units(cy0)
+          let c0 = AutoHintPoint::default()
+          c0.flags = AutoHintPointFlags::with_on_curve(false)
+          c0.fx = c0x
+          c0.fy = c0y
+          c0._ox = c0x
+          c0._oy = c0y
+          c0.x = c0x
+          c0.y = c0y
+          points.push(c0)
+          let c1x = autohint_round_font_units(cx1)
+          let c1y = autohint_round_font_units(cy1)
+          let c1 = AutoHintPoint::default()
+          c1.flags = AutoHintPointFlags::with_on_curve(false)
+          c1.fx = c1x
+          c1.fy = c1y
+          c1._ox = c1x
+          c1._oy = c1y
+          c1.x = c1x
+          c1.y = c1y
+          points.push(c1)
+          let px = autohint_round_font_units(x)
+          let py = autohint_round_font_units(y)
+          let p = AutoHintPoint::default()
+          p.flags = AutoHintPointFlags::with_on_curve(true)
+          p.fx = px
+          p.fy = py
+          p._ox = px
+          p._oy = py
+          p.x = px
+          p.y = py
+          points.push(p)
         }
       PathElement::Close =>
         if in_contour {
-          if points.length() > 0 {
-            contours.push(points.length() - 1)
+          if points.length() > contour_start {
+            contours.push(AutoHintContour::{
+              first_ix: contour_start,
+              last_ix: points.length() - 1,
+            })
           }
           in_contour = false
         }
     }
   }
-  if in_contour && points.length() > 0 {
-    contours.push(points.length() - 1)
+  if in_contour && points.length() > contour_start {
+    contours.push(AutoHintContour::{
+      first_ix: contour_start,
+      last_ix: points.length() - 1,
+    })
   }
-  AutoHintOutline::{ points, contours }
+  let outline = AutoHintOutline::{
+    units_per_em: 0,
+    orientation: None,
+    advance: 0,
+    points,
+    contours,
+  }
+  outline.link_points()
+  outline.compute_directions(0)
+  outline.compute_orientation()
+  outline
 }
 
 ///|
 fn AutoHintOutline::is_empty(self : AutoHintOutline) -> Bool {
   self.contours.length() == 0
+}
+
+///|
+fn AutoHintOutline::clear(self : AutoHintOutline) -> Unit {
+  self.units_per_em = 0
+  self.orientation = None
+  self.advance = 0
+  self.points.clear()
+  self.contours.clear()
+}
+
+///|
+fn autohint_outline_read_u16_be(view : BytesView, offset : Int) -> Int? {
+  if offset < 0 || offset + 2 > view.length() {
+    None
+  } else {
+    let b0 = view.at(offset).to_int()
+    let b1 = view.at(offset + 1).to_int()
+    Some((b0 << 8) | b1)
+  }
+}
+
+///|
+fn autohint_outline_read_i16_be(view : BytesView, offset : Int) -> Int? {
+  match autohint_outline_read_u16_be(view, offset) {
+    None => None
+    Some(u) => Some(if u >= 0x8000 { u - 0x10000 } else { u })
+  }
+}
+
+///|
+fn autohint_outline_read_i8(view : BytesView, offset : Int) -> Int? {
+  if offset < 0 || offset >= view.length() {
+    None
+  } else {
+    let u = view.at(offset).to_int()
+    Some(if u >= 0x80 { u - 0x100 } else { u })
+  }
+}
+
+///|
+fn autohint_outline_read_u32_be(view : BytesView, offset : Int) -> UInt? {
+  if offset < 0 || offset + 4 > view.length() {
+    None
+  } else {
+    let b0 = view.at(offset).to_uint()
+    let b1 = view.at(offset + 1).to_uint()
+    let b2 = view.at(offset + 2).to_uint()
+    let b3 = view.at(offset + 3).to_uint()
+    Some((b0 << 24) | (b1 << 16) | (b2 << 8) | b3)
+  }
+}
+
+///|
+const AUTOHINT_OUTLINE_TAG_HEAD : UInt = 0x68656164 // "head"
+
+///|
+const AUTOHINT_OUTLINE_TAG_LOCA : UInt = 0x6C6F6361 // "loca"
+
+///|
+const AUTOHINT_OUTLINE_TAG_GLYF : UInt = 0x676C7966 // "glyf"
+
+///|
+const AUTOHINT_OUTLINE_TAG_MAXP : UInt = 0x6D617870 // "maxp"
+
+///|
+fn autohint_outline_units_per_em(font : @moon_skrifa.FontRef) -> Int? {
+  match font.table(AUTOHINT_OUTLINE_TAG_HEAD) {
+    None => None
+    Some(head) => autohint_outline_read_u16_be(head, 18)
+  }
+}
+
+///|
+fn autohint_outline_num_glyphs(font : @moon_skrifa.FontRef) -> Int? {
+  match font.table(AUTOHINT_OUTLINE_TAG_MAXP) {
+    None => None
+    Some(maxp) => autohint_outline_read_u16_be(maxp, 4)
+  }
+}
+
+///|
+fn autohint_outline_index_to_loc_format(font : @moon_skrifa.FontRef) -> Int? {
+  match font.table(AUTOHINT_OUTLINE_TAG_HEAD) {
+    None => None
+    Some(head) => autohint_outline_read_i16_be(head, 50)
+  }
+}
+
+///|
+fn autohint_outline_glyf_glyph_slice(
+  font : @moon_skrifa.FontRef,
+  gid : @moon_skrifa.GlyphId,
+) -> BytesView? {
+  let glyf = match font.table(AUTOHINT_OUTLINE_TAG_GLYF) {
+    None => return None
+    Some(v) => v
+  }
+  let loca = match font.table(AUTOHINT_OUTLINE_TAG_LOCA) {
+    None => return None
+    Some(v) => v
+  }
+  let num_glyphs = autohint_outline_num_glyphs(font).unwrap_or(-1)
+  let idx = gid.to_uint64().to_int()
+  if idx < 0 || idx >= num_glyphs {
+    return None
+  }
+  let fmt = autohint_outline_index_to_loc_format(font).unwrap_or(-1)
+  let (start, end) = if fmt == 0 {
+    let need = (num_glyphs + 1) * 2
+    if loca.length() < need {
+      return None
+    }
+    let o0 = autohint_outline_read_u16_be(loca, idx * 2).unwrap_or(-1)
+    let o1 = autohint_outline_read_u16_be(loca, (idx + 1) * 2).unwrap_or(-1)
+    (o0 * 2, o1 * 2)
+  } else if fmt == 1 {
+    let need = (num_glyphs + 1) * 4
+    if loca.length() < need {
+      return None
+    }
+    let o0 = autohint_outline_read_u32_be(loca, idx * 4)
+      .unwrap_or(0)
+      .to_uint64()
+      .to_int()
+    let o1 = autohint_outline_read_u32_be(loca, (idx + 1) * 4)
+      .unwrap_or(0)
+      .to_uint64()
+      .to_int()
+    (o0, o1)
+  } else {
+    return None
+  }
+  if start < 0 || end < start || end > glyf.length() {
+    return None
+  }
+  Some(glyf.sub(start~, end~))
+}
+
+///|
+priv struct AutoHintOutlineData {
+  points : Array[AutoHintPoint]
+  contours : Array[AutoHintContour]
+}
+
+///|
+fn AutoHintOutlineData::new() -> AutoHintOutlineData {
+  AutoHintOutlineData::{ points: Array::new(), contours: Array::new() }
+}
+
+///|
+fn autohint_outline_data_append(
+  dst : AutoHintOutlineData,
+  src : AutoHintOutlineData,
+) -> Unit {
+  let base = dst.points.length()
+  for p in src.points.iter() {
+    dst.points.push(p)
+  }
+  for c in src.contours.iter() {
+    dst.contours.push(AutoHintContour::{
+      first_ix: c.first_ix + base,
+      last_ix: c.last_ix + base,
+    })
+  }
+}
+
+///|
+fn autohint_outline_mul_f2dot14(value : Int, coeff : Int) -> Int {
+  let prod = value.to_int64() * coeff.to_int64()
+  let rounded = if prod >= 0 { prod + 0x2000 } else { prod - 0x2000 }
+  (rounded >> 14).to_int()
+}
+
+///|
+fn autohint_outline_apply_transform(
+  points : Array[AutoHintPoint],
+  a : Int,
+  b : Int,
+  c : Int,
+  d : Int,
+  dx : Int,
+  dy : Int,
+) -> Unit {
+  for i in 0..<points.length() {
+    let p = points.at(i)
+    let x0 = p.x
+    let y0 = p.y
+    let x1 = autohint_outline_mul_f2dot14(x0, a) +
+      autohint_outline_mul_f2dot14(y0, b) +
+      dx
+    let y1 = autohint_outline_mul_f2dot14(x0, c) +
+      autohint_outline_mul_f2dot14(y0, d) +
+      dy
+    p.fx = x1
+    p.fy = y1
+    p._ox = x1
+    p._oy = y1
+    p.x = x1
+    p.y = y1
+  }
+}
+
+///|
+fn autohint_outline_decode_simple_glyf(
+  glyph : BytesView,
+  number_of_contours : Int,
+) -> Result[AutoHintOutlineData, DrawError] {
+  let data = AutoHintOutlineData::new()
+  let mut off = 10
+  let end_pts : Array[Int] = Array::new()
+  for _ in 0..<number_of_contours {
+    let v = match autohint_outline_read_u16_be(glyph, off) {
+      None => return Err(DrawError::Read)
+      Some(u) => u
+    }
+    end_pts.push(v)
+    off = off + 2
+  }
+  let instruction_len = autohint_outline_read_u16_be(glyph, off).unwrap_or(-1)
+  off = off + 2
+  if instruction_len < 0 || off + instruction_len > glyph.length() {
+    return Err(DrawError::Read)
+  }
+  off = off + instruction_len
+  let last_end = end_pts.at(end_pts.length() - 1)
+  let num_points = last_end + 1
+  if num_points <= 0 {
+    return Ok(data)
+  }
+  // Flags stream.
+  let flags : Array[Int] = Array::new()
+  while flags.length() < num_points {
+    if off >= glyph.length() {
+      return Err(DrawError::Read)
+    }
+    let flag = glyph.at(off).to_int()
+    off = off + 1
+    flags.push(flag)
+    if (flag & 0x08) != 0 {
+      if off >= glyph.length() {
+        return Err(DrawError::Read)
+      }
+      let repeat = glyph.at(off).to_int()
+      off = off + 1
+      for _ in 0..<repeat {
+        flags.push(flag)
+      }
+    }
+  }
+  // Decode coordinates.
+  let dxs : Array[Int] = Array::new()
+  for i in 0..<num_points {
+    let f = flags.at(i)
+    let short = (f & 0x02) != 0
+    let same = (f & 0x10) != 0
+    if short {
+      if off >= glyph.length() {
+        return Err(DrawError::Read)
+      }
+      let b = glyph.at(off).to_int()
+      off = off + 1
+      dxs.push(if same { b } else { -b })
+    } else if same {
+      dxs.push(0)
+    } else {
+      let d = match autohint_outline_read_i16_be(glyph, off) {
+        None => return Err(DrawError::Read)
+        Some(v) => v
+      }
+      off = off + 2
+      dxs.push(d)
+    }
+  }
+  let dys : Array[Int] = Array::new()
+  for i in 0..<num_points {
+    let f = flags.at(i)
+    let short = (f & 0x04) != 0
+    let same = (f & 0x20) != 0
+    if short {
+      if off >= glyph.length() {
+        return Err(DrawError::Read)
+      }
+      let b = glyph.at(off).to_int()
+      off = off + 1
+      dys.push(if same { b } else { -b })
+    } else if same {
+      dys.push(0)
+    } else {
+      let d = match autohint_outline_read_i16_be(glyph, off) {
+        None => return Err(DrawError::Read)
+        Some(v) => v
+      }
+      off = off + 2
+      dys.push(d)
+    }
+  }
+  let mut x = 0
+  let mut y = 0
+  let mut contour_start = 0
+  for i in 0..<num_points {
+    x = x + dxs.at(i)
+    y = y + dys.at(i)
+    let on = (flags.at(i) & 0x01) != 0
+    let p = AutoHintPoint::default()
+    p.flags = AutoHintPointFlags::with_on_curve(on)
+    p.fx = x
+    p.fy = y
+    p._ox = x
+    p._oy = y
+    p.x = x
+    p.y = y
+    data.points.push(p)
+  }
+  for c in 0..<number_of_contours {
+    let end = end_pts.at(c)
+    if end < contour_start || end >= data.points.length() {
+      return Err(DrawError::Read)
+    }
+    data.contours.push(AutoHintContour::{
+      first_ix: contour_start,
+      last_ix: end,
+    })
+    contour_start = end + 1
+  }
+  Ok(data)
+}
+
+///|
+const AUTOHINT_COMPOSITE_ARG_1_AND_2_ARE_WORDS : Int = 0x0001
+
+///|
+const AUTOHINT_COMPOSITE_ARGS_ARE_XY_VALUES : Int = 0x0002
+
+///|
+const AUTOHINT_COMPOSITE_WE_HAVE_A_SCALE : Int = 0x0008
+
+///|
+const AUTOHINT_COMPOSITE_MORE_COMPONENTS : Int = 0x0020
+
+///|
+const AUTOHINT_COMPOSITE_WE_HAVE_AN_XY_SCALE : Int = 0x0040
+
+///|
+const AUTOHINT_COMPOSITE_WE_HAVE_A_2X2 : Int = 0x0080
+
+///|
+const AUTOHINT_COMPOSITE_WE_HAVE_INSTRUCTIONS : Int = 0x0100
+
+///|
+fn autohint_outline_build_glyf_raw(
+  font : @moon_skrifa.FontRef,
+  gid : @moon_skrifa.GlyphId,
+  depth : Int,
+) -> Result[AutoHintOutlineData, DrawError] {
+  if depth > 16 {
+    return Err(DrawError::Read)
+  }
+  let glyph = match autohint_outline_glyf_glyph_slice(font, gid) {
+    None => return Err(DrawError::GlyphNotFound(gid))
+    Some(v) => v
+  }
+  if glyph.length() == 0 {
+    return Ok(AutoHintOutlineData::new())
+  }
+  if glyph.length() < 10 {
+    return Err(DrawError::Read)
+  }
+  let number_of_contours = autohint_outline_read_i16_be(glyph, 0).unwrap_or(0)
+  if number_of_contours == 0 {
+    return Ok(AutoHintOutlineData::new())
+  }
+  if number_of_contours > 0 {
+    return autohint_outline_decode_simple_glyf(glyph, number_of_contours)
+  }
+  // Composite glyph.
+  let data = AutoHintOutlineData::new()
+  let mut off = 10
+  let mut last_flags = 0
+  while true {
+    let flags = autohint_outline_read_u16_be(glyph, off).unwrap_or(-1)
+    let comp_gid_u16 = autohint_outline_read_u16_be(glyph, off + 2).unwrap_or(
+      -1,
+    )
+    if flags < 0 || comp_gid_u16 < 0 {
+      return Err(DrawError::Read)
+    }
+    last_flags = flags
+    off = off + 4
+    let (arg1, arg2) = if (flags & AUTOHINT_COMPOSITE_ARG_1_AND_2_ARE_WORDS) !=
+      0 {
+      let a1 = autohint_outline_read_i16_be(glyph, off).unwrap_or(-1)
+      let a2 = autohint_outline_read_i16_be(glyph, off + 2).unwrap_or(-1)
+      off = off + 4
+      (a1, a2)
+    } else {
+      let a1 = autohint_outline_read_i8(glyph, off).unwrap_or(0)
+      let a2 = autohint_outline_read_i8(glyph, off + 1).unwrap_or(0)
+      off = off + 2
+      (a1, a2)
+    }
+    // Default transform is identity (F2Dot14).
+    let mut a = 1 << 14
+    let mut b = 0
+    let mut c = 0
+    let mut d = 1 << 14
+    if (flags & AUTOHINT_COMPOSITE_WE_HAVE_A_SCALE) != 0 {
+      let s = autohint_outline_read_i16_be(glyph, off).unwrap_or(0)
+      off = off + 2
+      a = s
+      d = s
+    } else if (flags & AUTOHINT_COMPOSITE_WE_HAVE_AN_XY_SCALE) != 0 {
+      a = autohint_outline_read_i16_be(glyph, off).unwrap_or(0)
+      d = autohint_outline_read_i16_be(glyph, off + 2).unwrap_or(0)
+      off = off + 4
+    } else if (flags & AUTOHINT_COMPOSITE_WE_HAVE_A_2X2) != 0 {
+      a = autohint_outline_read_i16_be(glyph, off).unwrap_or(0)
+      b = autohint_outline_read_i16_be(glyph, off + 2).unwrap_or(0)
+      c = autohint_outline_read_i16_be(glyph, off + 4).unwrap_or(0)
+      d = autohint_outline_read_i16_be(glyph, off + 6).unwrap_or(0)
+      off = off + 8
+    }
+    let comp_gid = @moon_skrifa.GlyphId::new(comp_gid_u16.to_uint16())
+    let comp = match
+      autohint_outline_build_glyf_raw(font, comp_gid, depth + 1) {
+      Ok(v) => v
+      Err(e) => return Err(e)
+    }
+    autohint_outline_apply_transform(comp.points, a, b, c, d, 0, 0)
+    let (dx, dy) = if (flags & AUTOHINT_COMPOSITE_ARGS_ARE_XY_VALUES) != 0 {
+      (arg1, arg2)
+    } else {
+      if arg2 < 0 || arg2 >= data.points.length() {
+        return Err(DrawError::Read)
+      }
+      if arg1 < 0 || arg1 >= comp.points.length() {
+        return Err(DrawError::Read)
+      }
+      let p_parent = data.points.at(arg2)
+      let p_comp = comp.points.at(arg1)
+      (p_parent.x - p_comp.x, p_parent.y - p_comp.y)
+    }
+    if dx != 0 || dy != 0 {
+      autohint_outline_apply_transform(
+        comp.points,
+        1 << 14,
+        0,
+        0,
+        1 << 14,
+        dx,
+        dy,
+      )
+    }
+    autohint_outline_data_append(data, comp)
+    if (flags & AUTOHINT_COMPOSITE_MORE_COMPONENTS) == 0 {
+      break
+    }
+  }
+  if (last_flags & AUTOHINT_COMPOSITE_WE_HAVE_INSTRUCTIONS) != 0 {
+    let instr_len = autohint_outline_read_u16_be(glyph, off).unwrap_or(-1)
+    off = off + 2
+    if instr_len < 0 || off + instr_len > glyph.length() {
+      return Err(DrawError::Read)
+    }
+  }
+  Ok(data)
+}
+
+///|
+fn AutoHintOutline::fill_glyf(
+  self : AutoHintOutline,
+  font : @moon_skrifa.FontRef,
+  gid : @moon_skrifa.GlyphId,
+) -> Result[Unit, DrawError] {
+  self.clear()
+  self.units_per_em = autohint_outline_units_per_em(font).unwrap_or(0)
+  let near_limit = 20 * self.units_per_em / 2048
+  let data = match autohint_outline_build_glyf_raw(font, gid, 0) {
+    Ok(v) => v
+    Err(e) => return Err(e)
+  }
+  for p in data.points.iter() {
+    self.points.push(p)
+  }
+  for c in data.contours.iter() {
+    self.contours.push(c)
+  }
+  self.link_points()
+  self.mark_near_points(near_limit)
+  self.compute_directions(near_limit)
+  self.simplify_topology()
+  self.check_remaining_weak_points()
+  self.compute_orientation()
+  Ok(())
+}
+
+///|
+fn AutoHintOutline::_fill_unscaled(
+  self : AutoHintOutline,
+  font : @moon_skrifa.FontRef,
+  gid : @moon_skrifa.GlyphId,
+) -> Result[Unit, DrawError] {
+  self.fill_glyf(font, gid)
+}
+
+///|
+fn AutoHintOutline::link_points(self : AutoHintOutline) -> Unit {
+  for contour in self.contours.iter() {
+    let first = contour.first_ix
+    let last = contour.last_ix
+    if first < 0 || last < first || last >= self.points.length() {
+      continue
+    }
+    for i in first..<(last + 1) {
+      let p = self.points.at(i)
+      p.prev_ix = if i == first { last } else { i - 1 }
+      p.next_ix = if i == last { first } else { i + 1 }
+      self.points.set(i, p)
+    }
+  }
+}
+
+///|
+fn AutoHintOutline::compute_directions(
+  self : AutoHintOutline,
+  near_limit : Int,
+) -> Unit {
+  let near_limit2 = 2 * near_limit - 1
+  for contour in self.contours.iter() {
+    let mut first_ix = contour.first_ix
+    let mut ix = first_ix
+    let mut prev_ix = contour.prev(first_ix)
+    let mut point = self.points.at(first_ix)
+    // Walk backward to find the first non-near point.
+    while prev_ix != first_ix {
+      let prev = self.points.at(prev_ix)
+      let out_x = point.fx - prev.fx
+      let out_y = point.fy - prev.fy
+      if out_x.abs() + out_y.abs() >= near_limit2 {
+        break
+      }
+      point = prev
+      ix = prev_ix
+      prev_ix = contour.prev(prev_ix)
+    }
+    first_ix = ix
+    let first = self.points.at(first_ix)
+    first.u = first_ix
+    first.v = first_ix
+    self.points.set(first_ix, first)
+    let mut next_ix = first_ix
+    ix = first_ix
+    let mut out_x = 0
+    let mut out_y = 0
+    // Loop over all points in the contour to compute in/out directions.
+    while true {
+      let point_ix = next_ix
+      next_ix = contour.next(point_ix)
+      let point0 = self.points.at(point_ix)
+      let next0 = self.points.at(next_ix)
+      out_x = out_x + (next0.fx - point0.fx)
+      out_y = out_y + (next0.fy - point0.fy)
+      if out_x.abs() + out_y.abs() < near_limit {
+        let p = self.points.at(next_ix)
+        p.flags.set_marker(AutoHintPointMarker::WeakInterpolation)
+        self.points.set(next_ix, p)
+        if next_ix == first_ix {
+          break
+        }
+        continue
+      }
+      let out_dir = AutoHintDirection::new(out_x, out_y)
+      let nextp = self.points.at(next_ix)
+      nextp.in_dir = out_dir
+      nextp.v = ix
+      self.points.set(next_ix, nextp)
+      let cur = self.points.at(ix)
+      cur.u = next_ix
+      cur.out_dir = out_dir
+      self.points.set(ix, cur)
+      // Adjust directions for all intermediate points.
+      let mut inter_ix = contour.next(ix)
+      while inter_ix != next_ix {
+        let p = self.points.at(inter_ix)
+        p.in_dir = out_dir
+        p.out_dir = out_dir
+        self.points.set(inter_ix, p)
+        inter_ix = contour.next(inter_ix)
+      }
+      ix = next_ix
+      let lastp = self.points.at(ix)
+      lastp.u = first_ix
+      self.points.set(ix, lastp)
+      let firstp = self.points.at(first_ix)
+      firstp.v = ix
+      self.points.set(first_ix, firstp)
+      out_x = 0
+      out_y = 0
+      if next_ix == first_ix {
+        break
+      }
+    }
+  }
+}
+
+///|
+fn AutoHintOutline::mark_near_points(
+  self : AutoHintOutline,
+  near_limit : Int,
+) -> Unit {
+  for contour in self.contours.iter() {
+    let mut prev_ix = contour.last_ix
+    for ix in contour.first_ix..<(contour.last_ix + 1) {
+      let point = self.points.at(ix)
+      let prev = self.points.at(prev_ix)
+      let out_x = point.fx - prev.fx
+      let out_y = point.fy - prev.fy
+      if out_x.abs() + out_y.abs() < near_limit {
+        prev.flags.set_marker(AutoHintPointMarker::Near)
+        self.points.set(prev_ix, prev)
+      }
+      prev_ix = ix
+    }
+  }
+}
+
+///|
+fn AutoHintOutline::simplify_topology(self : AutoHintOutline) -> Unit {
+  for i in 0..<self.points.length() {
+    let point = self.points.at(i)
+    if point.flags.has_marker(AutoHintPointMarker::WeakInterpolation) {
+      continue
+    }
+    if point.in_dir == AutoHintDirection::None_ &&
+      point.out_dir == AutoHintDirection::None_ {
+      let u_index = point.u
+      let v_index = point.v
+      let next_u = self.points.at(u_index)
+      let prev_v = self.points.at(v_index)
+      let in_x = point.fx - prev_v.fx
+      let in_y = point.fy - prev_v.fy
+      let out_x = next_u.fx - point.fx
+      let out_y = next_u.fy - point.fy
+      if (in_x ^ out_x) >= 0 && (in_y ^ out_y) >= 0 {
+        let p = self.points.at(i)
+        p.flags.set_marker(AutoHintPointMarker::WeakInterpolation)
+        self.points.set(i, p)
+        let pv = self.points.at(v_index)
+        pv.u = u_index
+        self.points.set(v_index, pv)
+        let pu = self.points.at(u_index)
+        pu.v = v_index
+        self.points.set(u_index, pu)
+      }
+    }
+  }
+}
+
+///|
+fn autohint_is_corner_flat(
+  in_x : Int,
+  in_y : Int,
+  out_x : Int,
+  out_y : Int,
+) -> Bool {
+  let ax = in_x + out_x
+  let ay = in_y + out_y
+  fn autohint_hypot(x0 : Int, y0 : Int) -> Int {
+    let x = x0.abs()
+    let y = y0.abs()
+    if x > y {
+      x + ((3 * y) >> 3)
+    } else {
+      y + ((3 * x) >> 3)
+    }
+  }
+
+  let d_in = autohint_hypot(in_x, in_y)
+  let d_out = autohint_hypot(out_x, out_y)
+  let d_hypot = autohint_hypot(ax, ay)
+  d_in + d_out - d_hypot < d_hypot >> 4
+}
+
+///|
+fn AutoHintOutline::check_remaining_weak_points(self : AutoHintOutline) -> Unit {
+  for i in 0..<self.points.length() {
+    let point = self.points.at(i)
+    let mut make_weak = false
+    if point.flags.has_marker(AutoHintPointMarker::WeakInterpolation) {
+      continue
+    }
+    if !point.flags.is_on_curve() {
+      make_weak = true
+    } else if point.out_dir == point.in_dir {
+      if point.out_dir != AutoHintDirection::None_ {
+        make_weak = true
+      } else {
+        let u_index = point.u
+        let v_index = point.v
+        let next_u = self.points.at(u_index)
+        let prev_v = self.points.at(v_index)
+        if autohint_is_corner_flat(
+            point.fx - prev_v.fx,
+            point.fy - prev_v.fy,
+            next_u.fx - point.fx,
+            next_u.fy - point.fy,
+          ) {
+          make_weak = true
+          let pv = self.points.at(v_index)
+          pv.u = u_index
+          self.points.set(v_index, pv)
+          let pu = self.points.at(u_index)
+          pu.v = v_index
+          self.points.set(u_index, pu)
+        }
+      }
+    } else if point.in_dir.is_opposite(point.out_dir) {
+      make_weak = true
+    }
+    if make_weak {
+      let p = self.points.at(i)
+      p.flags.set_marker(AutoHintPointMarker::WeakInterpolation)
+      self.points.set(i, p)
+    }
+  }
+}
+
+///|
+fn AutoHintOutline::compute_orientation(self : AutoHintOutline) -> Unit {
+  let mut sum : Int64 = 0
+  for contour in self.contours.iter() {
+    let first = contour.first_ix
+    let last = contour.last_ix
+    if first < 0 || last < first || last >= self.points.length() {
+      continue
+    }
+    for i in first..<(last + 1) {
+      let p0 = self.points.at(i)
+      let j = if i == last { first } else { i + 1 }
+      let p1 = self.points.at(j)
+      sum = sum +
+        p0.x.to_int64() * p1.y.to_int64() -
+        p1.x.to_int64() * p0.y.to_int64()
+    }
+  }
+  // Match fontations' winding convention: positive area => Clockwise.
+  if sum > 0 {
+    self.orientation = Some(AutoHintOrientation::Clockwise)
+  } else if sum < 0 {
+    self.orientation = Some(AutoHintOrientation::CounterClockwise)
+  } else {
+    self.orientation = None
+  }
 }
 
 ///|
@@ -124,6 +1158,7 @@ fn AutoHintOutline::stats(self : AutoHintOutline) -> (Int, Int, Int, Int, Int) {
   if self.points.length() == 0 {
     return (0, 0, 0, 0, 0)
   }
+  self.advance |> ignore
   let mut min_x = self.points.at(0).x
   let mut min_y = self.points.at(0).y
   let mut max_x = min_x
@@ -142,7 +1177,7 @@ fn AutoHintOutline::stats(self : AutoHintOutline) -> (Int, Int, Int, Int, Int) {
     if p.y > max_y {
       max_y = p.y
     }
-    if p.on_curve {
+    if p.is_on_curve() {
       on_curve = on_curve + 1
     }
   }

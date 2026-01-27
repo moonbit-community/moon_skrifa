@@ -284,10 +284,13 @@ pub fn OutlineGlyph::has_hinting(self : OutlineGlyph) -> Bool? {
 /// implemented.
 pub fn OutlineGlyph::draw_memory_size(
   self : OutlineGlyph,
-  _hinting : Hinting,
+  hinting : Hinting,
 ) -> Int {
-  self |> ignore
-  0
+  match self.kind {
+    OutlineGlyphFormat::Glyf =>
+      glyf_draw_memory_size(self.font, self.glyph_id, hinting).unwrap_or(0)
+    _ => 0
+  }
 }
 
 ///|
@@ -400,14 +403,12 @@ pub fn OutlineGlyph::path(
         match cff_outline_path(self.font, self.glyph_id) {
           None => Err(DrawError::GlyphNotFound(self.glyph_id))
           // Upstream uses fixed-point rounding when scaling PostScript outlines.
-          Some(p) =>
-            Ok(outline_scale_path(p, scale, OutlineScaleMode::FreeType))
+          Some(p) => Ok(outline_scale_path(p, scale))
         }
       OutlineGlyphFormat::Cff2 =>
         match cff2_outline_path(self.font, self.glyph_id, coords) {
           None => Err(DrawError::GlyphNotFound(self.glyph_id))
-          Some(p) =>
-            Ok(outline_scale_path(p, scale, OutlineScaleMode::FreeType))
+          Some(p) => Ok(outline_scale_path(p, scale))
         }
     }
   }
@@ -597,92 +598,52 @@ fn outline_quantize_freetype(v : Double) -> Double {
 }
 
 ///|
-priv enum OutlineScaleMode {
-  Float
-  FreeType
-  HarfBuzz
-}
 
 ///|
 fn outline_scale_path(
   path : Array[PathElement],
   scale : Double,
-  mode : OutlineScaleMode,
 ) -> Array[PathElement] {
-  if mode is OutlineScaleMode::Float && scale == 1.0 {
+  if scale == 1.0 {
     return path
-  }
-  if mode is OutlineScaleMode::FreeType && scale == 1.0 {
-    return path
-  }
-  let scale = match mode {
-    OutlineScaleMode::HarfBuzz => scale * 65536.0
-    _ => scale
   }
   let out : Array[PathElement] = Array::new()
   for e in path.iter() {
     match e {
       PathElement::MoveTo(x, y) =>
-        if mode is OutlineScaleMode::FreeType {
-          out.push(
-            PathElement::MoveTo(
-              outline_quantize_freetype(x * scale),
-              outline_quantize_freetype(y * scale),
-            ),
-          )
-        } else {
-          out.push(PathElement::MoveTo(x * scale, y * scale))
-        }
+        out.push(
+          PathElement::MoveTo(
+            outline_quantize_freetype(x * scale),
+            outline_quantize_freetype(y * scale),
+          ),
+        )
       PathElement::LineTo(x, y) =>
-        if mode is OutlineScaleMode::FreeType {
-          out.push(
-            PathElement::LineTo(
-              outline_quantize_freetype(x * scale),
-              outline_quantize_freetype(y * scale),
-            ),
-          )
-        } else {
-          out.push(PathElement::LineTo(x * scale, y * scale))
-        }
+        out.push(
+          PathElement::LineTo(
+            outline_quantize_freetype(x * scale),
+            outline_quantize_freetype(y * scale),
+          ),
+        )
       PathElement::QuadTo(cx0, cy0, x, y) =>
-        if mode is OutlineScaleMode::FreeType {
-          out.push(
-            PathElement::QuadTo(
-              outline_quantize_freetype(cx0 * scale),
-              outline_quantize_freetype(cy0 * scale),
-              outline_quantize_freetype(x * scale),
-              outline_quantize_freetype(y * scale),
-            ),
-          )
-        } else {
-          out.push(
-            PathElement::QuadTo(cx0 * scale, cy0 * scale, x * scale, y * scale),
-          )
-        }
+        out.push(
+          PathElement::QuadTo(
+            outline_quantize_freetype(cx0 * scale),
+            outline_quantize_freetype(cy0 * scale),
+            outline_quantize_freetype(x * scale),
+            outline_quantize_freetype(y * scale),
+          ),
+        )
       PathElement::CurveTo(cx0, cy0, cx1, cy1, x, y) =>
-        if mode is OutlineScaleMode::FreeType {
-          out.push(
-            PathElement::CurveTo(
-              outline_quantize_freetype(cx0 * scale),
-              outline_quantize_freetype(cy0 * scale),
-              outline_quantize_freetype(cx1 * scale),
-              outline_quantize_freetype(cy1 * scale),
-              outline_quantize_freetype(x * scale),
-              outline_quantize_freetype(y * scale),
-            ),
-          )
-        } else {
-          out.push(
-            PathElement::CurveTo(
-              cx0 * scale,
-              cy0 * scale,
-              cx1 * scale,
-              cy1 * scale,
-              x * scale,
-              y * scale,
-            ),
-          )
-        }
+        out.push(
+          PathElement::CurveTo(
+            outline_quantize_freetype(cx0 * scale),
+            outline_quantize_freetype(cy0 * scale),
+            outline_quantize_freetype(cx1 * scale),
+            outline_quantize_freetype(cy1 * scale),
+            outline_quantize_freetype(x * scale),
+            outline_quantize_freetype(y * scale),
+          ),
+        )
       PathElement::Close => out.push(PathElement::Close)
     }
   }
