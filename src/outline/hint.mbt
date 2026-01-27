@@ -338,7 +338,13 @@ pub fn HintingInstance::reconfigure(
           )
           let rounded_ppem = hint_round_ppem(scale_bits, upem)
           match
-            tt.reconfigure(outlines.font, scale_bits, rounded_ppem, self.target) {
+            tt.reconfigure(
+              outlines.font,
+              scale_bits,
+              rounded_ppem,
+              self.target,
+              self.coords.op_as_view(),
+            ) {
             Err(e) => return Err(DrawError::HintingFailed(e))
             Ok(_) => ()
           }

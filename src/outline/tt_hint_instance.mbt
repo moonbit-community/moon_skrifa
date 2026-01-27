@@ -29,6 +29,9 @@ const TAG_PREP_TT : UInt = 0x70726570 // "prep"
 const TAG_CVT_TT : UInt = 0x63767420 // "cvt "
 
 ///|
+const TAG_FVAR_TT : UInt = 0x66766172 // "fvar"
+
+///|
 let tt_empty_bytes : Bytes = Bytes::from_array(Array::new().op_as_view())
 
 ///|
@@ -148,6 +151,14 @@ fn tt_scale_cvt_for_size(cvt : Array[Int], scale_bits : Int) -> Array[Int] {
 }
 
 ///|
+fn tt_fvar_axis_count(font : @moon_skrifa.FontRef) -> Int {
+  match font.table(TAG_FVAR_TT) {
+    None => 0
+    Some(fvar) => tt_read_u16_be(fvar, 8).unwrap_or(0)
+  }
+}
+
+///|
 fn tt_make_twilight_zone(point_count : Int) -> TtZone {
   let pts : Array[TtPoint] = Array::make(point_count, TtPoint::{ x: 0, y: 0 })
   let orig : Array[TtPoint] = Array::make(point_count, TtPoint::{ x: 0, y: 0 })
@@ -180,6 +191,7 @@ fn TtHintInstance::reconfigure(
   scale_bits : Int,
   rounded_ppem : Int,
   target : Target,
+  coords : ArrayView[@moon_skrifa.NormalizedCoord],
 ) -> Result[Unit, HintError] {
   let maxp = match font.table(TAG_MAXP_TT) {
     None => return Err(HintError::Unsupported)
@@ -199,7 +211,24 @@ fn TtHintInstance::reconfigure(
   self.max_instruction_defs = max_instruction_defs
   self.storage = Array::make(max_storage, 0)
   // Load and scale CVT.
-  self.cvt = tt_scale_cvt_for_size(tt_load_cvt(font), scale_bits)
+  let base_cvt = tt_load_cvt(font)
+  let cvt = match
+    cvar_deltas_fixed16_16(
+      font,
+      tt_fvar_axis_count(font),
+      coords,
+      base_cvt.length(),
+    ) {
+    None => base_cvt
+    Some(deltas_bits) => {
+      let out : Array[Int] = Array::new()
+      for i in 0..<base_cvt.length() {
+        out.push(base_cvt.at(i) + cvar_fixed16_16_to_f26_6(deltas_bits.at(i)))
+      }
+      out
+    }
+  }
+  self.cvt = tt_scale_cvt_for_size(cvt, scale_bits)
   // Twilight buffers.
   self.twilight_points = Array::make(max_twilight_points, TtPoint::{
     x: 0,
@@ -301,4 +330,24 @@ fn TtHintInstance::hint_glyph(
     Ok(_) => ()
   }
   Ok(engine.graphics.glyph)
+}
+
+///|
+test "hint: scaled cvar cvt" {
+  let font = cvar_test_font()
+  let coords : Array[@moon_skrifa.NormalizedCoord] = Array::from_fixed_array([
+    8192, -8192,
+  ])
+  let inst = TtHintInstance::default()
+  // From fontations-reference: ppem * 64 / upem (upem=1000).
+  let scale_bits = 67109
+  let ppem = 16
+  inst
+  .reconfigure(font, scale_bits, ppem, Target::default(), coords.op_as_view())
+  .unwrap()
+  |> ignore
+  inspect(
+    inst.cvt,
+    content="[778, 10, 731, 0, 731, 10, 549, 10, 0, 0, 0, -10, 0, -10, -256, -10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 95, 137, 99, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 60, 0, 81, 0, 0, 0, 0, 0, 51, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]",
+  )
 }

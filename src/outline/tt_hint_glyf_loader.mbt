@@ -77,6 +77,24 @@ fn tt2_scale_funits_to_26_6(value : Int, scale_bits : Int) -> Int {
 }
 
 ///|
+/// Scales a font-unit coordinate plus a 16.16 gvar delta into 26.6 bits.
+fn tt2_scale_funits_plus_delta_fixed_to_26_6(
+  value : Int,
+  delta_bits : Int,
+  scale_bits : Int,
+) -> Int {
+  // Match fontations' scaling path for gvar deltas:
+  // - convert delta 16.16 -> 26.6 (Fixed::to_f26dot6 rounding)
+  // - add to value in 26.6
+  // - multiply by 16.16 scale (stored in `scale_bits`)
+  // - undo the extra 26.6 shift (F26Dot6::to_i32 rounding)
+  let delta_26_6 = ((delta_bits.to_int64() + (0x200).to_int64()) >> 10).to_int()
+  let base_26_6 = (value << 6) + delta_26_6
+  let tmp = tt_hint_mul_16_16(base_26_6, scale_bits)
+  ((tmp.to_int64() + (32).to_int64()) >> 6).to_int()
+}
+
+///|
 fn tt2_round_grid_26_6(bits : Int) -> Int {
   if bits >= 0 {
     tt_hint_round_26(bits).max(0)
@@ -462,6 +480,8 @@ fn tt2_component_offset_bits(
   comp : Tt2Component,
   scale_bits : Int,
   is_hinted : Bool,
+  delta_x : Int,
+  delta_y : Int,
 ) -> (Int, Int) {
   // Default: no deltas.
   let mut dx = 0.0
@@ -483,6 +503,10 @@ fn tt2_component_offset_bits(
     dx = dx * glyf_hypot_guess(comp.xx, comp.xy)
     dy = dy * glyf_hypot_guess(comp.yy, comp.yx)
   }
+  // For composite gvar deltas, FreeType/fontations round off fractional parts
+  // and apply them in font units.
+  dx = dx + delta_x.to_double()
+  dy = dy + delta_y.to_double()
   let dx_bits = tt2_scale_funits_to_26_6(dx.to_int(), scale_bits)
   let mut dy_bits = tt2_scale_funits_to_26_6(dy.to_int(), scale_bits)
   if is_hinted && (comp.flags & COMPOSITE_ROUND_XY_TO_GRID) != 0 {
@@ -563,6 +587,60 @@ fn tt2_load_glyph_zone_for_hinting_impl(
       ) {
       None => return Err(DrawError::Read)
       Some(v) => v
+    }
+    // Apply gvar deltas (including phantom points) for hinted glyph loading.
+    if !coords.is_empty() {
+      let point_count = match tt2_zone_outline_count(zone0) {
+        None => return Err(DrawError::Read)
+        Some(v) => v
+      }
+      let xs : Array[Double] = Array::new()
+      let ys : Array[Double] = Array::new()
+      for i in 0..<point_count {
+        let p = zone0.unscaled.at(i)
+        xs.push(p.x.to_double())
+        ys.push(p.y.to_double())
+      }
+      match
+        glyf_gvar_simple_hint_deltas(font, gid, coords, zone0.contours, xs, ys) {
+        None => ()
+        Some((dx_bits, dy_bits)) => {
+          let total_points = point_count + 4
+          // Recompute scaled points from unscaled + delta (preserving fractional parts),
+          // then round phantom points if we will execute instructions.
+          for i in 0..<total_points {
+            let u = zone0.unscaled.at(i)
+            let sx = tt2_scale_funits_plus_delta_fixed_to_26_6(
+              u.x,
+              dx_bits.at(i),
+              scale_bits,
+            )
+            let sy = tt2_scale_funits_plus_delta_fixed_to_26_6(
+              u.y,
+              dy_bits.at(i),
+              scale_bits,
+            )
+            zone0.original.set(i, TtPoint::{ x: sx, y: sy })
+            zone0.points.set(i, TtPoint::{ x: sx, y: sy })
+            if code.length() > 0 {
+              // For hinting, adjust unscaled points by rounding off the deltas.
+              zone0.unscaled.set(i, TtPoint::{
+                x: u.x + gvar_fixed16_16_to_i32(dx_bits.at(i)),
+                y: u.y + gvar_fixed16_16_to_i32(dy_bits.at(i)),
+              })
+            }
+          }
+          if code.length() > 0 {
+            for i in 0..<4 {
+              let p = zone0.points.at(point_count + i)
+              zone0.points.set(point_count + i, TtPoint::{
+                x: tt2_round_grid_26_6(p.x),
+                y: tt2_round_grid_26_6(p.y),
+              })
+            }
+          }
+        }
+      }
     }
     if code.length() == 0 {
       return Ok(zone0)
@@ -718,27 +796,58 @@ fn tt2_load_glyph_zone_for_hinting_impl(
     } else {
       glyph.sub(start=off, end=off)
     }
+    // Precompute composite gvar deltas (component offsets + phantoms).
+    let comp_deltas = match
+      glyf_gvar_composite_hint_deltas(font, gid, coords, comps.length()) {
+      None => None
+      Some((dx, dy)) => Some((dx, dy))
+    }
     let phantom0_x = x_min - lsb
     let phantom1_x = phantom0_x + aw
     // Match fontations/FreeType vmetrics shape (see glyf scaler).
     let phantom2_y = os2_ascent
     let phantom3_y = os2_descent
+    // Apply gvar phantom deltas in font units before scaling (rounded).
+    let mut ph0_x_f = phantom0_x
+    let mut ph0_y_f = 0
+    let mut ph1_x_f = phantom1_x
+    let mut ph1_y_f = 0
+    let mut ph2_x_f = 0
+    let mut ph2_y_f = phantom2_y
+    let mut ph3_x_f = 0
+    let mut ph3_y_f = phantom3_y
+    match comp_deltas {
+      None => ()
+      Some((dx_bits, dy_bits)) => {
+        let base = comps.length()
+        if base + 3 < dx_bits.length() && base + 3 < dy_bits.length() {
+          ph0_x_f = ph0_x_f + gvar_fixed16_16_to_i32(dx_bits.at(base))
+          ph0_y_f = ph0_y_f + gvar_fixed16_16_to_i32(dy_bits.at(base))
+          ph1_x_f = ph1_x_f + gvar_fixed16_16_to_i32(dx_bits.at(base + 1))
+          ph1_y_f = ph1_y_f + gvar_fixed16_16_to_i32(dy_bits.at(base + 1))
+          ph2_x_f = ph2_x_f + gvar_fixed16_16_to_i32(dx_bits.at(base + 2))
+          ph2_y_f = ph2_y_f + gvar_fixed16_16_to_i32(dy_bits.at(base + 2))
+          ph3_x_f = ph3_x_f + gvar_fixed16_16_to_i32(dx_bits.at(base + 3))
+          ph3_y_f = ph3_y_f + gvar_fixed16_16_to_i32(dy_bits.at(base + 3))
+        }
+      }
+    }
     // Scale to 26.6.
     let mut ph0 = TtPoint::{
-      x: tt2_scale_funits_to_26_6(phantom0_x, scale_bits),
-      y: 0,
+      x: tt2_scale_funits_to_26_6(ph0_x_f, scale_bits),
+      y: tt2_scale_funits_to_26_6(ph0_y_f, scale_bits),
     }
     let mut ph1 = TtPoint::{
-      x: tt2_scale_funits_to_26_6(phantom1_x, scale_bits),
-      y: 0,
+      x: tt2_scale_funits_to_26_6(ph1_x_f, scale_bits),
+      y: tt2_scale_funits_to_26_6(ph1_y_f, scale_bits),
     }
     let mut ph2 = TtPoint::{
-      x: 0,
-      y: tt2_scale_funits_to_26_6(phantom2_y, scale_bits),
+      x: tt2_scale_funits_to_26_6(ph2_x_f, scale_bits),
+      y: tt2_scale_funits_to_26_6(ph2_y_f, scale_bits),
     }
     let mut ph3 = TtPoint::{
-      x: 0,
-      y: tt2_scale_funits_to_26_6(phantom3_y, scale_bits),
+      x: tt2_scale_funits_to_26_6(ph3_x_f, scale_bits),
+      y: tt2_scale_funits_to_26_6(ph3_y_f, scale_bits),
     }
     let points_out : Array[TtPoint] = Array::new()
     let flags_out : Array[Int] = Array::new()
@@ -793,8 +902,19 @@ fn tt2_load_glyph_zone_for_hinting_impl(
       }
       // Compute anchor offset.
       let (ox, oy) = match comp.anchor {
-        Tt2Anchor::Offset(_, _) =>
-          tt2_component_offset_bits(comp, scale_bits, ins.length() > 0)
+        Tt2Anchor::Offset(_, _) => {
+          let mut dx = 0
+          let mut dy = 0
+          match comp_deltas {
+            None => ()
+            Some((dx_bits, dy_bits)) =>
+              if i < dx_bits.length() && i < dy_bits.length() {
+                dx = gvar_fixed16_16_to_i32(dx_bits.at(i))
+                dy = gvar_fixed16_16_to_i32(dy_bits.at(i))
+              }
+          }
+          tt2_component_offset_bits(comp, scale_bits, ins.length() > 0, dx, dy)
+        }
         Tt2Anchor::Point(base, component) => {
           if base < 0 || base >= points_out.length() {
             return Err(DrawError::InvalidAnchorPoint(gid, base.to_uint16()))

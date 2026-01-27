@@ -163,6 +163,75 @@ fn gvar_tuple_scalar(
 }
 
 ///|
+fn gvar_f2dot14_to_fixed16_16(bits : Int) -> Int {
+  // F2Dot14 has 14 fractional bits; 16.16 has 16.
+  bits << 2
+}
+
+///|
+fn gvar_tuple_scalar_fixed16_16(
+  coords : ArrayView[@moon_skrifa.NormalizedCoord],
+  peak : Array[Int],
+  start : Array[Int]?,
+  end : Array[Int]?,
+) -> Int {
+  let axis_count = peak.length()
+  let mut scalar = 0x10000
+  for i in 0..<axis_count {
+    let peak_v = peak.at(i)
+    if peak_v == 0 {
+      continue
+    }
+    let coord = if i < coords.length() { coords.at(i) } else { 0 }
+    if coord == 0 {
+      return 0
+    }
+    if coord == peak_v {
+      continue
+    }
+    match (start, end) {
+      (Some(s), Some(e)) => {
+        let start_v = s.at(i)
+        let end_v = e.at(i)
+        if coord <= start_v || coord >= end_v {
+          return 0
+        }
+        let coord_f = gvar_f2dot14_to_fixed16_16(coord)
+        let peak_f = gvar_f2dot14_to_fixed16_16(peak_v)
+        if coord_f < peak_f {
+          let start_f = gvar_f2dot14_to_fixed16_16(start_v)
+          scalar = tt_hint_mul_div_16_16(
+            scalar,
+            coord_f - start_f,
+            peak_f - start_f,
+          )
+        } else {
+          let end_f = gvar_f2dot14_to_fixed16_16(end_v)
+          scalar = tt_hint_mul_div_16_16(
+            scalar,
+            end_f - coord_f,
+            end_f - peak_f,
+          )
+        }
+      }
+      _ => {
+        let min_v = if peak_v < 0 { peak_v } else { 0 }
+        let max_v = if peak_v > 0 { peak_v } else { 0 }
+        if coord < min_v || coord > max_v {
+          return 0
+        }
+        scalar = tt_hint_mul_div_16_16(
+          scalar,
+          gvar_f2dot14_to_fixed16_16(coord),
+          gvar_f2dot14_to_fixed16_16(peak_v),
+        )
+      }
+    }
+  }
+  scalar
+}
+
+///|
 /// Decodes a point number run list.
 fn gvar_points(
   gvar : BytesView,
@@ -451,6 +520,194 @@ fn gvar_interpolate_deltas(
           return false
         }
         if !gvar_interp_coord(
+            orig_y,
+            out_y,
+            first_ix,
+            first_delta_ix - 1,
+            cur_delta_ix,
+            first_delta_ix,
+          ) {
+          return false
+        }
+      }
+    }
+  }
+  true
+}
+
+///|
+fn gvar_shift_contour_fixed(
+  orig_x : Array[Int],
+  orig_y : Array[Int],
+  out_x : Array[Int],
+  out_y : Array[Int],
+  range_start : Int,
+  range_end : Int,
+  ref_ix : Int,
+) -> Bool {
+  if ref_ix < range_start || ref_ix > range_end {
+    return false
+  }
+  let dx = out_x.at(ref_ix) - orig_x.at(ref_ix)
+  let dy = out_y.at(ref_ix) - orig_y.at(ref_ix)
+  if dx == 0 && dy == 0 {
+    return true
+  }
+  for i in range_start..<ref_ix {
+    out_x.set(i, out_x.at(i) + dx)
+    out_y.set(i, out_y.at(i) + dy)
+  }
+  for i in (ref_ix + 1)..<(range_end + 1) {
+    out_x.set(i, out_x.at(i) + dx)
+    out_y.set(i, out_y.at(i) + dy)
+  }
+  true
+}
+
+///|
+fn gvar_interp_coord_fixed(
+  orig : Array[Int],
+  out : Array[Int],
+  range_start : Int,
+  range_end : Int,
+  ref1_ix_in : Int,
+  ref2_ix_in : Int,
+) -> Bool {
+  if range_start > range_end {
+    return true
+  }
+  let mut ref1_ix = ref1_ix_in
+  let mut ref2_ix = ref2_ix_in
+  if orig.at(ref1_ix) > orig.at(ref2_ix) {
+    let tmp = ref1_ix
+    ref1_ix = ref2_ix
+    ref2_ix = tmp
+  }
+  let in1 = orig.at(ref1_ix)
+  let in2 = orig.at(ref2_ix)
+  let out1 = out.at(ref1_ix)
+  let out2 = out.at(ref2_ix)
+  // If the reference points have the same coordinate but different delta,
+  // inferred delta is zero. Otherwise interpolate.
+  if in1 != in2 || out1 == out2 {
+    let scale = if in1 != in2 {
+      tt_hint_div_16_16(out2 - out1, in2 - in1)
+    } else {
+      0
+    }
+    let d1 = out1 - in1
+    let d2 = out2 - in2
+    for i in range_start..<(range_end + 1) {
+      let v0 = orig.at(i)
+      let v = if v0 <= in1 {
+        v0 + d1
+      } else if v0 >= in2 {
+        v0 + d2
+      } else {
+        out1 + tt_hint_mul_16_16(v0 - in1, scale)
+      }
+      out.set(i, v)
+    }
+  }
+  true
+}
+
+///|
+fn gvar_interpolate_deltas_fixed(
+  orig_x : Array[Int],
+  orig_y : Array[Int],
+  out_x : Array[Int],
+  out_y : Array[Int],
+  has_delta : Array[Bool],
+  contours : Array[Int],
+  point_count : Int,
+) -> Bool {
+  let mut point_ix = 0
+  for end_point_ix in contours.iter() {
+    let end_ix = end_point_ix
+    let first_ix = point_ix
+    // Search for first point that has a delta.
+    while point_ix <= end_ix &&
+          point_ix < point_count &&
+          !has_delta.at(point_ix) {
+      point_ix = point_ix + 1
+    }
+    if point_ix > end_ix {
+      // No deltas for this contour.
+      continue
+    }
+    let first_delta_ix = point_ix
+    let mut cur_delta_ix = point_ix
+    point_ix = point_ix + 1
+    // Search for next point that has a delta...
+    while point_ix <= end_ix && point_ix < point_count {
+      if has_delta.at(point_ix) {
+        // ... and interpolate intermediate points.
+        if !gvar_interp_coord_fixed(
+            orig_x,
+            out_x,
+            cur_delta_ix + 1,
+            point_ix - 1,
+            cur_delta_ix,
+            point_ix,
+          ) {
+          return false
+        }
+        if !gvar_interp_coord_fixed(
+            orig_y,
+            out_y,
+            cur_delta_ix + 1,
+            point_ix - 1,
+            cur_delta_ix,
+            point_ix,
+          ) {
+          return false
+        }
+        cur_delta_ix = point_ix
+      }
+      point_ix = point_ix + 1
+    }
+    // If we only have a single delta, shift the contour.
+    if cur_delta_ix == first_delta_ix {
+      if !gvar_shift_contour_fixed(
+          orig_x, orig_y, out_x, out_y, first_ix, end_ix, cur_delta_ix,
+        ) {
+        return false
+      }
+    } else {
+      // Otherwise, handle remaining points at beginning and end of contour.
+      if !gvar_interp_coord_fixed(
+          orig_x,
+          out_x,
+          cur_delta_ix + 1,
+          end_ix,
+          cur_delta_ix,
+          first_delta_ix,
+        ) {
+        return false
+      }
+      if !gvar_interp_coord_fixed(
+          orig_y,
+          out_y,
+          cur_delta_ix + 1,
+          end_ix,
+          cur_delta_ix,
+          first_delta_ix,
+        ) {
+        return false
+      }
+      if first_delta_ix > first_ix {
+        if !gvar_interp_coord_fixed(
+            orig_x,
+            out_x,
+            first_ix,
+            first_delta_ix - 1,
+            cur_delta_ix,
+            first_delta_ix,
+          ) {
+          return false
+        }
+        if !gvar_interp_coord_fixed(
             orig_y,
             out_y,
             first_ix,
@@ -916,6 +1173,536 @@ fn glyf_gvar_composite_deltas(
           if pt >= 0 && pt < component_count {
             accum_x.set(pt, accum_x.at(pt) + dxs.at(j).to_double() * scalar)
             accum_y.set(pt, accum_y.at(pt) + dys.at(j).to_double() * scalar)
+          }
+        }
+    }
+    cursor = tuple_end
+  }
+  Some((accum_x, accum_y))
+}
+
+///|
+/// Rounds a 16.16 fixed value to i32, matching FreeType-style rounding.
+fn gvar_fixed16_16_to_i32(bits : Int) -> Int {
+  // Matches `font_types::Fixed::to_i32()` rounding.
+  ((bits.to_int64() + (0x8000).to_int64()) >> 16).to_int()
+}
+
+///|
+fn gvar_scale_funit_delta_to_fixed16_16(delta : Int, scalar_bits : Int) -> Int {
+  let bits = delta << 16
+  if scalar_bits == 0x10000 {
+    bits
+  } else {
+    tt_hint_mul_16_16(bits, scalar_bits)
+  }
+}
+
+///|
+fn gvar_zero_deltas(total_points : Int) -> (Array[Int], Array[Int]) {
+  (Array::make(total_points, 0), Array::make(total_points, 0))
+}
+
+///|
+/// Computes gvar point deltas for a simple glyph suitable for embedded hinting.
+///
+/// Returns 16.16 fixed deltas for all points, including the four phantom
+/// points, with IUP interpolation applied to missing real-point deltas.
+fn glyf_gvar_simple_hint_deltas(
+  font : @moon_skrifa.FontRef,
+  gid : @moon_skrifa.GlyphId,
+  coords : ArrayView[@moon_skrifa.NormalizedCoord],
+  end_pts : Array[Int],
+  xs : Array[Double],
+  ys : Array[Double],
+) -> (Array[Int], Array[Int])? {
+  if coords.is_empty() {
+    return None
+  }
+  let ctx = match gvar_ctx(font) {
+    None => return None
+    Some(c) => c
+  }
+  let gid_i = gid.to_uint64().to_int()
+  if gid_i < 0 || gid_i >= ctx.glyph_count {
+    return None
+  }
+  let point_count = xs.length()
+  if ys.length() != point_count {
+    return None
+  }
+  let total_points = point_count + 4
+  if total_points <= 0 {
+    return None
+  }
+  // Offsets array starts at 20.
+  let offsets_off = 20
+  let long_offsets = (ctx.flags & 1) != 0
+  let entry_size = if long_offsets { 4 } else { 2 }
+  let need = offsets_off + (ctx.glyph_count + 1) * entry_size
+  if need < 0 || need > ctx.gvar.length() {
+    return Some(gvar_zero_deltas(total_points))
+  }
+  let off0 = if long_offsets {
+    gvar_read_u32_be_int(ctx.gvar, offsets_off + gid_i * 4).unwrap_or(-1)
+  } else {
+    gvar_read_u16_be(ctx.gvar, offsets_off + gid_i * 2).unwrap_or(-1) * 2
+  }
+  let off1 = if long_offsets {
+    gvar_read_u32_be_int(ctx.gvar, offsets_off + (gid_i + 1) * 4).unwrap_or(-1)
+  } else {
+    gvar_read_u16_be(ctx.gvar, offsets_off + (gid_i + 1) * 2).unwrap_or(-1) * 2
+  }
+  if off0 < 0 || off1 < off0 {
+    return Some(gvar_zero_deltas(total_points))
+  }
+  let start = ctx.data_array_off + off0
+  let end = ctx.data_array_off + off1
+  if start < 0 || end < start || end > ctx.gvar.length() {
+    return Some(gvar_zero_deltas(total_points))
+  }
+  if start == end {
+    return Some(gvar_zero_deltas(total_points))
+  }
+  let tuple_count_flags = gvar_read_u16_be(ctx.gvar, start).unwrap_or(0)
+  let tuple_count = tuple_count_flags & 0x0FFF
+  let shared_points = (tuple_count_flags & 0x8000) != 0
+  let data_rel = gvar_read_u16_be(ctx.gvar, start + 2).unwrap_or(-1)
+  if tuple_count <= 0 || data_rel < 0 {
+    return Some(gvar_zero_deltas(total_points))
+  }
+  let sizes : Array[Int] = Array::new()
+  let tuple_indexes : Array[Int] = Array::new()
+  let axis_count = ctx.axis_count
+  let scalars : Array[Int] = Array::new()
+  let mut header_off = start + 4
+  for _ in 0..<tuple_count {
+    let s = gvar_read_u16_be(ctx.gvar, header_off).unwrap_or(-1)
+    let ti = gvar_read_u16_be(ctx.gvar, header_off + 2).unwrap_or(-1)
+    if s < 0 || ti < 0 {
+      return Some(gvar_zero_deltas(total_points))
+    }
+    header_off = header_off + 4
+    sizes.push(s)
+    tuple_indexes.push(ti)
+    let embedded = (ti & 0x8000) != 0
+    let intermediate = (ti & 0x4000) != 0
+    let shared_ix = ti & 0x0FFF
+    let peak : Array[Int] = Array::make(axis_count, 0)
+    if embedded {
+      let need = header_off + axis_count * 2
+      if need < header_off || need > end {
+        return Some(gvar_zero_deltas(total_points))
+      }
+      for ax in 0..<axis_count {
+        peak.set(
+          ax,
+          gvar_read_i16_be(ctx.gvar, header_off + ax * 2).unwrap_or(0),
+        )
+      }
+      header_off = header_off + axis_count * 2
+    } else {
+      if shared_ix < 0 || shared_ix >= ctx.shared_tuple_count {
+        return Some(gvar_zero_deltas(total_points))
+      }
+      let base = ctx.shared_tuples_off + shared_ix * axis_count * 2
+      let need = base + axis_count * 2
+      if base < 0 || need < base || need > ctx.gvar.length() {
+        return Some(gvar_zero_deltas(total_points))
+      }
+      for ax in 0..<axis_count {
+        peak.set(ax, gvar_read_i16_be(ctx.gvar, base + ax * 2).unwrap_or(0))
+      }
+    }
+    let mut start_t : Array[Int]? = None
+    let mut end_t : Array[Int]? = None
+    if intermediate {
+      let st : Array[Int] = Array::make(axis_count, 0)
+      let et : Array[Int] = Array::make(axis_count, 0)
+      let need = header_off + axis_count * 4
+      if need < header_off || need > end {
+        return Some(gvar_zero_deltas(total_points))
+      }
+      for ax in 0..<axis_count {
+        st.set(ax, gvar_read_i16_be(ctx.gvar, header_off + ax * 2).unwrap_or(0))
+        et.set(
+          ax,
+          gvar_read_i16_be(ctx.gvar, header_off + axis_count * 2 + ax * 2).unwrap_or(
+            0,
+          ),
+        )
+      }
+      header_off = header_off + axis_count * 4
+      start_t = Some(st)
+      end_t = Some(et)
+    }
+    scalars.push(gvar_tuple_scalar_fixed16_16(coords, peak, start_t, end_t))
+  }
+  let data_off = start + data_rel
+  if data_off < header_off || data_off > end {
+    return Some(gvar_zero_deltas(total_points))
+  }
+  let accum_x : Array[Int] = Array::make(total_points, 0)
+  let accum_y : Array[Int] = Array::make(total_points, 0)
+  let mut cursor = data_off
+  let mut shared_points_list : Array[Int]? = None
+  if shared_points {
+    let (pts, off2) = match gvar_points(ctx.gvar, cursor, total_points) {
+      None => return Some(gvar_zero_deltas(total_points))
+      Some(v) => v
+    }
+    shared_points_list = pts
+    cursor = off2
+  }
+  for i in 0..<tuple_count {
+    let size = sizes.at(i)
+    let ti = tuple_indexes.at(i)
+    let tuple_end = cursor + size
+    if size < 0 || tuple_end < cursor || tuple_end > end {
+      return Some(gvar_zero_deltas(total_points))
+    }
+    let scalar = scalars.at(i)
+    if scalar == 0 {
+      cursor = tuple_end
+      continue
+    }
+    // PRIVATE_POINT_NUMBERS = 0x2000.
+    let private_points = (ti & 0x2000) != 0
+    let mut points_list : Array[Int]? = None
+    let mut after_points = cursor
+    if private_points || !shared_points {
+      let (pts, off2) = match gvar_points(ctx.gvar, cursor, total_points) {
+        None => return Some(gvar_zero_deltas(total_points))
+        Some(v) => v
+      }
+      points_list = pts
+      after_points = off2
+    } else {
+      points_list = shared_points_list
+      after_points = cursor
+    }
+    let count = match points_list {
+      None => total_points
+      Some(arr) => arr.length()
+    }
+    let (dxs, after_x) = match gvar_deltas(ctx.gvar, after_points, count) {
+      None => return Some(gvar_zero_deltas(total_points))
+      Some(v) => v
+    }
+    let (dys, after_y) = match gvar_deltas(ctx.gvar, after_x, count) {
+      None => return Some(gvar_zero_deltas(total_points))
+      Some(v) => v
+    }
+    if after_y > tuple_end {
+      return Some(gvar_zero_deltas(total_points))
+    }
+    // Prepare IUP buffers for real points for this tuple (16.16 coords).
+    let orig_x : Array[Int] = Array::make(point_count, 0)
+    let orig_y : Array[Int] = Array::make(point_count, 0)
+    let out_x : Array[Int] = Array::make(point_count, 0)
+    let out_y : Array[Int] = Array::make(point_count, 0)
+    for p_ix in 0..<point_count {
+      let x = xs.at(p_ix).round().to_int()
+      let y = ys.at(p_ix).round().to_int()
+      let xb = x << 16
+      let yb = y << 16
+      orig_x.set(p_ix, xb)
+      orig_y.set(p_ix, yb)
+      out_x.set(p_ix, xb)
+      out_y.set(p_ix, yb)
+    }
+    let has_delta : Array[Bool] = Array::make(point_count, false)
+    match points_list {
+      None => {
+        // Dense: apply real points and phantom points.
+        for p_ix in 0..<point_count {
+          out_x.set(
+            p_ix,
+            out_x.at(p_ix) +
+            gvar_scale_funit_delta_to_fixed16_16(dxs.at(p_ix), scalar),
+          )
+          out_y.set(
+            p_ix,
+            out_y.at(p_ix) +
+            gvar_scale_funit_delta_to_fixed16_16(dys.at(p_ix), scalar),
+          )
+          has_delta.set(p_ix, true)
+        }
+        for p_ix in point_count..<total_points {
+          accum_x.set(
+            p_ix,
+            accum_x.at(p_ix) +
+            gvar_scale_funit_delta_to_fixed16_16(dxs.at(p_ix), scalar),
+          )
+          accum_y.set(
+            p_ix,
+            accum_y.at(p_ix) +
+            gvar_scale_funit_delta_to_fixed16_16(dys.at(p_ix), scalar),
+          )
+        }
+      }
+      Some(list) =>
+        for j in 0..<list.length() {
+          let pt = list.at(j)
+          if pt >= 0 && pt < point_count {
+            out_x.set(
+              pt,
+              out_x.at(pt) +
+              gvar_scale_funit_delta_to_fixed16_16(dxs.at(j), scalar),
+            )
+            out_y.set(
+              pt,
+              out_y.at(pt) +
+              gvar_scale_funit_delta_to_fixed16_16(dys.at(j), scalar),
+            )
+            has_delta.set(pt, true)
+          } else if pt >= point_count && pt < total_points {
+            accum_x.set(
+              pt,
+              accum_x.at(pt) +
+              gvar_scale_funit_delta_to_fixed16_16(dxs.at(j), scalar),
+            )
+            accum_y.set(
+              pt,
+              accum_y.at(pt) +
+              gvar_scale_funit_delta_to_fixed16_16(dys.at(j), scalar),
+            )
+          }
+        }
+    }
+    if !gvar_interpolate_deltas_fixed(
+        orig_x, orig_y, out_x, out_y, has_delta, end_pts, point_count,
+      ) {
+      return Some(gvar_zero_deltas(total_points))
+    }
+    for p_ix in 0..<point_count {
+      accum_x.set(p_ix, accum_x.at(p_ix) + (out_x.at(p_ix) - orig_x.at(p_ix)))
+      accum_y.set(p_ix, accum_y.at(p_ix) + (out_y.at(p_ix) - orig_y.at(p_ix)))
+    }
+    cursor = tuple_end
+  }
+  Some((accum_x, accum_y))
+}
+
+///|
+/// Computes gvar component + phantom deltas for a composite glyph suitable for
+/// embedded hinting.
+///
+/// Returns 16.16 fixed deltas for all "component points" plus the four phantom
+/// points. No interpolation is performed (matching FreeType/fontations).
+fn glyf_gvar_composite_hint_deltas(
+  font : @moon_skrifa.FontRef,
+  gid : @moon_skrifa.GlyphId,
+  coords : ArrayView[@moon_skrifa.NormalizedCoord],
+  component_count : Int,
+) -> (Array[Int], Array[Int])? {
+  if coords.is_empty() {
+    return None
+  }
+  if component_count <= 0 {
+    return None
+  }
+  let ctx = match gvar_ctx(font) {
+    None => return None
+    Some(c) => c
+  }
+  let gid_i = gid.to_uint64().to_int()
+  if gid_i < 0 || gid_i >= ctx.glyph_count {
+    return None
+  }
+  let total_points = component_count + 4
+  if total_points <= 0 {
+    return None
+  }
+  // Offsets array starts at 20.
+  let offsets_off = 20
+  let long_offsets = (ctx.flags & 1) != 0
+  let entry_size = if long_offsets { 4 } else { 2 }
+  let need = offsets_off + (ctx.glyph_count + 1) * entry_size
+  if need < 0 || need > ctx.gvar.length() {
+    return Some(gvar_zero_deltas(total_points))
+  }
+  let off0 = if long_offsets {
+    gvar_read_u32_be_int(ctx.gvar, offsets_off + gid_i * 4).unwrap_or(-1)
+  } else {
+    gvar_read_u16_be(ctx.gvar, offsets_off + gid_i * 2).unwrap_or(-1) * 2
+  }
+  let off1 = if long_offsets {
+    gvar_read_u32_be_int(ctx.gvar, offsets_off + (gid_i + 1) * 4).unwrap_or(-1)
+  } else {
+    gvar_read_u16_be(ctx.gvar, offsets_off + (gid_i + 1) * 2).unwrap_or(-1) * 2
+  }
+  if off0 < 0 || off1 < off0 {
+    return Some(gvar_zero_deltas(total_points))
+  }
+  let start = ctx.data_array_off + off0
+  let end = ctx.data_array_off + off1
+  if start < 0 || end < start || end > ctx.gvar.length() {
+    return Some(gvar_zero_deltas(total_points))
+  }
+  if start == end {
+    return Some(gvar_zero_deltas(total_points))
+  }
+  let tuple_count_flags = gvar_read_u16_be(ctx.gvar, start).unwrap_or(0)
+  let tuple_count = tuple_count_flags & 0x0FFF
+  let shared_points = (tuple_count_flags & 0x8000) != 0
+  let data_rel = gvar_read_u16_be(ctx.gvar, start + 2).unwrap_or(-1)
+  if tuple_count <= 0 || data_rel < 0 {
+    return Some(gvar_zero_deltas(total_points))
+  }
+  let sizes : Array[Int] = Array::new()
+  let tuple_indexes : Array[Int] = Array::new()
+  let axis_count = ctx.axis_count
+  let scalars : Array[Int] = Array::new()
+  let mut header_off = start + 4
+  for _ in 0..<tuple_count {
+    let s = gvar_read_u16_be(ctx.gvar, header_off).unwrap_or(-1)
+    let ti = gvar_read_u16_be(ctx.gvar, header_off + 2).unwrap_or(-1)
+    if s < 0 || ti < 0 {
+      return Some(gvar_zero_deltas(total_points))
+    }
+    header_off = header_off + 4
+    sizes.push(s)
+    tuple_indexes.push(ti)
+    let embedded = (ti & 0x8000) != 0
+    let intermediate = (ti & 0x4000) != 0
+    let shared_ix = ti & 0x0FFF
+    let peak : Array[Int] = Array::make(axis_count, 0)
+    if embedded {
+      let need = header_off + axis_count * 2
+      if need < header_off || need > end {
+        return Some(gvar_zero_deltas(total_points))
+      }
+      for ax in 0..<axis_count {
+        peak.set(
+          ax,
+          gvar_read_i16_be(ctx.gvar, header_off + ax * 2).unwrap_or(0),
+        )
+      }
+      header_off = header_off + axis_count * 2
+    } else {
+      if shared_ix < 0 || shared_ix >= ctx.shared_tuple_count {
+        return Some(gvar_zero_deltas(total_points))
+      }
+      let base = ctx.shared_tuples_off + shared_ix * axis_count * 2
+      let need = base + axis_count * 2
+      if base < 0 || need < base || need > ctx.gvar.length() {
+        return Some(gvar_zero_deltas(total_points))
+      }
+      for ax in 0..<axis_count {
+        peak.set(ax, gvar_read_i16_be(ctx.gvar, base + ax * 2).unwrap_or(0))
+      }
+    }
+    let mut start_t : Array[Int]? = None
+    let mut end_t : Array[Int]? = None
+    if intermediate {
+      let st : Array[Int] = Array::make(axis_count, 0)
+      let et : Array[Int] = Array::make(axis_count, 0)
+      let need = header_off + axis_count * 4
+      if need < header_off || need > end {
+        return Some(gvar_zero_deltas(total_points))
+      }
+      for ax in 0..<axis_count {
+        st.set(ax, gvar_read_i16_be(ctx.gvar, header_off + ax * 2).unwrap_or(0))
+        et.set(
+          ax,
+          gvar_read_i16_be(ctx.gvar, header_off + axis_count * 2 + ax * 2).unwrap_or(
+            0,
+          ),
+        )
+      }
+      header_off = header_off + axis_count * 4
+      start_t = Some(st)
+      end_t = Some(et)
+    }
+    scalars.push(gvar_tuple_scalar_fixed16_16(coords, peak, start_t, end_t))
+  }
+  let data_off = start + data_rel
+  if data_off < header_off || data_off > end {
+    return Some(gvar_zero_deltas(total_points))
+  }
+  let accum_x : Array[Int] = Array::make(total_points, 0)
+  let accum_y : Array[Int] = Array::make(total_points, 0)
+  let mut cursor = data_off
+  let mut shared_points_list : Array[Int]? = None
+  if shared_points {
+    let (pts, off2) = match gvar_points(ctx.gvar, cursor, total_points) {
+      None => return Some(gvar_zero_deltas(total_points))
+      Some(v) => v
+    }
+    shared_points_list = pts
+    cursor = off2
+  }
+  for i in 0..<tuple_count {
+    let size = sizes.at(i)
+    let ti = tuple_indexes.at(i)
+    let tuple_end = cursor + size
+    if size < 0 || tuple_end < cursor || tuple_end > end {
+      return Some(gvar_zero_deltas(total_points))
+    }
+    let scalar = scalars.at(i)
+    if scalar == 0 {
+      cursor = tuple_end
+      continue
+    }
+    // PRIVATE_POINT_NUMBERS = 0x2000.
+    let private_points = (ti & 0x2000) != 0
+    let mut points_list : Array[Int]? = None
+    let mut after_points = cursor
+    if private_points || !shared_points {
+      let (pts, off2) = match gvar_points(ctx.gvar, cursor, total_points) {
+        None => return Some(gvar_zero_deltas(total_points))
+        Some(v) => v
+      }
+      points_list = pts
+      after_points = off2
+    } else {
+      points_list = shared_points_list
+      after_points = cursor
+    }
+    let count = match points_list {
+      None => total_points
+      Some(arr) => arr.length()
+    }
+    let (dxs, after_x) = match gvar_deltas(ctx.gvar, after_points, count) {
+      None => return Some(gvar_zero_deltas(total_points))
+      Some(v) => v
+    }
+    let (dys, after_y) = match gvar_deltas(ctx.gvar, after_x, count) {
+      None => return Some(gvar_zero_deltas(total_points))
+      Some(v) => v
+    }
+    if after_y > tuple_end {
+      return Some(gvar_zero_deltas(total_points))
+    }
+    match points_list {
+      None =>
+        for pt in 0..<total_points {
+          accum_x.set(
+            pt,
+            accum_x.at(pt) +
+            gvar_scale_funit_delta_to_fixed16_16(dxs.at(pt), scalar),
+          )
+          accum_y.set(
+            pt,
+            accum_y.at(pt) +
+            gvar_scale_funit_delta_to_fixed16_16(dys.at(pt), scalar),
+          )
+        }
+      Some(list) =>
+        for j in 0..<list.length() {
+          let pt = list.at(j)
+          if pt >= 0 && pt < total_points {
+            accum_x.set(
+              pt,
+              accum_x.at(pt) +
+              gvar_scale_funit_delta_to_fixed16_16(dxs.at(j), scalar),
+            )
+            accum_y.set(
+              pt,
+              accum_y.at(pt) +
+              gvar_scale_funit_delta_to_fixed16_16(dys.at(j), scalar),
+            )
           }
         }
     }

@@ -40,6 +40,19 @@ let outlines = @moon_skrifa_outline.OutlineGlyphCollection::from_font(font)
 
 ## Core APIs
 
+### Variation Axes / Locations (fvar/avar)
+
+If you have user-space axis values (e.g. `wght=700`), use `axes().location(...)` to
+build a normalized location (this also applies `avar` remapping when present):
+
+```moonbit
+let axes = font.axes()
+let settings : Array[@moon_skrifa.VariationSetting] = Array::from_fixed_array([
+  @moon_skrifa.Setting::new(@moon_skrifa.Tag::from_str("wght").unwrap(), 700.0),
+])
+let loc = axes.location(settings.op_as_view()).as_ref()
+```
+
 ### Charmap (codepoint -> glyph id)
 
 ```moonbit
@@ -121,7 +134,9 @@ let path = outlines.path(gid, settings).unwrap()
 
 `DrawSettings` controls:
 - `size` (`@moon_skrifa.Size`)
-- `location` (`@moon_skrifa.LocationRef`, normalized coords as `Int` in F2Dot14; `16384` == `1.0`)
+- `location` (`@moon_skrifa.LocationRef`)
+  - normalized coords are `Int` in F2Dot14; `16384` == `1.0`
+  - if you have user coords, prefer `font.axes().location(...).as_ref()`
 - `path_style` (`PathStyle::FreeType` or `PathStyle::HarfBuzz`)
 - optional embedded hinting via `HintingInstance` + `DrawSettings::hinted(...)`
 
