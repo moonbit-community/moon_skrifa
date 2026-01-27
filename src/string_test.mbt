@@ -312,6 +312,22 @@ test "find_by_language" {
 }
 
 ///|
+test "LocalizedString::chars" {
+  let name = string_test_build_name_table_v0(
+    Array::from_fixed_array([
+      (3, 1, 0x0409, STRING_ID_SUBFAMILY_NAME.to_int(), "Aé"),
+    ]),
+  )
+  let sfnt = string_test_build_sfnt(Array::from_fixed_array([(TAG_NAME, name)]))
+  let font = FontRef::new(sfnt).unwrap()
+  let s = font.localized_strings(STRING_ID_SUBFAMILY_NAME).strings().at(0)
+  let cs = s.chars()
+  inspect(cs.length(), content="2")
+  inspect(cs.at(0).to_string(), content="A")
+  inspect(cs.at(1).to_string(), content="é")
+}
+
+///|
 test "english_or_first" {
   let name = string_test_build_name_table_v0(
     Array::from_fixed_array([

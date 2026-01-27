@@ -16,7 +16,7 @@
 /// Temporary memory allocation helper.
 ///
 /// Ported from `fontations/skrifa/src/outline/memory.rs` (Apache-2.0 OR MIT).
-pub fn[R] with_temporary_memory(size : Int, f : (Array[Byte]) -> R) -> R {
+fn[R] _with_temporary_memory(size : Int, f : (Array[Byte]) -> R) -> R {
   let buf = Array::make(size, 0 |> Int::to_byte)
   f(buf)
 }

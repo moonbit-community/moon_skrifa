@@ -6,9 +6,6 @@ import {
 }
 
 // Values
-pub fn require_interpreter(@core.FontRef) -> Bool
-
-pub fn[R] with_temporary_memory(Int, (Array[Byte]) -> R) -> R
 
 // Errors
 pub(all) suberror DrawError {
@@ -144,7 +141,6 @@ pub fn OutlineGlyph::has_overlaps(Self) -> Bool?
 pub fn OutlineGlyph::path(Self, DrawSettings) -> Result[Array[PathElement], DrawError]
 
 pub struct OutlineGlyphCollection {
-  font : @core.FontRef
   // private fields
 }
 pub fn[P : OutlinePen] OutlineGlyphCollection::draw(Self, @core.GlyphId, DrawSettings, P) -> Bool

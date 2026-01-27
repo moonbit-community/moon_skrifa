@@ -72,7 +72,7 @@ pub fn AdjustedMetrics::default() -> AdjustedMetrics {
 
 ///|
 pub struct OutlineGlyphCollection {
-  font : @moon_skrifa.FontRef
+  priv font : @moon_skrifa.FontRef
   priv kind : OutlineGlyphFormat?
 }
 

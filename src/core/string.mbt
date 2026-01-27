@@ -744,6 +744,15 @@ pub fn LocalizedString::language(self : LocalizedString) -> String? {
 }
 
 ///|
+pub fn LocalizedString::chars(self : LocalizedString) -> Array[Char] {
+  let out : Array[Char] = Array::new()
+  for ch in self.value {
+    out.push(ch)
+  }
+  out
+}
+
+///|
 pub fn LocalizedString::to_string(self : LocalizedString) -> String {
   self.value
 }
@@ -794,6 +803,11 @@ pub fn LocalizedStrings::english_or_first(
     }
   }
   best
+}
+
+///|
+pub fn LocalizedStrings::new(font : FontRef, id : StringId) -> LocalizedStrings {
+  FontRef::localized_strings(font, id)
 }
 
 ///|

@@ -339,6 +339,7 @@ pub fn HmtxMetrics::number_of_hmetrics(Self) -> Int
 pub struct LocalizedString {
   // private fields
 }
+pub fn LocalizedString::chars(Self) -> Array[Char]
 pub fn LocalizedString::language(Self) -> String?
 pub fn LocalizedString::to_string(Self) -> String
 
@@ -347,6 +348,7 @@ pub struct LocalizedStrings {
 }
 pub fn LocalizedStrings::english_or_first(Self) -> LocalizedString?
 pub fn LocalizedStrings::id(Self) -> UInt16
+pub fn LocalizedStrings::new(FontRef, UInt16) -> Self
 pub fn LocalizedStrings::strings(Self) -> ArrayView[LocalizedString]
 
 pub struct Location {

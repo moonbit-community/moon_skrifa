@@ -17,7 +17,7 @@
 ///
 /// This is a direct port of `fontations/skrifa/src/outline/hint_reliant.rs`,
 /// which itself follows FreeType's "tricky font" heuristics.
-pub fn require_interpreter(_font : @moon_skrifa.FontRef) -> Bool {
+fn require_interpreter(_font : @moon_skrifa.FontRef) -> Bool {
   // "tricky font" detection by family name substring or cvt/fpgm/prep IDs.
   is_hint_reliant_by_name(_font) || matches_hint_reliant_id_list(_font)
 }
