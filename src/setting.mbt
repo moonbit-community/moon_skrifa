@@ -27,4 +27,21 @@ pub fn[T] Setting::new(selector : Tag, value : T) -> Setting[T] {
 }
 
 ///|
+pub fn[T] Setting::from_tuple(pair : (Tag, T)) -> Setting[T] {
+  let (selector, value) = pair
+  Setting::new(selector, value)
+}
+
+///|
+pub fn[T] Setting::from_str(selector : String, value : T) -> Setting[T] {
+  Setting::new(Tag::from_str_or_default(selector), value)
+}
+
+///|
+pub fn[T] Setting::from_str_tuple(pair : (String, T)) -> Setting[T] {
+  let (selector, value) = pair
+  Setting::from_str(selector, value)
+}
+
+///|
 pub type VariationSetting = Setting[Double]

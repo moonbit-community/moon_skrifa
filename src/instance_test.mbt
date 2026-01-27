@@ -18,6 +18,7 @@ test "Size::ppem and linear_scale" {
   inspect(s.ppem(), content="Some(20)")
   inspect(s.linear_scale(1000), content="0.02")
   inspect(s.linear_scale(0), content="1")
+  inspect(s.fixed_linear_scale(1000), content="83886")
 }
 
 ///|
@@ -25,5 +26,6 @@ test "Size::unscaled linear_scale" {
   let s = Size::unscaled()
   inspect(s.ppem(), content="None")
   inspect(s.linear_scale(1000), content="1")
+  inspect(s.fixed_linear_scale(1000), content="4194304")
   inspect(s.value(), content="0")
 }

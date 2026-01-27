@@ -71,9 +71,14 @@ fn attr_read_i32_be(view : BytesView, offset : Int) -> Int? {
 ///|
 /// Stretch, style and weight attributes of a font.
 pub struct Attributes {
-  priv stretch : Stretch
-  priv style : Style
-  priv weight : Weight
+  stretch : Stretch
+  style : Style
+  weight : Weight
+}
+
+///|
+pub fn Attributes::new(font : FontRef) -> Attributes {
+  font.attributes()
 }
 
 ///|
@@ -97,8 +102,58 @@ pub struct Stretch {
 }
 
 ///|
+pub fn Stretch::ultra_condensed() -> Stretch {
+  Stretch::new(0.5)
+}
+
+///|
+pub fn Stretch::extra_condensed() -> Stretch {
+  Stretch::new(0.625)
+}
+
+///|
+pub fn Stretch::condensed() -> Stretch {
+  Stretch::new(0.75)
+}
+
+///|
+pub fn Stretch::semi_condensed() -> Stretch {
+  Stretch::new(0.875)
+}
+
+///|
+pub fn Stretch::normal() -> Stretch {
+  Stretch::new(1.0)
+}
+
+///|
+pub fn Stretch::semi_expanded() -> Stretch {
+  Stretch::new(1.125)
+}
+
+///|
+pub fn Stretch::expanded() -> Stretch {
+  Stretch::new(1.25)
+}
+
+///|
+pub fn Stretch::extra_expanded() -> Stretch {
+  Stretch::new(1.5)
+}
+
+///|
+pub fn Stretch::ultra_expanded() -> Stretch {
+  Stretch::new(2.0)
+}
+
+///|
 pub fn Stretch::new(ratio : Double) -> Stretch {
   Stretch::{ ratio, }
+}
+
+///|
+pub fn Stretch::default() -> Stretch {
+  Stretch::normal()
 }
 
 ///|
@@ -114,15 +169,15 @@ pub fn Stretch::percentage(self : Stretch) -> Double {
 ///|
 fn Stretch::from_width_class(width_class : Int) -> Stretch {
   match width_class {
-    0 | 1 => Stretch::new(0.5)
-    2 => Stretch::new(0.625)
-    3 => Stretch::new(0.75)
-    4 => Stretch::new(0.875)
-    5 => Stretch::new(1.0)
-    6 => Stretch::new(1.125)
-    7 => Stretch::new(1.25)
-    8 => Stretch::new(1.5)
-    _ => Stretch::new(2.0)
+    0 | 1 => Stretch::ultra_condensed()
+    2 => Stretch::extra_condensed()
+    3 => Stretch::condensed()
+    4 => Stretch::semi_condensed()
+    5 => Stretch::normal()
+    6 => Stretch::semi_expanded()
+    7 => Stretch::expanded()
+    8 => Stretch::extra_expanded()
+    _ => Stretch::ultra_expanded()
   }
 }
 
@@ -139,8 +194,68 @@ pub struct Weight {
 }
 
 ///|
+pub fn Weight::thin() -> Weight {
+  Weight::new(100.0)
+}
+
+///|
+pub fn Weight::extra_light() -> Weight {
+  Weight::new(200.0)
+}
+
+///|
+pub fn Weight::light() -> Weight {
+  Weight::new(300.0)
+}
+
+///|
+pub fn Weight::semi_light() -> Weight {
+  Weight::new(350.0)
+}
+
+///|
+pub fn Weight::normal() -> Weight {
+  Weight::new(400.0)
+}
+
+///|
+pub fn Weight::medium() -> Weight {
+  Weight::new(500.0)
+}
+
+///|
+pub fn Weight::semi_bold() -> Weight {
+  Weight::new(600.0)
+}
+
+///|
+pub fn Weight::bold() -> Weight {
+  Weight::new(700.0)
+}
+
+///|
+pub fn Weight::extra_bold() -> Weight {
+  Weight::new(800.0)
+}
+
+///|
+pub fn Weight::black() -> Weight {
+  Weight::new(900.0)
+}
+
+///|
+pub fn Weight::extra_black() -> Weight {
+  Weight::new(950.0)
+}
+
+///|
 pub fn Weight::new(value : Double) -> Weight {
   Weight::{ value, }
+}
+
+///|
+pub fn Weight::default() -> Weight {
+  Weight::normal()
 }
 
 ///|
@@ -189,17 +304,17 @@ pub fn FontRef::attributes(self : FontRef) -> Attributes {
             Normal
           }
           let weight = if (mac_style & MACSTYLE_BOLD) != 0 {
-            Weight::new(700.0)
+            Weight::bold()
           } else {
-            Weight::new(400.0)
+            Weight::default()
           }
-          Attributes::{ stretch: Stretch::new(1.0), style, weight }
+          Attributes::{ stretch: Stretch::default(), style, weight }
         }
         None =>
           Attributes::{
-            stretch: Stretch::new(1.0),
+            stretch: Stretch::default(),
             style: Normal,
-            weight: Weight::new(400.0),
+            weight: Weight::default(),
           }
       }
   }

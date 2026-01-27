@@ -57,6 +57,26 @@ pub fn Size::linear_scale(self : Size, units_per_em : UInt16) -> Double {
 }
 
 ///|
+/// Computes a 16.16 fixed-point linear scale factor that matches FreeType.
+///
+/// This is intended for internal routines that apply the FreeType-style
+/// `mul_div(value, scale, 64)` pattern.
+pub fn Size::fixed_linear_scale(self : Size, units_per_em : UInt16) -> Int {
+  match self.ppem {
+    Some(ppem) => {
+      let upem = units_per_em.to_int()
+      if upem > 0 {
+        let scaled_h = (ppem * 64.0).to_int()
+        (scaled_h << 16) / upem
+      } else {
+        0x10000 * 64
+      }
+    }
+    None => 0x10000 * 64
+  }
+}
+
+///|
 /// Legacy helper for the earlier skeleton API.
 pub fn Size::value(self : Size) -> Double {
   match self.ppem {

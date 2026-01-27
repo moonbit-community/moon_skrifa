@@ -258,17 +258,29 @@ pub fn Decoration::thickness(self : Decoration) -> Double {
 ///|
 pub struct FontMetrics {
   units_per_em : UInt16
+  glyph_count : UInt16
   is_monospace : Bool
   italic_angle : Double
   ascent : Double
   descent : Double
   leading : Double
+  cap_height : Double?
+  x_height : Double?
+  average_width : Double?
+  max_width : Double?
   underline : Decoration?
+  strikeout : Decoration?
+  bounds : GlyphBounds?
 }
 
 ///|
 pub fn FontMetrics::units_per_em(self : FontMetrics) -> UInt16 {
   self.units_per_em
+}
+
+///|
+pub fn FontMetrics::glyph_count(self : FontMetrics) -> UInt16 {
+  self.glyph_count
 }
 
 ///|
@@ -297,24 +309,91 @@ pub fn FontMetrics::leading(self : FontMetrics) -> Double {
 }
 
 ///|
+pub fn FontMetrics::cap_height(self : FontMetrics) -> Double? {
+  self.cap_height
+}
+
+///|
+pub fn FontMetrics::x_height(self : FontMetrics) -> Double? {
+  self.x_height
+}
+
+///|
+pub fn FontMetrics::average_width(self : FontMetrics) -> Double? {
+  self.average_width
+}
+
+///|
+pub fn FontMetrics::max_width(self : FontMetrics) -> Double? {
+  self.max_width
+}
+
+///|
 pub fn FontMetrics::underline(self : FontMetrics) -> Decoration? {
   self.underline
 }
 
 ///|
+pub fn FontMetrics::strikeout(self : FontMetrics) -> Decoration? {
+  self.strikeout
+}
+
+///|
+pub fn FontMetrics::bounds(self : FontMetrics) -> GlyphBounds? {
+  self.bounds
+}
+
+///|
 pub fn FontMetrics::new(font : FontRef, size : Size) -> FontMetrics {
   let mut units_per_em : UInt16 = 0
+  let mut bounds : GlyphBounds? = None
   match font.table(METRICS_TAG_HEAD) {
     None => ()
     Some(head) => {
       let upem = metrics_read_u16_be(head, 18).unwrap_or(0)
       units_per_em = upem.to_uint16()
+      // head bbox: xMin/yMin/xMax/yMax at offsets 36..44.
+      if head.length() >= 44 {
+        let scale = size.linear_scale(units_per_em)
+        let x_min = metrics_read_i16_be(head, 36).unwrap_or(0).to_double() *
+          scale
+        let y_min = metrics_read_i16_be(head, 38).unwrap_or(0).to_double() *
+          scale
+        let x_max = metrics_read_i16_be(head, 40).unwrap_or(0).to_double() *
+          scale
+        let y_max = metrics_read_i16_be(head, 42).unwrap_or(0).to_double() *
+          scale
+        bounds = Some(GlyphBounds::{ x_min, y_min, x_max, y_max })
+      }
     }
   }
   let scale = size.linear_scale(units_per_em)
+  let mut glyph_count : UInt16 = 0
+  match font.table(TAG_MAXP) {
+    None => ()
+    Some(maxp) => {
+      let n = metrics_read_u16_be(maxp, 4).unwrap_or(0)
+      glyph_count = n.to_uint16()
+    }
+  }
+  let mut max_width : Double? = None
+  match font.table(TAG_HHEA) {
+    None => ()
+    Some(hhea) => {
+      // advanceWidthMax at offset 10 (u16).
+      let aw = metrics_read_u16_be(hhea, 10).unwrap_or(-1)
+      if aw >= 0 {
+        max_width = Some(aw.to_double() * scale)
+      }
+    }
+  }
   let mut is_monospace = false
   let mut italic_angle = 0.0
   let mut underline : Decoration? = None
+  let mut strikeout : Decoration? = None
+  let mut cap_height : Double? = None
+  let mut x_height : Double? = None
+  let mut average_width : Double? = None
   match font.table(METRICS_TAG_POST) {
     None => ()
     Some(post) => {
@@ -339,6 +418,23 @@ pub fn FontMetrics::new(font : FontRef, size : Size) -> FontMetrics {
   match os2 {
     None => ()
     Some(os2_tbl) => {
+      // xAvgCharWidth at offset 2 (i16).
+      let x_avg = metrics_read_i16_be(os2_tbl, 2).unwrap_or(0).to_double() *
+        scale
+      average_width = Some(x_avg)
+      // Strikeout position/size at offsets 28/30 (i16).
+      let so_pos = metrics_read_i16_be(os2_tbl, 28).unwrap_or(0).to_double() *
+        scale
+      let so_size = metrics_read_i16_be(os2_tbl, 30).unwrap_or(0).to_double() *
+        scale
+      strikeout = Some(Decoration::{ offset: so_pos, thickness: so_size })
+      // sxHeight and sCapHeight are present in OS/2 v2+ (offsets 86/88).
+      if os2_tbl.length() >= 90 {
+        let xh = metrics_read_i16_be(os2_tbl, 86).unwrap_or(0)
+        let ch = metrics_read_i16_be(os2_tbl, 88).unwrap_or(0)
+        x_height = Some(xh.to_double() * scale)
+        cap_height = Some(ch.to_double() * scale)
+      }
       // fsSelection at offset 62, USE_TYPO_METRICS = 0x0080.
       let fs_selection = metrics_read_u16_be(os2_tbl, 62).unwrap_or(0)
       if (fs_selection & 0x0080) != 0 {
@@ -390,17 +486,34 @@ pub fn FontMetrics::new(font : FontRef, size : Size) -> FontMetrics {
   }
   FontMetrics::{
     units_per_em,
+    glyph_count,
     is_monospace,
     italic_angle,
     ascent,
     descent,
     leading,
+    cap_height,
+    x_height,
+    average_width,
+    max_width,
     underline,
+    strikeout,
+    bounds,
   }
 }
 
 ///|
 pub fn FontRef::font_metrics(self : FontRef, size : Size) -> FontMetrics {
+  FontMetrics::new(self, size)
+}
+
+///|
+/// Location-aware metrics (currently ignores location, reserved for MVAR parity).
+pub fn FontRef::font_metrics_at(
+  self : FontRef,
+  size : Size,
+  _location : LocationRef,
+) -> FontMetrics {
   FontMetrics::new(self, size)
 }
 

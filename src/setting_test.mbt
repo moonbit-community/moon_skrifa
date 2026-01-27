@@ -19,3 +19,20 @@ test "Setting::new" {
   inspect(s.selector.to_string(), content="wght")
   inspect(s.value, content="400")
 }
+
+///|
+test "Setting::from_tuple" {
+  let tag = Tag::from_str("wght").unwrap()
+  let s : Setting[Double] = Setting::from_tuple((tag, 720.0))
+  inspect(s.selector.to_string(), content="wght")
+  inspect(s.value, content="720")
+}
+
+///|
+test "Setting::from_str uses Tag::from_str_or_default" {
+  let s : Setting[Double] = Setting::from_str("wght", 650.0)
+  inspect(s.selector.to_string(), content="wght")
+  inspect(s.value, content="650")
+  let bad : Setting[Double] = Setting::from_str("abc", 1.0)
+  inspect(bad.selector.to_uint(), content="0")
+}

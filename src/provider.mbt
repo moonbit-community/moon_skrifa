@@ -23,7 +23,7 @@ pub(open) trait MetadataProvider {
   localized_strings(Self, StringId) -> LocalizedStrings
   glyph_names(Self) -> GlyphNames
   metrics(Self) -> Metrics?
-  charmap(Self) -> Charmap?
+  charmap(Self) -> Charmap
   bitmap_strikes(Self) -> BitmapStrikes
   color_palettes(Self) -> ColorPalettes?
   color_glyphs(Self) -> ColorGlyphCollection?

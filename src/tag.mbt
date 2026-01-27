@@ -26,6 +26,11 @@ pub fn Tag::from_uint(value : UInt) -> Tag {
 }
 
 ///|
+pub fn Tag::default() -> Tag {
+  Tag::from_uint(0)
+}
+
+///|
 pub fn Tag::to_uint(self : Tag) -> UInt {
   self.value
 }

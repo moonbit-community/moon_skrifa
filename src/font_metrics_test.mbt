@@ -105,12 +105,44 @@ fn fm_test_build_head(units_per_em : Int) -> Bytes {
 }
 
 ///|
+fn fm_test_build_head_with_bbox(
+  units_per_em : Int,
+  x_min : Int,
+  y_min : Int,
+  x_max : Int,
+  y_max : Int,
+) -> Bytes {
+  let buf : Array[Byte] = Array::make(54, 0 |> Int::to_byte)
+  fm_test_write_u16_be(buf, 18, units_per_em)
+  fm_test_write_i16_be(buf, 36, x_min)
+  fm_test_write_i16_be(buf, 38, y_min)
+  fm_test_write_i16_be(buf, 40, x_max)
+  fm_test_write_i16_be(buf, 42, y_max)
+  Bytes::from_array(buf.op_as_view())
+}
+
+///|
 fn fm_test_build_hhea(ascent : Int, descent : Int, line_gap : Int) -> Bytes {
   // hhea: ascender at 4, descender at 6, lineGap at 8.
   let buf : Array[Byte] = Array::make(36, 0 |> Int::to_byte)
   fm_test_write_i16_be(buf, 4, ascent)
   fm_test_write_i16_be(buf, 6, descent)
   fm_test_write_i16_be(buf, 8, line_gap)
+  Bytes::from_array(buf.op_as_view())
+}
+
+///|
+fn fm_test_build_hhea_with_max_width(
+  ascent : Int,
+  descent : Int,
+  line_gap : Int,
+  max_width : Int,
+) -> Bytes {
+  let buf : Array[Byte] = Array::make(36, 0 |> Int::to_byte)
+  fm_test_write_i16_be(buf, 4, ascent)
+  fm_test_write_i16_be(buf, 6, descent)
+  fm_test_write_i16_be(buf, 8, line_gap)
+  fm_test_write_u16_be(buf, 10, max_width)
   Bytes::from_array(buf.op_as_view())
 }
 
@@ -149,6 +181,14 @@ fn fm_test_build_os2(
 }
 
 ///|
+fn fm_test_build_maxp(num_glyphs : Int) -> Bytes {
+  let buf : Array[Byte] = Array::make(6, 0 |> Int::to_byte)
+  fm_test_write_u32_be(buf, 0, fm_test_u32(0x00010000))
+  fm_test_write_u16_be(buf, 4, num_glyphs)
+  Bytes::from_array(buf.op_as_view())
+}
+
+///|
 test "FontMetrics prefers OS/2 typo metrics when flag set" {
   let head = fm_test_build_head(1000)
   let hhea = fm_test_build_hhea(800, -200, 0)
@@ -171,4 +211,47 @@ test "FontMetrics prefers OS/2 typo metrics when flag set" {
   inspect(m.is_monospace(), content="true")
   inspect(m.underline().unwrap().offset(), content="-50")
   inspect(m.underline().unwrap().thickness(), content="20")
+}
+
+///|
+test "FontMetrics: additional fields (bbox/count/widths/heights)" {
+  let head = fm_test_build_head_with_bbox(1000, -10, -20, 110, 220)
+  let hhea = fm_test_build_hhea_with_max_width(800, -200, 0, 1234)
+  let maxp = fm_test_build_maxp(42)
+  let os2_buf : Array[Byte] = Array::make(90, 0 |> Int::to_byte)
+  // fsSelection unset, line metrics come from hhea.
+  fm_test_write_u16_be(os2_buf, 62, 0)
+  // xAvgCharWidth (i16) at 2
+  fm_test_write_i16_be(os2_buf, 2, 321)
+  // strikeout position/size at 28/30
+  fm_test_write_i16_be(os2_buf, 28, 7)
+  fm_test_write_i16_be(os2_buf, 30, 8)
+  // sxHeight/sCapHeight at 86/88
+  fm_test_write_i16_be(os2_buf, 86, 11)
+  fm_test_write_i16_be(os2_buf, 88, 12)
+  let os2 = Bytes::from_array(os2_buf.op_as_view())
+  let post = fm_test_build_post(false, 0, 0)
+  let sfnt = fm_test_build_sfnt(
+    Array::from_fixed_array([
+      (FM_TAG_HEAD, head),
+      (FM_TAG_HHEA, hhea),
+      (0x6D617870, maxp), // "maxp"
+      (FM_TAG_OS2, os2),
+      (FM_TAG_POST, post),
+    ]),
+  )
+  let font = FontRef::new(sfnt).unwrap()
+  let m = font.font_metrics(Size::unscaled())
+  inspect(m.glyph_count().to_int(), content="42")
+  inspect(m.average_width().unwrap(), content="321")
+  inspect(m.max_width().unwrap(), content="1234")
+  inspect(m.x_height().unwrap(), content="11")
+  inspect(m.cap_height().unwrap(), content="12")
+  inspect(m.strikeout().unwrap().offset(), content="7")
+  inspect(m.strikeout().unwrap().thickness(), content="8")
+  let bb = m.bounds().unwrap()
+  inspect(bb.x_min(), content="-10")
+  inspect(bb.y_min(), content="-20")
+  inspect(bb.x_max(), content="110")
+  inspect(bb.y_max(), content="220")
 }

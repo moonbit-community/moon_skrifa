@@ -367,11 +367,7 @@ fn hint_parity_font_cousine_hint_subset_b64() -> String {
 ///|
 test "hint: ignore hdmx when back compat enabled" {
   let font = golden_font(hint_parity_font_tinos_subset_b64())
-  let gid = font
-    .charmap()
-    .unwrap()
-    .glyph_id((34).reinterpret_as_uint())
-    .unwrap()
+  let gid = font.charmap().glyph_id((34).reinterpret_as_uint()).unwrap()
   let outlines0 = OutlineGlyphCollection::from_font(font)
   let hinter = HintingInstance::new(
     outlines0,
@@ -395,11 +391,7 @@ test "hint: ignore hdmx when back compat enabled" {
 ///|
 test "hint: use hdmx when back compat disabled" {
   let font = golden_font(hint_parity_font_tinos_subset_b64())
-  let gid = font
-    .charmap()
-    .unwrap()
-    .glyph_id((34).reinterpret_as_uint())
-    .unwrap()
+  let gid = font.charmap().glyph_id((34).reinterpret_as_uint()).unwrap()
   let outlines0 = OutlineGlyphCollection::from_font(font)
   let hinter = HintingInstance::new(
     outlines0,

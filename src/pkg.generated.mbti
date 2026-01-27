@@ -66,8 +66,11 @@ pub fn string_id_predefined() -> Array[UInt16]
 
 // Types and methods
 pub struct Attributes {
-  // private fields
+  stretch : Stretch
+  style : Style
+  weight : Weight
 }
+pub fn Attributes::new(FontRef) -> Self
 pub fn Attributes::stretch(Self) -> Stretch
 pub fn Attributes::style(Self) -> Style
 pub fn Attributes::weight(Self) -> Weight
@@ -146,8 +149,16 @@ pub(all) enum Brush {
 pub struct Charmap {
   // private fields
 }
+pub fn Charmap::default() -> Self
 pub fn Charmap::glyph_id(Self, UInt) -> UInt16?
-pub fn Charmap::new(FontRef) -> Self?
+pub fn Charmap::has_map(Self) -> Bool
+pub fn Charmap::has_variant_map(Self) -> Bool
+pub fn Charmap::is_symbol(Self) -> Bool
+pub fn Charmap::map(Self, UInt) -> UInt16?
+pub fn Charmap::map_variant(Self, UInt, UInt) -> MapVariant?
+pub fn Charmap::mappings(Self) -> Array[(UInt, UInt16)]
+pub fn Charmap::new(FontRef) -> Self
+pub fn Charmap::variant_mappings(Self) -> Array[(UInt, UInt, MapVariant)]
 
 pub struct Color {
   r : Byte
@@ -239,21 +250,35 @@ pub fn Extend::raw(Self) -> Int
 
 pub struct FontMetrics {
   units_per_em : UInt16
+  glyph_count : UInt16
   is_monospace : Bool
   italic_angle : Double
   ascent : Double
   descent : Double
   leading : Double
+  cap_height : Double?
+  x_height : Double?
+  average_width : Double?
+  max_width : Double?
   underline : Decoration?
+  strikeout : Decoration?
+  bounds : GlyphBounds?
 }
 pub fn FontMetrics::ascent(Self) -> Double
+pub fn FontMetrics::average_width(Self) -> Double?
+pub fn FontMetrics::bounds(Self) -> GlyphBounds?
+pub fn FontMetrics::cap_height(Self) -> Double?
 pub fn FontMetrics::descent(Self) -> Double
+pub fn FontMetrics::glyph_count(Self) -> UInt16
 pub fn FontMetrics::is_monospace(Self) -> Bool
 pub fn FontMetrics::italic_angle(Self) -> Double
 pub fn FontMetrics::leading(Self) -> Double
+pub fn FontMetrics::max_width(Self) -> Double?
 pub fn FontMetrics::new(FontRef, Size) -> Self
+pub fn FontMetrics::strikeout(Self) -> Decoration?
 pub fn FontMetrics::underline(Self) -> Decoration?
 pub fn FontMetrics::units_per_em(Self) -> UInt16
+pub fn FontMetrics::x_height(Self) -> Double?
 
 pub struct FontRef {
   data : Bytes
@@ -262,11 +287,12 @@ pub struct FontRef {
 pub fn FontRef::attributes(Self) -> Attributes
 pub fn FontRef::axes(Self) -> AxisCollection
 pub fn FontRef::bitmap_strikes(Self) -> BitmapStrikes
-pub fn FontRef::charmap(Self) -> Charmap?
+pub fn FontRef::charmap(Self) -> Charmap
 pub fn FontRef::color_glyphs(Self) -> ColorGlyphCollection?
 pub fn FontRef::color_palettes(Self) -> ColorPalettes?
 pub fn FontRef::data(Self) -> Bytes
 pub fn FontRef::font_metrics(Self, Size) -> FontMetrics
+pub fn FontRef::font_metrics_at(Self, Size, LocationRef) -> FontMetrics
 pub fn FontRef::from_index(Bytes, UInt) -> Self?
 pub fn FontRef::glyph_metrics(Self, Size, LocationRef) -> GlyphMetrics?
 pub fn FontRef::glyph_names(Self) -> GlyphNames
@@ -349,6 +375,18 @@ pub fn LocationRef::effective_coords(Self) -> ArrayView[Int]
 pub fn LocationRef::is_default(Self) -> Bool
 pub fn LocationRef::new(ArrayView[Int]) -> Self
 
+pub(all) enum MapVariant {
+  UseDefault
+  Variant(UInt16)
+}
+
+pub struct MappingIndex {
+  // private fields
+}
+pub fn MappingIndex::charmap(Self, FontRef) -> Charmap
+pub fn MappingIndex::default() -> Self
+pub fn MappingIndex::new(FontRef) -> Self
+
 pub struct Metrics {
   // private fields
 }
@@ -391,11 +429,15 @@ pub struct Setting[T] {
   selector : Tag
   value : T
 }
+pub fn[T] Setting::from_str(String, T) -> Self[T]
+pub fn[T] Setting::from_str_tuple((String, T)) -> Self[T]
+pub fn[T] Setting::from_tuple((Tag, T)) -> Self[T]
 pub fn[T] Setting::new(Tag, T) -> Self[T]
 
 pub struct Size {
   ppem : Double?
 }
+pub fn Size::fixed_linear_scale(Self, UInt16) -> Int
 pub fn Size::linear_scale(Self, UInt16) -> Double
 pub fn Size::new(Double) -> Self
 pub fn Size::ppem(Self) -> Double?
@@ -405,9 +447,19 @@ pub fn Size::value(Self) -> Double
 pub struct Stretch {
   // private fields
 }
+pub fn Stretch::condensed() -> Self
+pub fn Stretch::default() -> Self
+pub fn Stretch::expanded() -> Self
+pub fn Stretch::extra_condensed() -> Self
+pub fn Stretch::extra_expanded() -> Self
 pub fn Stretch::new(Double) -> Self
+pub fn Stretch::normal() -> Self
 pub fn Stretch::percentage(Self) -> Double
 pub fn Stretch::ratio(Self) -> Double
+pub fn Stretch::semi_condensed() -> Self
+pub fn Stretch::semi_expanded() -> Self
+pub fn Stretch::ultra_condensed() -> Self
+pub fn Stretch::ultra_expanded() -> Self
 
 pub(all) enum Style {
   Normal
@@ -418,6 +470,7 @@ pub(all) enum Style {
 pub struct Tag {
   // private fields
 }
+pub fn Tag::default() -> Self
 pub fn Tag::from_str(String) -> Self?
 pub fn Tag::from_str_or_default(String) -> Self
 pub fn Tag::from_uint(UInt) -> Self
@@ -440,7 +493,19 @@ pub fn Transform::mul(Self, Self) -> Self
 pub struct Weight {
   // private fields
 }
+pub fn Weight::black() -> Self
+pub fn Weight::bold() -> Self
+pub fn Weight::default() -> Self
+pub fn Weight::extra_black() -> Self
+pub fn Weight::extra_bold() -> Self
+pub fn Weight::extra_light() -> Self
+pub fn Weight::light() -> Self
+pub fn Weight::medium() -> Self
 pub fn Weight::new(Double) -> Self
+pub fn Weight::normal() -> Self
+pub fn Weight::semi_bold() -> Self
+pub fn Weight::semi_light() -> Self
+pub fn Weight::thin() -> Self
 pub fn Weight::value(Self) -> Double
 
 // Type aliases
@@ -474,7 +539,7 @@ pub(open) trait MetadataProvider {
   localized_strings(Self, UInt16) -> LocalizedStrings
   glyph_names(Self) -> GlyphNames
   metrics(Self) -> Metrics?
-  charmap(Self) -> Charmap?
+  charmap(Self) -> Charmap
   bitmap_strikes(Self) -> BitmapStrikes
   color_palettes(Self) -> ColorPalettes?
   color_glyphs(Self) -> ColorGlyphCollection?
