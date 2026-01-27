@@ -88,7 +88,9 @@ pub fn Engine::resolve_auto_fallback(Self, OutlineGlyphCollection) -> Self
 pub struct GlyphStyles {
   // private fields
 }
+pub fn GlyphStyles::is_digit(Self, @core.GlyphId) -> Bool
 pub fn GlyphStyles::new(OutlineGlyphCollection) -> Self
+pub fn GlyphStyles::style_index(Self, @core.GlyphId) -> Int?
 
 pub(all) enum Hinting {
   None_
@@ -212,12 +214,6 @@ pub fn Target::is_vertical_lcd(Self) -> Bool
 pub fn Target::mode(Self) -> SmoothMode?
 pub fn Target::preserve_linear_metrics(Self) -> Bool
 pub fn Target::symmetric_rendering(Self) -> Bool
-
-type TtDecoder
-
-type TtInstruction
-
-type TtProgram
 
 // Type aliases
 

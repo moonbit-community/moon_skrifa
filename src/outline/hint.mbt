@@ -240,17 +240,20 @@ priv enum HinterKind {
 }
 
 ///|
-/// Placeholder for the runtime autohinter instance.
-///
-/// The full implementation is tracked separately; this type is used to wire
-/// `Engine::Auto` through `HintingInstance` and `DrawSettings`.
 priv struct AutoHintInstance {
-  priv _private : Unit
+  styles : GlyphStyles
 }
 
 ///|
-fn AutoHintInstance::default() -> AutoHintInstance {
-  AutoHintInstance::{ _private: () }
+fn AutoHintInstance::new(
+  outlines : OutlineGlyphCollection,
+  styles : GlyphStyles?,
+) -> AutoHintInstance {
+  let resolved = match styles {
+    Some(s) => s
+    None => GlyphStyles::new(outlines)
+  }
+  AutoHintInstance::{ styles: resolved }
 }
 
 ///|
@@ -371,7 +374,8 @@ pub fn HintingInstance::reconfigure(
     Engine::Auto(_styles) =>
       match outlines.format() {
         None => ()
-        Some(_) => self.kind = HinterKind::Auto(AutoHintInstance::default())
+        Some(_) =>
+          self.kind = HinterKind::Auto(AutoHintInstance::new(outlines, _styles))
       }
     _ => ()
   }
@@ -620,31 +624,13 @@ fn HintingInstance::hinted_path(
 ) -> Result[(AdjustedMetrics, Array[PathElement]), DrawError] {
   match self.kind {
     HinterKind::None_ => Err(DrawError::NoSources)
-    HinterKind::Auto(_) => {
-      let settings = DrawSettings::unhinted(
+    HinterKind::Auto(a) =>
+      a.hinted_path(
+        glyph,
         self.size,
         @moon_skrifa.LocationRef::new(self.coords.op_as_view()),
-      ).with_path_style(path_style)
-      let metrics = match glyph.draw(settings, NullPen::new()) {
-        Err(e) => return Err(e)
-        Ok(m) => m
-      }
-      // Match upstream: when hinting is requested, advance width is rounded to
-      // integer pixels.
-      let metrics = AdjustedMetrics::{
-        has_overlaps: metrics.has_overlaps,
-        lsb: metrics.lsb,
-        advance_width: match metrics.advance_width {
-          None => None
-          Some(v) => Some(v.round())
-        },
-      }
-      let path = match glyph.path(settings) {
-        Err(e) => return Err(e)
-        Ok(p) => p
-      }
-      Ok((metrics, path))
-    }
+        path_style,
+      )
     HinterKind::Glyf(tt) => {
       if path_style is PathStyle::HarfBuzz {
         return Err(DrawError::HarfBuzzHintingUnsupported)
@@ -675,6 +661,53 @@ fn HintingInstance::hinted_path(
       self.hinted_glyf_path(glyph, is_pedantic)
     }
   }
+}
+
+///|
+fn AutoHintInstance::hinted_path(
+  self : AutoHintInstance,
+  glyph : OutlineGlyph,
+  size : @moon_skrifa.Size,
+  location : @moon_skrifa.LocationRef,
+  path_style : PathStyle,
+) -> Result[(AdjustedMetrics, Array[PathElement]), DrawError] {
+  // Extract unscaled outline geometry (used by the real autohinter).
+  // This is currently best-effort and will be refined as parity work lands.
+  let unscaled = DrawSettings::unhinted(@moon_skrifa.Size::unscaled(), location).with_path_style(
+    path_style,
+  )
+  let unscaled_path = match glyph.path(unscaled) {
+    Err(e) => return Err(e)
+    Ok(p) => p
+  }
+  let outline = AutoHintOutline::from_path(unscaled_path)
+  if outline.is_empty() {
+    return Ok((AdjustedMetrics::default(), Array::new()))
+  }
+  outline.stats() |> ignore
+  // Placeholder behavior: draw unhinted but round advances like upstream.
+  let settings = DrawSettings::unhinted(size, location).with_path_style(
+    path_style,
+  )
+  let metrics0 = match glyph.draw(settings, NullPen::new()) {
+    Err(e) => return Err(e)
+    Ok(m) => m
+  }
+  let metrics = AdjustedMetrics::{
+    has_overlaps: metrics0.has_overlaps,
+    lsb: metrics0.lsb,
+    advance_width: match metrics0.advance_width {
+      None => None
+      Some(v) => Some(v.round())
+    },
+  }
+  let path = match glyph.path(settings) {
+    Err(e) => return Err(e)
+    Ok(p) => p
+  }
+  // Use the extracted outline to avoid unused warnings until full autohint lands.
+  self.styles |> ignore
+  Ok((metrics, path))
 }
 
 ///|

@@ -18,14 +18,14 @@
 /// Ported from `read_fonts::tables::glyf::bytecode` usage in
 /// `fontations/skrifa/src/outline/glyf/hint/engine/dispatch.rs`
 /// (Apache-2.0 OR MIT).
-enum TtProgram {
+priv enum TtProgram {
   Font
   ControlValue
   Glyph
 }
 
 ///|
-struct TtInstruction {
+priv struct TtInstruction {
   pc : Int
   opcode : Int
   inline_operands : Array[Int]
@@ -37,7 +37,7 @@ fn TtInstruction::default() -> TtInstruction {
 }
 
 ///|
-struct TtDecoder {
+priv struct TtDecoder {
   code : BytesView
   mut pc : Int
 }
