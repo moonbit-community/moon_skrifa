@@ -236,6 +236,7 @@ pub struct HintingInstance {
 priv enum HinterKind {
   None_
   Glyf(TtHintInstance)
+  Cff(Bool)
   Auto(AutoHintInstance)
 }
 
@@ -351,6 +352,7 @@ pub fn HintingInstance::is_enabled(self : HintingInstance) -> Bool {
   match self.kind {
     HinterKind::None_ => false
     HinterKind::Glyf(tt) => tt.is_enabled()
+    HinterKind::Cff(_) => true
     HinterKind::Auto(_) => true
   }
 }
@@ -416,6 +418,8 @@ pub fn HintingInstance::reconfigure(
           }
           self.kind = HinterKind::Glyf(tt)
         }
+        Some(OutlineGlyphFormat::Cff) => self.kind = HinterKind::Cff(false)
+        Some(OutlineGlyphFormat::Cff2) => self.kind = HinterKind::Cff(true)
         _ => ()
       }
     Engine::Auto(_styles) =>
@@ -707,6 +711,26 @@ fn HintingInstance::hinted_path(
         return Ok((metrics, path))
       }
       self.hinted_glyf_path(glyph, is_pedantic)
+    }
+    HinterKind::Cff(is_cff2) => {
+      if path_style is PathStyle::HarfBuzz {
+        return Err(DrawError::HarfBuzzHintingUnsupported)
+      }
+      let location = @moon_skrifa.LocationRef::new(self.coords.op_as_view())
+      let path = if is_cff2 {
+        cff2_outline_path_hinted(
+          glyph.font,
+          glyph.glyph_id,
+          location.effective_coords(),
+          self.size,
+        )
+      } else {
+        cff_outline_path_hinted(glyph.font, glyph.glyph_id, self.size)
+      }
+      match path {
+        None => Err(DrawError::GlyphNotFound(glyph.glyph_id))
+        Some(p) => Ok((AdjustedMetrics::default(), p))
+      }
     }
   }
 }

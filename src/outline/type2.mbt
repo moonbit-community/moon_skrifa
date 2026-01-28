@@ -369,9 +369,6 @@ fn type2_ivs_region_scalar(
   region_index : Int,
   coords : ArrayView[@moon_skrifa.NormalizedCoord],
 ) -> Double {
-  if coords.is_empty() {
-    return 0.0
-  }
   if region_index < 0 || region_index >= ctx.region_count {
     return 0.0
   }
@@ -488,6 +485,7 @@ priv struct Type2Eval {
   global_subrs : Type2Index?
   local_subrs : Type2Index?
   blend_state : Type2BlendState?
+  mut cff_hinter : CffHintingSink?
   out : Array[PathElement]
   mut is_open : Bool
   mut have_read_width : Bool
@@ -508,6 +506,7 @@ fn Type2Eval::new(
     global_subrs,
     local_subrs,
     blend_state,
+    cff_hinter: None,
     out: Array::new(),
     is_open: false,
     have_read_width: false,
@@ -603,8 +602,62 @@ fn Type2Eval::apply_blend(self : Type2Eval) -> Bool {
 ///|
 fn Type2Eval::close_path(self : Type2Eval) -> Unit {
   if self.is_open {
-    self.out.push(Close)
+    match self.cff_hinter {
+      None => self.out.push(Close)
+      Some(h) => CffHintingSink::close(h)
+    }
     self.is_open = false
+  }
+}
+
+///|
+fn Type2Eval::emit_move_to(self : Type2Eval) -> Unit {
+  match self.cff_hinter {
+    None => self.out.push(MoveTo(self.x, self.y))
+    Some(h) =>
+      CffHintingSink::move_to(
+        h,
+        CffFixed::from_f64(self.x),
+        CffFixed::from_f64(self.y),
+      )
+  }
+}
+
+///|
+fn Type2Eval::emit_line_to(self : Type2Eval) -> Unit {
+  match self.cff_hinter {
+    None => self.out.push(LineTo(self.x, self.y))
+    Some(h) =>
+      CffHintingSink::line_to(
+        h,
+        CffFixed::from_f64(self.x),
+        CffFixed::from_f64(self.y),
+      )
+  }
+}
+
+///|
+fn Type2Eval::emit_curve_to(
+  self : Type2Eval,
+  cx0 : Double,
+  cy0 : Double,
+  cx1 : Double,
+  cy1 : Double,
+  x : Double,
+  y : Double,
+) -> Unit {
+  match self.cff_hinter {
+    None => self.out.push(CurveTo(cx0, cy0, cx1, cy1, x, y))
+    Some(h) =>
+      CffHintingSink::curve_to(
+        h,
+        CffFixed::from_f64(cx0),
+        CffFixed::from_f64(cy0),
+        CffFixed::from_f64(cx1),
+        CffFixed::from_f64(cy1),
+        CffFixed::from_f64(x),
+        CffFixed::from_f64(y),
+      )
   }
 }
 
@@ -694,7 +747,7 @@ fn Type2Eval::emit_curves(
     }
     self.stack_ix = self.stack_ix + used
     if count == 2 {
-      self.out.push(CurveTo(cx0, cy0, cx1, cy1, self.x, self.y))
+      Type2Eval::emit_curve_to(self, cx0, cy0, cx1, cy1, self.x, self.y)
       count = 0
     } else if count == 0 {
       cx0 = self.x
@@ -763,9 +816,15 @@ fn Type2Eval::eval(self : Type2Eval, data : BytesView, depth : Int) -> Bool {
       }
     }
   }
-  // Some CFF/CFF2 charstrings may terminate without an explicit endchar.
-  // Upstream closes any pending subpath in this case.
-  Type2Eval::close_path(self)
+  if depth == 0 {
+    // Some CFF/CFF2 charstrings may terminate without an explicit endchar.
+    // Upstream closes any pending subpath in this case.
+    Type2Eval::close_path(self)
+    match self.cff_hinter {
+      None => ()
+      Some(h) => CffHintingSink::finish(h)
+    }
+  }
   true
 }
 
@@ -801,6 +860,25 @@ fn Type2Eval::eval_operator(
         i = 1
       }
       let len = self.stack.length() - i
+      let is_horizontal = op == 1 || op == 18
+      match self.cff_hinter {
+        None => ()
+        Some(h) => {
+          let mut u = CffFixed::zero()
+          let mut j = i
+          while j < self.stack.length() {
+            let a0 = CffFixed::from_f64(self.stack.at(j))
+            let w = CffFixed::from_f64(self.stack.at(j + 1))
+            u = u.add(a0)
+            let v = u.wrapping_add(w)
+            if is_horizontal {
+              CffHintingSink::hstem(h, u, v)
+            }
+            u = v
+            j = j + 2
+          }
+        }
+      }
       self.stem_count = self.stem_count + len / 2
       self.reset_stack()
       Some((true, new_pos))
@@ -813,10 +891,37 @@ fn Type2Eval::eval_operator(
         i = 1
       }
       let len = self.stack.length() - i
+      // Implied VSTEMHM operators. We only track HSTEMs for Y hinting, but we
+      // still need to consume operands and update stem_count.
+      match self.cff_hinter {
+        None => ()
+        Some(_) => {
+          let mut u = CffFixed::zero()
+          let mut j = i
+          while j < self.stack.length() {
+            let a0 = CffFixed::from_f64(self.stack.at(j))
+            let w = CffFixed::from_f64(self.stack.at(j + 1))
+            u = u.add(a0)
+            let v = u.wrapping_add(w)
+            u = v
+            j = j + 2
+          }
+        }
+      }
       self.stem_count = self.stem_count + len / 2
       let mask_bytes = (self.stem_count + 7) / 8
       if new_pos + mask_bytes > data.length() {
         return None
+      }
+      let mask = data.sub(start=new_pos, end=new_pos + mask_bytes)
+      match self.cff_hinter {
+        None => ()
+        Some(h) =>
+          if op == 19 {
+            CffHintingSink::hint_mask(h, mask)
+          } else {
+            CffHintingSink::counter_mask(h, mask)
+          }
       }
       new_pos = new_pos + mask_bytes
       self.reset_stack()
@@ -835,7 +940,7 @@ fn Type2Eval::eval_operator(
       let dy = self.stack.at(i + 1)
       self.x = self.x + dx
       self.y = self.y + dy
-      self.out.push(MoveTo(self.x, self.y))
+      Type2Eval::emit_move_to(self)
       self.reset_stack()
       Some((true, new_pos))
     }
@@ -854,7 +959,7 @@ fn Type2Eval::eval_operator(
       } else {
         self.y = self.y + delta
       }
-      self.out.push(MoveTo(self.x, self.y))
+      Type2Eval::emit_move_to(self)
       self.reset_stack()
       Some((true, new_pos))
     }
@@ -866,7 +971,7 @@ fn Type2Eval::eval_operator(
         let dy = self.stack.at(i + 1)
         self.x = self.x + dx
         self.y = self.y + dy
-        self.out.push(LineTo(self.x, self.y))
+        Type2Eval::emit_line_to(self)
         i = i + 2
       }
       self.reset_stack()
@@ -883,7 +988,7 @@ fn Type2Eval::eval_operator(
           self.y = self.y + delta
         }
         is_x = !is_x
-        self.out.push(LineTo(self.x, self.y))
+        Type2Eval::emit_line_to(self)
       }
       self.reset_stack()
       Some((true, new_pos))
@@ -948,7 +1053,7 @@ fn Type2Eval::eval_operator(
         let dy = self.stack.at(self.stack_ix + 1)
         self.x = self.x + dx
         self.y = self.y + dy
-        self.out.push(LineTo(self.x, self.y))
+        Type2Eval::emit_line_to(self)
       }
       self.reset_stack()
       Some((true, new_pos))
@@ -960,7 +1065,7 @@ fn Type2Eval::eval_operator(
         let dy = self.stack.at(self.stack_ix + 1)
         self.x = self.x + dx
         self.y = self.y + dy
-        self.out.push(LineTo(self.x, self.y))
+        Type2Eval::emit_line_to(self)
         self.stack_ix = self.stack_ix + 2
       }
       let modes = Array::from_fixed_array([DxDy, DxDy, DxDy])
@@ -1063,6 +1168,23 @@ fn type2_path(
   blend_state : Type2BlendState?,
 ) -> Array[PathElement]? {
   let eval = Type2Eval::new(global_subrs, local_subrs, blend_state)
+  if Type2Eval::eval(eval, charstring, 0) {
+    Some(eval.out)
+  } else {
+    None
+  }
+}
+
+///|
+fn type2_path_hinted(
+  charstring : BytesView,
+  global_subrs : Type2Index?,
+  local_subrs : Type2Index?,
+  blend_state : Type2BlendState?,
+  hint_state : HintState,
+) -> Array[PathElement]? {
+  let eval = Type2Eval::new(global_subrs, local_subrs, blend_state)
+  eval.cff_hinter = Some(CffHintingSink::new(hint_state, eval.out))
   if Type2Eval::eval(eval, charstring, 0) {
     Some(eval.out)
   } else {
