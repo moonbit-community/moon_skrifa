@@ -242,6 +242,40 @@ priv enum HinterKind {
 ///|
 priv struct AutoHintInstance {
   styles : GlyphStyles
+  is_fixed_width : Bool
+  font_style : @moon_skrifa.Style
+}
+
+///|
+const AUTOHINT_TAG_POST : UInt = 0x706F7374 // "post"
+
+///|
+fn autohint_read_u32_be(view : BytesView, offset : Int) -> UInt? {
+  if offset < 0 || offset + 4 > view.length() {
+    None
+  } else {
+    let b0 = view.at(offset).to_uint()
+    let b1 = view.at(offset + 1).to_uint()
+    let b2 = view.at(offset + 2).to_uint()
+    let b3 = view.at(offset + 3).to_uint()
+    Some((b0 << 24) | (b1 << 16) | (b2 << 8) | b3)
+  }
+}
+
+///|
+fn autohint_is_fixed_width(font : @moon_skrifa.FontRef) -> Bool {
+  match font.table(AUTOHINT_TAG_POST) {
+    None => false
+    Some(post) =>
+      if post.length() < 16 {
+        false
+      } else {
+        match autohint_read_u32_be(post, 12) {
+          None => false
+          Some(v) => v.reinterpret_as_int() != 0
+        }
+      }
+  }
 }
 
 ///|
@@ -253,7 +287,20 @@ fn AutoHintInstance::new(
     Some(s) => s
     None => GlyphStyles::new(outlines)
   }
-  AutoHintInstance::{ styles: resolved }
+  let attrs = outlines.font.attributes()
+  AutoHintInstance::{
+    styles: resolved,
+    is_fixed_width: autohint_is_fixed_width(outlines.font),
+    font_style: attrs.style(),
+  }
+}
+
+///|
+priv struct AutoHintEdgeMetrics {
+  left_opos : Int
+  left_pos : Int
+  right_opos : Int
+  right_pos : Int
 }
 
 ///|
@@ -673,31 +720,6 @@ fn AutoHintInstance::hinted_path(
   path_style : PathStyle,
   target : Target,
 ) -> Result[(AdjustedMetrics, Array[PathElement]), DrawError] {
-  // We currently only support autohinting using the quadratic ("FreeType")
-  // path style. If the caller asks for HarfBuzz-style contours, fall back
-  // to the unhinted outline.
-  if path_style is PathStyle::HarfBuzz {
-    let settings = DrawSettings::unhinted(size, location).with_path_style(
-      path_style,
-    )
-    let metrics0 = match glyph.draw(settings, NullPen::new()) {
-      Err(e) => return Err(e)
-      Ok(m) => m
-    }
-    let metrics = AdjustedMetrics::{
-      has_overlaps: metrics0.has_overlaps,
-      lsb: metrics0.lsb,
-      advance_width: match metrics0.advance_width {
-        None => None
-        Some(v) => Some(v.round())
-      },
-    }
-    let path = match glyph.path(settings) {
-      Err(e) => return Err(e)
-      Ok(p) => p
-    }
-    return Ok((metrics, path))
-  }
   let ppem = match size.ppem() {
     None => {
       // Unscaled size: return unhinted path.
@@ -756,7 +778,7 @@ fn AutoHintInstance::hinted_path(
   let scale0 = AutoHintScale::new(
     ppem,
     upem,
-    @moon_skrifa.Style::Normal,
+    self.font_style,
     target,
     unscaled_metrics.group,
   )
@@ -765,74 +787,162 @@ fn AutoHintInstance::hinted_path(
   outline.scale(scale.x_scale, scale.y_scale, scale.x_delta, scale.y_delta)
   let axis = AutoHintAxis::default()
   let y_axis_scale = scaled_metrics.axes.at(AUTOHINT_DIM_VERTICAL).scale
-  for dim in 0..<2 {
-    if dim == AUTOHINT_DIM_HORIZONTAL &&
-      (scale.flags & AUTOHINT_SCALE_NO_HORIZONTAL) != 0 {
-      continue
+  let mut hinted_x_scale = scale.x_scale
+  let mut edge_metrics : AutoHintEdgeMetrics? = None
+  let missing_blues = unscaled_metrics.group is AutoHintScriptGroup::Default &&
+    scaled_metrics.axes.at(AUTOHINT_DIM_VERTICAL).blues.is_empty()
+  if !missing_blues {
+    for dim in 0..<2 {
+      if dim == AUTOHINT_DIM_HORIZONTAL &&
+        (scale.flags & AUTOHINT_SCALE_NO_HORIZONTAL) != 0 {
+        continue
+      }
+      if dim == AUTOHINT_DIM_VERTICAL &&
+        (scale.flags & AUTOHINT_SCALE_NO_VERTICAL) != 0 {
+        continue
+      }
+      let axis_metrics = scaled_metrics.axes.at(dim)
+      axis.reset(dim, outline.orientation)
+      let ok = autohint_compute_segments(outline, axis, unscaled_metrics.group)
+      if !ok {
+        continue
+      }
+      let axis_scale = axis_metrics.scale
+      autohint_link_segments(
+        outline,
+        axis,
+        axis_scale,
+        unscaled_metrics.group,
+        unscaled_metrics.axes.at(dim).max_width(),
+      )
+      autohint_compute_edges(
+        axis,
+        axis_metrics.width_metrics.edge_distance_threshold,
+        unscaled_metrics.hint_top_to_bottom,
+        y_axis_scale,
+        axis_scale,
+        unscaled_metrics.group,
+      )
+      if dim == AUTOHINT_DIM_VERTICAL {
+        if !(unscaled_metrics.group is AutoHintScriptGroup::Default) ||
+          !self.styles._is_non_base(glyph.glyph_id) {
+          autohint_compute_blue_edges(
+            axis,
+            scale,
+            unscaled_metrics.axes.at(dim).blues,
+            axis_metrics.blues,
+            unscaled_metrics.group,
+          )
+        }
+      }
+      autohint_hint_edges(
+        axis,
+        axis_metrics,
+        unscaled_metrics.group,
+        scale,
+        unscaled_metrics.hint_top_to_bottom,
+      )
+      if dim == AUTOHINT_DIM_HORIZONTAL && axis.edges.length() > 1 {
+        hinted_x_scale = axis_metrics.scale
+        let left = axis.edges.at(0)
+        let right = axis.edges.at(axis.edges.length() - 1)
+        edge_metrics = Some(AutoHintEdgeMetrics::{
+          left_opos: left.opos,
+          left_pos: left.pos,
+          right_opos: right.opos,
+          right_pos: right.pos,
+        })
+      }
+      autohint_align_edge_points(
+        outline,
+        axis,
+        unscaled_metrics.group,
+        scale.flags,
+      )
+      autohint_align_strong_points(outline, axis)
+      autohint_align_weak_points(outline, dim)
     }
-    if dim == AUTOHINT_DIM_VERTICAL &&
-      (scale.flags & AUTOHINT_SCALE_NO_VERTICAL) != 0 {
-      continue
-    }
-    let axis_metrics = scaled_metrics.axes.at(dim)
-    axis.reset(dim, outline.orientation)
-    let ok = autohint_compute_segments(outline, axis, unscaled_metrics.group)
-    if !ok {
-      continue
-    }
-    let axis_scale = axis_metrics.scale
-    autohint_link_segments(
-      outline,
-      axis,
-      axis_scale,
-      unscaled_metrics.group,
-      unscaled_metrics.axes.at(dim).max_width(),
-    )
-    autohint_compute_edges(
-      axis,
-      axis_metrics.width_metrics.edge_distance_threshold,
-      unscaled_metrics.hint_top_to_bottom,
-      y_axis_scale,
-      axis_scale,
-      unscaled_metrics.group,
-    )
-    autohint_compute_blue_edges(
-      axis,
-      scale,
-      unscaled_metrics.axes.at(dim).blues,
-      axis_metrics.blues,
-      unscaled_metrics.group,
-    )
-    autohint_hint_edges(
-      axis,
-      axis_metrics,
-      unscaled_metrics.group,
-      scale,
-      unscaled_metrics.hint_top_to_bottom,
-    )
-    autohint_align_edge_points(
-      outline,
-      axis,
-      unscaled_metrics.group,
-      scale.flags,
-    )
-    autohint_align_strong_points(outline, axis)
-    autohint_align_weak_points(outline, dim)
   }
-  let settings = DrawSettings::unhinted(size, location).with_path_style(
-    path_style,
-  )
-  let metrics0 = match glyph.draw(settings, NullPen::new()) {
-    Err(e) => return Err(e)
-    Ok(m) => m
+  // Adjust advances and origin for better pixel alignment.
+  let gm = glyph.font.glyph_metrics(@moon_skrifa.Size::unscaled(), location)
+  let h_advance0 = gm.advance_width(glyph.glyph_id).unwrap_or(0.0)
+  let h_advance = h_advance0.round().to_int()
+  let mut digit_advance : Int? = None
+  let mut digits_have_same_width = true
+  for d in 0x30..<0x3A {
+    match glyph.font.charmap().map(d |> Int::reinterpret_as_uint) {
+      None => ()
+      Some(gid) =>
+        match gm.advance_width(gid) {
+          None => ()
+          Some(adv) => {
+            let aw = adv.round().to_int()
+            match digit_advance {
+              None => digit_advance = Some(aw)
+              Some(prev) => if prev != aw { digits_have_same_width = false }
+            }
+          }
+        }
+    }
+    if !digits_have_same_width {
+      break
+    }
+  }
+  let mut pp1x = 0
+  let mut pp2x = autohint_fixed_mul(h_advance, hinted_x_scale)
+  let is_light = target.is_light() || target.preserve_linear_metrics()
+  if !is_light {
+    match (edge_metrics, (scale.flags & AUTOHINT_SCALE_NO_ADVANCE) == 0) {
+      (Some(em), true) => {
+        let old_rsb = pp2x - em.right_opos
+        let old_lsb = em.left_opos
+        let new_lsb = em.left_pos
+        let mut pp1x_uh = new_lsb - old_lsb
+        let mut pp2x_uh = em.right_pos + old_rsb
+        if old_lsb < 24 {
+          pp1x_uh = pp1x_uh - 8
+        }
+        if old_rsb < 24 {
+          pp2x_uh = pp2x_uh + 8
+        }
+        pp1x = autohint_pix_round(pp1x_uh)
+        pp2x = autohint_pix_round(pp2x_uh)
+        if pp1x >= new_lsb && old_lsb > 0 {
+          pp1x = pp1x - 64
+        }
+        if pp2x <= em.right_pos && old_rsb > 0 {
+          pp2x = pp2x + 64
+        }
+      }
+      _ => {
+        pp1x = autohint_pix_round(pp1x)
+        pp2x = autohint_pix_round(pp2x)
+      }
+    }
+  } else {
+    pp1x = autohint_pix_round(pp1x)
+    pp2x = autohint_pix_round(pp2x)
+  }
+  if pp1x != 0 {
+    for i in 0..<outline.points.length() {
+      outline.points.at(i).x = outline.points.at(i).x - pp1x
+    }
+  }
+  let advance = if !is_light &&
+    (
+      self.is_fixed_width ||
+      (digits_have_same_width && self.styles.is_digit(glyph.glyph_id))
+    ) {
+    autohint_fixed_mul(h_advance, scale.x_scale)
+  } else if h_advance != 0 {
+    pp2x - pp1x
+  } else {
+    0
   }
   let metrics = AdjustedMetrics::{
-    has_overlaps: metrics0.has_overlaps,
-    lsb: metrics0.lsb,
-    advance_width: match metrics0.advance_width {
-      None => None
-      Some(v) => Some(v.round())
-    },
+    has_overlaps: glyph.has_overlaps().unwrap_or(false),
+    lsb: None,
+    advance_width: Some(autohint_pix_round(advance).to_double() / 64.0),
   }
   Ok((metrics, autohint_outline_to_path(outline, path_style)))
 }

@@ -322,3 +322,16 @@ pub fn GlyphStyles::is_digit(
     self.map.styles.at(gi).is_digit()
   }
 }
+
+///|
+fn GlyphStyles::_is_non_base(
+  self : GlyphStyles,
+  gid : @moon_skrifa.GlyphId,
+) -> Bool {
+  let gi = gid.to_uint64().to_int()
+  if gi < 0 || gi >= self.map.styles.length() {
+    false
+  } else {
+    self.map.styles.at(gi).is_non_base()
+  }
+}
