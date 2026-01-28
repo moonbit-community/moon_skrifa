@@ -426,21 +426,11 @@ priv struct Tt2Component {
   xy16 : Int
   yy16 : Int
   have_xform : Bool
-  // 2.14 as float for hypot-guess scaling.
-  xx : Double
-  yx : Double
-  xy : Double
-  yy : Double
 }
 
 ///|
 fn tt2_read_f2dot14_bits(view : BytesView, offset : Int) -> Int? {
   tt2_read_i16_be(view, offset)
-}
-
-///|
-fn tt2_f2dot14_to_double(bits : Int) -> Double {
-  bits.to_double() / 16384.0
 }
 
 ///|
@@ -461,6 +451,27 @@ fn tt2_apply_xform_point(p : TtPoint, comp : Tt2Component) -> TtPoint {
 }
 
 ///|
+fn tt2_abs_i32(v : Int) -> Int {
+  if v < 0 {
+    -v
+  } else {
+    v
+  }
+}
+
+///|
+/// FreeType's guess for hypot(a, b) where inputs are 16.16 fixed values.
+fn tt2_hypot_guess_16_16(a : Int, b : Int) -> Int {
+  let aa = tt2_abs_i32(a)
+  let bb = tt2_abs_i32(b)
+  if aa > bb {
+    (aa.to_int64() + (((3).to_int64() * bb.to_int64()) >> 3)).to_int()
+  } else {
+    (bb.to_int64() + (((3).to_int64() * aa.to_int64()) >> 3)).to_int()
+  }
+}
+
+///|
 fn tt2_component_offset_bits(
   comp : Tt2Component,
   scale_bits : Int,
@@ -468,13 +479,12 @@ fn tt2_component_offset_bits(
   delta_x : Int,
   delta_y : Int,
 ) -> (Int, Int) {
-  // Default: no deltas.
-  let mut dx = 0.0
-  let mut dy = 0.0
+  let mut dx = 0
+  let mut dy = 0
   match comp.anchor {
     Tt2Anchor::Offset(x, y) => {
-      dx = x.to_double()
-      dy = y.to_double()
+      dx = x
+      dy = y
     }
     _ => ()
   }
@@ -485,15 +495,17 @@ fn tt2_component_offset_bits(
     ) ==
     COMPOSITE_SCALED_COMPONENT_OFFSET {
     // FreeType's guess-based scaling for composite offsets.
-    dx = dx * glyf_hypot_guess(comp.xx, comp.xy)
-    dy = dy * glyf_hypot_guess(comp.yy, comp.yx)
+    //
+    // Match fontations-reference: x = Fixed::from_bits(x) * hypot(xx, xy).
+    dx = tt_hint_mul_16_16(dx, tt2_hypot_guess_16_16(comp.xx16, comp.xy16))
+    dy = tt_hint_mul_16_16(dy, tt2_hypot_guess_16_16(comp.yy16, comp.yx16))
   }
   // For composite gvar deltas, FreeType/fontations round off fractional parts
   // and apply them in font units.
-  dx = dx + delta_x.to_double()
-  dy = dy + delta_y.to_double()
-  let dx_bits = tt2_scale_funits_to_26_6(dx.to_int(), scale_bits)
-  let mut dy_bits = tt2_scale_funits_to_26_6(dy.to_int(), scale_bits)
+  dx = dx + delta_x
+  dy = dy + delta_y
+  let dx_bits = tt2_scale_funits_to_26_6(dx, scale_bits)
+  let mut dy_bits = tt2_scale_funits_to_26_6(dy, scale_bits)
   if is_hinted && (comp.flags & COMPOSITE_ROUND_XY_TO_GRID) != 0 {
     // Only round the y-coordinate, per FreeType.
     dy_bits = tt2_round_grid_26_6(dy_bits)
@@ -761,10 +773,6 @@ fn tt2_load_glyph_zone_for_hinting_impl(
         xy16: tt2_f2dot14_to_16_16(xy14),
         yy16: tt2_f2dot14_to_16_16(yy14),
         have_xform,
-        xx: tt2_f2dot14_to_double(xx14),
-        yx: tt2_f2dot14_to_double(yx14),
-        xy: tt2_f2dot14_to_double(xy14),
-        yy: tt2_f2dot14_to_double(yy14),
       })
       if (flags_last & COMPOSITE_MORE_COMPONENTS) == 0 {
         break
