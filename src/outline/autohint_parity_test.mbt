@@ -29,7 +29,6 @@ fn autohint_parity_font_notoserifhebrew_autohint_metrics_b64() -> String {
 }
 
 ///|
-#skip
 test "autohint: notoserif_autohint_shaping gid=1 size=16 ft" {
   let font = golden_font(autohint_parity_font_notoserif_autohint_shaping_b64())
   let outlines0 = OutlineGlyphCollection::from_font(font)
@@ -53,7 +52,6 @@ test "autohint: notoserif_autohint_shaping gid=1 size=16 ft" {
 }
 
 ///|
-#skip
 test "autohint: notoserifhebrew_autohint_metrics gid=1 size=16 ft" {
   let font = golden_font(
     autohint_parity_font_notoserifhebrew_autohint_metrics_b64(),

@@ -19,44 +19,6 @@
 /// (Apache-2.0 OR MIT).
 
 ///|
-priv struct AutoHintWidthMetrics {
-  is_extra_light : Bool
-}
-
-///|
-priv struct AutoHintScaledWidth {
-  scaled : Int
-}
-
-///|
-priv struct AutoHintScaledAxisMetrics {
-  dim : Int
-  widths : Array[AutoHintScaledWidth]
-  width_metrics : AutoHintWidthMetrics
-}
-
-///|
-fn autohint_pix_round(a : Int) -> Int {
-  (a + 32) & -64
-}
-
-///|
-fn autohint_fixed_mul_div(a : Int, b : Int, c : Int) -> Int {
-  if c == 0 {
-    0
-  } else {
-    let prod = a.to_int64() * b.to_int64()
-    let denom = c.to_int64()
-    let half = denom.abs() / 2
-    if prod >= 0 {
-      ((prod + half) / denom).to_int()
-    } else {
-      ((prod - half) / denom).to_int()
-    }
-  }
-}
-
-///|
 fn autohint_snap_width(widths : Array[AutoHintScaledWidth], width : Int) -> Int {
   let mut best_dist = 64 + 32 + 2
   let mut ref_width = width
@@ -604,6 +566,91 @@ fn autohint_align_remaining_edges(
 }
 
 ///|
+fn autohint_align_edges_to_blues(
+  axis : AutoHintAxis,
+  metrics : AutoHintScaledAxisMetrics,
+  group : AutoHintScriptGroup,
+  scale : AutoHintScale,
+) -> Int? {
+  let mut anchor_ix : Int? = None
+  if group is AutoHintScriptGroup::Default && axis.dim != AUTOHINT_DIM_VERTICAL {
+    return anchor_ix
+  }
+  for edge_ix in 0..<axis.edges.length() {
+    let edge = axis.edges.at(edge_ix)
+    if (edge.flags & AUTOHINT_FLAG_DONE) != 0 {
+      continue
+    }
+    let edge2_ix = match edge.link_ix {
+      None => None
+      Some(ix) => Some(ix)
+    }
+    // If we have two neutral zones, skip one of them.
+    match (edge.blue_edge, edge2_ix) {
+      (Some(_), Some(ix2)) => {
+        let edge2 = axis.edges.at(ix2)
+        match edge2.blue_edge {
+          None => ()
+          Some(_) => {
+            let skip_ix = if (edge2.flags & AUTOHINT_FLAG_NEUTRAL) != 0 {
+              Some(ix2)
+            } else if (edge.flags & AUTOHINT_FLAG_NEUTRAL) != 0 {
+              Some(edge_ix)
+            } else {
+              None
+            }
+            match skip_ix {
+              None => ()
+              Some(skip_ix) => {
+                axis.edges.at(skip_ix).blue_edge = None
+                axis.edges.at(skip_ix).flags = axis.edges.at(skip_ix).flags &
+                  (-1 - AUTOHINT_FLAG_NEUTRAL)
+              }
+            }
+          }
+        }
+      }
+      _ => ()
+    }
+    let blue0 = axis.edges.at(edge_ix).blue_edge
+    let (blue, edge1_ix, edge2_ix2) = match (blue0, edge2_ix) {
+      (Some(b), _) => (b, Some(edge_ix), edge2_ix)
+      (None, Some(ix2)) => {
+        let b2 = axis.edges.at(ix2).blue_edge
+        match b2 {
+          None => (AutoHintScaledWidth::default(), None, None)
+          Some(bb) => (bb, Some(ix2), Some(edge_ix))
+        }
+      }
+      _ => (AutoHintScaledWidth::default(), None, None)
+    }
+    match edge1_ix {
+      None => continue
+      Some(edge1_ix) => {
+        axis.edges.at(edge1_ix).pos = blue.fitted
+        axis.edges.at(edge1_ix).flags = axis.edges.at(edge1_ix).flags |
+          AUTOHINT_FLAG_DONE
+        match edge2_ix2 {
+          None => ()
+          Some(edge2_ix) =>
+            if axis.edges.at(edge2_ix).blue_edge is None {
+              axis.edges.at(edge2_ix).flags = axis.edges.at(edge2_ix).flags |
+                AUTOHINT_FLAG_DONE
+              autohint_align_linked_edge(
+                axis, metrics, group, scale, edge1_ix, edge2_ix,
+              )
+            }
+        }
+        if anchor_ix is None {
+          anchor_ix = Some(edge_ix)
+        }
+      }
+    }
+  }
+  anchor_ix
+}
+
+///|
 fn autohint_hint_edges(
   axis : AutoHintAxis,
   metrics : AutoHintScaledAxisMetrics,
@@ -615,15 +662,9 @@ fn autohint_hint_edges(
   if axis.dim != AUTOHINT_DIM_VERTICAL {
     top_to_bottom_hinting = false
   }
-  // Blue alignment is handled upstream before stem fitting; this port does not
-  // yet compute blue zones, so we begin with stem fitting immediately.
+  let anchor_ix = autohint_align_edges_to_blues(axis, metrics, group, scale)
   let (serif_count, anchor_ix) = autohint_align_stem_edges(
-    axis,
-    metrics,
-    group,
-    scale,
-    top_to_bottom_hinting,
-    None,
+    axis, metrics, group, scale, top_to_bottom_hinting, anchor_ix,
   )
   if axis.dim == AUTOHINT_DIM_HORIZONTAL &&
     (axis.edges.length() == 6 || axis.edges.length() == 12) {

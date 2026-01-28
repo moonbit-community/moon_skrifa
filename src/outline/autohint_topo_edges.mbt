@@ -43,6 +43,7 @@ priv struct AutoHintEdge {
   mut pos : Int
   mut flags : Int
   mut dir : AutoHintDirection
+  mut blue_edge : AutoHintScaledWidth?
   mut link_ix : Int?
   mut serif_ix : Int?
   mut scale : Int
@@ -58,11 +59,97 @@ fn AutoHintEdge::default() -> AutoHintEdge {
     pos: 0,
     flags: AUTOHINT_FLAG_NORMAL,
     dir: AutoHintDirection::None_,
+    blue_edge: None,
     link_ix: None,
     serif_ix: None,
     scale: 0,
     first_ix: 0,
     last_ix: 0,
+  }
+}
+
+///|
+fn autohint_compute_blue_edges(
+  axis : AutoHintAxis,
+  scale : AutoHintScale,
+  unscaled_blues : Array[AutoHintUnscaledBlue],
+  blues : Array[AutoHintScaledBlue],
+  group : AutoHintScriptGroup,
+) -> Unit {
+  if group is AutoHintScriptGroup::Default && axis.dim != AUTOHINT_DIM_VERTICAL {
+    return
+  }
+  let axis_scale = if axis.dim == AUTOHINT_DIM_HORIZONTAL {
+    scale.x_scale
+  } else {
+    scale.y_scale
+  }
+  let initial_best_dist = autohint_fixed_mul(
+    (scale.units_per_em / 40).max(0),
+    axis_scale,
+  ).min(64 / 2)
+  for edge_ix in 0..<axis.edges.length() {
+    let edge = axis.edges.at(edge_ix)
+    let mut best_blue : AutoHintScaledWidth? = None
+    let mut best_is_neutral = false
+    let mut best_dist = initial_best_dist
+    let limit = unscaled_blues.length().min(blues.length())
+    for i in 0..<limit {
+      let unscaled_blue = unscaled_blues.at(i)
+      let blue = blues.at(i)
+      if !blue.is_active {
+        continue
+      }
+      let is_top = autohint_blue_is_top_like(blue.zones)
+      let is_neutral = autohint_blue_is_neutral(blue.zones)
+      let is_major_dir = edge.dir == axis.major_dir
+      if is_top != is_major_dir || is_neutral {
+        let (ref_pos, matching) = if group is AutoHintScriptGroup::Default {
+          (unscaled_blue.position, blue.position)
+        } else {
+          // CJK: pick closer of position/overshoot.
+          let dpos = (edge.fpos - unscaled_blue.position).abs()
+          let dsho = (edge.fpos - unscaled_blue.overshoot).abs()
+          if dpos > dsho {
+            (unscaled_blue.overshoot, blue.overshoot)
+          } else {
+            (unscaled_blue.position, blue.position)
+          }
+        }
+        let dist = autohint_fixed_mul((edge.fpos - ref_pos).abs(), axis_scale)
+        if dist < best_dist {
+          best_dist = dist
+          best_blue = Some(matching)
+          best_is_neutral = is_neutral
+        }
+        if group is AutoHintScriptGroup::Default &&
+          (edge.flags & AUTOHINT_FLAG_ROUND) != 0 &&
+          dist != 0 &&
+          !is_neutral {
+          let is_under_ref = edge.fpos < unscaled_blue.position
+          if is_top != is_under_ref {
+            let dist2 = autohint_fixed_mul(
+              (edge.fpos - unscaled_blue.overshoot).abs(),
+              axis_scale,
+            )
+            if dist2 < best_dist {
+              best_dist = dist2
+              best_blue = Some(blue.overshoot)
+              best_is_neutral = is_neutral
+            }
+          }
+        }
+      }
+    }
+    match best_blue {
+      None => ()
+      Some(b) => {
+        edge.blue_edge = Some(b)
+        if best_is_neutral {
+          edge.flags = edge.flags | AUTOHINT_FLAG_NEUTRAL
+        }
+      }
+    }
   }
 }
 

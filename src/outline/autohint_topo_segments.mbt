@@ -31,18 +31,35 @@ fn autohint_derived_constant(units_per_em : Int, value : Int) -> Int {
 
 ///|
 fn autohint_fixed_div(a : Int, b : Int) -> Int {
-  if b == 0 {
-    0
+  let mut sign = 1
+  let mut aa = a.to_int64()
+  let mut bb = b.to_int64()
+  if aa < 0 {
+    aa = -aa
+    sign = -sign
+  }
+  if bb < 0 {
+    bb = -bb
+    sign = -sign
+  }
+  let q : Int64 = if bb == 0 {
+    (0x7FFFFFFF).to_int64()
   } else {
-    let a64 = a.to_int64() << 16
-    (a64 / b.to_int64()).to_int()
+    ((aa << 16) + (bb >> 1)) / bb
+  }
+  let out = q.to_int()
+  if sign < 0 {
+    -out
+  } else {
+    out
   }
 }
 
 ///|
 fn autohint_fixed_mul(a : Int, b : Int) -> Int {
   let prod = a.to_int64() * b.to_int64()
-  (prod >> 16).to_int()
+  let round : Int64 = (0x8000 - (if prod < 0 { 1 } else { 0 })).to_int64()
+  ((prod + round) >> 16).to_int()
 }
 
 // Bounds for score, position and coordinate values.

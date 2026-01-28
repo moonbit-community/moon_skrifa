@@ -746,25 +746,25 @@ fn AutoHintInstance::hinted_path(
     return Ok((AdjustedMetrics::default(), Array::new()))
   }
   let upem = outline_units_per_em(glyph.font).to_int()
-  let group = match self.styles.style_index(glyph.glyph_id) {
-    Some(style_ix) =>
-      if style_ix == AUTOHINT_STYLE_HANI {
-        AutoHintScriptGroup::Cjk
-      } else {
-        AutoHintScriptGroup::Default
-      }
-    None => AutoHintScriptGroup::Default
-  }
-  let scale = AutoHintScale::new(
+  let style_ix = self.styles
+    .style_index(glyph.glyph_id)
+    .unwrap_or(AUTOHINT_STYLE_LATN)
+  let metrics_outlines = OutlineGlyphCollection::from_font(glyph.font)
+  let unscaled_metrics = autohint_compute_unscaled_style_metrics(
+    metrics_outlines, style_ix, upem,
+  )
+  let scale0 = AutoHintScale::new(
     ppem,
     upem,
     @moon_skrifa.Style::Normal,
     target,
-    group,
+    unscaled_metrics.group,
   )
+  let scaled_metrics = autohint_scale_style_metrics(unscaled_metrics, scale0)
+  let scale = scaled_metrics.scale
   outline.scale(scale.x_scale, scale.y_scale, scale.x_delta, scale.y_delta)
   let axis = AutoHintAxis::default()
-  let standard_width = autohint_derived_constant(upem, 50).max(1)
+  let y_axis_scale = scaled_metrics.axes.at(AUTOHINT_DIM_VERTICAL).scale
   for dim in 0..<2 {
     if dim == AUTOHINT_DIM_HORIZONTAL &&
       (scale.flags & AUTOHINT_SCALE_NO_HORIZONTAL) != 0 {
@@ -774,35 +774,48 @@ fn AutoHintInstance::hinted_path(
       (scale.flags & AUTOHINT_SCALE_NO_VERTICAL) != 0 {
       continue
     }
+    let axis_metrics = scaled_metrics.axes.at(dim)
     axis.reset(dim, outline.orientation)
-    let ok = autohint_compute_segments(outline, axis, group)
+    let ok = autohint_compute_segments(outline, axis, unscaled_metrics.group)
     if !ok {
       continue
     }
-    let axis_scale = if dim == AUTOHINT_DIM_HORIZONTAL {
-      scale.x_scale
-    } else {
-      scale.y_scale
-    }
-    let edge_distance_threshold = standard_width / 5
-    let std_scaled = autohint_fixed_mul(standard_width, axis_scale)
-    let width_metrics = AutoHintWidthMetrics::{
-      is_extra_light: std_scaled < 32 + 8,
-    }
-    let widths : Array[AutoHintScaledWidth] = Array::new()
-    widths.push(AutoHintScaledWidth::{ scaled: std_scaled })
-    let axis_metrics = AutoHintScaledAxisMetrics::{ dim, widths, width_metrics }
-    autohint_link_segments(outline, axis, axis_scale, group, None)
+    let axis_scale = axis_metrics.scale
+    autohint_link_segments(
+      outline,
+      axis,
+      axis_scale,
+      unscaled_metrics.group,
+      unscaled_metrics.axes.at(dim).max_width(),
+    )
     autohint_compute_edges(
       axis,
-      edge_distance_threshold,
-      false,
-      scale.y_scale,
+      axis_metrics.width_metrics.edge_distance_threshold,
+      unscaled_metrics.hint_top_to_bottom,
+      y_axis_scale,
       axis_scale,
-      group,
+      unscaled_metrics.group,
     )
-    autohint_hint_edges(axis, axis_metrics, group, scale, false)
-    autohint_align_edge_points(outline, axis, group, scale.flags)
+    autohint_compute_blue_edges(
+      axis,
+      scale,
+      unscaled_metrics.axes.at(dim).blues,
+      axis_metrics.blues,
+      unscaled_metrics.group,
+    )
+    autohint_hint_edges(
+      axis,
+      axis_metrics,
+      unscaled_metrics.group,
+      scale,
+      unscaled_metrics.hint_top_to_bottom,
+    )
+    autohint_align_edge_points(
+      outline,
+      axis,
+      unscaled_metrics.group,
+      scale.flags,
+    )
     autohint_align_strong_points(outline, axis)
     autohint_align_weak_points(outline, dim)
   }
