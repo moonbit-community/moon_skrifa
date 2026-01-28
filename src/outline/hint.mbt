@@ -721,29 +721,7 @@ fn AutoHintInstance::hinted_path(
   target : Target,
 ) -> Result[(AdjustedMetrics, Array[PathElement]), DrawError] {
   let ppem = match size.ppem() {
-    None => {
-      // Unscaled size: return unhinted path.
-      let settings = DrawSettings::unhinted(size, location).with_path_style(
-        path_style,
-      )
-      let metrics0 = match glyph.draw(settings, NullPen::new()) {
-        Err(e) => return Err(e)
-        Ok(m) => m
-      }
-      let metrics = AdjustedMetrics::{
-        has_overlaps: metrics0.has_overlaps,
-        lsb: metrics0.lsb,
-        advance_width: match metrics0.advance_width {
-          None => None
-          Some(v) => Some(v.round())
-        },
-      }
-      let path = match glyph.path(settings) {
-        Err(e) => return Err(e)
-        Ok(p) => p
-      }
-      return Ok((metrics, path))
-    }
+    None => 0.0
     Some(v) => v
   }
   let unscaled_settings = DrawSettings::unhinted(
@@ -768,6 +746,7 @@ fn AutoHintInstance::hinted_path(
     return Ok((AdjustedMetrics::default(), Array::new()))
   }
   let upem = outline_units_per_em(glyph.font).to_int()
+  let ppem = if ppem == 0.0 { upem.to_double() } else { ppem }
   let style_ix = self.styles
     .style_index(glyph.glyph_id)
     .unwrap_or(AUTOHINT_STYLE_LATN)
