@@ -510,23 +510,36 @@ fn table_is_non_empty(font : @moon_skrifa.FontRef, tag : UInt) -> Bool {
 }
 
 ///|
+/// Returns true if FreeType-style logic would prefer running the TrueType
+/// instruction interpreter.
+///
+/// Upstream computes this using:
+/// `!(max_instructions == 0 && fpgm.is_empty() && prep.is_empty())`.
+fn glyf_prefer_interpreter(font : @moon_skrifa.FontRef) -> Bool {
+  let max_instructions = match font.table(TAG_MAXP) {
+    None => 0
+    // maxp.max_size_of_instructions() is a u16 at offset 26 in the v1.0 table.
+    Some(maxp) => outline_read_u16_be(maxp, 26).unwrap_or(0)
+  }
+  let fpgm_empty = !table_is_non_empty(font, TAG_FPGM)
+  let prep_empty = !table_is_non_empty(font, TAG_PREP)
+  !(max_instructions == 0 && fpgm_empty && prep_empty)
+}
+
+///|
 /// Returns `true` if the embedded instruction interpreter is preferred.
 ///
 /// This matches the high-level selection logic used by upstream:
 /// - CFF/CFF2 prefers the (PostScript) interpreter
-/// - glyf prefers the TrueType interpreter when fpgm/prep are non-empty, or
-///   for a small set of "tricky" fonts (by name/ID heuristics)
+/// - glyf follows FreeType-style preference rules based on max instructions
+///   and the presence of `fpgm`/`prep`
 pub fn OutlineGlyphCollection::prefer_interpreter(
   self : OutlineGlyphCollection,
 ) -> Bool {
   match self.format() {
-    Some(OutlineGlyphFormat::Cff) => true
-    Some(OutlineGlyphFormat::Cff2) => true
-    Some(OutlineGlyphFormat::Glyf) =>
-      require_interpreter(self.font) ||
-      table_is_non_empty(self.font, TAG_FPGM) ||
-      table_is_non_empty(self.font, TAG_PREP)
-    _ => false
+    Some(OutlineGlyphFormat::Glyf) => glyf_prefer_interpreter(self.font)
+    // Upstream prefers the interpreter for all non-glyf outline formats.
+    _ => true
   }
 }
 

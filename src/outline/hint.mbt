@@ -766,9 +766,6 @@ fn AutoHintInstance::hinted_path(
     }
     _ => AutoHintOutline::from_path(unscaled_path)
   }
-  if outline.is_empty() {
-    return Ok((AdjustedMetrics::default(), Array::new()))
-  }
   let upem = outline_units_per_em(glyph.font).to_int()
   let ppem = if ppem == 0.0 { upem.to_double() } else { ppem }
   let style_ix = self.styles
@@ -980,7 +977,21 @@ fn HintingInstance::hinted_glyf_path(
     Ok(z) => z
   }
   if zone.contours.length() == 0 {
-    return Ok((AdjustedMetrics::default(), Array::new()))
+    if zone.points.length() >= 4 {
+      // Empty glyph: use phantom points to compute metrics, matching upstream.
+      let phantom0 = zone.points.at(0)
+      let phantom1 = zone.points.at(1)
+      let advance = tt_bits_to_double(phantom1.x - phantom0.x).round()
+      let lsb = tt_bits_to_double(phantom0.x)
+      let metrics = AdjustedMetrics::{
+        has_overlaps: glyph.has_overlaps().unwrap_or(false),
+        lsb: Some(lsb),
+        advance_width: Some(advance),
+      }
+      return Ok((metrics, Array::new()))
+    } else {
+      return Ok((AdjustedMetrics::default(), Array::new()))
+    }
   }
   let last_end = zone.contours.at(zone.contours.length() - 1)
   let num_points = last_end + 1

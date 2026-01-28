@@ -1095,6 +1095,98 @@ test "hint: composite glyf instructions (vazirmatn gid=2)" {
 }
 
 ///|
+fn hint_parity_font_hvar_truncated_adv_index_map_b64() -> String {
+  "AAEAAAAQAIAAAwBwR0RFRgAdAA4AAAc4AAAAFkhWQVKtmEO2AAAHUAAAAElPUy8yX1tdgQAAAXgAAABg" +
+  "U1RBVHhwaIwAAAecAAAAHGNtYXAKEQaaAAACKAAAAIhmdmFyhp5pkgAAB7gAAAA8Z2x5ZolB98gAAALk" +
+  "AAABfmd2YXJrjwj1AAAH9AAAAd5oZWFkI6ywUwAAAPwAAAA2aGhlYQXpAHsAAAE0AAAAJGhtdHgSrwFD" +
+  "AAAB2AAAAE5sb2NhBs0GggAAArAAAAAybWF4cAAgABwAAAFYAAAAIG5hbWVXhKJ5AAAEZAAAAhNwb3N0" +
+  "5C3L5wAABngAAAC9AAEAAAABAADg7JZ0Xw889QADA+gAAAAA4TsYowAAAADhXFP8/8L/OAI8A5kAAAAG" +
+  "AAIAAAAAAAAAAQAAA+j/OAAAAkT/wv7vAjwAAQAAAAAAAAAAAAAAAAAAAA8AAQAAABgACwACAA8AAwAB" +
+  "AAAAAAAAAAAAAAAAAAIAAQAEAY8BkAAFAAgCigJYAAAASwKKAlgAAAFeADIBLAAAAAAAAAAAAAAAAAAA" +
+  "AEcAAAAAAAAAAAAAAABOT05FAEAAIAMEAyD/OADIA+gAyAAAAAEAAAAAAfQCvAAAACAAAAH0ADIBkAAA" +
+  "AkQACgC+ADMBkAAHAkQACgJEAAoAvgAzAL7/9gJEAAoAvv/mAAAAkgAAAEwAAP/CAZAAAAAAAAAAAAAA" +
+  "AAAAAAAAAAAAAAAAAAAAAgAAAAMAAAAUAAMAAQAAABQABAB0AAAAFgAQAAMABgAgAEEASQBUAMEAzQEA" +
+  "ASoDAQME//8AAAAgAEEASQBUAMAAzAEAASoDAAME////4f/B/7r/sAAAAAD/Cf7gAAD9CQABAAAAAAAA" +
+  "AAAADgAQAAAAAAAOAAAAAAAGAAUACAAHAAwACwAAABUAFQAwAD0AUABcAGgAdACAAIwAlwClALMAvwC/" +
+  "AL8AvwC/AL8AvwC/AL8AvwC/AAAAAgAy/zgBwgMgAAMABwAAFxEhESUhESEyAZD+ogEs/tTIA+j8GDID" +
+  "hAAAAgAK/+wCPALOAAYACgAANwExAQcDAzc3BRcKARcBG0jR0CgUASQHCwLD/T0fAj7918ZYCkYAAQAz" +
+  "AAAAiwLLAAMAABMzESMzWFgCy/01AAACAAcAAAGHArwAAwAHAAATIRUhNzMRIwcBgP6AklZWArxHE/14" +
+  "//8ACv/sAjwDlwImAAIAAAAHAAsAgQCd//8ACv/sAjwDmQImAAIAAAAHAAwAaQCf//8AMwAAAMsDkAIm" +
+  "AAMAAAAHAAv/ugCW////9gAAAIsDkQImAAMAAAAHAAz/qgCX//8ACv/sAjwDIwImAAIAAAAHAA0A2QBn" +
+  "////5gAAAOEDJgImAAMAAAAGAA0kagABAJICUgERAvoAAwAAEzcXB5I2SVcCUqgCpQAAAQBMAlIAywL6" +
+  "AAMAABMnJzfLKFdJAlIBpQIAAAH/wgKEAL0CvAADAAADMxUjPvv7Arw4AAAAAAAOAK4AAQAAAAABAAAG" +
+  "AAAAAQAAAAABAQAHAAYAAQAAAAABAgAGAA0AAQAAAAABAwAEABMAAwABBAkAAQAyABcAAwABBAkAAgAO" +
+  "AEkAAwABBAkAAwBUAFcAAwABBAkABABCAKsAAwABBAkABQAaAO0AAwABBAkABgA+AQcAAwABBAkBAAAM" +
+  "AUUAAwABBAkBAQAOAEkAAwABBAkBAgAMAVEAAwABBAkBAwAIAV1XZWlnaHRSZWd1bGFyTWVkaXVtQm9s" +
+  "ZABIAFYAQQBSACAAUwBpAG4AZwBsAGUATQBvAGQAZQBsACAASQBuAGQAaQByAGUAYwB0AFIAZQBnAHUA" +
+  "bABhAHIAMQAuADAAMAAwADsATgBPAE4ARQA7AEgAVgBBAFIAUwBpAG4AZwBsAGUATQBvAGQAZQBsAEkA" +
+  "bgBkAGkAcgBlAGMAdAAtAFIAZQBnAHUAbABhAHIASABWAEEAUgAgAFMAaQBuAGcAbABlAE0AbwBkAGUA" +
+  "bAAgAEkAbgBkAGkAcgBlAGMAdAAgAFIAZQBnAHUAbABhAHIAVgBlAHIAcwBpAG8AbgAgADEALgAwADAA" +
+  "MABIAFYAQQBSAFMAaQBuAGcAbABlAE0AbwBkAGUAbABJAG4AZABpAHIAZQBjAHQALQBSAGUAZwB1AGwA" +
+  "YQByAFcAZQBpAGcAaAB0AE0AZQBkAGkAdQBtAEIAbwBsAGQAAAIAAAAAAAD/nAAyAAAAAAAAAAAAAAAA" +
+  "AAAAAAAAAAAAGAAAAAMAJAAsADcAyQCtAMwAzwECAQMBBAEFAQYBBwEIAQkBCgELAQwBDQEOAQ8BEAdB" +
+  "bWFjcm9uB0ltYWNyb24JYWN1dGVjb21iCWdyYXZlY29tYgptYWNyb25jb21iBUEuMDAxBUEuMDAyBUEu" +
+  "MDAzBUEuMDA0BUEuMDA1BUEuMDA2BUEuMDA3BUEuMDA4BUEuMDA5BUEuMDEwAAAAAAEAAAAMAAAAAAAA" +
+  "AAIAAQALAA0AAwAAAAEAAAAAABQAAAA2AAAAAAAAAAAAAQAAAAwAAQAAABYAAQABAABAAEAAAAQAAAAB" +
+  "AAAARmR4AAEADwACAwECAwMBAQMBAAAAAgAAAAABAAEACAABAAAAFAAAAAAAAAACd2dodAEAAAAAAQAA" +
+  "ABAAAgABABQAAwAId2dodAGQAAABkAAAArwAAAAAAQABAQAAAZAAAAECAAAB9AAAAQMAAAK8AAAAAQAA" +
+  "AAEAAQAAAEYAGAAAAAAASAAAAAAABwAaACMAMAA5AEIASwBUAF0AZgBxAHwAhQCMAJMAmgChAKgArwC2" +
+  "AL0AxADLQACAAQAIAAUAAACAAGSBg4ABAAgAHAAAAAwJC31wID1WEB1WYAB4gQoZ//8NAdTr4w4e6IMA" +
+  "gAEACAAJAAAABQ44OA4ARoGHgAEACAALAAAFBAECAgICBGQCUyFkgAHi4oGAAQAIAAYAAAIBAQIBRngB" +
+  "DwCAAQAIAAYAAAIBAQIBPngBDgCAAQAIAAYAAAIBAQIBI0YBCQCAAQAIAAYAAAIBAQIBG0YBAQCAAQAI" +
+  "AAYAAAIBAQIBPXgBMgCAAQAIAAYAAAIBAQIBDUYBOACAAQAIAAwAAAAD7fUgEIMD/vn3+oMAgAEACAAM" +
+  "AAAAAxbz4w6DA/769/mDAIABAAgABgAAAgEBAgEl7IAA2YABAAgABQAAAIAAZIGDgAEACAAFAAAAgABk" +
+  "gYOAAQAIAAUAAACAAGSBg4ABAAgABQAAAIAAZIGDgAEACAAFAAAAgABkgYOAAQAIAAUAAACAAGSBg4AB" +
+  "AAgABQAAAIAAZIGDgAEACAAFAAAAgABkgYOAAQAIAAUAAACAAGSBg4ABAAgABQAAAIAAZIGDAAA="
+}
+
+///|
+test "hint: empty glyph advance unhinted (hvar truncated adv index map)" {
+  let font = golden_font(hint_parity_font_hvar_truncated_adv_index_map_b64())
+  let outlines = OutlineGlyphCollection::from_font(font)
+  let coords : Array[@moon_skrifa.NormalizedCoord] = Array::from_fixed_array([
+    8192,
+  ])
+  let loc = @moon_skrifa.LocationRef::new(coords.op_as_view())
+  let gid = font.charmap().glyph_id((32).reinterpret_as_uint()).unwrap()
+  let glyph = outlines.get(gid).unwrap()
+  let metrics = glyph
+    .draw(
+      DrawSettings::unhinted(@moon_skrifa.Size::new(24.0), loc).with_path_style(
+        PathStyle::FreeType,
+      ),
+      NullPen::new(),
+    )
+    .unwrap()
+  let ok = (metrics.advance_width.unwrap() - 10.796875).abs() <= 0.000001
+  inspect(ok, content="true")
+}
+
+///|
+test "hint: empty glyph advance hinted (hvar truncated adv index map)" {
+  let font = golden_font(hint_parity_font_hvar_truncated_adv_index_map_b64())
+  let outlines0 = OutlineGlyphCollection::from_font(font)
+  let coords : Array[@moon_skrifa.NormalizedCoord] = Array::from_fixed_array([
+    8192,
+  ])
+  let loc = @moon_skrifa.LocationRef::new(coords.op_as_view())
+  let size = @moon_skrifa.Size::new(24.0)
+  let hinting = HintingInstance::new(
+    outlines0,
+    size,
+    loc,
+    HintingOptions::default(),
+  ).unwrap()
+  let outlines = OutlineGlyphCollection::from_font(font)
+  let gid = font.charmap().glyph_id((32).reinterpret_as_uint()).unwrap()
+  let glyph = outlines.get(gid).unwrap()
+  let metrics = glyph
+    .draw(DrawSettings::hinted(hinting, false), NullPen::new())
+    .unwrap()
+  inspect(metrics.advance_width, content="Some(11)")
+}
+
+///|
 test "hint: tthint subset should not fail in pedantic mode" {
   let font = golden_font(hint_parity_font_tthint_subset_b64())
   let outlines = OutlineGlyphCollection::from_font(font)

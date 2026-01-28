@@ -564,6 +564,38 @@ fn tt2_load_glyph_zone_for_hinting_impl(
     Err(e) => return Err(e)
     Ok(v) => v
   }
+  // Empty glyph (loca start == end) is valid. We still synthesize the four
+  // phantom points to compute metrics, matching upstream.
+  if glyph.length() == 0 {
+    let (aw, lsb) = tt2_hmtx_metrics(font, gid).unwrap_or((0, 0))
+    let (os2_ascent, os2_descent) = tt2_os2_vmetrics(font)
+    let phantom0_x = 0 - lsb
+    let phantom1_x = phantom0_x + aw
+    let unscaled : Array[TtPoint] = Array::make(4, TtPoint::{ x: 0, y: 0 })
+    let original : Array[TtPoint] = Array::make(4, TtPoint::{ x: 0, y: 0 })
+    let points : Array[TtPoint] = Array::make(4, TtPoint::{ x: 0, y: 0 })
+    let flags : Array[Int] = Array::make(4, 0)
+    unscaled.set(0, TtPoint::{ x: phantom0_x, y: 0 })
+    unscaled.set(1, TtPoint::{ x: phantom1_x, y: 0 })
+    unscaled.set(2, TtPoint::{ x: 0, y: os2_ascent })
+    unscaled.set(3, TtPoint::{ x: 0, y: os2_descent })
+    for i in 0..<4 {
+      let p = unscaled.at(i)
+      let sx = tt2_scale_funits_to_26_6(p.x, scale_bits)
+      let sy = tt2_scale_funits_to_26_6(p.y, scale_bits)
+      let sp = TtPoint::{ x: sx, y: sy }
+      original.set(i, sp)
+      points.set(i, sp)
+      flags.set(i, 0)
+    }
+    return Ok(TtZone::{
+      unscaled,
+      original,
+      points,
+      flags,
+      contours: Array::new(),
+    })
+  }
   if glyph.length() < 10 {
     return Err(DrawError::Read)
   }
