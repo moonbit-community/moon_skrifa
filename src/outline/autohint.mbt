@@ -53,10 +53,6 @@ const AUTOHINT_STYLE_NON_BASE : Int = 0x100
 const AUTOHINT_STYLE_DIGIT : Int = 0x200
 
 ///|
-// These indices match fontations-reference's generated StyleClass constants.
-const AUTOHINT_STYLE_HEBR : Int = 44
-
-///|
 const AUTOHINT_STYLE_LATN : Int = 60
 
 ///|
@@ -175,29 +171,23 @@ fn autohint_num_glyphs(font : @moon_skrifa.FontRef) -> Int {
 }
 
 ///|
-fn autohint_style_for_codepoint(cp : UInt) -> GlyphStyle? {
+fn autohint_style_for_codepoint(
+  ranges : ArrayView[AutoHintStyleRange],
+  cp : UInt,
+) -> (Int, Int, GlyphStyle)? {
   let ch = cp.to_uint64().to_int()
-  // Latin: basic + Latin-1 supplement + Latin Extended A/B.
-  if ch >= 0x0000 && ch <= 0x024F {
-    return Some(GlyphStyle::with_style_index(AUTOHINT_STYLE_LATN))
-  }
-  // Latin combining marks treated as non-base.
-  if ch >= 0x0300 && ch <= 0x036F {
-    return Some(GlyphStyle::with_style_index_non_base(AUTOHINT_STYLE_LATN))
-  }
-  // Hebrew block.
-  if ch >= 0x0590 && ch <= 0x05FF {
-    // Hebrew marks.
-    if (ch >= 0x0591 && ch <= 0x05BD) || (ch >= 0x05BF && ch <= 0x05C7) {
-      return Some(GlyphStyle::with_style_index_non_base(AUTOHINT_STYLE_HEBR))
+  match autohint_style_range_for_codepoint(ch, ranges) {
+    None => None
+    Some((start, end, bits)) => {
+      let style_ix = bits & AUTOHINT_STYLE_INDEX_MASK
+      let style = if (bits & AUTOHINT_STYLE_NON_BASE) != 0 {
+        GlyphStyle::with_style_index_non_base(style_ix)
+      } else {
+        GlyphStyle::with_style_index(style_ix)
+      }
+      Some((start, end, style))
     }
-    return Some(GlyphStyle::with_style_index(AUTOHINT_STYLE_HEBR))
   }
-  // CJK unified ideographs.
-  if ch >= 0x4E00 && ch <= 0x9FFF {
-    return Some(GlyphStyle::with_style_index(AUTOHINT_STYLE_HANI))
-  }
-  None
 }
 
 ///|
@@ -206,6 +196,7 @@ fn GlyphStyleMap::new(
   font : @moon_skrifa.FontRef,
 ) -> GlyphStyleMap {
   let map = GlyphStyleMap::default()
+  let ranges = autohint_style_ranges()
   for _ in 0..<glyph_count {
     map.styles.push(GlyphStyle::default())
   }
@@ -227,25 +218,12 @@ fn GlyphStyleMap::new(
         }
       None => ()
     }
-    match autohint_style_for_codepoint(cp) {
+    match autohint_style_for_codepoint(ranges, cp) {
       None => ()
-      Some(s) => {
+      Some((start, end, s)) => {
         style = style.maybe_assign(s)
         map.styles.set(gi, style)
-        // Keep track of the range we just used for cheap locality.
-        let ch = cp.to_uint64().to_int()
-        let (start, end) = if s.is_non_base() {
-          // We only use this as a hint; keep it tight for non-base.
-          (ch, ch)
-        } else if (s.bits & AUTOHINT_STYLE_INDEX_MASK) == AUTOHINT_STYLE_HEBR {
-          (0x0590, 0x05FF)
-        } else if (s.bits & AUTOHINT_STYLE_INDEX_MASK) == AUTOHINT_STYLE_LATN {
-          (0x0000, 0x024F)
-        } else if (s.bits & AUTOHINT_STYLE_INDEX_MASK) == AUTOHINT_STYLE_HANI {
-          (0x4E00, 0x9FFF)
-        } else {
-          (ch, ch)
-        }
+        // Keep track of the style range we just used for cheap locality.
         last_range = Some((start, end, s))
         match s.style_index() {
           None => ()

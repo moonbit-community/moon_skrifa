@@ -337,86 +337,22 @@ fn AutoHintScale::new(
 
 ///|
 fn autohint_style_script_group(style_ix : Int) -> AutoHintScriptGroup {
-  if style_ix == AUTOHINT_STYLE_HANI {
-    AutoHintScriptGroup::Cjk
-  } else {
-    AutoHintScriptGroup::Default
-  }
+  autohint_script_group(autohint_style_script_ix(style_ix))
 }
 
 ///|
 fn autohint_style_hint_top_to_bottom(style_ix : Int) -> Bool {
-  // Extracted from `generated_autohint_styles.rs` for the subset we support.
-  if style_ix == AUTOHINT_STYLE_HANI {
-    false
-  } else if style_ix == AUTOHINT_STYLE_HEBR {
-    false
-  } else {
-    false
-  }
+  autohint_script_hint_top_to_bottom(autohint_style_script_ix(style_ix))
 }
 
 ///|
 fn autohint_style_std_chars(style_ix : Int) -> String {
-  if style_ix == AUTOHINT_STYLE_HEBR {
-    "ם"
-  } else if style_ix == AUTOHINT_STYLE_HANI {
-    "田 囗"
-  } else {
-    // Latin default.
-    "o O 0"
-  }
+  autohint_script_std_chars(autohint_style_script_ix(style_ix))
 }
 
 ///|
 fn autohint_style_blues(style_ix : Int) -> Array[(String, Int)] {
-  let out : Array[(String, Int)] = Array::new()
-  if style_ix == AUTOHINT_STYLE_HEBR {
-    out.push(
-      ("ב ד ה ח ך כ ם ס", AUTOHINT_BLUE_TOP | AUTOHINT_BLUE_LONG),
-    )
-    out.push(("ב ט כ ם ס צ", AUTOHINT_BLUE_NONE))
-    out.push(("ק ך ן ף ץ", AUTOHINT_BLUE_NONE))
-    return out
-  }
-  if style_ix == AUTOHINT_STYLE_HANI {
-    // Extracted from `generated_autohint_styles.rs`. Horizontal zones are
-    // currently disabled in FreeType; we keep them in the data but skip them
-    // during computation.
-    out.push(
-      (
-        "他 们 你 來 們 到 和 地 对 對 就 席 我 时 時 會 来 為 能 舰 說 说 这 這 齊 | 军 同 已 愿 既 星 是 景 民 照 现 現 理 用 置 要 軍 那 配 里 開 雷 露 面 顾",
-        AUTOHINT_BLUE_TOP,
-      ),
-    )
-    out.push(
-      (
-        "个 为 人 他 以 们 你 來 個 們 到 和 大 对 對 就 我 时 時 有 来 為 要 說 说 | 主 些 因 它 想 意 理 生 當 看 着 置 者 自 著 裡 过 还 进 進 過 道 還 里 面",
-        AUTOHINT_BLUE_NONE,
-      ),
-    )
-    out.push(
-      (
-        " 些 们 你 來 們 到 和 地 她 将 將 就 年 得 情 最 样 樣 理 能 說 说 这 這 通 | 即 吗 吧 听 呢 品 响 嗎 师 師 收 断 斷 明 眼 間 间 际 陈 限 除 陳 随 際 隨",
-        AUTOHINT_BLUE_HORIZONTAL,
-      ),
-    )
-    out.push(
-      (
-        "事 前 學 将 將 情 想 或 政 斯 新 样 樣 民 沒 没 然 特 现 現 球 第 經 谁 起 | 例 別 别 制 动 動 吗 嗎 增 指 明 朝 期 构 物 确 种 調 调 費 费 那 都 間 间",
-        AUTOHINT_BLUE_HORIZONTAL | AUTOHINT_BLUE_RIGHT,
-      ),
-    )
-    return out
-  }
-  // Latin.
-  out.push(("T H E Z O C Q S", AUTOHINT_BLUE_TOP))
-  out.push(("H E Z L O C U S", AUTOHINT_BLUE_NONE))
-  out.push(("f i j k d b h", AUTOHINT_BLUE_TOP))
-  out.push(("u v x z o e s c", AUTOHINT_BLUE_TOP | AUTOHINT_BLUE_X_HEIGHT))
-  out.push(("n r x z o e s c", AUTOHINT_BLUE_NONE))
-  out.push(("p q g j y", AUTOHINT_BLUE_NONE))
-  out
+  autohint_script_blues(autohint_style_script_ix(style_ix))
 }
 
 ///|
