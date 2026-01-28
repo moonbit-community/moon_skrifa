@@ -39,6 +39,72 @@ fn tt_in_bounds(
 }
 
 ///|
+fn TtEngine::op_flippt(self : TtEngine) -> Result[Unit, HintError] {
+  let count = self.graphics.loop_counter
+  self.graphics.loop_counter = 1
+  // In backward compatibility mode, don't flip points after IUP has run.
+  if self.graphics.backward_compatibility &&
+    self.graphics.did_iup_x &&
+    self.graphics.did_iup_y {
+    for _ in 0..<count {
+      match self.value_stack.pop() {
+        Err(e) => return Err(e)
+        Ok(_) => ()
+      }
+    }
+    return Ok(())
+  }
+  let zone = self.graphics.glyph
+  for _ in 0..<count {
+    let p = match self.value_stack.pop_usize() {
+      Err(e) => return Err(e)
+      Ok(v) => v
+    }
+    match zone.flip_on_curve(p) {
+      Err(e) => return Err(e)
+      Ok(_) => ()
+    }
+  }
+  Ok(())
+}
+
+///|
+fn TtEngine::set_on_curve_for_range(
+  self : TtEngine,
+  on : Bool,
+) -> Result[Unit, HintError] {
+  let high0 = match self.value_stack.pop_usize() {
+    Err(e) => return Err(e)
+    Ok(v) => v
+  }
+  let low = match self.value_stack.pop_usize() {
+    Err(e) => return Err(e)
+    Ok(v) => v
+  }
+  // high_point is inclusive; convert to exclusive.
+  let high = high0 + 1
+  if high <= high0 {
+    return Err(HintError::InvalidPointIndex(high0))
+  }
+  if self.graphics.backward_compatibility &&
+    self.graphics.did_iup_x &&
+    self.graphics.did_iup_y {
+    return Ok(())
+  }
+  self.graphics.glyph.set_on_curve(low, high, on)
+}
+
+///|
+fn TtEngine::op_fliprgon(self : TtEngine) -> Result[Unit, HintError] {
+  self.set_on_curve_for_range(true)
+}
+
+///|
+fn TtEngine::op_fliprgoff(self : TtEngine) -> Result[Unit, HintError] {
+  self.set_on_curve_for_range(false)
+}
+
+///|
 fn TtEngine::op_shp(self : TtEngine, opcode : Int) -> Result[Unit, HintError] {
   let gs = self.graphics
   let disp = match gs.point_displacement(opcode) {
@@ -94,6 +160,41 @@ fn TtEngine::op_shc(self : TtEngine, opcode : Int) -> Result[Unit, HintError] {
   for i in start..<end {
     if disp.zone != gs.zp2 || disp.point_ix != i {
       match self.graphics.move_zp2_point(i, disp.dx, disp.dy, true) {
+        Err(e) => return Err(e)
+        Ok(_) => ()
+      }
+    }
+  }
+  Ok(())
+}
+
+///|
+fn TtEngine::op_shz(self : TtEngine, opcode : Int) -> Result[Unit, HintError] {
+  let e = match self.value_stack.pop() {
+    Err(e) => return Err(e)
+    Ok(v) => v
+  }
+  // Validate zone pointer but we shift the current zp2 zone regardless.
+  match tt_zone_pointer_from_i32(e) {
+    Err(e) => return Err(e)
+    Ok(_) => ()
+  }
+  let gs = self.graphics
+  let disp = match gs.point_displacement(opcode) {
+    Err(e) => return Err(e)
+    Ok(v) => v
+  }
+  let z = gs.zp2_zone()
+  let end = if gs.zp2.is_twilight() {
+    z.points.length()
+  } else if !z.contours.is_empty() {
+    z.contours.at(z.contours.length() - 1) + 1
+  } else {
+    0
+  }
+  for i in 0..<end {
+    if disp.zone != gs.zp2 || disp.point_ix != i {
+      match self.graphics.move_zp2_point(i, disp.dx, disp.dy, false) {
         Err(e) => return Err(e)
         Ok(_) => ()
       }
@@ -515,6 +616,106 @@ fn TtEngine::op_alignrp(self : TtEngine) -> Result[Unit, HintError] {
 }
 
 ///|
+fn TtEngine::op_isect(self : TtEngine) -> Result[Unit, HintError] {
+  let gs = self.graphics
+  let b1 = match self.value_stack.pop_usize() {
+    Err(e) => return Err(e)
+    Ok(v) => v
+  }
+  let b0 = match self.value_stack.pop_usize() {
+    Err(e) => return Err(e)
+    Ok(v) => v
+  }
+  let a1 = match self.value_stack.pop_usize() {
+    Err(e) => return Err(e)
+    Ok(v) => v
+  }
+  let a0 = match self.value_stack.pop_usize() {
+    Err(e) => return Err(e)
+    Ok(v) => v
+  }
+  let point_ix = match self.value_stack.pop_usize() {
+    Err(e) => return Err(e)
+    Ok(v) => v
+  }
+  let z1 = gs.zp1_zone()
+  let pa0 = match z1.point(a0) {
+    Err(e) => return Err(e)
+    Ok(v) => v
+  }
+  let pa1 = match z1.point(a1) {
+    Err(e) => return Err(e)
+    Ok(v) => v
+  }
+  let z0 = gs.zp0_zone()
+  let pb0 = match z0.point(b0) {
+    Err(e) => return Err(e)
+    Ok(v) => v
+  }
+  let pb1 = match z0.point(b1) {
+    Err(e) => return Err(e)
+    Ok(v) => v
+  }
+  let dbx = pb1.x - pb0.x
+  let dby = pb1.y - pb0.y
+  let dax = pa1.x - pa0.x
+  let day = pa1.y - pa0.y
+  let dx = pb0.x - pa0.x
+  let dy = pb0.y - pa0.y
+  let discriminant = tt_mul_div26(dax, -dby, 0x40) +
+    tt_mul_div26(day, dbx, 0x40)
+  let dotproduct = tt_mul_div26(dax, dbx, 0x40) + tt_mul_div26(day, dby, 0x40)
+  let z2 = gs.zp2_zone()
+  let (new_x, new_y) = if tt_abs_i(discriminant).to_int64() * 19 >
+    tt_abs_i(dotproduct).to_int64() {
+    let v = tt_mul_div26(dx, -dby, 0x40) + tt_mul_div26(dy, dbx, 0x40)
+    let x = tt_mul_div26(v, dax, discriminant)
+    let y = tt_mul_div26(v, day, discriminant)
+    (pa0.x + x, pa0.y + y)
+  } else {
+    ((pa0.x + pa1.x + pb0.x + pb1.x) / 4, (pa0.y + pa1.y + pb0.y + pb1.y) / 4)
+  }
+  match z2.set_point(point_ix, TtPoint::{ x: new_x, y: new_y }) {
+    Err(e) => return Err(e)
+    Ok(_) => ()
+  }
+  match z2.touch(point_ix, TtAxis::X) {
+    Err(e) => return Err(e)
+    Ok(_) => ()
+  }
+  z2.touch(point_ix, TtAxis::Y)
+}
+
+///|
+fn TtEngine::op_alignpts(self : TtEngine) -> Result[Unit, HintError] {
+  let p2 = match self.value_stack.pop_usize() {
+    Err(e) => return Err(e)
+    Ok(v) => v
+  }
+  let p1 = match self.value_stack.pop_usize() {
+    Err(e) => return Err(e)
+    Ok(v) => v
+  }
+  let gs = self.graphics
+  let distance = self.graphics.project(
+      match gs.zp0_zone().point(p2) {
+        Err(e) => return Err(e)
+        Ok(v) => v
+      },
+      match gs.zp1_zone().point(p1) {
+        Err(e) => return Err(e)
+        Ok(v) => v
+      },
+    ) /
+    2
+  match self.graphics.move_point(gs.zp1, p1, distance) {
+    Err(e) => return Err(e)
+    Ok(_) => ()
+  }
+  self.graphics.move_point(gs.zp0, p2, -distance)
+}
+
+///|
 fn tt_mul_div26(a : Int, b : Int, c : Int) -> Int {
   tt_mul_div_round(a, b, c)
 }
@@ -627,6 +828,33 @@ fn TtEngine::op_iup(self : TtEngine, opcode : Int) -> Result[Unit, HintError] {
   if run {
     let glyph = self.graphics.glyph
     match glyph.iup(axis) {
+      Err(e) => return Err(e)
+      Ok(_) => ()
+    }
+  }
+  Ok(())
+}
+
+///|
+fn TtEngine::op_utp(self : TtEngine) -> Result[Unit, HintError] {
+  let p = match self.value_stack.pop_usize() {
+    Err(e) => return Err(e)
+    Ok(v) => v
+  }
+  let has_x = self.graphics.freedom_vector.x != 0
+  let has_y = self.graphics.freedom_vector.y != 0
+  if !has_x && !has_y {
+    return Ok(())
+  }
+  let z0 = self.graphics.zp0_zone()
+  if has_x {
+    match z0.untouch(p, TtAxis::X) {
+      Err(e) => return Err(e)
+      Ok(_) => ()
+    }
+  }
+  if has_y {
+    match z0.untouch(p, TtAxis::Y) {
       Err(e) => return Err(e)
       Ok(_) => ()
     }

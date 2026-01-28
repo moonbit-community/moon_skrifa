@@ -198,6 +198,46 @@ fn TtZone::is_touched(
 }
 
 ///|
+fn TtZone::untouch(
+  self : TtZone,
+  index : Int,
+  axis : TtAxis,
+) -> Result[Unit, HintError] {
+  if index < 0 || index >= self.flags.length() {
+    return Err(HintError::InvalidPointIndex(index))
+  }
+  self.flags.set(index, self.flags.at(index) & (axis.touched_mask() ^ -1))
+  Ok(())
+}
+
+///|
+fn TtZone::flip_on_curve(self : TtZone, index : Int) -> Result[Unit, HintError] {
+  if index < 0 || index >= self.flags.length() {
+    return Err(HintError::InvalidPointIndex(index))
+  }
+  self.flags.set(index, self.flags.at(index) ^ TT_POINT_ON_CURVE)
+  Ok(())
+}
+
+///|
+fn TtZone::set_on_curve(
+  self : TtZone,
+  start : Int,
+  end_ : Int,
+  on : Bool,
+) -> Result[Unit, HintError] {
+  if start < 0 || end_ < start || end_ > self.flags.length() {
+    return Err(HintError::InvalidPointRange(start, end_))
+  }
+  let mask = TT_POINT_ON_CURVE
+  for i in start..<end_ {
+    let f = self.flags.at(i)
+    self.flags.set(i, if on { f | mask } else { f & (mask ^ -1) })
+  }
+  Ok(())
+}
+
+///|
 
 ///|
 

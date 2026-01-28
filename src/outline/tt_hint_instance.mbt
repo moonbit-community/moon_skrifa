@@ -211,14 +211,10 @@ fn TtHintInstance::reconfigure(
   self.max_instruction_defs = max_instruction_defs
   self.storage = Array::make(max_storage, 0)
   // Load and scale CVT.
+  let axis_count = tt_fvar_axis_count(font)
   let base_cvt = tt_load_cvt(font)
   let cvt = match
-    cvar_deltas_fixed16_16(
-      font,
-      tt_fvar_axis_count(font),
-      coords,
-      base_cvt.length(),
-    ) {
+    cvar_deltas_fixed16_16(font, axis_count, coords, base_cvt.length()) {
     None => base_cvt
     Some(deltas_bits) => {
       let out : Array[Int] = Array::new()
@@ -250,6 +246,8 @@ fn TtHintInstance::reconfigure(
     retained,
     self.cvt,
     self.storage,
+    axis_count,
+    coords,
     max_stack,
     self.max_call_depth,
     max_function_defs,
@@ -288,6 +286,8 @@ fn TtHintInstance::hint_glyph(
   glyph_zone : TtZone,
   is_composite : Bool,
   is_pedantic : Bool,
+  axis_count : Int,
+  coords : ArrayView[@moon_skrifa.NormalizedCoord],
 ) -> Result[TtZone, HintError] {
   // Clone mutable state per glyph (matches upstream's copy-on-write behavior).
   let cvt = self.cvt.copy()
@@ -300,6 +300,8 @@ fn TtHintInstance::hint_glyph(
     retained,
     cvt,
     storage,
+    axis_count,
+    coords,
     self.max_stack,
     self.max_call_depth,
     self.max_function_defs,

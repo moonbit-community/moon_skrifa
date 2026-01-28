@@ -29,6 +29,11 @@ fn tt_in_bounds_zone(zone : TtZone, p : Int) -> Bool {
 }
 
 ///|
+fn TtEngine::op_mps(self : TtEngine) -> Result[Unit, HintError] {
+  self.value_stack.push(self.graphics.retained.ppem * 64)
+}
+
+///|
 fn TtEngine::op_gc(self : TtEngine, opcode : Int) -> Result[Unit, HintError] {
   let p = match self.value_stack.pop_usize() {
     Err(e) => return Err(e)

@@ -32,6 +32,7 @@ priv struct TtEngine {
   cvt : Array[Int]
   storage : Array[Int]
   axis_count : Int
+  coords : ArrayView[@moon_skrifa.NormalizedCoord]
 }
 
 ///|
@@ -42,6 +43,8 @@ fn TtEngine::new(
   retained : TtRetainedGraphicsState,
   cvt : Array[Int],
   storage : Array[Int],
+  axis_count : Int,
+  coords : ArrayView[@moon_skrifa.NormalizedCoord],
   max_stack : Int,
   max_call_depth : Int,
   max_function_defs : Int,
@@ -65,7 +68,8 @@ fn TtEngine::new(
     graphics,
     cvt,
     storage,
-    axis_count: 0,
+    axis_count,
+    coords,
   }
 }
 
@@ -166,8 +170,22 @@ fn TtEngine::run(self : TtEngine) -> Result[Unit, HintError] {
 }
 
 ///|
-fn tt_engine_unknown(op : Int, pc : Int) -> Result[Unit, HintError] {
-  Err(HintError::UnhandledOpcode(op, pc))
+fn TtEngine::op_unknown(
+  self : TtEngine,
+  op : Int,
+  pc : Int,
+) -> Result[Unit, HintError] {
+  match self.instructions.get(op) {
+    None => Err(HintError::UnhandledOpcode(op, pc))
+    Some(d) =>
+      match d.slice() {
+        None => Err(HintError::InvalidDefinition(op))
+        Some(code) => {
+          let return_pc = self.program.decoder.pc
+          self.program.push_frame(code, 0, return_pc)
+        }
+      }
+  }
 }
 
 ///|
@@ -211,6 +229,9 @@ fn TtEngine::dispatch(
     0x0B => self.op_sfvfs()
     0x0C => self.op_gpv()
     0x0D => self.op_gfv()
+    // SFVTPV/ISECT
+    0x0E => self.op_sfvtpv()
+    0x0F => self.op_isect()
     // SRP0/SRP1/SRP2
     0x10 => self.op_srp0()
     0x11 => self.op_srp1()
@@ -239,6 +260,9 @@ fn TtEngine::dispatch(
     0x89 => self.op_idef(ins.pc)
     // SCVTCI
     0x1D => self.op_scvtci()
+    // SSWCI/SSW
+    0x1E => self.op_sswci()
+    0x1F => self.op_ssw()
     // DUP
     0x20 => self.op_dup()
     // POP
@@ -268,6 +292,10 @@ fn TtEngine::dispatch(
     0x25 => self.op_cindex()
     // MINDEX
     0x26 => self.op_mindex()
+    // ALIGNPTS
+    0x27 => self.op_alignpts()
+    // UTP
+    0x29 => self.op_utp()
     // MDAP
     0x2E => self.op_mdap(op)
     0x2F => self.op_mdap(op)
@@ -280,6 +308,9 @@ fn TtEngine::dispatch(
     // SHC
     0x34 => self.op_shc(op)
     0x35 => self.op_shc(op)
+    // SHZ
+    0x36 => self.op_shz(op)
+    0x37 => self.op_shz(op)
     // SHPIX
     0x38 => self.op_shpix()
     // IP
@@ -304,6 +335,17 @@ fn TtEngine::dispatch(
     0x48 => self.op_scfs()
     0x49 => self.op_md(op)
     0x4A => self.op_md(op)
+    // MPS
+    0x4C => self.op_mps()
+    // FLIPON/FLIPOFF
+    0x4D => self.op_flipon()
+    0x4E => self.op_flipoff()
+    // DEBUG
+    0x4F =>
+      match self.value_stack.pop() {
+        Err(e) => Err(e)
+        Ok(_) => Ok(())
+      }
     // ROLL
     0x8A => self.op_roll()
     // ADD
@@ -325,6 +367,10 @@ fn TtEngine::dispatch(
     0x69 => self.op_round()
     0x6A => self.op_round()
     0x6B => self.op_round()
+    0x6C => Ok(())
+    0x6D => Ok(())
+    0x6E => Ok(())
+    0x6F => Ok(())
     // WCVTF
     0x70 => self.op_wcvtf()
     // DELTAP2/3
@@ -341,6 +387,12 @@ fn TtEngine::dispatch(
     0x7A => self.op_roff()
     0x7C => self.op_rutg()
     0x7D => self.op_rdtg()
+    // SANGW/AA/FLIP*
+    0x7E => self.op_sangw()
+    0x7F => Ok(())
+    0x80 => self.op_flippt()
+    0x81 => self.op_fliprgon()
+    0x82 => self.op_fliprgoff()
     // SCANCTRL/SDPVTL/GETINFO/MAX/MIN/SCANTYPE/INSTCTRL
     0x85 => self.op_scanctrl()
     0x86 => self.op_sdpvtl(op)
@@ -350,6 +402,8 @@ fn TtEngine::dispatch(
     0x8C => self.op_min()
     0x8D => self.op_scantype()
     0x8E => self.op_instctrl()
+    0x91 => self.op_getvariation(ins.pc)
+    0x92 => self.op_getdata(ins.pc)
     // IF
     0x58 => self.op_if()
     // ELSE
@@ -378,7 +432,9 @@ fn TtEngine::dispatch(
     0x53 => self.op_cmp_gteq()
     0x54 => self.op_cmp_eq()
     0x55 => self.op_cmp_neq()
-    _ => tt_engine_unknown(op, ins.pc)
+    0x56 => self.op_odd()
+    0x57 => self.op_even()
+    _ => self.op_unknown(op, ins.pc)
   }
 }
 

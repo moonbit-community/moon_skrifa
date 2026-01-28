@@ -102,3 +102,23 @@ fn TtEngine::op_min(self : TtEngine) -> Result[Unit, HintError] {
   }
   self.value_stack.push(if a < b { a } else { b })
 }
+
+///|
+fn TtEngine::op_odd(self : TtEngine) -> Result[Unit, HintError] {
+  let e1 = match self.value_stack.pop() {
+    Err(e) => return Err(e)
+    Ok(v) => v
+  }
+  let r = self.graphics.round(e1)
+  self.value_stack.push(if (r & 127) == 64 { 1 } else { 0 })
+}
+
+///|
+fn TtEngine::op_even(self : TtEngine) -> Result[Unit, HintError] {
+  let e1 = match self.value_stack.pop() {
+    Err(e) => return Err(e)
+    Ok(v) => v
+  }
+  let r = self.graphics.round(e1)
+  self.value_stack.push(if (r & 127) == 0 { 1 } else { 0 })
+}

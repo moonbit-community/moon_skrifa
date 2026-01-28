@@ -630,7 +630,17 @@ fn tt2_load_glyph_zone_for_hinting_impl(
     if code.length() == 0 {
       return Ok(zone0)
     }
-    match tt.hint_glyph(fpgm, prep, code, zone0, false, is_pedantic) {
+    match
+      tt.hint_glyph(
+        fpgm,
+        prep,
+        code,
+        zone0,
+        false,
+        is_pedantic,
+        tt_fvar_axis_count(font),
+        coords,
+      ) {
       Err(e) => Err(DrawError::HintingFailed(e))
       Ok(z) => Ok(z)
     }
@@ -992,7 +1002,17 @@ fn tt2_load_glyph_zone_for_hinting_impl(
     if ins.length() == 0 {
       return Ok(zone0)
     }
-    match tt.hint_glyph(fpgm, prep, ins, zone0, true, is_pedantic) {
+    match
+      tt.hint_glyph(
+        fpgm,
+        prep,
+        ins,
+        zone0,
+        true,
+        is_pedantic,
+        tt_fvar_axis_count(font),
+        coords,
+      ) {
       Err(e) => Err(DrawError::HintingFailed(e))
       Ok(z) => Ok(z)
     }

@@ -41,7 +41,7 @@ fn TtVec14::default() -> TtVec14 {
 ///|
 /// Persistent graphics state (retained across programs as in FreeType).
 priv struct TtRetainedGraphicsState {
-  auto_flip : Bool
+  mut auto_flip : Bool
   mut control_value_cutin : Int
   mut delta_base : Int
   mut delta_shift : Int
@@ -49,8 +49,8 @@ priv struct TtRetainedGraphicsState {
   mut min_distance : Int
   mut scan_control : Bool
   mut scan_type : Int
-  single_width_cutin : Int
-  single_width : Int
+  mut single_width_cutin : Int
+  mut single_width : Int
   target : Target
   scale : Int
   ppem : Int

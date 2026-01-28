@@ -151,6 +151,13 @@ fn TtEngine::op_gfv(self : TtEngine) -> Result[Unit, HintError] {
 }
 
 ///|
+fn TtEngine::op_sfvtpv(self : TtEngine) -> Result[Unit, HintError] {
+  self.graphics.freedom_vector = self.graphics.proj_vector
+  self.graphics.update_projection_state()
+  Ok(())
+}
+
+///|
 fn TtEngine::op_srp0(self : TtEngine) -> Result[Unit, HintError] {
   let p = match self.value_stack.pop_usize() {
     Err(e) => return Err(e)
@@ -359,6 +366,49 @@ fn TtEngine::op_scvtci(self : TtEngine) -> Result[Unit, HintError] {
 }
 
 ///|
+fn TtEngine::op_sswci(self : TtEngine) -> Result[Unit, HintError] {
+  let c = match self.value_stack.pop() {
+    Err(e) => return Err(e)
+    Ok(v) => v
+  }
+  self.graphics.retained.single_width_cutin = c
+  Ok(())
+}
+
+///|
+fn TtEngine::op_ssw(self : TtEngine) -> Result[Unit, HintError] {
+  let n = match self.value_stack.pop() {
+    Err(e) => return Err(e)
+    Ok(v) => v
+  }
+  self.graphics.retained.single_width = tt_hint_mul_16_16(
+    n,
+    self.graphics.retained.scale,
+  )
+  Ok(())
+}
+
+///|
+fn TtEngine::op_flipon(self : TtEngine) -> Result[Unit, HintError] {
+  self.graphics.retained.auto_flip = true
+  Ok(())
+}
+
+///|
+fn TtEngine::op_flipoff(self : TtEngine) -> Result[Unit, HintError] {
+  self.graphics.retained.auto_flip = false
+  Ok(())
+}
+
+///|
+fn TtEngine::op_sangw(self : TtEngine) -> Result[Unit, HintError] {
+  match self.value_stack.pop() {
+    Err(e) => Err(e)
+    Ok(_) => Ok(())
+  }
+}
+
+///|
 fn TtEngine::op_instctrl(self : TtEngine) -> Result[Unit, HintError] {
   let selector = match self.value_stack.pop() {
     Err(e) => return Err(e)
@@ -482,6 +532,34 @@ fn TtEngine::op_getinfo(self : TtEngine) -> Result[Unit, HintError] {
     }
   }
   self.value_stack.push(result)
+}
+
+///|
+fn TtEngine::op_getvariation(
+  self : TtEngine,
+  pc : Int,
+) -> Result[Unit, HintError] {
+  if self.axis_count != 0 {
+    for i in 0..<self.axis_count {
+      let coord = if i < self.coords.length() { self.coords.at(i) } else { 0 }
+      match self.value_stack.push(coord) {
+        Err(e) => return Err(e)
+        Ok(_) => ()
+      }
+    }
+    Ok(())
+  } else {
+    self.op_unknown(0x91, pc)
+  }
+}
+
+///|
+fn TtEngine::op_getdata(self : TtEngine, pc : Int) -> Result[Unit, HintError] {
+  if self.axis_count != 0 {
+    self.value_stack.push(17)
+  } else {
+    self.op_unknown(0x92, pc)
+  }
 }
 
 ///|

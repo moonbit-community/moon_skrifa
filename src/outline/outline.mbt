@@ -279,9 +279,6 @@ pub fn OutlineGlyph::has_hinting(self : OutlineGlyph) -> Bool? {
 ///|
 /// Returns the size (in bytes) of the temporary memory required to draw this
 /// outline.
-///
-/// This port currently returns 0 until the full glyf scaler/hinter is
-/// implemented.
 pub fn OutlineGlyph::draw_memory_size(
   self : OutlineGlyph,
   hinting : Hinting,
