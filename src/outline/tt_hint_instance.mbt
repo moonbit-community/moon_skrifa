@@ -246,6 +246,7 @@ fn TtHintInstance::reconfigure(
     retained,
     self.cvt,
     self.storage,
+    None,
     axis_count,
     coords,
     max_stack,
@@ -293,6 +294,11 @@ fn TtHintInstance::hint_glyph(
   let cvt = self.cvt.copy()
   let storage = self.storage.copy()
   let retained = self.retained
+  let point_count = if glyph_zone.points.is_empty() {
+    None
+  } else {
+    Some(glyph_zone.points.length())
+  }
   let engine = TtEngine::new(
     fpgm,
     prep,
@@ -300,6 +306,7 @@ fn TtHintInstance::hint_glyph(
     retained,
     cvt,
     storage,
+    point_count,
     axis_count,
     coords,
     self.max_stack,

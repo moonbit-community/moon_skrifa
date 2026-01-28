@@ -23,6 +23,62 @@
 const TT_MAX_RUN_INSTRUCTIONS : Int = 1_000_000
 
 ///|
+/// Tracks budgets for loops to limit execution time.
+///
+/// Ported from `fontations/skrifa/src/outline/glyf/hint/engine/mod.rs`.
+priv struct TtLoopBudget {
+  limit : Int
+  mut backward_jumps : Int
+  mut loop_calls : Int
+}
+
+///|
+fn TtLoopBudget::new(cvt_len : Int, point_count : Int?) -> TtLoopBudget {
+  // Compute limits for loop calls and backward jumps.
+  // See FreeType's ttinterp.c "neg_jump_counter_max/loopcall_counter_max".
+  let limit = match point_count {
+    Some(n) =>
+      // (point_count * 10).max(50) + (cvt_len / 10).max(50)
+      (n * 10).max(50) + (cvt_len / 10).max(50)
+    None =>
+      // 300 + 22 * cvt_len
+      300 + 22 * cvt_len
+  }
+  TtLoopBudget::{ limit, backward_jumps: 0, loop_calls: 0 }
+}
+
+///|
+fn TtLoopBudget::reset(self : TtLoopBudget) -> Unit {
+  self.backward_jumps = 0
+  self.loop_calls = 0
+}
+
+///|
+fn TtLoopBudget::doing_backward_jump(
+  self : TtLoopBudget,
+) -> Result[Unit, HintError] {
+  self.backward_jumps = self.backward_jumps + 1
+  if self.backward_jumps > self.limit {
+    Err(HintError::ExceededExecutionBudget)
+  } else {
+    Ok(())
+  }
+}
+
+///|
+fn TtLoopBudget::doing_loop_call(
+  self : TtLoopBudget,
+  count : Int,
+) -> Result[Unit, HintError] {
+  self.loop_calls = self.loop_calls + count
+  if self.loop_calls > self.limit {
+    Err(HintError::ExceededExecutionBudget)
+  } else {
+    Ok(())
+  }
+}
+
+///|
 priv struct TtEngine {
   program : TtProgramState
   value_stack : TtValueStack
@@ -31,6 +87,7 @@ priv struct TtEngine {
   graphics : TtGraphicsState
   cvt : Array[Int]
   storage : Array[Int]
+  loop_budget : TtLoopBudget
   axis_count : Int
   coords : ArrayView[@moon_skrifa.NormalizedCoord]
 }
@@ -43,6 +100,7 @@ fn TtEngine::new(
   retained : TtRetainedGraphicsState,
   cvt : Array[Int],
   storage : Array[Int],
+  point_count : Int?,
   axis_count : Int,
   coords : ArrayView[@moon_skrifa.NormalizedCoord],
   max_stack : Int,
@@ -54,6 +112,7 @@ fn TtEngine::new(
   let graphics = TtGraphicsState::default()
   graphics.retained = retained
   graphics.update_projection_state()
+  let loop_budget = TtLoopBudget::new(cvt.length(), point_count)
   TtEngine::{
     program: TtProgramState::new(
       font_code,
@@ -68,6 +127,7 @@ fn TtEngine::new(
     graphics,
     cvt,
     storage,
+    loop_budget,
     axis_count,
     coords,
   }
@@ -83,6 +143,7 @@ fn TtEngine::reset(
   self.value_stack.clear()
   self.graphics.reset()
   self.graphics.is_pedantic = is_pedantic
+  self.loop_budget.reset()
   match program {
     TtProgram::Font => {
       self.functions.reset()
@@ -764,8 +825,15 @@ fn TtEngine::op_jmpr(self : TtEngine, _pc : Int) -> Result[Unit, HintError] {
   // Offset is relative to the JMPR instruction, but decoder.pc currently
   // points at the next instruction, so subtract one.
   let jump = off - 1
-  if jump == -1 {
-    return Err(HintError::InvalidJump)
+  if jump < 0 {
+    if jump == -1 {
+      // If the offset is -1, we'll loop in place forever.
+      return Err(HintError::InvalidJump)
+    }
+    match self.loop_budget.doing_backward_jump() {
+      Err(e) => return Err(e)
+      Ok(_) => ()
+    }
   }
   let next = self.program.decoder.pc + jump
   if next < 0 || next > self.program.decoder.code.length() {
@@ -788,8 +856,14 @@ fn TtEngine::op_jrot(self : TtEngine, pc : Int) -> Result[Unit, HintError] {
   }
   if cond != 0 {
     let jump = off - 1
-    if jump == -1 {
-      return Err(HintError::InvalidJump)
+    if jump < 0 {
+      if jump == -1 {
+        return Err(HintError::InvalidJump)
+      }
+      match self.loop_budget.doing_backward_jump() {
+        Err(e) => return Err(e)
+        Ok(_) => ()
+      }
     }
     let next = self.program.decoder.pc + jump
     if next < 0 || next > self.program.decoder.code.length() {
@@ -815,8 +889,14 @@ fn TtEngine::op_jrof(self : TtEngine, pc : Int) -> Result[Unit, HintError] {
   }
   if cond == 0 {
     let jump = off - 1
-    if jump == -1 {
-      return Err(HintError::InvalidJump)
+    if jump < 0 {
+      if jump == -1 {
+        return Err(HintError::InvalidJump)
+      }
+      match self.loop_budget.doing_backward_jump() {
+        Err(e) => return Err(e)
+        Ok(_) => ()
+      }
     }
     let next = self.program.decoder.pc + jump
     if next < 0 || next > self.program.decoder.code.length() {
@@ -949,6 +1029,10 @@ fn TtEngine::op_loopcall(self : TtEngine, _pc : Int) -> Result[Unit, HintError] 
   }
   if count <= 0 {
     return Ok(())
+  }
+  match self.loop_budget.doing_loop_call(count) {
+    Err(e) => return Err(e)
+    Ok(_) => ()
   }
   match self.functions.get(fn_id) {
     None => Err(HintError::InvalidDefinition(fn_id))
