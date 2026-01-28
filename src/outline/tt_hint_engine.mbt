@@ -23,6 +23,13 @@
 const TT_MAX_RUN_INSTRUCTIONS : Int = 1_000_000
 
 ///|
+/// Maximum number of bytes in a function/instruction definition.
+///
+/// This matches upstream's `u16::MAX` limit, and is only enforced in pedantic
+/// mode.
+const TT_MAX_DEFINITION_SIZE : Int = 0xFFFF
+
+///|
 /// Tracks budgets for loops to limit execution time.
 ///
 /// Ported from `fontations/skrifa/src/outline/glyf/hint/engine/mod.rs`.
@@ -835,11 +842,8 @@ fn TtEngine::op_jmpr(self : TtEngine, _pc : Int) -> Result[Unit, HintError] {
       Ok(_) => ()
     }
   }
-  let next = self.program.decoder.pc + jump
-  if next < 0 || next > self.program.decoder.code.length() {
-    return Err(HintError::InvalidJump)
-  }
-  self.program.decoder.pc = next
+  // Upstream uses wrapping pc arithmetic and does not bounds-check.
+  self.program.decoder.pc = self.program.decoder.pc + jump
   Ok(())
 }
 
@@ -865,11 +869,7 @@ fn TtEngine::op_jrot(self : TtEngine, pc : Int) -> Result[Unit, HintError] {
         Ok(_) => ()
       }
     }
-    let next = self.program.decoder.pc + jump
-    if next < 0 || next > self.program.decoder.code.length() {
-      return Err(HintError::InvalidJump)
-    }
-    self.program.decoder.pc = next
+    self.program.decoder.pc = self.program.decoder.pc + jump
     Ok(())
   } else {
     Ok(())
@@ -898,11 +898,7 @@ fn TtEngine::op_jrof(self : TtEngine, pc : Int) -> Result[Unit, HintError] {
         Ok(_) => ()
       }
     }
-    let next = self.program.decoder.pc + jump
-    if next < 0 || next > self.program.decoder.code.length() {
-      return Err(HintError::InvalidJump)
-    }
-    self.program.decoder.pc = next
+    self.program.decoder.pc = self.program.decoder.pc + jump
     Ok(())
   } else {
     Ok(())
@@ -944,6 +940,9 @@ fn TtEngine::op_fdef(self : TtEngine, pc : Int) -> Result[Unit, HintError] {
     Err(e) => return Err(e)
     Ok(v) => v
   }
+  if self.graphics.is_pedantic && end_pc - start > TT_MAX_DEFINITION_SIZE {
+    return Err(HintError::DefinitionTooLarge)
+  }
   // end_pc is pc after ENDF.
   match
     self.functions.set_definition(
@@ -974,6 +973,9 @@ fn TtEngine::op_idef(self : TtEngine, pc : Int) -> Result[Unit, HintError] {
   let end_pc = match tt_engine_find_endf(self.program.decoder.code, start) {
     Err(e) => return Err(e)
     Ok(v) => v
+  }
+  if self.graphics.is_pedantic && end_pc - start > TT_MAX_DEFINITION_SIZE {
+    return Err(HintError::DefinitionTooLarge)
   }
   match
     self.instructions.set_definition(

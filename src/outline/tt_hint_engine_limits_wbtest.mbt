@@ -113,3 +113,67 @@ test "tt_hint: loop budget loopcall" {
     Err(_) => fail("expected ExceededExecutionBudget")
   }
 }
+
+///|
+test "tt_hint: jmpr does not bounds-check pc" {
+  let code = Bytes::from_array(Array::make(8, (0).to_byte()).op_as_view())
+  let empty = Bytes::from_array(Array::new().op_as_view())
+  let retained = TtRetainedGraphicsState::new(0x10000, 20, Target::default())
+  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array::new()
+  let engine = TtEngine::new(
+    code[:],
+    empty[:],
+    empty[:],
+    retained,
+    Array::new(),
+    Array::new(),
+    None,
+    0,
+    coords0.op_as_view(),
+    64,
+    32,
+    64,
+    64,
+  )
+  engine.program.decoder.pc = 0
+  engine.value_stack.push(100).unwrap() |> ignore
+  engine.op_jmpr(0).unwrap() |> ignore
+  inspect(engine.program.decoder.pc, content="99")
+}
+
+///|
+test "tt_hint: DefinitionTooLarge in pedantic mode" {
+  let huge : Array[Byte] = Array::new()
+  huge.push((0xB0).to_byte())
+  huge.push((0).to_byte())
+  huge.push((0x2C).to_byte())
+  // 65536 bytes of body, plus ENDF => len > 0xFFFF.
+  for _ in 0..<65536 {
+    huge.push((0).to_byte())
+  }
+  huge.push((0x2D).to_byte())
+  let font = Bytes::from_array(huge.op_as_view())
+  let empty = Bytes::from_array(Array::new().op_as_view())
+  let retained = TtRetainedGraphicsState::new(0x10000, 20, Target::default())
+  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array::new()
+  let engine = TtEngine::new(
+    font[:],
+    empty[:],
+    empty[:],
+    retained,
+    Array::new(),
+    Array::new(),
+    None,
+    0,
+    coords0.op_as_view(),
+    64,
+    32,
+    64,
+    64,
+  )
+  match engine.run_program(TtProgram::Font, true) {
+    Err(HintError::DefinitionTooLarge) => ()
+    Ok(_) => fail("expected DefinitionTooLarge")
+    Err(_) => fail("expected DefinitionTooLarge")
+  }
+}
