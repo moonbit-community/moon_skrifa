@@ -273,6 +273,10 @@ fn TtEngine::op_sds(self : TtEngine) -> Result[Unit, HintError] {
     Err(e) => return Err(e)
     Ok(v) => v
   }
+  // FreeType/fontations clamp delta_shift to [0, 6].
+  if s < 0 || s > 6 {
+    return Err(HintError::InvalidStackValue(s))
+  }
   self.graphics.retained.delta_shift = s
   Ok(())
 }

@@ -148,6 +148,8 @@ fn TtEngine::reset(
 ) -> Unit {
   self.program.reset(program)
   self.value_stack.clear()
+  // Match fontations: stack under/overflow is only an error in pedantic mode.
+  self.value_stack.check = is_pedantic
   self.graphics.reset()
   self.graphics.is_pedantic = is_pedantic
   self.loop_budget.reset()
@@ -600,11 +602,16 @@ fn TtEngine::op_cmp_neq(self : TtEngine) -> Result[Unit, HintError] {
 
 ///|
 fn TtEngine::op_dup(self : TtEngine) -> Result[Unit, HintError] {
-  let v = match self.value_stack.peek(0) {
-    Err(e) => return Err(e)
-    Ok(v) => v
+  match self.value_stack.peek(0) {
+    Ok(v) => self.value_stack.push(v)
+    Err(HintError::ValueStackUnderflow) =>
+      if self.value_stack.check {
+        Err(HintError::ValueStackUnderflow)
+      } else {
+        self.value_stack.push(0)
+      }
+    Err(e) => Err(e)
   }
-  self.value_stack.push(v)
 }
 
 ///|
@@ -626,43 +633,54 @@ fn TtEngine::op_swap(self : TtEngine) -> Result[Unit, HintError] {
 
 ///|
 fn TtEngine::op_cindex(self : TtEngine) -> Result[Unit, HintError] {
-  let idx = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
+  // Match fontations/FreeType: use the top element as an index without popping.
+  // Index 0 is valid and is a no-op.
+  let top = self.value_stack.length()
+  if top <= 0 {
+    return Err(HintError::ValueStackUnderflow)
   }
-  if idx <= 0 {
-    return Err(HintError::InvalidStackValue(idx))
+  let top_ix = top - 1
+  let idx = self.value_stack.buf.at(top_ix)
+  if idx < 0 {
+    return Err(HintError::ValueStackUnderflow)
   }
-  let v = match self.value_stack.peek(idx - 1) {
-    Err(e) => return Err(e)
-    Ok(v) => v
+  let element_ix = top_ix - idx
+  if element_ix < 0 {
+    return Err(HintError::ValueStackUnderflow)
   }
-  self.value_stack.push(v)
+  self.value_stack.buf.set(top_ix, self.value_stack.buf.at(element_ix))
+  Ok(())
 }
 
 ///|
 fn TtEngine::op_mindex(self : TtEngine) -> Result[Unit, HintError] {
-  let idx = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
-  if idx <= 0 {
-    return Err(HintError::InvalidStackValue(idx))
-  }
-  let depth = idx - 1
-  let v = match self.value_stack.peek(depth) {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
-  // Remove the item at `depth` from top by shifting values above it down.
+  // Match fontations/FreeType: use the top element as an index without popping.
+  // Index 0 moves the top element to the new top, effectively dropping one slot.
   let top = self.value_stack.length()
-  // depth is from top, convert to absolute index.
-  let abs = top - 1 - depth
-  for i in abs..<(top - 1) {
+  if top <= 0 {
+    return Err(HintError::ValueStackUnderflow)
+  }
+  let top_ix = top - 1
+  let idx = self.value_stack.buf.at(top_ix)
+  if idx < 0 {
+    return Err(HintError::ValueStackUnderflow)
+  }
+  let element_ix = top_ix - idx
+  if element_ix < 0 {
+    return Err(HintError::ValueStackUnderflow)
+  }
+  let new_top_ix = top_ix - 1
+  if new_top_ix < 0 {
+    return Err(HintError::ValueStackUnderflow)
+  }
+  let v = self.value_stack.buf.at(element_ix)
+  // Remove the element by shifting values above it down (including the index slot).
+  for i in element_ix..<(top - 1) {
     self.value_stack.buf.set(i, self.value_stack.buf.at(i + 1))
   }
+  self.value_stack.buf.set(new_top_ix, v)
   self.value_stack.len = self.value_stack.len - 1
-  self.value_stack.push(v)
+  Ok(())
 }
 
 ///|

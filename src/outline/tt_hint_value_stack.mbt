@@ -20,7 +20,7 @@
 priv struct TtValueStack {
   buf : Array[Int]
   mut len : Int
-  check : Bool
+  mut check : Bool
 }
 
 ///|

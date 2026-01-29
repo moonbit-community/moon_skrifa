@@ -87,6 +87,17 @@ fn TtRetainedGraphicsState::new(
   ppem : Int,
   target : Target,
 ) -> TtRetainedGraphicsState {
+  TtRetainedGraphicsState::new_with_flags(scale, ppem, target, false, false)
+}
+
+///|
+fn TtRetainedGraphicsState::new_with_flags(
+  scale : Int,
+  ppem : Int,
+  target : Target,
+  is_rotated : Bool,
+  is_stretched : Bool,
+) -> TtRetainedGraphicsState {
   let d = TtRetainedGraphicsState::default()
   TtRetainedGraphicsState::{
     auto_flip: d.auto_flip,
@@ -102,8 +113,8 @@ fn TtRetainedGraphicsState::new(
     target,
     scale,
     ppem,
-    is_rotated: d.is_rotated,
-    is_stretched: d.is_stretched,
+    is_rotated,
+    is_stretched,
   }
 }
 
