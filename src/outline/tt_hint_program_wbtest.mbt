@@ -82,3 +82,42 @@ test "tt_hint: program state loopcall frame" {
   inspect(state.decoder.code.at(0).to_int() == 2, content="true")
   inspect(state.decoder.pc == 0, content="true")
 }
+
+///|
+test "tt_hint: program state call stack underflow" {
+  let font_code = tt_prog_bytes([(0).to_byte()])
+  let cv_code = tt_prog_bytes([(1).to_byte()])
+  let glyph_code = tt_prog_bytes([(2).to_byte()])
+  let state = TtProgramState::new(
+    font_code[:],
+    cv_code[:],
+    glyph_code[:],
+    TtProgram::Glyph,
+    32,
+  )
+  inspect(
+    state.pop_frame() is Err(HintError::CallStackUnderflow),
+    content="true",
+  )
+}
+
+///|
+test "tt_hint: program state call stack overflow" {
+  let font_code = tt_prog_bytes([(0).to_byte()])
+  let cv_code = tt_prog_bytes([(1).to_byte()])
+  let glyph_code = tt_prog_bytes([(2).to_byte()])
+  let state = TtProgramState::new(
+    font_code[:],
+    cv_code[:],
+    glyph_code[:],
+    TtProgram::Glyph,
+    3,
+  )
+  for _ in 0..<3 {
+    state.push_frame(cv_code[:], 0, 0).unwrap() |> ignore
+  }
+  inspect(
+    state.push_frame(cv_code[:], 0, 0) is Err(HintError::CallStackOverflow),
+    content="true",
+  )
+}

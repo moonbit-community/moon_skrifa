@@ -73,7 +73,13 @@ priv struct TtDefinitionSet {
 
 ///|
 fn TtDefinitionSet::new(cap : Int) -> TtDefinitionSet {
-  TtDefinitionSet::{ defs: Array::make(cap, TtDefinition::default()) }
+  // `Array::make(cap, v)` duplicates `v`. For mutable structs, we need a fresh
+  // default instance per slot (matches Rust `vec![Default::default(); cap]`).
+  let defs : Array[TtDefinition] = Array::new()
+  for _ in 0..<cap {
+    defs.push(TtDefinition::default())
+  }
+  TtDefinitionSet::{ defs, }
 }
 
 ///|
