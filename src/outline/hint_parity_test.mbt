@@ -1181,6 +1181,60 @@ test "hint golden: Tinos subset (gid=6) hinted SVG matches fontations" {
 }
 
 ///|
+test "hint golden: Vazirmatn VF (gid=2 size=16 coords=0) hinted SVG matches fontations" {
+  let font = golden_font(font_vazirmatn_var_trimmed_b64())
+  let gid : @moon_skrifa.GlyphId = @moon_skrifa.GlyphId::new((2).to_uint16())
+  let size = @moon_skrifa.Size::new(16.0)
+  let coords : Array[@moon_skrifa.NormalizedCoord] = Array::from_fixed_array([0])
+  let loc = @moon_skrifa.LocationRef::new(coords.op_as_view())
+  let opts = Engine::Interpreter.into()
+  let outlines0 = OutlineGlyphCollection::from_font(font)
+  let hinter = HintingInstance::new(outlines0, size, loc, opts).unwrap()
+  let outlines = OutlineGlyphCollection::from_font(font)
+  let glyph = outlines.get(gid).unwrap()
+  let pen = SvgPen::with_precision(6)
+  glyph
+  .draw(
+    DrawSettings::hinted(hinter, false).with_path_style(PathStyle::FreeType),
+    pen,
+  )
+  .unwrap()
+  |> ignore
+  inspect(
+    pen.to_string(),
+    content="M5.531250,10.375000 L1.765625,0.000000 L0.234375,0.000000 L4.562500,11.375000 L5.562500,11.375000 Z M8.687500,0.000000 L4.921875,10.375000 L4.890625,11.375000 L5.890625,11.375000 L10.234375,0.000000 Z M8.500000,4.218750 L8.500000,2.984375 L2.109375,2.984375 L2.109375,4.218750 Z M4.578125,14.000000 L6.078125,11.703125 L4.843750,11.703125 L2.828125,14.000000 Z",
+  )
+}
+
+///|
+test "hint golden: Vazirmatn VF (gid=2 size=16 coords=0.5) hinted SVG matches fontations" {
+  let font = golden_font(font_vazirmatn_var_trimmed_b64())
+  let gid : @moon_skrifa.GlyphId = @moon_skrifa.GlyphId::new((2).to_uint16())
+  let size = @moon_skrifa.Size::new(16.0)
+  let coords : Array[@moon_skrifa.NormalizedCoord] = Array::from_fixed_array([
+    8192,
+  ])
+  let loc = @moon_skrifa.LocationRef::new(coords.op_as_view())
+  let opts = Engine::Interpreter.into()
+  let outlines0 = OutlineGlyphCollection::from_font(font)
+  let hinter = HintingInstance::new(outlines0, size, loc, opts).unwrap()
+  let outlines = OutlineGlyphCollection::from_font(font)
+  let glyph = outlines.get(gid).unwrap()
+  let pen = SvgPen::with_precision(6)
+  glyph
+  .draw(
+    DrawSettings::hinted(hinter, false).with_path_style(PathStyle::FreeType),
+    pen,
+  )
+  .unwrap()
+  |> ignore
+  inspect(
+    pen.to_string(),
+    content="M5.609375,9.671875 L2.343750,0.000000 L0.093750,0.000000 L4.359375,11.375000 L5.781250,11.375000 Z M8.343750,0.000000 L5.062500,9.671875 L4.875000,11.375000 L6.312500,11.375000 L10.593750,0.000000 Z M8.187500,4.234375 L8.187500,2.546875 L2.078125,2.546875 L2.078125,4.234375 Z M4.859375,14.000000 L6.390625,11.625000 L4.703125,11.625000 L2.593750,14.000000 Z",
+  )
+}
+
+///|
 test "hint: composite glyf instructions (vazirmatn gid=2)" {
   let font = golden_font(font_vazirmatn_var_trimmed_b64())
   let gid : @moon_skrifa.GlyphId = @moon_skrifa.GlyphId::new((2).to_uint16())
