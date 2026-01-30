@@ -318,4 +318,52 @@ test "tt_hint: graphics simple state setting + INSTCTRL + SCANCTRL" {
   engine.value_stack.push(0x01FF).unwrap() |> ignore
   engine.op_scanctrl().unwrap() |> ignore
   inspect(engine.graphics.retained.scan_control, content="true")
+
+  // Conditional dropout control: 0x0A10 => if rotated and ppem < 16.
+  let prev = engine.graphics.retained
+  engine.graphics.retained = TtRetainedGraphicsState::new_with_flags(
+    prev.scale,
+    12,
+    prev.target,
+    true,
+    prev.is_stretched,
+  )
+  engine.value_stack.push(0x0A10).unwrap() |> ignore
+  engine.op_scanctrl().unwrap() |> ignore
+  inspect(engine.graphics.retained.scan_control, content="true")
+}
+
+///|
+test "tt_hint: graphics set vectors to line handles equal points (x-axis default)" {
+  let engine = tt_make_engine_for_graphics(0x10000, 20)
+  let one = 0x4000
+  let x_axis = TtVec14::{ x: one, y: 0 }
+  engine.graphics.glyph = TtZone::{
+    unscaled: Array::new(),
+    points: Array::from_fixed_array([
+      TtPoint::{ x: 0, y: 0 },
+      TtPoint::{ x: 0, y: 0 },
+    ]),
+    original: Array::from_fixed_array([
+      TtPoint::{ x: 0, y: 0 },
+      TtPoint::{ x: 0, y: 0 },
+    ]),
+    flags: Array::make(2, 0),
+    contours: Array::new(),
+  }
+  engine.value_stack.push(1).unwrap() |> ignore
+  engine.op_szps().unwrap() |> ignore
+
+  // If the points are equal, fontations/FreeType default the line vector to the x-axis
+  // (even for the perpendicular form).
+  engine.value_stack.push(1).unwrap() |> ignore
+  engine.value_stack.push(0).unwrap() |> ignore
+  engine.op_svtl(0x06).unwrap() |> ignore
+  inspect(engine.graphics.proj_vector.x == x_axis.x, content="true")
+  inspect(engine.graphics.proj_vector.y == x_axis.y, content="true")
+  engine.value_stack.push(1).unwrap() |> ignore
+  engine.value_stack.push(0).unwrap() |> ignore
+  engine.op_svtl(0x07).unwrap() |> ignore
+  inspect(engine.graphics.proj_vector.x == x_axis.x, content="true")
+  inspect(engine.graphics.proj_vector.y == x_axis.y, content="true")
 }

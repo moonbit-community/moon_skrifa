@@ -461,11 +461,30 @@ fn TtEngine::op_scanctrl(self : TtEngine) -> Result[Unit, HintError] {
     self.graphics.retained.scan_control = false
     return Ok(())
   }
-  // Minimal implementation: enable when ppem <= threshold and bit 8 set.
   let ppem = self.graphics.retained.ppem
+  let is_rotated = self.graphics.retained.is_rotated
+  let is_stretched = self.graphics.retained.is_stretched
+  // See fontations/skrifa + FreeType: bits 8..13 conditionally enable/disable.
   let mut scan_control = self.graphics.retained.scan_control
+  // Bits 8-10 set scan_control to true when the condition is met.
   if (n & 0x100) != 0 && ppem <= threshold {
     scan_control = true
+  }
+  if (n & 0x200) != 0 && is_rotated {
+    scan_control = true
+  }
+  if (n & 0x400) != 0 && is_stretched {
+    scan_control = true
+  }
+  // Bits 11-13 set scan_control to false when the condition is met.
+  if (n & 0x800) != 0 && ppem > threshold {
+    scan_control = false
+  }
+  if (n & 0x1000) != 0 && is_rotated {
+    scan_control = false
+  }
+  if (n & 0x2000) != 0 && is_stretched {
+    scan_control = false
   }
   self.graphics.retained.scan_control = scan_control
   Ok(())
@@ -477,7 +496,7 @@ fn TtEngine::op_scantype(self : TtEngine) -> Result[Unit, HintError] {
     Err(e) => return Err(e)
     Ok(v) => v
   }
-  self.graphics.retained.scan_type = n
+  self.graphics.retained.scan_type = n & 0xFFFF
   Ok(())
 }
 
