@@ -16,6 +16,13 @@
 /// Minimal CFF/CFF2 DICT parsing helpers (only operators needed for outlines).
 
 ///|
+priv struct CffDictNum {
+  value : Double
+  // Dynamic scaling exponent for FontMatrix parsing (range [-9..0]).
+  scaling : Int
+}
+
+///|
 priv struct CffDictInfo {
   mut charstrings_offset : Int?
   mut var_store_offset : Int?
@@ -24,6 +31,8 @@ priv struct CffDictInfo {
   mut private_size : Int?
   mut private_offset : Int?
   mut subrs_offset : Int?
+  mut font_matrix : CffMatrix?
+  mut font_matrix_upem : Int?
 }
 
 ///|
@@ -55,20 +64,19 @@ fn cff_dict_parse(data : BytesView) -> CffDictInfo {
     private_size: None,
     private_offset: None,
     subrs_offset: None,
+    font_matrix: None,
+    font_matrix_upem: None,
   }
-  let stack : Array[Int] = Array::new()
+  let stack : Array[CffDictNum] = Array::new()
   let mut pos = 0
   while pos < data.length() {
     let b0 = data.at(pos).to_int()
     pos = pos + 1
     if b0 == 28 || b0 == 29 || b0 == 30 || b0 == 255 || (b0 >= 32 && b0 <= 254) {
-      match cff_dict_parse_number(data, pos, b0) {
+      match cff_dict_parse_number_scaled(data, pos, b0) {
         None => break
-        Some((v, p)) => {
-          match cff_dict_number_to_int(v) {
-            None => ()
-            Some(iv) => stack.push(iv)
-          }
+        Some((v, scaling, p)) => {
+          stack.push(CffDictNum::{ value: v, scaling })
           pos = p
         }
       }
@@ -88,33 +96,66 @@ fn cff_dict_parse(data : BytesView) -> CffDictInfo {
       // CharStrings offset
       17 =>
         if stack.length() >= 1 {
-          info.charstrings_offset = Some(stack.at(stack.length() - 1))
+          info.charstrings_offset = cff_dict_number_to_int(
+            stack.at(stack.length() - 1).value,
+          )
         }
       // CFF2 VarStore offset (ItemVariationStore)
       24 =>
         if stack.length() >= 1 {
-          info.var_store_offset = Some(stack.at(stack.length() - 1))
+          info.var_store_offset = cff_dict_number_to_int(
+            stack.at(stack.length() - 1).value,
+          )
         }
       // FDArray offset (Top DICT, escaped op 12 36)
       1236 =>
         if stack.length() >= 1 {
-          info.fd_array_offset = Some(stack.at(stack.length() - 1))
+          info.fd_array_offset = cff_dict_number_to_int(
+            stack.at(stack.length() - 1).value,
+          )
         }
       // FDSelect offset (Top DICT, escaped op 12 37)
       1237 =>
         if stack.length() >= 1 {
-          info.fd_select_offset = Some(stack.at(stack.length() - 1))
+          info.fd_select_offset = cff_dict_number_to_int(
+            stack.at(stack.length() - 1).value,
+          )
         }
       // Private DICT range: size, offset
       18 =>
         if stack.length() >= 2 {
-          info.private_size = Some(stack.at(0))
-          info.private_offset = Some(stack.at(1))
+          info.private_size = cff_dict_number_to_int(stack.at(0).value)
+          info.private_offset = cff_dict_number_to_int(stack.at(1).value)
         }
       // Subrs offset (within Private DICT)
       19 =>
         if stack.length() >= 1 {
-          info.subrs_offset = Some(stack.at(stack.length() - 1))
+          info.subrs_offset = cff_dict_number_to_int(
+            stack.at(stack.length() - 1).value,
+          )
+        }
+      // FontMatrix (escaped op 12 7)
+      1207 =>
+        if stack.length() >= 6 {
+          let mut max_scaling = -2147483648
+          for i in 0..<6 {
+            let n = stack.at(i)
+            if n.value != 0.0 {
+              max_scaling = max_scaling.max(n.scaling)
+            }
+          }
+          if max_scaling >= -9 && max_scaling <= 0 {
+            let upem = cff_dict_pow10((-max_scaling).max(0))
+            let scale = upem.to_double()
+            let xx = CffFixed::from_f64(stack.at(0).value * scale)
+            let yx = CffFixed::from_f64(stack.at(1).value * scale)
+            let xy = CffFixed::from_f64(stack.at(2).value * scale)
+            let yy = CffFixed::from_f64(stack.at(3).value * scale)
+            let dx = CffFixed::from_f64(stack.at(4).value * scale)
+            let dy = CffFixed::from_f64(stack.at(5).value * scale)
+            info.font_matrix = Some(CffMatrix::{ xx, yx, xy, yy, dx, dy })
+            info.font_matrix_upem = Some(upem)
+          }
         }
       _ => ()
     }
@@ -131,6 +172,87 @@ fn cff_dict_number_to_int(v : Double) -> Int? {
   } else {
     None
   }
+}
+
+///|
+fn cff_dict_pow10(exp : Int) -> Int {
+  let mut v = 1
+  for _ in 0..<exp {
+    v = v * 10
+  }
+  v
+}
+
+///|
+fn cff_dict_parse_real_scaled(
+  data : BytesView,
+  pos : Int,
+) -> (Double, Int, Int)? {
+  // Returns (value, scaling, new_pos). BCD real number per CFF spec.
+  //
+  // Note: We only need enough of FreeType's dynamic scaling behavior for
+  // FontMatrix parsing; we approximate it by clamping fractional digits to 6,
+  // which matches read-fonts/fontations for the fonts in our parity suite.
+  let mut i = pos
+  let mut sign = 1.0
+  let mut int_part = 0.0
+  let mut frac_part = 0.0
+  let mut frac_div = 1.0
+  let mut have_dot = false
+  let mut frac_len = 0
+  let mut in_exp = false
+  let mut exp_sign = 1
+  let mut exp_val = 0
+  let mut done = false
+  while i < data.length() && !done {
+    let b = data.at(i).to_int()
+    i = i + 1
+    let nibs = Array::from_fixed_array([b >> 4, b & 0x0F])
+    for n in nibs.iter() {
+      match n {
+        0..=9 =>
+          if in_exp {
+            exp_val = exp_val * 10 + n
+          } else if have_dot {
+            frac_part = frac_part * 10.0 + n.to_double()
+            frac_div = frac_div * 10.0
+            frac_len = frac_len + 1
+          } else {
+            int_part = int_part * 10.0 + n.to_double()
+          }
+        10 => have_dot = true
+        11 => in_exp = true
+        12 => {
+          in_exp = true
+          exp_sign = -1
+        }
+        14 => if !in_exp && int_part == 0.0 && frac_part == 0.0 { sign = -1.0 }
+        15 => {
+          done = true
+          break
+        }
+        _ => ()
+      }
+    }
+  }
+  let mut v = sign * (int_part + frac_part / frac_div)
+  if exp_val != 0 {
+    let e = exp_sign * exp_val
+    let mut p = 1.0
+    let mut j = 0
+    let abs_e = if e < 0 { -e } else { e }
+    while j < abs_e {
+      p = p * 10.0
+      j = j + 1
+    }
+    if e < 0 {
+      v = v / p
+    } else {
+      v = v * p
+    }
+  }
+  let scaling = if frac_len <= 0 { 0 } else { -frac_len.min(6) }
+  Some((v, scaling, i))
 }
 
 ///|
@@ -235,6 +357,22 @@ fn cff_dict_parse_number(
         Some(((-(b0 - 251) * 256 - b1 - 108).to_double(), pos + 1))
       }
     _ => None
+  }
+}
+
+///|
+fn cff_dict_parse_number_scaled(
+  data : BytesView,
+  pos : Int,
+  b0 : Int,
+) -> (Double, Int, Int)? {
+  match b0 {
+    30 => cff_dict_parse_real_scaled(data, pos)
+    _ =>
+      match cff_dict_parse_number(data, pos, b0) {
+        None => None
+        Some((v, p)) => Some((v, 0, p))
+      }
   }
 }
 

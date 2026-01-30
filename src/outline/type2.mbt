@@ -1182,9 +1182,10 @@ fn type2_path_hinted(
   local_subrs : Type2Index?,
   blend_state : Type2BlendState?,
   hint_state : HintState,
+  hint_matrix : CffMatrix?,
 ) -> Array[PathElement]? {
   let eval = Type2Eval::new(global_subrs, local_subrs, blend_state)
-  eval.cff_hinter = Some(CffHintingSink::new(hint_state, eval.out))
+  eval.cff_hinter = Some(CffHintingSink::new(hint_state, eval.out, hint_matrix))
   if Type2Eval::eval(eval, charstring, 0) {
     Some(eval.out)
   } else {

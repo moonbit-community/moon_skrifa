@@ -234,6 +234,7 @@ fn cff2_outline_path_hinted(
     local_ix,
     blend_state,
     hint_state,
+    None,
   )
 }
 

@@ -1228,6 +1228,7 @@ priv struct CffHintingSink {
   mut mask : HintMask
   initial_map : HintMap
   map : HintMap
+  matrix : CffMatrix?
   mut start_point : (CffFixed, CffFixed)?
   mut pending_line : (CffFixed, CffFixed, CffFixed, CffFixed)?
 }
@@ -1236,6 +1237,7 @@ priv struct CffHintingSink {
 fn CffHintingSink::new(
   state : HintState,
   out : Array[PathElement],
+  matrix : CffMatrix?,
 ) -> CffHintingSink {
   let stem_hints : Array[StemHint] = Array::new()
   for _ in 0..<CFF_HINT_MAX_HINTS {
@@ -1249,8 +1251,21 @@ fn CffHintingSink::new(
     mask: HintMask::all(),
     initial_map: HintMap::new(state.scale),
     map: HintMap::new(state.scale),
+    matrix,
     start_point: None,
     pending_line: None,
+  }
+}
+
+///|
+fn CffHintingSink::transform_hinted(
+  self : CffHintingSink,
+  x : CffFixed,
+  y : CffFixed,
+) -> (CffFixed, CffFixed) {
+  match self.matrix {
+    None => (x, y)
+    Some(m) => cff_matrix_transform_hinted(m, x, y)
   }
 }
 
@@ -1405,6 +1420,7 @@ fn CffHintingSink::move_to(
   self.start_point = Some((x, y))
   let x1 = CffHintingSink::scale(self, x)
   let y1 = CffHintingSink::hint(self, y)
+  let (x1, y1) = CffHintingSink::transform_hinted(self, x1, y1)
   self.out.push(
     MoveTo(cff_hint_fixed_to_double(x1), cff_hint_fixed_to_double(y1)),
   )
@@ -1419,6 +1435,7 @@ fn CffHintingSink::line_to(
   CffHintingSink::flush_pending_line(self)
   let ds_x = CffHintingSink::scale(self, x)
   let ds_y = CffHintingSink::hint(self, y)
+  let (ds_x, ds_y) = CffHintingSink::transform_hinted(self, ds_x, ds_y)
   self.pending_line = Some((x, y, ds_x, ds_y))
 }
 
@@ -1439,6 +1456,9 @@ fn CffHintingSink::curve_to(
   let cy2 = CffHintingSink::hint(self, cy2)
   let x = CffHintingSink::scale(self, x)
   let y = CffHintingSink::hint(self, y)
+  let (cx1, cy1) = CffHintingSink::transform_hinted(self, cx1, cy1)
+  let (cx2, cy2) = CffHintingSink::transform_hinted(self, cx2, cy2)
+  let (x, y) = CffHintingSink::transform_hinted(self, x, y)
   self.out.push(
     CurveTo(
       cff_hint_fixed_to_double(cx1),
