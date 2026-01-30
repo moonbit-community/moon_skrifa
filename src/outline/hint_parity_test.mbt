@@ -1106,6 +1106,81 @@ test "hint golden: Cousine hint subset (gid=1) hinted SVG matches fontations" {
 }
 
 ///|
+test "hint golden: Tinos subset (gid=3) hinted SVG matches fontations" {
+  let font = golden_font(hint_parity_font_tinos_subset_b64())
+  let gid : @moon_skrifa.GlyphId = @moon_skrifa.GlyphId::new((3).to_uint16())
+  let outlines0 = OutlineGlyphCollection::from_font(font)
+  let size = @moon_skrifa.Size::new(16.0)
+  let loc = @moon_skrifa.LocationRef::default()
+  let opts = Engine::Interpreter.into()
+  let hinter = HintingInstance::new(outlines0, size, loc, opts).unwrap()
+  let outlines = OutlineGlyphCollection::from_font(font)
+  let glyph = outlines.get(gid).unwrap()
+  let pen = SvgPen::with_precision(6)
+  glyph
+  .draw(
+    DrawSettings::hinted(hinter, false).with_path_style(PathStyle::FreeType),
+    pen,
+  )
+  .unwrap()
+  |> ignore
+  inspect(
+    pen.to_string(),
+    content="M3.609375,0.421875 L3.609375,0.000000 L0.156250,0.000000 L0.156250,0.421875 L1.343750,0.625000 L4.921875,11.000000 L6.406250,11.000000 L10.109375,0.625000 L11.437500,0.421875 L11.437500,0.000000 L7.015625,0.000000 L7.015625,0.421875 L8.421875,0.625000 L7.375000,4.296875 L3.250000,4.296875 L2.203125,0.625000 Z M5.281250,9.875000 L3.484375,5.000000 L7.140625,5.000000 Z",
+  )
+}
+
+///|
+test "hint golden: Tinos subset (gid=5) hinted SVG matches fontations" {
+  let font = golden_font(hint_parity_font_tinos_subset_b64())
+  let gid : @moon_skrifa.GlyphId = @moon_skrifa.GlyphId::new((5).to_uint16())
+  let outlines0 = OutlineGlyphCollection::from_font(font)
+  let size = @moon_skrifa.Size::new(16.0)
+  let loc = @moon_skrifa.LocationRef::default()
+  let opts = Engine::Interpreter.into()
+  let hinter = HintingInstance::new(outlines0, size, loc, opts).unwrap()
+  let outlines = OutlineGlyphCollection::from_font(font)
+  let glyph = outlines.get(gid).unwrap()
+  let pen = SvgPen::with_precision(6)
+  glyph
+  .draw(
+    DrawSettings::hinted(hinter, false).with_path_style(PathStyle::FreeType),
+    pen,
+  )
+  .unwrap()
+  |> ignore
+  inspect(
+    pen.to_string(),
+    content="M3.640625,8.000000 Q4.843750,8.000000 5.406250,7.468750 Q5.968750,6.953125 5.968750,5.859375 L5.968750,0.546875 L6.890625,0.359375 L6.890625,0.000000 L4.875000,0.000000 L4.718750,0.890625 Q3.828125,0.000000 2.453125,0.000000 Q0.562500,0.000000 0.562500,2.453125 Q0.562500,3.281250 0.843750,3.828125 Q1.140625,4.375000 1.765625,4.656250 Q2.390625,4.937500 3.578125,4.968750 L4.671875,5.000000 L4.671875,6.046875 Q4.671875,6.750000 4.390625,7.078125 Q4.125000,7.406250 3.546875,7.406250 Q2.765625,7.406250 2.109375,7.078125 L1.843750,6.234375 L1.406250,6.234375 L1.406250,7.750000 Q2.671875,8.000000 3.640625,8.000000 Z M4.671875,4.453125 L3.656250,4.421875 Q2.609375,4.375000 2.234375,3.937500 Q1.859375,3.500000 1.859375,2.484375 Q1.859375,0.859375 2.984375,0.859375 Q3.515625,0.859375 3.890625,0.984375 Q4.281250,1.109375 4.671875,1.296875 Z",
+  )
+}
+
+///|
+test "hint golden: Tinos subset (gid=6) hinted SVG matches fontations" {
+  let font = golden_font(hint_parity_font_tinos_subset_b64())
+  let gid : @moon_skrifa.GlyphId = @moon_skrifa.GlyphId::new((6).to_uint16())
+  let outlines0 = OutlineGlyphCollection::from_font(font)
+  let size = @moon_skrifa.Size::new(16.0)
+  let loc = @moon_skrifa.LocationRef::default()
+  let opts = Engine::Interpreter.into()
+  let hinter = HintingInstance::new(outlines0, size, loc, opts).unwrap()
+  let outlines = OutlineGlyphCollection::from_font(font)
+  let glyph = outlines.get(gid).unwrap()
+  let pen = SvgPen::with_precision(6)
+  glyph
+  .draw(
+    DrawSettings::hinted(hinter, false).with_path_style(PathStyle::FreeType),
+    pen,
+  )
+  .unwrap()
+  |> ignore
+  inspect(
+    pen.to_string(),
+    content="M5.984375,4.187500 Q5.984375,5.703125 5.484375,6.437500 Q4.984375,7.171875 3.937500,7.171875 Q3.484375,7.171875 3.031250,7.093750 Q2.578125,7.015625 2.375000,6.921875 L2.375000,0.796875 Q3.031250,0.671875 3.937500,0.671875 Q5.015625,0.671875 5.500000,1.546875 Q5.984375,2.437500 5.984375,4.187500 Z M1.078125,10.453125 L0.000000,10.640625 L0.000000,11.000000 L2.375000,11.000000 L2.375000,8.734375 Q2.375000,8.359375 2.328125,7.390625 Q3.109375,8.000000 4.296875,8.000000 Q5.796875,8.000000 6.593750,7.046875 Q7.390625,6.109375 7.390625,4.187500 Q7.390625,2.140625 6.515625,1.062500 Q5.640625,0.000000 3.968750,0.000000 Q3.296875,0.000000 2.484375,0.140625 Q1.687500,0.296875 1.078125,0.531250 Z",
+  )
+}
+
+///|
 test "hint: composite glyf instructions (vazirmatn gid=2)" {
   let font = golden_font(font_vazirmatn_var_trimmed_b64())
   let gid : @moon_skrifa.GlyphId = @moon_skrifa.GlyphId::new((2).to_uint16())
