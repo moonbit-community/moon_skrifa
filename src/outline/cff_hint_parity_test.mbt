@@ -15,8 +15,8 @@
 ///|
 /// CFF/CFF2 hinting parity tests ported from `fontations-reference/skrifa`.
 ///
-/// These tests are intended to fail until CFF/CFF2 hinting support is fully
-/// implemented for `Engine::Interpreter`.
+/// These tests verify `Engine::Interpreter` CFF/CFF2 hinting behavior against
+/// upstream reference outputs.
 
 ///|
 fn cff_hint_b64_val(c : Int) -> Int? {

@@ -150,6 +150,27 @@ fn glyf_f26dot6_bits_to_double(bits : Int) -> Double {
 }
 
 ///|
+fn glyf_shift_path_x(path : Array[PathElement], x_shift : Double) -> Unit {
+  if x_shift == 0.0 {
+    return
+  }
+  for i in 0..<path.length() {
+    match path.at(i) {
+      MoveTo(x, y) => path.set(i, MoveTo(x - x_shift, y))
+      LineTo(x, y) => path.set(i, LineTo(x - x_shift, y))
+      QuadTo(cx, cy, x, y) =>
+        path.set(i, QuadTo(cx - x_shift, cy, x - x_shift, y))
+      CurveTo(cx0, cy0, cx1, cy1, x, y) =>
+        path.set(
+          i,
+          CurveTo(cx0 - x_shift, cy0, cx1 - x_shift, cy1, x - x_shift, y),
+        )
+      Close => ()
+    }
+  }
+}
+
+///|
 fn glyf_midpoint_i32(a : Int, b : Int) -> Int {
   // Matches read-fonts midpoint_i32: a.wrapping_add(b) / 2.
   (a + b) / 2
@@ -1078,8 +1099,52 @@ fn glyf_outline_path(
     scale_bits,
     hb_scale,
   }
+  let x_shift = match glyf_glyph_slice(ctx, idx) {
+    None => 0.0
+    Some(glyph) =>
+      if glyph.length() < 10 {
+        0.0
+      } else {
+        let x_min = glyf_read_i16_be(glyph, 2).unwrap_or(0).to_double()
+        let loc = @moon_skrifa.LocationRef::new(coords)
+        let lsb = @moon_skrifa.FontRef::glyph_metrics(
+            font,
+            @moon_skrifa.Size::unscaled(),
+            loc,
+          )
+          .left_side_bearing(gid)
+          .unwrap_or(0.0)
+        let x_shift_du = x_min - lsb
+        if x_shift_du == 0.0 {
+          0.0
+        } else {
+          match path_style {
+            PathStyle::FreeType =>
+              if is_scaled {
+                glyf_f26dot6_bits_to_double(
+                  glyf_mul_16_16_f(x_shift_du, scale_bits),
+                )
+              } else {
+                x_shift_du
+              }
+            PathStyle::HarfBuzz =>
+              if is_scaled {
+                x_shift_du * hb_scale
+              } else {
+                x_shift_du
+              }
+          }
+        }
+      }
+  }
   let visited = Array::make(num_glyphs, false)
-  glyf_outline_path_idx(ctx, idx, visited, path_style)
+  match glyf_outline_path_idx(ctx, idx, visited, path_style) {
+    None => None
+    Some(path) => {
+      glyf_shift_path_x(path, x_shift)
+      Some(path)
+    }
+  }
 }
 
 ///|

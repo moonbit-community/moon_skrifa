@@ -13,8 +13,8 @@ Repository: https://github.com/moonbit-community/moon_skrifa
 - Runtime autohinting (for fonts without embedded instructions) is implemented and integrated:
   - style classification + outline topology (segments/edges)
   - edge fitting + point alignment for `PathStyle::FreeType` and `PathStyle::HarfBuzz`
-- CFF/CFF2 outlines are supported; CFF/CFF2 hinting for `Engine::Interpreter` is not yet implemented (Type2 stem hinting).
-- Remaining parity work is tracked in `bd` (notably: CFF/CFF2 hinting + `Engine::AutoFallback` CFF parity, and some core-module parity sweeps).
+- CFF/CFF2 outlines and `Engine::Interpreter` hinting are supported (including Type2 stem hinting parity tests).
+- Remaining parity work is tracked in `bd` (primarily broader core-module parity sweeps and maintenance).
 
 ## Packages
 

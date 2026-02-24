@@ -200,6 +200,148 @@ fn autohint_align_serif_edge(
 }
 
 ///|
+const AUTOHINT_CJK_MAX_HORIZONTAL_GAP : Int = 9
+
+///|
+const AUTOHINT_CJK_MAX_VERTICAL_GAP : Int = 15
+
+///|
+const AUTOHINT_CJK_MAX_DELTA_ABS : Int = 14
+
+///|
+fn autohint_apply_stem_adjustment_cjk(
+  axis : AutoHintAxis,
+  edge_ix : Int,
+  edge2_ix : Int,
+  edge : AutoHintEdge,
+  edge2 : AutoHintEdge,
+  cur_pos1 : Int,
+  cur_len : Int,
+  delta : Int,
+  do_stem_adjust : Bool,
+) -> Int {
+  let mut delta_adj = delta
+  if !do_stem_adjust {
+    if delta_adj < -AUTOHINT_CJK_MAX_DELTA_ABS {
+      delta_adj = -AUTOHINT_CJK_MAX_DELTA_ABS
+    } else if delta_adj > AUTOHINT_CJK_MAX_DELTA_ABS {
+      delta_adj = AUTOHINT_CJK_MAX_DELTA_ABS
+    }
+  }
+  let adjustment = cur_pos1 + delta_adj
+  if edge.opos < edge2.opos {
+    axis.edges.at(edge_ix).pos = adjustment
+    axis.edges.at(edge2_ix).pos = adjustment + cur_len
+  } else {
+    axis.edges.at(edge2_ix).pos = adjustment
+    axis.edges.at(edge_ix).pos = adjustment + cur_len
+  }
+  delta_adj
+}
+
+///|
+fn autohint_hint_normal_stem_cjk(
+  axis : AutoHintAxis,
+  metrics : AutoHintScaledAxisMetrics,
+  group : AutoHintScriptGroup,
+  scale : AutoHintScale,
+  edge_ix : Int,
+  edge2_ix : Int,
+  anchor : Int,
+) -> Int {
+  let edge = axis.edges.at(edge_ix)
+  let edge2 = axis.edges.at(edge2_ix)
+  let do_stem_adjust = (scale.flags & AUTOHINT_SCALE_STEM_ADJUST) != 0
+  let threshold_delta = if do_stem_adjust {
+    0
+  } else {
+    let delta = if axis.dim == AUTOHINT_DIM_VERTICAL {
+      AUTOHINT_CJK_MAX_HORIZONTAL_GAP
+    } else {
+      AUTOHINT_CJK_MAX_VERTICAL_GAP
+    }
+    if (edge.flags & AUTOHINT_FLAG_ROUND) != 0 &&
+      (edge2.flags & AUTOHINT_FLAG_ROUND) != 0 {
+      delta
+    } else {
+      delta / 3
+    }
+  }
+  let threshold = 64 - threshold_delta
+  let original_len = edge2.opos - edge.opos
+  let cur_len = autohint_stem_width(
+    metrics,
+    group,
+    scale,
+    original_len,
+    0,
+    edge.flags,
+    edge2.flags,
+  )
+  let original_center = (edge.opos + edge2.opos) / 2 + anchor
+  let cur_pos1 = original_center - cur_len / 2
+  let cur_pos2 = cur_pos1 + cur_len
+  let mut d_off1 = cur_pos1 - autohint_pix_floor(cur_pos1)
+  let mut d_off2 = cur_pos2 - autohint_pix_floor(cur_pos2)
+  if d_off1 == 0 || d_off2 == 0 {
+    return autohint_apply_stem_adjustment_cjk(
+      axis, edge_ix, edge2_ix, edge, edge2, cur_pos1, cur_len, 0, do_stem_adjust,
+    )
+  }
+  let mut u_off1 = 64 - d_off1
+  let mut u_off2 = 64 - d_off2
+  if cur_len <= threshold {
+    let delta = if d_off2 < cur_len {
+      if u_off1 <= d_off2 {
+        u_off1
+      } else {
+        -d_off2
+      }
+    } else {
+      0
+    }
+    return autohint_apply_stem_adjustment_cjk(
+      axis, edge_ix, edge2_ix, edge, edge2, cur_pos1, cur_len, delta, do_stem_adjust,
+    )
+  }
+  if threshold < 64 &&
+    (
+      d_off1 >= threshold ||
+      u_off1 >= threshold ||
+      d_off2 >= threshold ||
+      u_off2 >= threshold
+    ) {
+    return autohint_apply_stem_adjustment_cjk(
+      axis, edge_ix, edge2_ix, edge, edge2, cur_pos1, cur_len, 0, do_stem_adjust,
+    )
+  }
+  let mut offset = cur_len & 63
+  if offset < 32 {
+    if u_off1 <= offset || d_off2 <= offset {
+      return autohint_apply_stem_adjustment_cjk(
+        axis, edge_ix, edge2_ix, edge, edge2, cur_pos1, cur_len, 0, do_stem_adjust,
+      )
+    }
+  } else {
+    offset = 64 - threshold
+  }
+  d_off1 = threshold - u_off1
+  u_off1 = u_off1 - offset
+  u_off2 = threshold - d_off2
+  d_off2 = d_off2 - offset
+  if d_off1 <= u_off1 {
+    u_off1 = -d_off1
+  }
+  if d_off2 <= u_off2 {
+    u_off2 = -d_off2
+  }
+  let delta = if u_off1.abs() <= u_off2.abs() { u_off1 } else { u_off2 }
+  autohint_apply_stem_adjustment_cjk(
+    axis, edge_ix, edge2_ix, edge, edge2, cur_pos1, cur_len, delta, do_stem_adjust,
+  )
+}
+
+///|
 priv enum AutoHintLinkDir {
   Prev
   Next
@@ -303,8 +445,8 @@ fn autohint_align_stem_edges(
 ) -> (Int, Int?) {
   let mut serif_count = 0
   let mut anchor_ix = anchor_ix
-  // Default/Latin branch only for now; CJK branch remains TODO.
-  group |> ignore
+  let mut last_stem_pos : Int? = None
+  let mut delta = 0
   for edge_ix in 0..<axis.edges.length() {
     let edge = axis.edges.at(edge_ix)
     if (edge.flags & AUTOHINT_FLAG_DONE) != 0 {
@@ -319,6 +461,23 @@ fn autohint_align_stem_edges(
     }
     if edge2_ix < 0 || edge2_ix >= axis.edges.length() {
       serif_count = serif_count + 1
+      continue
+    }
+    if !(group is AutoHintScriptGroup::Default) {
+      match last_stem_pos {
+        Some(last_pos) =>
+          if edge.pos < last_pos + 64 ||
+            axis.edges.at(edge2_ix).pos < last_pos + 64 {
+            serif_count = serif_count + 1
+            continue
+          }
+        None => ()
+      }
+    }
+    if axis.edges.at(edge2_ix).blue_edge is Some(_) {
+      axis.edges.at(edge2_ix).flags = axis.edges.at(edge2_ix).flags |
+        AUTOHINT_FLAG_DONE
+      autohint_align_linked_edge(axis, metrics, group, scale, edge2_ix, edge_ix)
       continue
     }
     if group is AutoHintScriptGroup::Default {
@@ -415,8 +574,31 @@ fn autohint_align_stem_edges(
         }
       }
     } else {
-      // TODO: CJK edge fitting.
-      serif_count = serif_count + 1
+      if edge2_ix < edge_ix {
+        last_stem_pos = Some(edge.pos)
+        axis.edges.at(edge_ix).flags = axis.edges.at(edge_ix).flags |
+          AUTOHINT_FLAG_DONE
+        autohint_align_linked_edge(
+          axis, metrics, group, scale, edge2_ix, edge_ix,
+        )
+        continue
+      }
+      if axis.dim != AUTOHINT_DIM_VERTICAL && anchor_ix is None {
+        delta = autohint_hint_normal_stem_cjk(
+          axis, metrics, group, scale, edge_ix, edge2_ix, delta,
+        )
+      } else {
+        autohint_hint_normal_stem_cjk(
+          axis, metrics, group, scale, edge_ix, edge2_ix, delta,
+        )
+        |> ignore
+      }
+      anchor_ix = Some(edge_ix)
+      axis.edges.at(edge_ix).flags = axis.edges.at(edge_ix).flags |
+        AUTOHINT_FLAG_DONE
+      axis.edges.at(edge2_ix).flags = axis.edges.at(edge2_ix).flags |
+        AUTOHINT_FLAG_DONE
+      last_stem_pos = Some(axis.edges.at(edge2_ix).pos)
     }
   }
   (serif_count, anchor_ix)
@@ -483,7 +665,6 @@ fn autohint_align_remaining_edges(
   serif_count : Int,
   anchor_ix : Int?,
 ) -> Unit {
-  serif_count |> ignore
   if group is AutoHintScriptGroup::Default {
     let mut anchor_ix = anchor_ix
     for edge_ix in 0..<axis.edges.length() {
@@ -558,8 +739,59 @@ fn autohint_align_remaining_edges(
       )
     }
   } else {
-    // TODO: CJK/Indic remaining edge alignment.
-    group |> ignore
+    let mut serif_count = serif_count
+    for edge_ix in 0..<axis.edges.length() {
+      let edge = axis.edges.at(edge_ix)
+      if (edge.flags & AUTOHINT_FLAG_DONE) != 0 {
+        continue
+      }
+      match edge.serif_ix {
+        None => ()
+        Some(serif_ix) =>
+          if serif_ix >= 0 && serif_ix < axis.edges.length() {
+            axis.edges.at(edge_ix).flags = axis.edges.at(edge_ix).flags |
+              AUTOHINT_FLAG_DONE
+            autohint_align_serif_edge(axis, serif_ix, edge_ix)
+            if serif_count > 0 {
+              serif_count = serif_count - 1
+            }
+          }
+      }
+    }
+    if serif_count == 0 {
+      return
+    }
+    for edge_ix in 0..<axis.edges.length() {
+      let edge = axis.edges.at(edge_ix)
+      if (edge.flags & AUTOHINT_FLAG_DONE) != 0 {
+        continue
+      }
+      let (before_ix, after_ix) = autohint_find_bounding_completed_edges(
+        axis.edges,
+        edge_ix,
+      )
+      match (before_ix, after_ix) {
+        (Some(before_ix), None) =>
+          autohint_align_serif_edge(axis, before_ix, edge_ix)
+        (None, Some(after_ix)) =>
+          autohint_align_serif_edge(axis, after_ix, edge_ix)
+        (Some(before_ix), Some(after_ix)) => {
+          let before = axis.edges.at(before_ix)
+          let after = axis.edges.at(after_ix)
+          if after.fpos == before.fpos {
+            axis.edges.at(edge_ix).pos = before.pos
+          } else {
+            axis.edges.at(edge_ix).pos = before.pos +
+              autohint_fixed_mul_div(
+                edge.fpos - before.fpos,
+                after.pos - before.pos,
+                after.fpos - before.fpos,
+              )
+          }
+        }
+        _ => ()
+      }
+    }
     top_to_bottom_hinting |> ignore
     anchor_ix |> ignore
   }

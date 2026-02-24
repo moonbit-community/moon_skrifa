@@ -42,7 +42,7 @@ fn u32(x : Int) -> UInt {
 }
 
 ///|
-fn make_min_sfnt() -> Bytes {
+fn make_min_sfnt_with_table_offset(table_offset : Int) -> Bytes {
   let out = Array::new()
   // sfnt version: 0x00010000
   push_u32_be(out, u32(0x00010000))
@@ -54,7 +54,7 @@ fn make_min_sfnt() -> Bytes {
   // table record (16 bytes)
   push_u32_be(out, TAG_TEST)
   push_u32_be(out, u32(0)) // checksum (unused)
-  push_u32_be(out, u32(28)) // offset (from sfnt start)
+  push_u32_be(out, u32(table_offset))
   push_u32_be(out, u32(4)) // length
   // table bytes: "abcd"
   out.push(0x61 |> Int::to_byte)
@@ -65,13 +65,21 @@ fn make_min_sfnt() -> Bytes {
 }
 
 ///|
+fn make_min_sfnt() -> Bytes {
+  // Standalone SFNT: table offset is relative to start of the file.
+  make_min_sfnt_with_table_offset(28)
+}
+
+///|
 fn make_min_ttc() -> Bytes {
   let out = Array::new()
   push_u32_be(out, TAG_TTCF)
   push_u32_be(out, u32(0x00010000)) // version
   push_u32_be(out, u32(1)) // numFonts
   push_u32_be(out, u32(16)) // offset[0] (immediately after offsets array)
-  let sfnt = make_min_sfnt()
+  // In TTC, table offsets in each SFNT table record are absolute from the
+  // beginning of the collection file.
+  let sfnt = make_min_sfnt_with_table_offset(16 + 28)
   for b in sfnt.iter() {
     out.push(b)
   }

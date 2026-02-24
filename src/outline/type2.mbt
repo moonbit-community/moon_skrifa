@@ -855,9 +855,11 @@ fn Type2Eval::eval_operator(
     // hstem/vstem/hstemhm/vstemhm: ignore but consume hints (and possible width).
     1 | 3 | 18 | 23 => {
       let mut i = 0
-      if (self.stack.length() & 1) != 0 && !self.have_read_width {
+      if !self.have_read_width {
+        if (self.stack.length() & 1) != 0 {
+          i = 1
+        }
         self.have_read_width = true
-        i = 1
       }
       let len = self.stack.length() - i
       let is_horizontal = op == 1 || op == 18
@@ -886,9 +888,11 @@ fn Type2Eval::eval_operator(
     // hintmask/cntrmask
     19 | 20 => {
       let mut i = 0
-      if (self.stack.length() & 1) != 0 && !self.have_read_width {
+      if !self.have_read_width {
+        if (self.stack.length() & 1) != 0 {
+          i = 1
+        }
         self.have_read_width = true
-        i = 1
       }
       let len = self.stack.length() - i
       // Implied VSTEMHM operators. We only track HSTEMs for Y hinting, but we
@@ -930,9 +934,11 @@ fn Type2Eval::eval_operator(
     // rmoveto
     21 => {
       let mut i = 0
-      if self.stack.length() == 3 && !self.have_read_width {
+      if !self.have_read_width {
+        if self.stack.length() == 3 {
+          i = 1
+        }
         self.have_read_width = true
-        i = 1
       }
       Type2Eval::close_path(self)
       self.is_open = true
@@ -947,9 +953,11 @@ fn Type2Eval::eval_operator(
     // hmoveto/vmoveto
     22 | 4 => {
       let mut i = 0
-      if self.stack.length() == 2 && !self.have_read_width {
+      if !self.have_read_width {
+        if self.stack.length() == 2 {
+          i = 1
+        }
         self.have_read_width = true
-        i = 1
       }
       Type2Eval::close_path(self)
       self.is_open = true

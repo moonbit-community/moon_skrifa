@@ -231,7 +231,35 @@ fn cff_outline_path(
   }
 
   // Optional local Subrs.
-  let local_ix : Type2Index? = match (dict.private_size, dict.private_offset) {
+  //
+  // For CID-keyed CFF, Private DICT/Subrs may come from FDArray+FDSelect
+  // instead of Top DICT.
+  let mut private_size : Int? = dict.private_size
+  let mut private_off : Int? = dict.private_offset
+  if dict.fd_array_offset is Some(fd_array_off) {
+    let fd_select_ix = match dict.fd_select_offset {
+      None => 0
+      Some(sel_off) =>
+        cff_fdselect_index(cff, sel_off, glyph_index).unwrap_or(0)
+    }
+    let fd_ix = match cff_slice(cff, fd_array_off) {
+      None => return None
+      Some(s) =>
+        match type2_index1_read(s) {
+          None => return None
+          Some(ix) => ix
+        }
+    }
+    let fd_data = match type2_index_get(fd_ix, fd_select_ix) {
+      None => return None
+      Some(v) => v
+    }
+    let fd_dict = cff_dict_parse(fd_data)
+    private_size = fd_dict.private_size
+    private_off = fd_dict.private_offset
+  }
+
+  let local_ix : Type2Index? = match (private_size, private_off) {
     (Some(size), Some(off)) =>
       if size <= 0 || off < 0 || off + size > cff.length() {
         None

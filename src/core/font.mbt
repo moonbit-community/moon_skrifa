@@ -261,7 +261,9 @@ pub fn FontRef::table(self : FontRef, tag : UInt) -> BytesView? {
                     None => return None
                     Some(v) => v
                   }
-                  let start = base + off
+                  // In TTC, table record offsets are absolute from the start of
+                  // the collection file (not relative to the per-font base).
+                  let start = off
                   let end = start + len
                   if off < 0 || len < 0 || start < 0 || end > self.data.length() {
                     return None
