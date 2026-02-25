@@ -34,7 +34,7 @@ fn cff2_fdselect_index(
   if offset < 0 || offset >= data.length() {
     return None
   }
-  let select = data.sub(start=offset, end=data.length())
+  let select = data[offset:data.length()]
   if select.length() < 1 {
     return None
   }
@@ -120,7 +120,7 @@ fn cff2_outline_path_hinted(
   if top_len < 0 || top_end < top_start || top_end > cff2.length() {
     return None
   }
-  let top_dict = cff2.sub(start=top_start, end=top_end)
+  let top_dict = cff2[top_start:top_end]
   let dict = cff_dict_parse(top_dict)
   let charstrings_off = match dict.charstrings_offset {
     None => return None
@@ -145,13 +145,11 @@ fn cff2_outline_path_hinted(
   if global_off > cff2.length() {
     return None
   }
-  let global_ix = match
-    type2_index2_read(cff2.sub(start=global_off, end=cff2.length())) {
+  let global_ix = match type2_index2_read(cff2[global_off:cff2.length()]) {
     None => return None
     Some(ix) => ix
   }
-  let char_ix = match
-    type2_index2_read(cff2.sub(start=charstrings_off, end=cff2.length())) {
+  let char_ix = match type2_index2_read(cff2[charstrings_off:cff2.length()]) {
     None => return None
     Some(ix) => ix
   }
@@ -176,8 +174,7 @@ fn cff2_outline_path_hinted(
   let mut private_size : Int? = dict.private_size
   let mut private_off : Int? = dict.private_offset
   if dict.fd_array_offset is Some(fd_array_off) {
-    let fd_ix = match
-      type2_index2_read(cff2.sub(start=fd_array_off, end=cff2.length())) {
+    let fd_ix = match type2_index2_read(cff2[fd_array_off:cff2.length()]) {
       None => return None
       Some(ix) => ix
     }
@@ -204,7 +201,7 @@ fn cff2_outline_path_hinted(
       if psize < 0 || poff0 < 0 || poff0 + psize > cff2.length() {
         return None
       }
-      let private_dict = cff2.sub(start=poff0, end=poff0 + psize)
+      let private_dict = cff2[poff0:poff0 + psize]
       priv_info = cff_private_dict_hint_info(private_dict, blend_state)
     }
     _ => ()
@@ -222,7 +219,7 @@ fn cff2_outline_path_hinted(
       if subrs_abs < 0 || subrs_abs > cff2.length() {
         None
       } else {
-        type2_index2_read(cff2.sub(start=subrs_abs, end=cff2.length()))
+        type2_index2_read(cff2[subrs_abs:cff2.length()])
       }
     }
     _ => None
@@ -271,7 +268,7 @@ fn cff2_outline_path(
   if top_len < 0 || top_end < top_start || top_end > cff2.length() {
     return None
   }
-  let top_dict = cff2.sub(start=top_start, end=top_end)
+  let top_dict = cff2[top_start:top_end]
   let dict = cff_dict_parse(top_dict)
   let charstrings_off = match dict.charstrings_offset {
     None => return None
@@ -293,14 +290,12 @@ fn cff2_outline_path(
   if global_off > cff2.length() {
     return None
   }
-  let global_ix = match
-    type2_index2_read(cff2.sub(start=global_off, end=cff2.length())) {
+  let global_ix = match type2_index2_read(cff2[global_off:cff2.length()]) {
     None => return None
     Some(ix) => ix
   }
   // CharStrings INDEX2 is at the offset from Top DICT.
-  let char_ix = match
-    type2_index2_read(cff2.sub(start=charstrings_off, end=cff2.length())) {
+  let char_ix = match type2_index2_read(cff2[charstrings_off:cff2.length()]) {
     None => return None
     Some(ix) => ix
   }
@@ -345,7 +340,7 @@ fn cff2_glyph_count(font : @moon_skrifa.FontRef) -> Int? {
   if top_len < 0 || top_end < top_start || top_end > cff2.length() {
     return None
   }
-  let top_dict = cff2.sub(start=top_start, end=top_end)
+  let top_dict = cff2[top_start:top_end]
   let dict = cff_dict_parse(top_dict)
   let charstrings_off = match dict.charstrings_offset {
     None => return None
@@ -354,8 +349,7 @@ fn cff2_glyph_count(font : @moon_skrifa.FontRef) -> Int? {
   if charstrings_off < 0 || charstrings_off > cff2.length() {
     return None
   }
-  let char_ix = match
-    type2_index2_read(cff2.sub(start=charstrings_off, end=cff2.length())) {
+  let char_ix = match type2_index2_read(cff2[charstrings_off:cff2.length()]) {
     None => return None
     Some(ix) => ix
   }

@@ -268,7 +268,7 @@ pub fn FontRef::table(self : FontRef, tag : UInt) -> BytesView? {
                   if off < 0 || len < 0 || start < 0 || end > self.data.length() {
                     return None
                   }
-                  return Some(self.data.sub(start~, end~))
+                  return Some(self.data[start:end])
                 }
             }
           }

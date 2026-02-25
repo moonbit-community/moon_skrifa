@@ -402,7 +402,7 @@ fn HintState::new(params : HintParams, scale : CffFixed) -> HintState {
 
 ///|
 fn HintState::zones(self : HintState) -> ArrayView[BlueZone] {
-  self.zones.sub(start=0, end=self.zone_count).op_as_view()
+  self.zones[0:self.zone_count].op_as_view()
 }
 
 ///|

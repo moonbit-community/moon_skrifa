@@ -483,7 +483,7 @@ fn bitmap_bdt_glyph(strike : BitmapStrike, gid : GlyphId) -> BitmapGlyph? {
           if start < 0 || end < start || end > data.length() {
             return None
           }
-          let record = data.sub(start~, end~)
+          let record = data[start:end]
           // CBDT: small metrics + PNG data
           if strike.bdt_is_color && image_format == 17 {
             if record.length() < 9 {
@@ -499,7 +499,7 @@ fn bitmap_bdt_glyph(strike : BitmapStrike, gid : GlyphId) -> BitmapGlyph? {
             }
             let start = 9
             let end = start + png_len
-            let png = record.sub(start~, end~)
+            let png = record[start:end]
             Some(BitmapGlyph::{
               format: BitmapImageFormat::Png,
               data: png,
@@ -532,7 +532,7 @@ fn bitmap_bdt_glyph(strike : BitmapStrike, gid : GlyphId) -> BitmapGlyph? {
             }
             let start = 5
             let end = start + data_len
-            let bits = record.sub(start~, end~)
+            let bits = record[start:end]
             Some(BitmapGlyph::{
               format: BitmapImageFormat::Unknown(
                 image_format.reinterpret_as_uint(),
@@ -597,7 +597,7 @@ fn bitmap_sbix_strike_glyph(
   }
   let start = data_off
   let end = glyph_end
-  let data = sbix.sub(start~, end~)
+  let data = sbix[start:end]
   let format = if graphic_type == 0x706E6720 { // "png "
     BitmapImageFormat::Png
   } else if graphic_type == 0x6A706720 { // "jpg "

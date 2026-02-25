@@ -35,7 +35,7 @@ fn cff_fdselect_index(
   if offset < 0 || offset >= data.length() {
     return None
   }
-  let select = data.sub(start=offset, end=data.length())
+  let select = data[offset:data.length()]
   if select.length() < 1 {
     return None
   }
@@ -106,7 +106,7 @@ fn cff_slice(view : BytesView, start : Int) -> BytesView? {
   if start < 0 || start > view.length() {
     None
   } else {
-    Some(view.sub(start~, end=view.length()))
+    Some(view[start:view.length()])
   }
 }
 
@@ -265,7 +265,7 @@ fn cff_outline_path(
         None
       } else {
         let end = off + size
-        let private = cff.sub(start=off, end~)
+        let private = cff[off:end]
         let priv_dict = cff_dict_parse(private)
         match priv_dict.subrs_offset {
           None => None
@@ -481,7 +481,7 @@ fn cff_outline_path_hinted(
       if size < 0 || off < 0 || off + size > cff.length() {
         return None
       }
-      let private_dict = cff.sub(start=off, end=off + size)
+      let private_dict = cff[off:off + size]
       priv_info = cff_private_dict_hint_info(private_dict, None)
     }
     _ => ()

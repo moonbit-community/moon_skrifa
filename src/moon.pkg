@@ -1,0 +1,8 @@
+import {
+  "moonbitlang/core/prelude",
+  "moonbitlang/core/array",
+  "moonbitlang/core/bytes",
+  "moonbitlang/core/math",
+  "Milky2018/moon_skrifa/core" @skrifa_core,
+  "Milky2018/moon_skrifa/outline" @skrifa_outline,
+}

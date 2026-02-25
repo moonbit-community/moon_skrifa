@@ -238,7 +238,7 @@ fn type2_index_get(ix : Type2Index, index : Int) -> BytesView? {
   if s < 0 || e < s || e > ix.data.length() {
     None
   } else {
-    Some(ix.data.sub(start=s, end=e))
+    Some(ix.data[s:e])
   }
 }
 
@@ -917,7 +917,7 @@ fn Type2Eval::eval_operator(
       if new_pos + mask_bytes > data.length() {
         return None
       }
-      let mask = data.sub(start=new_pos, end=new_pos + mask_bytes)
+      let mask = data[new_pos:new_pos + mask_bytes]
       match self.cff_hinter {
         None => ()
         Some(h) =>

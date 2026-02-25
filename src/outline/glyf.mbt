@@ -758,7 +758,7 @@ fn glyf_glyph_slice(ctx : GlyfCtx, idx : Int) -> BytesView? {
   if start < 0 || end < start || end > ctx.glyf.length() {
     return None
   }
-  Some(ctx.glyf.sub(start~, end~))
+  Some(ctx.glyf[start:end])
 }
 
 ///|

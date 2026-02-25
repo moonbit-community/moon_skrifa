@@ -884,7 +884,7 @@ pub fn FontRef::localized_strings(
     if start < 0 || end < start || end > name.length() {
       continue
     }
-    let view = name.sub(start~, end~)
+    let view = name[start:end]
     let value = match
       string_decode_name_string(platform_id, encoding_id, view) {
       None => continue
@@ -901,7 +901,7 @@ pub fn FontRef::localized_strings(
         if start < 0 || end < start || end > name.length() {
           None
         } else {
-          match string_decode_utf16be(name.sub(start~, end~)) {
+          match string_decode_utf16be(name[start:end]) {
             None => None
             Some(tag) => if string_is_ascii(tag) { Some(tag) } else { None }
           }

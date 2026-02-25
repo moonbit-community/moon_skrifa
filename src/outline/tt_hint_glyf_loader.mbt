@@ -188,7 +188,7 @@ fn tt2_glyph_slice(
   if start < 0 || end < start || end > glyf.length() {
     Err(DrawError::Read)
   } else {
-    Ok(glyf.sub(start~, end~))
+    Ok(glyf[start:end])
   }
 }
 
@@ -268,7 +268,7 @@ fn tt2_decode_simple_glyph_for_hinting(
   if instruction_len < 0 || off + instruction_len > glyph.length() {
     return None
   }
-  let instr = glyph.sub(start=off, end=off + instruction_len)
+  let instr = glyph[off:off + instruction_len]
   off = off + instruction_len
   let num_points = if contours.is_empty() {
     0
@@ -827,9 +827,9 @@ fn tt2_load_glyph_zone_for_hinting_impl(
       0
     }
     let ins = if ins_len > 0 {
-      glyph.sub(start=off, end=off + ins_len)
+      glyph[off:off + ins_len]
     } else {
-      glyph.sub(start=off, end=off)
+      glyph[off:off]
     }
     // Precompute composite gvar deltas (component offsets + phantoms).
     let comp_deltas = match

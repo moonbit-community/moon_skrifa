@@ -147,7 +147,7 @@ fn glyph_name_post_v2_get(post : BytesView, gid : Int) -> String? {
       return None
     }
     if want == 0 {
-      let bytes = post.sub(start=off, end=off + len)
+      let bytes = post[off:off + len]
       // ASCII only for MVP.
       let chars : Array[Char] = Array::new()
       for b in bytes.iter() {
@@ -249,7 +249,7 @@ fn cff_index1_get(ix : CffIndex1, index : Int) -> BytesView? {
   if start < 0 || end < start || s < 0 || e > ix.data.length() {
     None
   } else {
-    Some(ix.data.sub(start=s, end=e))
+    Some(ix.data[s:e])
   }
 }
 
@@ -342,32 +342,30 @@ fn glyph_name_cff_get(cff : BytesView, gid : Int) -> String? {
   if hdr_size < 4 || hdr_size > cff.length() {
     return None
   }
-  let name_ix = cff_index1_read(cff.sub(start=hdr_size, end=cff.length())).unwrap_or(CffIndex1::{
-      data: cff,
-      count: 0,
-      off_size: 0,
-      offsets_base: 0,
-      objects_base: 0,
-    },
-  )
+  let name_ix = cff_index1_read(cff[hdr_size:cff.length()]).unwrap_or(CffIndex1::{
+    data: cff,
+    count: 0,
+    off_size: 0,
+    offsets_base: 0,
+    objects_base: 0,
+  })
   let name_size = cff_index1_total_size(name_ix).unwrap_or(-1)
   if name_size < 0 {
     return None
   }
   let top_base = hdr_size + name_size
-  let top_ix = cff_index1_read(cff.sub(start=top_base, end=cff.length())).unwrap_or(CffIndex1::{
-      data: cff,
-      count: 0,
-      off_size: 0,
-      offsets_base: 0,
-      objects_base: 0,
-    },
-  )
+  let top_ix = cff_index1_read(cff[top_base:cff.length()]).unwrap_or(CffIndex1::{
+    data: cff,
+    count: 0,
+    off_size: 0,
+    offsets_base: 0,
+    objects_base: 0,
+  })
   let top_size = cff_index1_total_size(top_ix).unwrap_or(-1)
   if top_ix.count <= 0 || top_size < 0 {
     return None
   }
-  let top_dict = cff_index1_get(top_ix, 0).unwrap_or(cff.sub(start=0, end=0))
+  let top_dict = cff_index1_get(top_ix, 0).unwrap_or(cff[0:0])
   let dict = cff_dict_parse_offsets(top_dict)
   let charset_off = dict.charset_offset.unwrap_or(-1)
   let charstrings_off = dict.charstrings_offset.unwrap_or(-1)
@@ -376,8 +374,7 @@ fn glyph_name_cff_get(cff : BytesView, gid : Int) -> String? {
   }
   // Skip String INDEX, but parse it to resolve custom SIDs.
   let string_base = top_base + top_size
-  let str_ix = match
-    cff_index1_read(cff.sub(start=string_base, end=cff.length())) {
+  let str_ix = match cff_index1_read(cff[string_base:cff.length()]) {
     None => return None
     Some(ix) => ix
   }
@@ -386,8 +383,7 @@ fn glyph_name_cff_get(cff : BytesView, gid : Int) -> String? {
     Some(v) => v
   }
   let global_base = string_base + str_size
-  let global_ix = match
-    cff_index1_read(cff.sub(start=global_base, end=cff.length())) {
+  let global_ix = match cff_index1_read(cff[global_base:cff.length()]) {
     None => return None
     Some(ix) => ix
   }
@@ -396,8 +392,7 @@ fn glyph_name_cff_get(cff : BytesView, gid : Int) -> String? {
     Some(v) => v
   }
   global_size |> ignore
-  let char_ix = match
-    cff_index1_read(cff.sub(start=charstrings_off, end=cff.length())) {
+  let char_ix = match cff_index1_read(cff[charstrings_off:cff.length()]) {
     None => return None
     Some(ix) => ix
   }

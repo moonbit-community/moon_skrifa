@@ -538,7 +538,7 @@ fn autohint_outline_glyf_glyph_slice(
   if start < 0 || end < start || end > glyf.length() {
     return None
   }
-  Some(glyf.sub(start~, end~))
+  Some(glyf[start:end])
 }
 
 ///|
