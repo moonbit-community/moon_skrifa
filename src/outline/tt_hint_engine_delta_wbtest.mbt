@@ -69,10 +69,11 @@ test "tt_hint: delta DELTAP" {
 
   // (ppem_bias, opcode)
   let cases : Array[(Int, Int)] = Array::from_fixed_array([
-    (0, 0x5D), // DELTAP1
-    (16, 0x71), // DELTAP2
-    (32, 0x72), // DELTAP3
-  ])
+      (0, 0x5D), // DELTAP1
+      (16, 0x71), // DELTAP2
+      (32, 0x72),
+    ], // DELTAP3
+  )
   for i in 0..<cases.length() {
     let (ppem_bias, opcode) = cases.at(i)
     engine.graphics.retained = TtRetainedGraphicsState::new(
@@ -103,10 +104,11 @@ test "tt_hint: delta DELTAC" {
 
   // (ppem_bias, opcode)
   let cases : Array[(Int, Int)] = Array::from_fixed_array([
-    (0, 0x73), // DELTAC1
-    (16, 0x74), // DELTAC2
-    (32, 0x75), // DELTAC3
-  ])
+      (0, 0x73), // DELTAC1
+      (16, 0x74), // DELTAC2
+      (32, 0x75),
+    ], // DELTAC3
+  )
   for i in 0..<cases.length() {
     let (ppem_bias, opcode) = cases.at(i)
     engine.graphics.retained = TtRetainedGraphicsState::new(
