@@ -1,55 +1,57 @@
 # Milky2018/moon_skrifa
 
-MoonBit port of Fontations `skrifa` (font parsing + metrics + color/bitmap glyph helpers).
+A MoonBit library for OpenType font reading and outline drawing.
+
+It provides:
+- font metadata access (cmap, names, metrics, variation axes)
+- bitmap glyph access (`sbix`, `CBDT/EBDT`)
+- color glyph paint traversal (`COLR`)
+- outline extraction and drawing (`glyf`, `CFF`, `CFF2`)
 
 Repository: https://github.com/moonbit-community/moon_skrifa
 
-## Status
-
-- The public API and behavior aim to match `fontations/skrifa` (`fontations-reference/` in this repo).
-- Embedded hinting (TrueType `glyf`) is implemented and wired into outline drawing via `HintingInstance` + `DrawSettings::hinted(...)`.
-  - Supports both simple and composite `glyf` glyphs (FreeType-style path building).
-  - Non-pedantic hinting matches fontations behavior (interpreter errors may be ignored); pedantic mode returns errors.
-- Runtime autohinting (for fonts without embedded instructions) is implemented and integrated:
-  - style classification + outline topology (segments/edges)
-  - edge fitting + point alignment for `PathStyle::FreeType` and `PathStyle::HarfBuzz`
-- CFF/CFF2 outlines and `Engine::Interpreter` hinting are supported (including Type2 stem hinting parity tests).
-- Remaining parity work is tracked in `bd` (primarily broader core-module parity sweeps and maintenance).
-
 ## Packages
 
-- `Milky2018/moon_skrifa`: facade re-exporting `Milky2018/moon_skrifa/core` (+ `OutlineGlyph*`)
-- `Milky2018/moon_skrifa/core`: core metadata (FontRef, charmap, names/strings, metrics, bitmaps, COLR traversal)
-- `Milky2018/moon_skrifa/outline`: outline extraction (glyf/CFF/CFF2), pens + SVG path output
+- `Milky2018/moon_skrifa`: facade exports for common entry points
+- `Milky2018/moon_skrifa/core`: font metadata, metrics, strings, bitmap/color helpers
+- `Milky2018/moon_skrifa/outline`: outline extraction, pens, and SVG path helpers
 
-## Install / Import
+## Install
 
-Add the dependency to your package `moon.pkg.json`:
+Add dependency imports in `moon.pkg`:
 
-```json
-{
-  "import": [
-    "moonbitlang/core/prelude",
-    "moonbitlang/core/bytes",
-    { "path": "Milky2018/moon_skrifa", "alias": "moon_skrifa" },
-    { "path": "Milky2018/moon_skrifa/outline", "alias": "moon_skrifa_outline" }
-  ]
+```moon
+import {
+  "moonbitlang/core/prelude",
+  "moonbitlang/core/bytes",
+  "Milky2018/moon_skrifa" @moon_skrifa,
+  "Milky2018/moon_skrifa/outline" @moon_skrifa_outline,
 }
 ```
 
-Then use the package via `@moon_skrifa` / `@moon_skrifa_outline`:
+## Quick Start
 
 ```moonbit
 let font = @moon_skrifa.FontRef::new(font_bytes).unwrap()
 let outlines = @moon_skrifa_outline.OutlineGlyphCollection::from_font(font)
+
+let cmap = font.charmap().unwrap()
+let gid = cmap.glyph_id(0x41).unwrap() // 'A'
+
+let settings =
+  @moon_skrifa_outline.DrawSettings::unhinted(
+    @moon_skrifa.Size::new(16.0),
+    @moon_skrifa.LocationRef::default(),
+  )
+
+let svg_path = outlines.svg_path(gid, settings).unwrap()
 ```
 
-## Core APIs
+## Core API Guide
 
-### Variation Axes / Locations (fvar/avar)
+### Variation Axes and Locations
 
-If you have user-space axis values (e.g. `wght=700`), use `axes().location(...)` to
-build a normalized location (this also applies `avar` remapping when present):
+Build normalized locations from user-space axis values:
 
 ```moonbit
 let axes = font.axes()
@@ -59,14 +61,14 @@ let settings : Array[@moon_skrifa.VariationSetting] = Array::from_fixed_array([
 let loc = axes.location(settings.op_as_view()).as_ref()
 ```
 
-### Charmap (codepoint -> glyph id)
+### Character Mapping
 
 ```moonbit
 let cmap = font.charmap().unwrap()
-let gid = cmap.glyph_id(0x41).unwrap() // 'A'
+let gid = cmap.glyph_id(0x4F60).unwrap() // example codepoint
 ```
 
-### Name / Localized Strings (name table)
+### Localized Name Strings
 
 ```moonbit
 let family = font.localized_strings(@moon_skrifa.STRING_ID_FAMILY_NAME)
@@ -75,91 +77,99 @@ match family.english_or_first() {
   Some(s) => {
     let lang = s.language() // Option[String]
     let value = s.to_string()
-    // ...
+    lang |> ignore
+    value |> ignore
   }
 }
 ```
 
-### Font / Glyph Metrics
+### Metrics
 
 ```moonbit
-let fm = font.metrics(@moon_skrifa.Size::new(16.0), @moon_skrifa.LocationRef::default())
-let gm = font.glyph_metrics(@moon_skrifa.Size::unscaled(), @moon_skrifa.LocationRef::default())
+let fm = font.metrics(
+  @moon_skrifa.Size::new(16.0),
+  @moon_skrifa.LocationRef::default(),
+)
+let gm = font.glyph_metrics(
+  @moon_skrifa.Size::unscaled(),
+  @moon_skrifa.LocationRef::default(),
+)
 
-let aw = gm.advance_width(gid).unwrap()
-let lsb = gm.left_side_bearing(gid).unwrap()
-let bounds = gm.bounds(gid) // Option[GlyphBounds]
+let aw = gm.advance_width(gid)
+let lsb = gm.left_side_bearing(gid)
+let bounds = gm.bounds(gid)
+
+fm |> ignore
+aw |> ignore
+lsb |> ignore
+bounds |> ignore
 ```
 
-`GlyphMetrics` supports:
-- HVAR deltas when present
-- gvar phantom-deltas fallback for advance/lsb when HVAR is missing
-
-### Bitmap Strikes (sbix/CBDT/EBDT)
+### Bitmap Glyphs
 
 ```moonbit
 let strikes = font.bitmap_strikes()
 for i in 0..<strikes.len() {
   let strike = strikes.get(i).unwrap()
   let bmp = strike.get(gid)
-  // BitmapGlyph has format/data/ppem/origin/width/height
+  bmp |> ignore
 }
 ```
 
-### COLRv1 Paint Traversal (gradients/var/clip)
+### Color Paint Traversal (COLR)
 
-Implement `ColorPainter` and call:
+Implement `ColorPainter`, then call:
 
 ```moonbit
 let loc = @moon_skrifa.LocationRef::default()
 try! font.paint_colr_v1_at(gid, loc, painter) |> ignore
 ```
 
-Brush variants include:
-- `Solid(palette_index, alpha)`
-- `LinearGradient(p0, p1, stops, extend)`
-- `RadialGradient(c0, r0, c1, r1, stops, extend)`
-- `SweepGradient(c0, start_deg, end_deg, stops, extend)`
+## Outline API Guide
 
-## Outline Package
-
-Use `OutlineGlyphCollection` to get outlines from `glyf`/`CFF`/`CFF2`:
+### Unhinted Draw
 
 ```moonbit
-let gid = 1
-
 let settings =
   @moon_skrifa_outline.DrawSettings::unhinted(
     @moon_skrifa.Size::new(16.0),
     @moon_skrifa.LocationRef::default(),
   )
-
-let svg = outlines.svg_path(gid, settings).unwrap()
-let path = outlines.path(gid, settings).unwrap()
+let path = outlines.path(gid, settings)
+path |> ignore
 ```
 
-`DrawSettings` controls:
-- `size` (`@moon_skrifa.Size`)
-- `location` (`@moon_skrifa.LocationRef`)
-  - normalized coords are `Int` in F2Dot14; `16384` == `1.0`
-  - if you have user coords, prefer `font.axes().location(...).as_ref()`
-- `path_style` (`PathStyle::FreeType` or `PathStyle::HarfBuzz`)
-- optional embedded hinting via `HintingInstance` + `DrawSettings::hinted(...)`
-
-Create and use a hinting instance:
+### Hinted Draw
 
 ```moonbit
-let outlines0 = @moon_skrifa_outline.OutlineGlyphCollection::from_font(font)
 let hinter =
   @moon_skrifa_outline.HintingInstance::new(
-    outlines0,
+    outlines,
     @moon_skrifa.Size::new(16.0),
     @moon_skrifa.LocationRef::default(),
     @moon_skrifa_outline.HintingOptions::default(),
   ).unwrap()
 
 let settings = @moon_skrifa_outline.DrawSettings::hinted(hinter, false)
-let svg = outlines.svg_path(gid, settings).unwrap()
+let svg = outlines.svg_path(gid, settings)
+svg |> ignore
+```
+
+### Path Styles
+
+`DrawSettings` supports:
+- `PathStyle::FreeType`
+- `PathStyle::HarfBuzz`
+
+Set with:
+
+```moonbit
+let settings =
+  @moon_skrifa_outline.DrawSettings::unhinted(
+    @moon_skrifa.Size::new(16.0),
+    @moon_skrifa.LocationRef::default(),
+  ).with_path_style(@moon_skrifa_outline.PathStyle::HarfBuzz)
+settings |> ignore
 ```
 
 ## Development
