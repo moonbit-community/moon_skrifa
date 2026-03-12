@@ -74,6 +74,8 @@ pub struct Attributes {
   stretch : Stretch
   style : Style
   weight : Weight
+
+  fn new(font : FontRef) -> Attributes
 }
 
 ///|
@@ -99,6 +101,8 @@ pub fn Attributes::weight(self : Attributes) -> Weight {
 ///|
 pub struct Stretch {
   priv ratio : Double
+
+  fn new(ratio : Double) -> Stretch
 }
 
 ///|
@@ -191,6 +195,8 @@ pub(all) enum Style {
 ///|
 pub struct Weight {
   priv value : Double
+
+  fn new(value : Double) -> Weight
 }
 
 ///|

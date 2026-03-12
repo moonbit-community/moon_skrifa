@@ -54,6 +54,14 @@ priv struct AutoHintScale {
   size : Double
   units_per_em : Int
   flags : Int
+
+  fn new(
+    size : Double,
+    units_per_em : Int,
+    font_style : @moon_skrifa.Style,
+    target : Target,
+    group : AutoHintScriptGroup,
+  ) -> AutoHintScale
 }
 
 ///|
@@ -1141,7 +1149,7 @@ test "autohint metrics: scale flags" {
   AUTOHINT_BLUE_LONG |> ignore
   AUTOHINT_MAX_WIDTHS |> ignore
   autohint_pix_floor(0) |> ignore
-  let scale = AutoHintScale::new(
+  let scale = AutoHintScale(
     16.0,
     2048,
     @moon_skrifa.Style::Normal,

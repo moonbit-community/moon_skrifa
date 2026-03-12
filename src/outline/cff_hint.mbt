@@ -277,6 +277,8 @@ const CFF_HINT_EPSILON_BITS : Int = 1
 ///|
 priv struct CffBlues {
   pairs : Array[(CffFixed, CffFixed)]
+
+  fn new(values : ArrayView[CffFixed]) -> CffBlues
 }
 
 ///|
@@ -360,6 +362,8 @@ priv struct HintState {
   mut darken_y : CffFixed
   mut zones : Array[BlueZone]
   mut zone_count : Int
+
+  fn new(params : HintParams, scale : CffFixed) -> HintState
 }
 
 ///|
@@ -772,6 +776,8 @@ priv struct HintMap {
   mut len : Int
   mut is_valid : Bool
   scale : CffFixed
+
+  fn new(scale : CffFixed) -> HintMap
 }
 
 ///|
@@ -1231,6 +1237,12 @@ priv struct CffHintingSink {
   matrix : CffMatrix?
   mut start_point : (CffFixed, CffFixed)?
   mut pending_line : (CffFixed, CffFixed, CffFixed, CffFixed)?
+
+  fn new(
+    state : HintState,
+    out : Array[PathElement],
+    matrix : CffMatrix?,
+  ) -> CffHintingSink
 }
 
 ///|
@@ -1249,8 +1261,8 @@ fn CffHintingSink::new(
     stem_hints,
     stem_count: 0,
     mask: HintMask::all(),
-    initial_map: HintMap::new(state.scale),
-    map: HintMap::new(state.scale),
+    initial_map: HintMap(state.scale),
+    map: HintMap(state.scale),
     matrix,
     start_point: None,
     pending_line: None,
@@ -1397,7 +1409,7 @@ fn CffHintingSink::counter_mask(
     None => HintMask::all()
     Some(m) => m
   }
-  let map = HintMap::new(self.state.scale)
+  let map = HintMap(self.state.scale)
   HintMap::build(
     map,
     self.state,

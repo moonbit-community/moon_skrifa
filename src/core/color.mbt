@@ -86,6 +86,8 @@ pub struct ColorPalettes {
   priv num_records : Int
   priv color_records_off : Int
   priv indices_off : Int
+
+  fn new(font : FontRef) -> ColorPalettes
 }
 
 ///|

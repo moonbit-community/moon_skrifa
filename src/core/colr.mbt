@@ -79,6 +79,8 @@ pub struct ColorGlyphCollection {
   priv _v1_clip_list_off : Int?
   priv _v1_var_index_map_off : Int?
   priv _v1_item_variation_store_off : Int?
+
+  fn new(font : FontRef) -> ColorGlyphCollection
 }
 
 ///|

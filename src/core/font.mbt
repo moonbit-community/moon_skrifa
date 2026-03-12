@@ -18,6 +18,8 @@
 /// Ported from `fontations/skrifa/src/font.rs` (Apache-2.0 OR MIT).
 pub struct GlyphId {
   priv value : UInt16
+
+  fn new(value : UInt16) -> GlyphId
 }
 
 ///|

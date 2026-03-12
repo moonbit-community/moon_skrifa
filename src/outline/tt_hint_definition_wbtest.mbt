@@ -23,7 +23,7 @@ test "tt_hint: definition set too many + invalid range" {
   let code0 = tt_def_code()
   let code = code0[:]
   inspect(code.length() == 1, content="true")
-  let defs = TtDefinitionSet::new(32)
+  let defs = TtDefinitionSet(32)
   for i in 0..<32 {
     inspect(defs.set_definition(i, code, 0, 0) is Ok(_), content="true")
   }
@@ -44,7 +44,7 @@ test "tt_hint: definition set too many + invalid range" {
 test "tt_hint: definition set allocate dense" {
   let code0 = tt_def_code()
   let code = code0[:]
-  let defs = TtDefinitionSet::new(32)
+  let defs = TtDefinitionSet(32)
   for i in 0..<32 {
     inspect(defs.set_definition(i, code, 0, 0) is Ok(_), content="true")
   }
@@ -60,7 +60,7 @@ test "tt_hint: definition set allocate dense" {
 test "tt_hint: definition set allocate sparse" {
   let code0 = tt_def_code()
   let code = code0[:]
-  let defs = TtDefinitionSet::new(3)
+  let defs = TtDefinitionSet(3)
   let keys = [42, 88, 107]
   for k in keys {
     inspect(defs.set_definition(k, code, 0, 0) is Ok(_), content="true")
@@ -81,7 +81,7 @@ test "tt_hint: definition set allocate sparse" {
 test "tt_hint: definition set allocate mixed" {
   let code0 = tt_def_code()
   let code = code0[:]
-  let defs = TtDefinitionSet::new(10)
+  let defs = TtDefinitionSet(10)
   let keys = [0, 1, 2, 3, 123456, -42, -5555, 5, 7]
   for k in keys {
     inspect(defs.set_definition(k, code, 0, 0) is Ok(_), content="true")

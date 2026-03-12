@@ -29,6 +29,8 @@ priv struct Decycler[T] {
   node_ids : FixedArray[T]
   depth : Int
   max_depth : Int
+
+  fn[T : Default] new(max_depth : Int) -> Decycler[T]
 }
 
 ///|
@@ -74,12 +76,12 @@ fn[T] Decycler::leave(self : Decycler[T]) -> Decycler[T] {
 ///|
 test "graph_with_cycles" {
   let nodes = Array::new()
-  nodes.push(Node::new(Array::from_fixed_array([1, 2])))
-  nodes.push(Node::new(Array::from_fixed_array([2, 3])))
-  nodes.push(Node::new(Array::new()))
-  nodes.push(Node::new(Array::from_fixed_array([0, 1])))
+  nodes.push(Node(Array::from_fixed_array([1, 2])))
+  nodes.push(Node(Array::from_fixed_array([2, 3])))
+  nodes.push(Node(Array::new()))
+  nodes.push(Node(Array::from_fixed_array([0, 1])))
   let tree = Tree::{ nodes, }
-  let decycler : Decycler[Int] = Decycler::new(MAX_DEPTH)
+  let decycler : Decycler[Int] = Decycler(MAX_DEPTH)
   let ok = match tree.traverse(decycler) {
     Err(CycleDetected) => true
     _ => false
@@ -91,11 +93,11 @@ test "graph_with_cycles" {
 test "exceeds_max_depth" {
   let nodes = Array::new()
   for ix in 0..<MAX_DEPTH {
-    nodes.push(Node::new(Array::from_fixed_array([ix + 1])))
+    nodes.push(Node(Array::from_fixed_array([ix + 1])))
   }
-  nodes.push(Node::new(Array::new()))
+  nodes.push(Node(Array::new()))
   let tree = Tree::{ nodes, }
-  let decycler : Decycler[Int] = Decycler::new(MAX_DEPTH)
+  let decycler : Decycler[Int] = Decycler(MAX_DEPTH)
   let ok = match tree.traverse(decycler) {
     Err(DepthLimitExceeded) => true
     _ => false
@@ -107,11 +109,11 @@ test "exceeds_max_depth" {
 test "well_formed_tree" {
   let nodes = Array::new()
   for ix in 0..<(MAX_DEPTH - 1) {
-    nodes.push(Node::new(Array::from_fixed_array([ix + 1])))
+    nodes.push(Node(Array::from_fixed_array([ix + 1])))
   }
-  nodes.push(Node::new(Array::new()))
+  nodes.push(Node(Array::new()))
   let tree = Tree::{ nodes, }
-  let decycler : Decycler[Int] = Decycler::new(MAX_DEPTH)
+  let decycler : Decycler[Int] = Decycler(MAX_DEPTH)
   let ok = match tree.traverse(decycler) {
     Ok(_) => true
     _ => false
@@ -125,6 +127,8 @@ const MAX_DEPTH : Int = 64
 ///|
 priv struct Node {
   child_ids : Array[Int]
+
+  fn new(child_ids : Array[Int]) -> Node
 }
 
 ///|

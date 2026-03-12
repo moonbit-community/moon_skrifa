@@ -23,6 +23,8 @@
 ///|
 pub struct GlyphStyles {
   priv map : GlyphStyleMap
+
+  fn new(outlines : OutlineGlyphCollection) -> GlyphStyles
 }
 
 ///|
@@ -30,6 +32,8 @@ priv struct GlyphStyleMap {
   styles : Array[GlyphStyle]
   metrics_map : Array[Byte]
   mut metrics_count : Int
+
+  fn new(glyph_count : Int, font : @moon_skrifa.FontRef) -> GlyphStyleMap
 }
 
 ///|
@@ -270,7 +274,7 @@ pub fn GlyphStyles::new(outlines : OutlineGlyphCollection) -> GlyphStyles {
   let map = if glyph_count <= 0 {
     GlyphStyleMap::default()
   } else {
-    GlyphStyleMap::new(glyph_count, font)
+    GlyphStyleMap(glyph_count, font)
   }
   GlyphStyles::{ map, }
 }

@@ -56,6 +56,8 @@ priv struct TtRetainedGraphicsState {
   ppem : Int
   is_rotated : Bool
   is_stretched : Bool
+
+  fn new(scale : Int, ppem : Int, target : Target) -> TtRetainedGraphicsState
 }
 
 ///|
@@ -215,7 +217,7 @@ fn TtGraphicsState::reset_retained(self : TtGraphicsState) -> Unit {
   let scale = self.retained.scale
   let ppem = self.retained.ppem
   let target = self.retained.target
-  self.retained = TtRetainedGraphicsState::new(scale, ppem, target)
+  self.retained = TtRetainedGraphicsState(scale, ppem, target)
 }
 
 ///|

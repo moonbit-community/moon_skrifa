@@ -21,6 +21,8 @@ pub type NormalizedCoord = Int
 ///|
 pub struct Size {
   ppem : Double?
+
+  fn new(size : Double) -> Size
 }
 
 ///|
@@ -95,6 +97,8 @@ const MAX_INLINE_COORDS : Int = 8
 /// This is a minimal port of `LocationRef` from upstream.
 pub struct LocationRef {
   priv coords : ArrayView[NormalizedCoord]
+
+  fn new(coords : ArrayView[NormalizedCoord]) -> LocationRef
 }
 
 ///|
@@ -137,6 +141,8 @@ pub fn LocationRef::effective_coords(
 /// Owned ordered sequence of normalized variation coordinates.
 pub struct Location {
   priv coords : SmallVec[NormalizedCoord]
+
+  fn new(len : Int) -> Location
 }
 
 ///|

@@ -494,6 +494,12 @@ priv struct Type2Eval {
   mut y : Double
   stack : Array[Double]
   mut stack_ix : Int
+
+  fn new(
+    global_subrs : Type2Index?,
+    local_subrs : Type2Index?,
+    blend_state : Type2BlendState?,
+  ) -> Type2Eval
 }
 
 ///|
@@ -1175,7 +1181,7 @@ fn type2_path(
   local_subrs : Type2Index?,
   blend_state : Type2BlendState?,
 ) -> Array[PathElement]? {
-  let eval = Type2Eval::new(global_subrs, local_subrs, blend_state)
+  let eval = Type2Eval(global_subrs, local_subrs, blend_state)
   if Type2Eval::eval(eval, charstring, 0) {
     Some(eval.out)
   } else {
@@ -1192,8 +1198,8 @@ fn type2_path_hinted(
   hint_state : HintState,
   hint_matrix : CffMatrix?,
 ) -> Array[PathElement]? {
-  let eval = Type2Eval::new(global_subrs, local_subrs, blend_state)
-  eval.cff_hinter = Some(CffHintingSink::new(hint_state, eval.out, hint_matrix))
+  let eval = Type2Eval(global_subrs, local_subrs, blend_state)
+  eval.cff_hinter = Some(CffHintingSink(hint_state, eval.out, hint_matrix))
   if Type2Eval::eval(eval, charstring, 0) {
     Some(eval.out)
   } else {

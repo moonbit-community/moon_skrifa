@@ -19,6 +19,8 @@
 pub struct Setting[T] {
   selector : Tag
   value : T
+
+  fn[T] new(selector : Tag, value : T) -> Setting[T]
 }
 
 ///|

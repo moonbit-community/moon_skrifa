@@ -84,6 +84,8 @@ pub fn Engine::resolve_auto_fallback(Self, OutlineGlyphCollection) -> Self
 
 pub struct GlyphStyles {
   // private fields
+
+  fn new(OutlineGlyphCollection) -> GlyphStyles
 }
 pub fn GlyphStyles::is_digit(Self, @core.GlyphId) -> Bool
 pub fn GlyphStyles::new(OutlineGlyphCollection) -> Self
@@ -115,6 +117,8 @@ pub fn HintingMode::into(Self) -> HintingOptions
 pub struct HintingOptions {
   engine : Engine
   target : Target
+
+  fn new(Engine, Target) -> HintingOptions
 }
 pub fn HintingOptions::default() -> Self
 pub fn HintingOptions::new(Engine, Target) -> Self
@@ -125,6 +129,7 @@ pub(all) enum LcdLayout {
 }
 
 pub struct NullPen {
+  fn new() -> NullPen
 }
 pub fn NullPen::new() -> Self
 pub impl OutlinePen for NullPen
@@ -142,6 +147,8 @@ pub fn OutlineGlyph::path(Self, DrawSettings) -> Result[Array[PathElement], Draw
 
 pub struct OutlineGlyphCollection {
   // private fields
+
+  fn new(@core.FontRef) -> OutlineGlyphCollection
 }
 pub fn[P : OutlinePen] OutlineGlyphCollection::draw(Self, @core.GlyphId, DrawSettings, P) -> Bool
 pub fn[P : OutlinePen] OutlineGlyphCollection::draw_unscaled(Self, @core.GlyphId, P) -> Bool
@@ -190,6 +197,8 @@ pub fn SmoothMode::into(Self) -> Target
 
 pub struct SvgPen {
   // private fields
+
+  fn new() -> SvgPen
 }
 pub fn SvgPen::clear(Self) -> Unit
 pub fn SvgPen::new() -> Self

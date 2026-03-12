@@ -49,6 +49,8 @@ pub(all) suberror HintError {
 pub struct HintingOptions {
   engine : Engine
   target : Target
+
+  fn new(engine : Engine, target : Target) -> HintingOptions
 }
 
 ///|
@@ -245,6 +247,11 @@ priv struct AutoHintInstance {
   styles : GlyphStyles
   is_fixed_width : Bool
   font_style : @moon_skrifa.Style
+
+  fn new(
+    outlines : OutlineGlyphCollection,
+    styles : GlyphStyles?,
+  ) -> AutoHintInstance
 }
 
 ///|
@@ -426,7 +433,7 @@ pub fn HintingInstance::reconfigure(
       match outlines.format() {
         None => ()
         Some(_) =>
-          self.kind = HinterKind::Auto(AutoHintInstance::new(outlines, _styles))
+          self.kind = HinterKind::Auto(AutoHintInstance(outlines, _styles))
       }
     _ => ()
   }
@@ -775,7 +782,7 @@ fn AutoHintInstance::hinted_path(
   let unscaled_metrics = autohint_compute_unscaled_style_metrics(
     metrics_outlines, style_ix, upem,
   )
-  let scale0 = AutoHintScale::new(
+  let scale0 = AutoHintScale(
     ppem,
     upem,
     self.font_style,

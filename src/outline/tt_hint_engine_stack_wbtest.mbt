@@ -39,9 +39,9 @@ fn tt_stack_eq(engine : TtEngine, expected : FixedArray[Int]) -> Bool {
 ///|
 test "tt_hint: engine stack ops (push/depth/pop/swap/roll/cindex/mindex)" {
   let empty = Bytes::from_array(Array::new().op_as_view())
-  let retained = TtRetainedGraphicsState::new(0x10000, 20, Target::default())
+  let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
   let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array::new()
-  let engine = TtEngine::new(
+  let engine = TtEngine(
     empty[:],
     empty[:],
     empty[:],
@@ -153,9 +153,9 @@ test "tt_hint: engine stack ops (push/depth/pop/swap/roll/cindex/mindex)" {
 ///|
 test "tt_hint: engine cindex/mindex accept zero index (FreeType style)" {
   let empty = Bytes::from_array(Array::new().op_as_view())
-  let retained = TtRetainedGraphicsState::new(0x10000, 20, Target::default())
+  let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
   let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array::new()
-  let engine = TtEngine::new(
+  let engine = TtEngine(
     empty[:],
     empty[:],
     empty[:],

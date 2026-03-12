@@ -15,9 +15,9 @@
 ///|
 fn tt_make_engine_for_delta() -> TtEngine {
   let empty = Bytes::from_array(Array::new().op_as_view())
-  let retained = TtRetainedGraphicsState::new(0x10000, 20, Target::default())
+  let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
   let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array::new()
-  let engine = TtEngine::new(
+  let engine = TtEngine(
     empty[:],
     empty[:],
     empty[:],
@@ -69,13 +69,14 @@ test "tt_hint: delta DELTAP" {
 
   // (ppem_bias, opcode)
   let cases : Array[(Int, Int)] = Array::from_fixed_array([
-    (0, 0x5D), // DELTAP1
-    (16, 0x71), // DELTAP2
-    (32, 0x72), // DELTAP3
-  ])
+      (0, 0x5D), // DELTAP1
+      (16, 0x71), // DELTAP2
+      (32, 0x72),
+    ], // DELTAP3
+  )
   for i in 0..<cases.length() {
     let (ppem_bias, opcode) = cases.at(i)
-    engine.graphics.retained = TtRetainedGraphicsState::new(
+    engine.graphics.retained = TtRetainedGraphicsState(
       engine.graphics.retained.scale,
       raw_ppem + ppem_bias,
       engine.graphics.retained.target,
@@ -103,13 +104,14 @@ test "tt_hint: delta DELTAC" {
 
   // (ppem_bias, opcode)
   let cases : Array[(Int, Int)] = Array::from_fixed_array([
-    (0, 0x73), // DELTAC1
-    (16, 0x74), // DELTAC2
-    (32, 0x75), // DELTAC3
-  ])
+      (0, 0x73), // DELTAC1
+      (16, 0x74), // DELTAC2
+      (32, 0x75),
+    ], // DELTAC3
+  )
   for i in 0..<cases.length() {
     let (ppem_bias, opcode) = cases.at(i)
-    engine.graphics.retained = TtRetainedGraphicsState::new(
+    engine.graphics.retained = TtRetainedGraphicsState(
       engine.graphics.retained.scale,
       raw_ppem + ppem_bias,
       engine.graphics.retained.target,

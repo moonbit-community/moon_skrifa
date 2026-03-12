@@ -761,6 +761,8 @@ pub fn LocalizedString::to_string(self : LocalizedString) -> String {
 pub struct LocalizedStrings {
   priv id : StringId
   priv strings : Array[LocalizedString]
+
+  fn new(font : FontRef, id : StringId) -> LocalizedStrings
 }
 
 ///|

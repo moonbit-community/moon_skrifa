@@ -40,9 +40,9 @@ test "tt_hint: fdef/call/loopcall basic flow" {
     ]).op_as_view(),
   )
   let empty = Bytes::from_array(Array::new().op_as_view())
-  let retained = TtRetainedGraphicsState::new(0x10000, 20, Target::default())
+  let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
   let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array::new()
-  let engine = TtEngine::new(
+  let engine = TtEngine(
     font[:],
     empty[:],
     empty[:],
@@ -76,9 +76,9 @@ test "tt_hint: fdef in glyph program errors" {
     ]).op_as_view(),
   )
   let empty = Bytes::from_array(Array::new().op_as_view())
-  let retained = TtRetainedGraphicsState::new(0x10000, 20, Target::default())
+  let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
   let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array::new()
-  let engine = TtEngine::new(
+  let engine = TtEngine(
     empty[:],
     empty[:],
     glyph[:],
@@ -116,9 +116,9 @@ test "tt_hint: nested definitions error" {
     ]).op_as_view(),
   )
   let empty = Bytes::from_array(Array::new().op_as_view())
-  let retained = TtRetainedGraphicsState::new(0x10000, 20, Target::default())
+  let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
   let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array::new()
-  let engine = TtEngine::new(
+  let engine = TtEngine(
     font[:],
     empty[:],
     empty[:],
@@ -151,9 +151,9 @@ test "tt_hint: TooManyDefinitions when max_function_defs=0" {
     ]).op_as_view(),
   )
   let empty = Bytes::from_array(Array::new().op_as_view())
-  let retained = TtRetainedGraphicsState::new(0x10000, 20, Target::default())
+  let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
   let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array::new()
-  let engine = TtEngine::new(
+  let engine = TtEngine(
     font[:],
     empty[:],
     empty[:],

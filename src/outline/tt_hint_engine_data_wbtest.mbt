@@ -15,9 +15,9 @@
 ///|
 fn tt_make_engine_for_data_ops() -> TtEngine {
   let empty = Bytes::from_array(Array::new().op_as_view())
-  let retained = TtRetainedGraphicsState::new(0x10000, 20, Target::default())
+  let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
   let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array::new()
-  let engine = TtEngine::new(
+  let engine = TtEngine(
     empty[:],
     empty[:],
     empty[:],
@@ -74,7 +74,7 @@ fn tt_set_test_vectors(engine : TtEngine) -> Unit {
 test "tt_hint: data MPPEM/MPS" {
   let engine = tt_make_engine_for_data_ops()
   let ppem = 20
-  engine.graphics.retained = TtRetainedGraphicsState::new(
+  engine.graphics.retained = TtRetainedGraphicsState(
     engine.graphics.retained.scale,
     ppem,
     engine.graphics.retained.target,
@@ -147,7 +147,7 @@ test "tt_hint: data MD scaled" {
 test "tt_hint: data MD unscaled" {
   let engine = tt_make_engine_for_data_ops()
   tt_set_test_vectors(engine)
-  engine.graphics.retained = TtRetainedGraphicsState::new(
+  engine.graphics.retained = TtRetainedGraphicsState(
     375912,
     engine.graphics.retained.ppem,
     engine.graphics.retained.target,

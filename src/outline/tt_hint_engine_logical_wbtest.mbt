@@ -15,9 +15,9 @@
 ///|
 fn tt_make_engine_for_logical() -> TtEngine {
   let empty = Bytes::from_array(Array::new().op_as_view())
-  let retained = TtRetainedGraphicsState::new(0x10000, 20, Target::default())
+  let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
   let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array::new()
-  TtEngine::new(
+  TtEngine(
     empty[:],
     empty[:],
     empty[:],

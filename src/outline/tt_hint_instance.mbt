@@ -77,8 +77,8 @@ priv struct TtHintInstance {
 ///|
 fn TtHintInstance::default() -> TtHintInstance {
   TtHintInstance::{
-    functions: TtDefinitionSet::new(0),
-    instructions: TtDefinitionSet::new(0),
+    functions: TtDefinitionSet(0),
+    instructions: TtDefinitionSet(0),
     cvt: Array::new(),
     storage: Array::new(),
     retained: TtRetainedGraphicsState::default(),
@@ -204,8 +204,8 @@ fn TtHintInstance::reconfigure(
     max_stack,
     max_storage,
   ) = tt_parse_maxp_limits(maxp)
-  self.functions = TtDefinitionSet::new(max_function_defs)
-  self.instructions = TtDefinitionSet::new(max_instruction_defs)
+  self.functions = TtDefinitionSet(max_function_defs)
+  self.instructions = TtDefinitionSet(max_instruction_defs)
   self.max_stack = max_stack
   self.max_function_defs = max_function_defs
   self.max_instruction_defs = max_instruction_defs
@@ -238,8 +238,8 @@ fn TtHintInstance::reconfigure(
   // Create engine to run fpgm+prep.
   let fpgm = font.table(TAG_FPGM_TT).unwrap_or(tt_empty_bytes_view())
   let prep = font.table(TAG_PREP_TT).unwrap_or(tt_empty_bytes_view())
-  let retained = TtRetainedGraphicsState::new(scale_bits, rounded_ppem, target)
-  let engine = TtEngine::new(
+  let retained = TtRetainedGraphicsState(scale_bits, rounded_ppem, target)
+  let engine = TtEngine(
     fpgm,
     prep,
     tt_empty_bytes_view(),
@@ -299,7 +299,7 @@ fn TtHintInstance::hint_glyph(
   } else {
     Some(glyph_zone.points.length())
   }
-  let engine = TtEngine::new(
+  let engine = TtEngine(
     fpgm,
     prep,
     glyph_code,

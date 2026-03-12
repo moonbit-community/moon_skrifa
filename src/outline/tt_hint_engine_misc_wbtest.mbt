@@ -19,7 +19,7 @@ fn tt_make_engine_for_misc(
   coords : Array[@moon_skrifa.NormalizedCoord],
 ) -> TtEngine {
   let empty = Bytes::from_array(Array::new().op_as_view())
-  TtEngine::new(
+  TtEngine(
     empty[:],
     empty[:],
     empty[:],

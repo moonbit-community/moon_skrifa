@@ -22,7 +22,7 @@ test "tt_hint: program state accounting push/pop frame" {
   let font_code = tt_prog_bytes([(0).to_byte()])
   let cv_code = tt_prog_bytes([(1).to_byte()])
   let glyph_code = tt_prog_bytes([(2).to_byte()])
-  let state = TtProgramState::new(
+  let state = TtProgramState(
     font_code[:],
     cv_code[:],
     glyph_code[:],
@@ -63,7 +63,7 @@ test "tt_hint: program state loopcall frame" {
   let font_code = tt_prog_bytes([(0).to_byte()])
   let cv_code = tt_prog_bytes([(1).to_byte()])
   let glyph_code = tt_prog_bytes([(2).to_byte()])
-  let state = TtProgramState::new(
+  let state = TtProgramState(
     font_code[:],
     cv_code[:],
     glyph_code[:],
@@ -88,7 +88,7 @@ test "tt_hint: program state call stack underflow" {
   let font_code = tt_prog_bytes([(0).to_byte()])
   let cv_code = tt_prog_bytes([(1).to_byte()])
   let glyph_code = tt_prog_bytes([(2).to_byte()])
-  let state = TtProgramState::new(
+  let state = TtProgramState(
     font_code[:],
     cv_code[:],
     glyph_code[:],
@@ -106,7 +106,7 @@ test "tt_hint: program state call stack overflow" {
   let font_code = tt_prog_bytes([(0).to_byte()])
   let cv_code = tt_prog_bytes([(1).to_byte()])
   let glyph_code = tt_prog_bytes([(2).to_byte()])
-  let state = TtProgramState::new(
+  let state = TtProgramState(
     font_code[:],
     cv_code[:],
     glyph_code[:],

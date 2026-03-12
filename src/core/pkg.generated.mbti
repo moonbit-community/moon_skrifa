@@ -69,6 +69,8 @@ pub struct Attributes {
   stretch : Stretch
   style : Style
   weight : Weight
+
+  fn new(FontRef) -> Attributes
 }
 pub fn Attributes::new(FontRef) -> Self
 pub fn Attributes::stretch(Self) -> Stretch
@@ -89,6 +91,8 @@ pub fn Axis::tag(Self) -> Tag
 
 pub struct AxisCollection {
   // private fields
+
+  fn new(FontRef) -> AxisCollection
 }
 pub fn AxisCollection::get(Self, Int) -> Axis?
 pub fn AxisCollection::get_by_tag(Self, Tag) -> Axis?
@@ -131,6 +135,8 @@ pub fn BitmapStrike::ppem_y(Self) -> Int
 
 pub struct BitmapStrikes {
   // private fields
+
+  fn new(FontRef) -> BitmapStrikes
 }
 pub fn BitmapStrikes::format(Self) -> BitmapFormat?
 pub fn BitmapStrikes::get(Self, Int) -> BitmapStrike?
@@ -148,6 +154,8 @@ pub(all) enum Brush {
 
 pub struct Charmap {
   // private fields
+
+  fn new(FontRef) -> Charmap
 }
 pub fn Charmap::default() -> Self
 pub fn Charmap::glyph_id(Self, UInt) -> GlyphId?
@@ -173,6 +181,8 @@ pub fn Color::r(Self) -> Byte
 
 pub struct ColorGlyphCollection {
   // private fields
+
+  fn new(FontRef) -> ColorGlyphCollection
 }
 pub fn ColorGlyphCollection::has_colr_v1(Self) -> Bool
 pub fn ColorGlyphCollection::layers(Self, GlyphId) -> Array[ColorLayer]?
@@ -188,6 +198,8 @@ pub fn ColorLayer::palette_index(Self) -> Int
 
 pub struct ColorPalettes {
   // private fields
+
+  fn new(FontRef) -> ColorPalettes
 }
 pub fn ColorPalettes::color(Self, Int, Int) -> Color?
 pub fn ColorPalettes::entries_per_palette(Self) -> Int
@@ -286,6 +298,8 @@ pub fn GlyphBounds::y_min(Self) -> Double
 
 pub struct GlyphId {
   // private fields
+
+  fn new(UInt16) -> GlyphId
 }
 pub fn GlyphId::default() -> Self
 pub fn GlyphId::new(UInt16) -> Self
@@ -300,6 +314,8 @@ pub impl Show for GlyphId
 
 pub struct GlyphMetrics {
   // private fields
+
+  fn new(FontRef, Size, LocationRef) -> GlyphMetrics
 }
 pub fn GlyphMetrics::advance_width(Self, GlyphId) -> Double?
 pub fn GlyphMetrics::bounds(Self, GlyphId) -> GlyphBounds?
@@ -321,6 +337,8 @@ pub(all) enum GlyphNameSource {
 
 pub struct GlyphNames {
   // private fields
+
+  fn new(FontRef) -> GlyphNames
 }
 pub fn GlyphNames::get(Self, GlyphId) -> GlyphName?
 pub fn GlyphNames::new(FontRef) -> Self
@@ -345,6 +363,8 @@ pub fn LocalizedString::to_string(Self) -> String
 
 pub struct LocalizedStrings {
   // private fields
+
+  fn new(FontRef, UInt16) -> LocalizedStrings
 }
 pub fn LocalizedStrings::english_or_first(Self) -> LocalizedString?
 pub fn LocalizedStrings::id(Self) -> UInt16
@@ -353,6 +373,8 @@ pub fn LocalizedStrings::strings(Self) -> ArrayView[LocalizedString]
 
 pub struct Location {
   // private fields
+
+  fn new(Int) -> Location
 }
 pub fn Location::as_ref(Self) -> LocationRef
 pub fn Location::coords(Self) -> ArrayView[Int]
@@ -361,6 +383,8 @@ pub fn Location::new(Int) -> Self
 
 pub struct LocationRef {
   // private fields
+
+  fn new(ArrayView[Int]) -> LocationRef
 }
 pub fn LocationRef::coords(Self) -> ArrayView[Int]
 pub fn LocationRef::default() -> Self
@@ -375,6 +399,8 @@ pub(all) enum MapVariant {
 
 pub struct MappingIndex {
   // private fields
+
+  fn new(FontRef) -> MappingIndex
 }
 pub fn MappingIndex::charmap(Self, FontRef) -> Charmap
 pub fn MappingIndex::default() -> Self
@@ -395,6 +421,8 @@ pub struct Metrics {
   underline : Decoration?
   strikeout : Decoration?
   bounds : GlyphBounds?
+
+  fn new(FontRef, Size, LocationRef) -> Metrics
 }
 pub fn Metrics::ascent(Self) -> Double
 pub fn Metrics::average_width(Self) -> Double?
@@ -422,6 +450,8 @@ pub fn NamedInstance::user_coords(Self) -> ArrayView[Double]
 
 pub struct NamedInstanceCollection {
   // private fields
+
+  fn new(FontRef) -> NamedInstanceCollection
 }
 pub fn NamedInstanceCollection::get(Self, Int) -> NamedInstance?
 pub fn NamedInstanceCollection::is_empty(Self) -> Bool
@@ -444,6 +474,8 @@ pub(all) enum PaintError {
 pub struct Setting[T] {
   selector : Tag
   value : T
+
+  fn[T] new(Tag, T) -> Setting[T]
 }
 pub fn[T] Setting::from_str(String, T) -> Self[T]
 pub fn[T] Setting::from_str_tuple((String, T)) -> Self[T]
@@ -452,6 +484,8 @@ pub fn[T] Setting::new(Tag, T) -> Self[T]
 
 pub struct Size {
   ppem : Double?
+
+  fn new(Double) -> Size
 }
 pub fn Size::fixed_linear_scale(Self, UInt16) -> Int
 pub fn Size::linear_scale(Self, UInt16) -> Double
@@ -462,6 +496,8 @@ pub fn Size::value(Self) -> Double
 
 pub struct Stretch {
   // private fields
+
+  fn new(Double) -> Stretch
 }
 pub fn Stretch::condensed() -> Self
 pub fn Stretch::default() -> Self
@@ -485,6 +521,8 @@ pub(all) enum Style {
 
 pub struct Tag {
   // private fields
+
+  fn new(Bytes) -> Tag
 }
 pub fn Tag::default() -> Self
 pub fn Tag::from_str(String) -> Self?
@@ -509,6 +547,8 @@ pub fn Transform::mul(Self, Self) -> Self
 
 pub struct Weight {
   // private fields
+
+  fn new(Double) -> Weight
 }
 pub fn Weight::black() -> Self
 pub fn Weight::bold() -> Self

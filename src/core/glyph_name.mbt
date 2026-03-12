@@ -441,6 +441,8 @@ priv enum GlyphNamesInner {
 ///|
 pub struct GlyphNames {
   priv inner : GlyphNamesInner
+
+  fn new(font : FontRef) -> GlyphNames
 }
 
 ///|

@@ -194,6 +194,8 @@ pub struct Charmap {
   priv codepoint_subtable : CodepointSubtable?
   priv variant_off : Int?
   priv cmap12_limits : CmapIterLimits
+
+  fn new(font : FontRef) -> Charmap
 }
 
 ///|
@@ -308,6 +310,8 @@ pub struct MappingIndex {
   priv codepoint_is_symbol : Bool
   priv variant_index : Int?
   priv cmap12_limits : CmapIterLimits
+
+  fn new(font : FontRef) -> MappingIndex
 }
 
 ///|

@@ -22,9 +22,9 @@ test "tt_hint: loop budget backward jumps" {
   let zero = (0).to_byte()
   let font = Bytes::from_array(Array::make(2048, zero).op_as_view())
   let empty = Bytes::from_array(Array::new().op_as_view())
-  let retained = TtRetainedGraphicsState::new(0x10000, 20, Target::default())
+  let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
   let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array::new()
-  let engine = TtEngine::new(
+  let engine = TtEngine(
     font[:],
     empty[:],
     empty[:],
@@ -68,7 +68,7 @@ test "tt_hint: loop budget backward jumps" {
 ///|
 test "tt_hint: loop budget loopcall" {
   let empty = Bytes::from_array(Array::new().op_as_view())
-  let retained = TtRetainedGraphicsState::new(0x10000, 20, Target::default())
+  let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
   let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array::new()
 
   // Define FDEF 0 in the font program (body is ENDF only).
@@ -91,7 +91,7 @@ test "tt_hint: loop budget loopcall" {
     (0).to_byte(),
     (0x2A).to_byte(),
   ])
-  let engine = TtEngine::new(
+  let engine = TtEngine(
     font[:],
     prep[:],
     empty[:],
@@ -118,9 +118,9 @@ test "tt_hint: loop budget loopcall" {
 test "tt_hint: jmpr does not bounds-check pc" {
   let code = Bytes::from_array(Array::make(8, (0).to_byte()).op_as_view())
   let empty = Bytes::from_array(Array::new().op_as_view())
-  let retained = TtRetainedGraphicsState::new(0x10000, 20, Target::default())
+  let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
   let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array::new()
-  let engine = TtEngine::new(
+  let engine = TtEngine(
     code[:],
     empty[:],
     empty[:],
@@ -154,9 +154,9 @@ test "tt_hint: DefinitionTooLarge in pedantic mode" {
   huge.push((0x2D).to_byte())
   let font = Bytes::from_array(huge.op_as_view())
   let empty = Bytes::from_array(Array::new().op_as_view())
-  let retained = TtRetainedGraphicsState::new(0x10000, 20, Target::default())
+  let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
   let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array::new()
-  let engine = TtEngine::new(
+  let engine = TtEngine(
     font[:],
     empty[:],
     empty[:],

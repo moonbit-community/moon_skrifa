@@ -545,6 +545,8 @@ fn autohint_outline_glyf_glyph_slice(
 priv struct AutoHintOutlineData {
   points : Array[AutoHintPoint]
   contours : Array[AutoHintContour]
+
+  fn new() -> AutoHintOutlineData
 }
 
 ///|
@@ -610,7 +612,7 @@ fn autohint_outline_decode_simple_glyf(
   glyph : BytesView,
   number_of_contours : Int,
 ) -> Result[AutoHintOutlineData, DrawError] {
-  let data = AutoHintOutlineData::new()
+  let data = AutoHintOutlineData()
   let mut off = 10
   let end_pts : Array[Int] = Array::new()
   for _ in 0..<number_of_contours {
@@ -765,20 +767,20 @@ fn autohint_outline_build_glyf_raw(
     Some(v) => v
   }
   if glyph.length() == 0 {
-    return Ok(AutoHintOutlineData::new())
+    return Ok(AutoHintOutlineData())
   }
   if glyph.length() < 10 {
     return Err(DrawError::Read)
   }
   let number_of_contours = autohint_outline_read_i16_be(glyph, 0).unwrap_or(0)
   if number_of_contours == 0 {
-    return Ok(AutoHintOutlineData::new())
+    return Ok(AutoHintOutlineData())
   }
   if number_of_contours > 0 {
     return autohint_outline_decode_simple_glyf(glyph, number_of_contours)
   }
   // Composite glyph.
-  let data = AutoHintOutlineData::new()
+  let data = AutoHintOutlineData()
   let mut off = 10
   let mut last_flags = 0
   while true {

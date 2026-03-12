@@ -20,9 +20,9 @@ fn tt_bytes_for_control_flow(xs : FixedArray[Byte]) -> Bytes {
 ///|
 fn tt_make_engine_for_control_flow() -> TtEngine {
   let empty = Bytes::from_array(Array::new().op_as_view())
-  let retained = TtRetainedGraphicsState::new(0x10000, 20, Target::default())
+  let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
   let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array::new()
-  TtEngine::new(
+  TtEngine(
     empty[:],
     empty[:],
     empty[:],
@@ -60,7 +60,7 @@ test "tt_hint: control flow IF/ELSE nesting skip" {
     (0x59).to_byte(), // EIF
     (0x59).to_byte(), // EIF
   ])
-  engine.program.decoder = TtDecoder::new(code[:])
+  engine.program.decoder = TtDecoder(code[:])
 
   // Outer IF (at pc=0, so body starts at pc=1).
   engine.program.decoder.pc = 1

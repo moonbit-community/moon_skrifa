@@ -37,6 +37,8 @@ priv struct TtLoopBudget {
   limit : Int
   mut backward_jumps : Int
   mut loop_calls : Int
+
+  fn new(cvt_len : Int, point_count : Int?) -> TtLoopBudget
 }
 
 ///|
@@ -97,6 +99,22 @@ priv struct TtEngine {
   loop_budget : TtLoopBudget
   axis_count : Int
   coords : ArrayView[@moon_skrifa.NormalizedCoord]
+
+  fn new(
+    font_code : BytesView,
+    prep_code : BytesView,
+    glyph_code : BytesView,
+    retained : TtRetainedGraphicsState,
+    cvt : Array[Int],
+    storage : Array[Int],
+    point_count : Int?,
+    axis_count : Int,
+    coords : ArrayView[@moon_skrifa.NormalizedCoord],
+    max_stack : Int,
+    max_call_depth : Int,
+    max_function_defs : Int,
+    max_instruction_defs : Int,
+  ) -> TtEngine
 }
 
 ///|
@@ -119,18 +137,18 @@ fn TtEngine::new(
   let graphics = TtGraphicsState::default()
   graphics.retained = retained
   graphics.update_projection_state()
-  let loop_budget = TtLoopBudget::new(cvt.length(), point_count)
+  let loop_budget = TtLoopBudget(cvt.length(), point_count)
   TtEngine::{
-    program: TtProgramState::new(
+    program: TtProgramState(
       font_code,
       prep_code,
       glyph_code,
       TtProgram::Font,
       max_call_depth,
     ),
-    value_stack: TtValueStack::new(stack_buf, true),
-    functions: TtDefinitionSet::new(max_function_defs),
-    instructions: TtDefinitionSet::new(max_instruction_defs),
+    value_stack: TtValueStack(stack_buf, true),
+    functions: TtDefinitionSet(max_function_defs),
+    instructions: TtDefinitionSet(max_instruction_defs),
     graphics,
     cvt,
     storage,

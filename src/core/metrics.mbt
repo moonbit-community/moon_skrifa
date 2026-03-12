@@ -271,6 +271,8 @@ pub struct Metrics {
   underline : Decoration?
   strikeout : Decoration?
   bounds : GlyphBounds?
+
+  fn new(font : FontRef, size : Size, _location : LocationRef) -> Metrics
 }
 
 ///|
@@ -552,6 +554,8 @@ pub struct GlyphMetrics {
   priv gvar_glyph_count : Int
   priv gvar_flags : Int
   priv gvar_data_array_off : Int
+
+  fn new(font : FontRef, size : Size, location : LocationRef) -> GlyphMetrics
 }
 
 ///|

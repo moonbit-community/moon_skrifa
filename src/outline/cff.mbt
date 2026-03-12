@@ -496,7 +496,7 @@ fn cff_outline_path_hinted(
     }
     _ => None
   }
-  let hint_state = HintState::new(priv_info.hint_params, hint_scale)
+  let hint_state = HintState(priv_info.hint_params, hint_scale)
   type2_path_hinted(
     charstring,
     Some(global_ix),

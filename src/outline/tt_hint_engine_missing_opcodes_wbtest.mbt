@@ -20,7 +20,7 @@ fn tt_bytes(xs : FixedArray[Byte]) -> Bytes {
 ///|
 test "tt_hint: missing opcodes (getvariation/getdata/odd/even/mps/debug)" {
   let empty = Bytes::from_array(Array::new().op_as_view())
-  let retained = TtRetainedGraphicsState::new(0x10000, 20, Target::default())
+  let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
   let cvt : Array[Int] = Array::new()
   let storage : Array[Int] = Array::new()
   let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array::new()
@@ -35,7 +35,7 @@ test "tt_hint: missing opcodes (getvariation/getdata/odd/even/mps/debug)" {
     (0x2D).to_byte(),
   ])
   let prep = tt_bytes([(0x91).to_byte()])
-  let engine0 = TtEngine::new(
+  let engine0 = TtEngine(
     font[:],
     prep[:],
     empty[:],
@@ -59,7 +59,7 @@ test "tt_hint: missing opcodes (getvariation/getdata/odd/even/mps/debug)" {
     8192,
   ])
   let prep1 = tt_bytes([(0x91).to_byte()])
-  let engine1 = TtEngine::new(
+  let engine1 = TtEngine(
     empty[:],
     prep1[:],
     empty[:],
@@ -80,7 +80,7 @@ test "tt_hint: missing opcodes (getvariation/getdata/odd/even/mps/debug)" {
 
   // GETDATA pushes 17 for variable fonts.
   let prep2 = tt_bytes([(0x92).to_byte()])
-  let engine2 = TtEngine::new(
+  let engine2 = TtEngine(
     empty[:],
     prep2[:],
     empty[:],
@@ -107,7 +107,7 @@ test "tt_hint: missing opcodes (getvariation/getdata/odd/even/mps/debug)" {
     (128).to_byte(),
     (0x57).to_byte(),
   ])
-  let engine3 = TtEngine::new(
+  let engine3 = TtEngine(
     empty[:],
     prep3[:],
     empty[:],
@@ -128,7 +128,7 @@ test "tt_hint: missing opcodes (getvariation/getdata/odd/even/mps/debug)" {
 
   // MPS: ppem * 64.
   let prep4 = tt_bytes([(0x4C).to_byte()])
-  let engine4 = TtEngine::new(
+  let engine4 = TtEngine(
     empty[:],
     prep4[:],
     empty[:],
@@ -148,7 +148,7 @@ test "tt_hint: missing opcodes (getvariation/getdata/odd/even/mps/debug)" {
 
   // DEBUG: pops a value and leaves stack empty.
   let prep5 = tt_bytes([(0xB0).to_byte(), (1).to_byte(), (0x4F).to_byte()])
-  let engine5 = TtEngine::new(
+  let engine5 = TtEngine(
     empty[:],
     prep5[:],
     empty[:],

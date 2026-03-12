@@ -69,6 +69,8 @@ fn TtDefinition::slice(self : TtDefinition) -> BytesView? {
 ///|
 priv struct TtDefinitionSet {
   defs : Array[TtDefinition]
+
+  fn new(cap : Int) -> TtDefinitionSet
 }
 
 ///|

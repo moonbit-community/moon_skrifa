@@ -15,9 +15,9 @@
 ///|
 fn tt_make_engine_for_cvt_storage() -> TtEngine {
   let empty = Bytes::from_array(Array::new().op_as_view())
-  let retained = TtRetainedGraphicsState::new(0x10000, 20, Target::default())
+  let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
   let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array::new()
-  TtEngine::new(
+  TtEngine(
     empty[:],
     empty[:],
     empty[:],
@@ -101,7 +101,7 @@ test "tt_hint: CVT WCVTP/WCVTF/RCVT write and read" {
 test "tt_hint: CVT WCVTF scaling uses 16.16 mul (fontations parity)" {
   let engine = tt_make_engine_for_cvt_storage()
   let scale = 64
-  engine.graphics.retained = TtRetainedGraphicsState::new(
+  engine.graphics.retained = TtRetainedGraphicsState(
     scale,
     engine.graphics.retained.ppem,
     engine.graphics.retained.target,

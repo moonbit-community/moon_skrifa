@@ -32,6 +32,8 @@ priv enum Storage[T] {
 priv struct SmallVec[T] {
   storage : Storage[T]
   inline_cap : Int
+
+  fn[T : Default] new(inline_cap : Int) -> SmallVec[T]
 }
 
 ///|
@@ -250,7 +252,7 @@ test "store_and_read_heap" {
 
 ///|
 test "spill_to_heap" {
-  let mut vec : SmallVec[Int] = SmallVec::new(4)
+  let mut vec : SmallVec[Int] = SmallVec(4)
   for i in 0..<4 {
     vec = vec.push(i)
   }
@@ -262,7 +264,7 @@ test "spill_to_heap" {
 
 ///|
 test "clear_inline" {
-  let mut vec : SmallVec[Int] = SmallVec::new(4)
+  let mut vec : SmallVec[Int] = SmallVec(4)
   for i in 0..<4 {
     vec = vec.push(i)
   }
@@ -274,7 +276,7 @@ test "clear_inline" {
 
 ///|
 test "clear_heap" {
-  let mut vec : SmallVec[Int] = SmallVec::new(3)
+  let mut vec : SmallVec[Int] = SmallVec(3)
   for i in 0..<4 {
     vec = vec.push(i)
   }
@@ -286,7 +288,7 @@ test "clear_heap" {
 
 ///|
 test "reserve" {
-  let mut vec : SmallVec[Int] = SmallVec::new(3)
+  let mut vec : SmallVec[Int] = SmallVec(3)
   for i in 0..<2 {
     vec = vec.push(i)
   }
@@ -328,7 +330,7 @@ test "get_bounds" {
 
 ///|
 test "iter" {
-  let mut vec : SmallVec[Int] = SmallVec::new(3)
+  let mut vec : SmallVec[Int] = SmallVec(3)
   for i in 0..<3 {
     vec = vec.push(i)
   }
@@ -340,7 +342,7 @@ test "iter" {
 
 ///|
 test "into_iter" {
-  let mut vec : SmallVec[Int] = SmallVec::new(3)
+  let mut vec : SmallVec[Int] = SmallVec(3)
   for i in 0..<3 {
     vec = vec.push(i)
   }

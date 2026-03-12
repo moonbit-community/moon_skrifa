@@ -35,6 +35,8 @@ priv struct TtInstruction {
 priv struct TtDecoder {
   code : BytesView
   mut pc : Int
+
+  fn new(code : BytesView) -> TtDecoder
 }
 
 ///|
