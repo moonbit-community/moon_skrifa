@@ -665,8 +665,8 @@ fn cmap_iter_format12(
 ///|
 fn cmap_iter_format4(cmap : BytesView, base : Int) -> Array[(UInt, GlyphId)] {
   let out : Array[(UInt, GlyphId)] = Array::new()
-  // BMP only; iterate over all BMP codepoints and query the mapping. This is
-  // simpler than a faithful port of read-fonts' iterator and is bounded.
+  // BMP only; enumerate all codepoints and reuse `cmap_map_format4`, keeping
+  // iterator semantics aligned with point lookups.
   for cp in 0..<0x10000 {
     match cmap_map_format4(cmap, base, cp) {
       None => ()

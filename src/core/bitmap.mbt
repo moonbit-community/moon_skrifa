@@ -288,6 +288,44 @@ pub fn BitmapStrikes::is_empty(self : BitmapStrikes) -> Bool {
 }
 
 ///|
+pub fn BitmapStrikes::iter(self : BitmapStrikes) -> Array[BitmapStrike] {
+  let out : Array[BitmapStrike] = Array::new(capacity=self.len())
+  for i in 0..<self.len() {
+    if self.get(i) is Some(strike) {
+      out.push(strike)
+    }
+  }
+  out
+}
+
+///|
+pub fn BitmapStrikes::glyph_for_size(
+  self : BitmapStrikes,
+  size : Size,
+  glyph_id : GlyphId,
+) -> BitmapGlyph? {
+  let target_ppem = size.ppem().unwrap_or(3.402823e38)
+  let mut best : BitmapGlyph? = None
+  let mut best_size = 0.0
+  for strike in self.iter() {
+    let strike_size = strike.ppem_y().to_double()
+    if best is Some(_) {
+      if (strike_size >= target_ppem && strike_size < best_size) ||
+        (best_size < target_ppem && strike_size > best_size) {
+        if strike.get(glyph_id) is Some(glyph) {
+          best = Some(glyph)
+          best_size = strike_size
+        }
+      }
+    } else if strike.get(glyph_id) is Some(glyph) {
+      best = Some(glyph)
+      best_size = strike_size
+    }
+  }
+  best
+}
+
+///|
 pub fn BitmapStrikes::get(self : BitmapStrikes, index : Int) -> BitmapStrike? {
   if index < 0 || index >= self.len() {
     return None

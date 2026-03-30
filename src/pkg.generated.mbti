@@ -94,9 +94,17 @@ pub using @core {type Charmap}
 
 pub using @core {type Color}
 
+pub using @core {type ColorGlyph}
+
 pub using @core {type ColorGlyphCollection}
 
+pub using @core {type ColorGlyphFormat}
+
 pub using @core {type ColorLayer}
+
+pub using @core {type ColorPalette}
+
+pub using @core {type ColorPaletteType}
 
 pub using @core {type ColorPalettes}
 

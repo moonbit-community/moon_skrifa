@@ -13,7 +13,7 @@
 // limitations under the License.
 
 ///|
-/// Glyph zones for TrueType hinting (partial port).
+/// Glyph zones for TrueType hinting.
 ///
 /// Ported from `fontations/skrifa/src/outline/glyf/hint/zone.rs` (Apache-2.0 OR MIT).
 priv struct TtPoint {

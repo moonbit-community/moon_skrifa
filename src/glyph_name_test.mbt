@@ -96,7 +96,30 @@ fn glyph_test_build_post_v2() -> Bytes {
 }
 
 ///|
-fn glyph_test_build_cff_custom_charset() -> Bytes {
+fn glyph_test_build_post_v2_standard_name(name_index : Int) -> Bytes {
+  let out : Array[Byte] = Array::new()
+  glyph_test_push_u32_be(out, glyph_test_u32(0x00020000))
+  for _ in 0..<28 {
+    out.push(0 |> Int::to_byte)
+  }
+  glyph_test_push_u16_be(out, 1)
+  glyph_test_push_u16_be(out, name_index)
+  Bytes::from_array(out.op_as_view())
+}
+
+///|
+fn glyph_test_build_post_v1() -> Bytes {
+  let out : Array[Byte] = Array::new()
+  glyph_test_push_u32_be(out, glyph_test_u32(0x00010000))
+  // Keep 32-byte post v1 header shape.
+  for _ in 0..<28 {
+    out.push(0 |> Int::to_byte)
+  }
+  Bytes::from_array(out.op_as_view())
+}
+
+///|
+fn glyph_test_build_cff_custom_charset(format : Int, sid : Int) -> Bytes {
   // Header (4)
   let out : Array[Byte] = Array::new()
   out.push(1 |> Int::to_byte)
@@ -130,7 +153,15 @@ fn glyph_test_build_cff_custom_charset() -> Bytes {
   // Top DICT: charset offset + charstrings offset.
   // We'll place it right after global subrs, so compute offsets.
   // Header + NameIX + TopIX + StrIX + GlobalIX + Charset + CharStrings
-  let charset_len = 1 + 2 // format 0 + one SID for gid1
+  let charset_len = match format {
+    0 => 1 + 2
+    1 => 1 + 2 + 1
+    2 => 1 + 2 + 2
+    _ => 0
+  }
+  if charset_len == 0 {
+    return Bytes::from_array(Array::new().op_as_view())
+  }
   // Top DICT bytes: charset(i32+op) + charstrings(i32+op) => 6+6=12
   let top_dict_len = 12
   let top_ix_len = 2 + 1 + 2 + top_dict_len
@@ -157,9 +188,15 @@ fn glyph_test_build_cff_custom_charset() -> Bytes {
     out.push(b)
   }
 
-  // Charset at charset_off: format0 + sid for glyph 1 = 391 (0x0187)
-  out.push(0 |> Int::to_byte)
-  glyph_test_push_u16_be(out, 391)
+  // Charset maps gid1 -> sid.
+  out.push(format |> Int::to_byte)
+  glyph_test_push_u16_be(out, sid)
+  match format {
+    0 => ()
+    1 => out.push(0 |> Int::to_byte) // nLeft = 0
+    2 => glyph_test_push_u16_be(out, 0) // nLeft = 0
+    _ => ()
+  }
   for b in char_ix.iter() {
     out.push(b)
   }
@@ -235,7 +272,7 @@ test "glyph_names from post v2 custom string" {
 ///|
 test "glyph_names from CFF custom charset + string index" {
   let maxp = glyph_test_build_maxp(2)
-  let cff = glyph_test_build_cff_custom_charset()
+  let cff = glyph_test_build_cff_custom_charset(0, 391)
   let sfnt = glyph_test_build_sfnt(
     Array::from_fixed_array([
       (GLYPH_TEST_TAG_MAXP, maxp),
@@ -249,5 +286,95 @@ test "glyph_names from CFF custom charset + string index" {
   inspect(
     names.get(GlyphId::new((1).to_uint16())).unwrap().as_str(),
     content="A",
+  )
+}
+
+///|
+test "glyph_names from post v2 standard name index" {
+  let maxp = glyph_test_build_maxp(1)
+  let post = glyph_test_build_post_v2_standard_name(3) // "space"
+  let sfnt = glyph_test_build_sfnt(
+    Array::from_fixed_array([
+      (GLYPH_TEST_TAG_MAXP, maxp),
+      (GLYPH_TEST_TAG_POST, post),
+    ]),
+  )
+  let font = FontRef::new(sfnt).unwrap()
+  let names = font.glyph_names()
+  inspect(
+    names.get(GlyphId::new((0).to_uint16())).unwrap().as_str(),
+    content="space",
+  )
+}
+
+///|
+test "glyph_names from post v1 default names" {
+  let maxp = glyph_test_build_maxp(1)
+  let post = glyph_test_build_post_v1()
+  let sfnt = glyph_test_build_sfnt(
+    Array::from_fixed_array([
+      (GLYPH_TEST_TAG_MAXP, maxp),
+      (GLYPH_TEST_TAG_POST, post),
+    ]),
+  )
+  let font = FontRef::new(sfnt).unwrap()
+  let names = font.glyph_names()
+  inspect(
+    names.get(GlyphId::new((0).to_uint16())).unwrap().as_str(),
+    content=".notdef",
+  )
+}
+
+///|
+test "glyph_names from CFF charset format 1" {
+  let maxp = glyph_test_build_maxp(2)
+  let cff = glyph_test_build_cff_custom_charset(1, 391)
+  let sfnt = glyph_test_build_sfnt(
+    Array::from_fixed_array([
+      (GLYPH_TEST_TAG_MAXP, maxp),
+      (GLYPH_TEST_TAG_CFF, cff),
+    ]),
+  )
+  let font = FontRef::new(sfnt).unwrap()
+  let names = font.glyph_names()
+  inspect(
+    names.get(GlyphId::new((1).to_uint16())).unwrap().as_str(),
+    content="A",
+  )
+}
+
+///|
+test "glyph_names from CFF charset format 2" {
+  let maxp = glyph_test_build_maxp(2)
+  let cff = glyph_test_build_cff_custom_charset(2, 391)
+  let sfnt = glyph_test_build_sfnt(
+    Array::from_fixed_array([
+      (GLYPH_TEST_TAG_MAXP, maxp),
+      (GLYPH_TEST_TAG_CFF, cff),
+    ]),
+  )
+  let font = FontRef::new(sfnt).unwrap()
+  let names = font.glyph_names()
+  inspect(
+    names.get(GlyphId::new((1).to_uint16())).unwrap().as_str(),
+    content="A",
+  )
+}
+
+///|
+test "glyph_names from CFF standard SID" {
+  let maxp = glyph_test_build_maxp(2)
+  let cff = glyph_test_build_cff_custom_charset(0, 1) // "space"
+  let sfnt = glyph_test_build_sfnt(
+    Array::from_fixed_array([
+      (GLYPH_TEST_TAG_MAXP, maxp),
+      (GLYPH_TEST_TAG_CFF, cff),
+    ]),
+  )
+  let font = FontRef::new(sfnt).unwrap()
+  let names = font.glyph_names()
+  inspect(
+    names.get(GlyphId::new((1).to_uint16())).unwrap().as_str(),
+    content="space",
   )
 }

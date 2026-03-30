@@ -190,6 +190,9 @@ priv struct GlyfTransform {
 priv struct GlyfCompositeComp {
   flags : Int
   gid : Int
+  args_xy : Bool
+  base_point_ix : Int
+  component_point_ix : Int
   dx : Double
   dy : Double
   a : Double
@@ -252,6 +255,48 @@ fn glyf_apply_transform(
     }
   }
   out
+}
+
+///|
+fn glyf_path_points(path : Array[PathElement]) -> Array[(Double, Double)] {
+  let out : Array[(Double, Double)] = Array::new()
+  for e in path {
+    match e {
+      MoveTo(x, y) | LineTo(x, y) => out.push((x, y))
+      QuadTo(cx, cy, x, y) => {
+        out.push((cx, cy))
+        out.push((x, y))
+      }
+      CurveTo(cx0, cy0, cx1, cy1, x, y) => {
+        out.push((cx0, cy0))
+        out.push((cx1, cy1))
+        out.push((x, y))
+      }
+      Close => ()
+    }
+  }
+  out
+}
+
+///|
+fn glyf_composite_point_offset(
+  base_path : Array[PathElement],
+  component_path : Array[PathElement],
+  base_point_ix : Int,
+  component_point_ix : Int,
+) -> (Double, Double) {
+  if base_point_ix < 0 || component_point_ix < 0 {
+    return (0.0, 0.0)
+  }
+  let base_points = glyf_path_points(base_path)
+  let component_points = glyf_path_points(component_path)
+  if base_point_ix >= base_points.length() ||
+    component_point_ix >= component_points.length() {
+    return (0.0, 0.0)
+  }
+  let (bx, by) = base_points.at(base_point_ix)
+  let (cx, cy) = component_points.at(component_point_ix)
+  (bx - cx, by - cy)
 }
 
 ///|
@@ -788,21 +833,30 @@ fn glyf_composite_path(
     off = off + 4
     let arg_words = (flags & COMPOSITE_ARG_1_AND_2_ARE_WORDS) != 0
     let args_xy = (flags & COMPOSITE_ARGS_ARE_XY_VALUES) != 0
-    if !args_xy {
-      // Point matching not supported by MVP.
-      return None
-    }
-    let (dx, dy) = if arg_words {
-      let a1 = match glyf_read_i16_be(glyph, off) {
-        None => return None
-        Some(v) => v
+    let (dx, dy, base_point_ix, component_point_ix) = if arg_words {
+      if args_xy {
+        let a1 = match glyf_read_i16_be(glyph, off) {
+          None => return None
+          Some(v) => v
+        }
+        let a2 = match glyf_read_i16_be(glyph, off + 2) {
+          None => return None
+          Some(v) => v
+        }
+        off = off + 4
+        (a1.to_double(), a2.to_double(), -1, -1)
+      } else {
+        let p1 = match glyf_read_u16_be(glyph, off) {
+          None => return None
+          Some(v) => v
+        }
+        let p2 = match glyf_read_u16_be(glyph, off + 2) {
+          None => return None
+          Some(v) => v
+        }
+        off = off + 4
+        (0.0, 0.0, p1, p2)
       }
-      let a2 = match glyf_read_i16_be(glyph, off + 2) {
-        None => return None
-        Some(v) => v
-      }
-      off = off + 4
-      (a1.to_double(), a2.to_double())
     } else {
       if off + 2 > glyph.length() {
         return None
@@ -810,9 +864,13 @@ fn glyf_composite_path(
       let b1 = glyph.at(off).to_int()
       let b2 = glyph.at(off + 1).to_int()
       off = off + 2
-      let a1 = if b1 >= 128 { b1 - 256 } else { b1 }
-      let a2 = if b2 >= 128 { b2 - 256 } else { b2 }
-      (a1.to_double(), a2.to_double())
+      if args_xy {
+        let a1 = if b1 >= 128 { b1 - 256 } else { b1 }
+        let a2 = if b2 >= 128 { b2 - 256 } else { b2 }
+        (a1.to_double(), a2.to_double(), -1, -1)
+      } else {
+        (0.0, 0.0, b1, b2)
+      }
     }
     let mut a = 1.0
     let mut b = 0.0
@@ -868,6 +926,9 @@ fn glyf_composite_path(
     comps.push(GlyfCompositeComp::{
       flags,
       gid: comp_gid,
+      args_xy,
+      base_point_ix,
+      component_point_ix,
       dx,
       dy,
       a,
@@ -905,83 +966,109 @@ fn glyf_composite_path(
   let out : Array[PathElement] = Array::new()
   for i in 0..<comps.length() {
     let comp = comps.at(i)
-    let mut dx = comp.dx
-    let mut dy = comp.dy
-    if comp.have_xform &&
-      (
-        comp.flags &
-        (
-          COMPOSITE_SCALED_COMPONENT_OFFSET |
-          COMPOSITE_UNSCALED_COMPONENT_OFFSET
-        )
-      ) ==
-      COMPOSITE_SCALED_COMPONENT_OFFSET {
-      // Matches FreeType's guess-based scaling.
-      dx = dx * glyf_hypot_guess(comp.a, comp.b)
-      dy = dy * glyf_hypot_guess(comp.d, comp.c)
-    }
-    match (delta_x, delta_y) {
-      (Some(dx_arr), Some(dy_arr)) =>
-        if i < dx_arr.length() && i < dy_arr.length() {
-          match path_style {
-            PathStyle::FreeType => {
-              // FreeType rounds off the fractional part of component deltas.
-              dx = dx + dx_arr.at(i).to_int().to_double()
-              dy = dy + dy_arr.at(i).to_int().to_double()
-            }
-            PathStyle::HarfBuzz => {
-              dx = dx + dx_arr.at(i)
-              dy = dy + dy_arr.at(i)
-            }
-          }
-        }
-      _ => ()
-    }
-    let (sdx, sdy) = match path_style {
-      PathStyle::FreeType => {
-        let dx_i = dx.to_int()
-        let dy_i = dy.to_int()
-        let dx_bits = if ctx.is_scaled {
-          glyf_mul_16_16(dx_i, ctx.scale_bits)
-        } else {
-          dx_i * 64
-        }
-        let mut dy_bits = if ctx.is_scaled {
-          glyf_mul_16_16(dy_i, ctx.scale_bits)
-        } else {
-          dy_i * 64
-        }
-        if ctx.is_scaled &&
-          ctx.is_hinted &&
-          (comp.flags & COMPOSITE_ROUND_XY_TO_GRID) != 0 {
-          // Match fontations-reference (FreeType behavior): only round the y
-          // component, and only when hinting is enabled.
-          dy_bits = (dy_bits + 32) & -64
-        }
-        (
-          glyf_f26dot6_bits_to_double(dx_bits),
-          glyf_f26dot6_bits_to_double(dy_bits),
-        )
-      }
-      PathStyle::HarfBuzz =>
-        // Matches fontations-reference HarfBuzzScaler: component offsets are
-        // applied without scaling, even when points are scaled to 16.16.
-        (dx, dy)
-    }
-    let t = GlyfTransform::{
-      a: comp.a,
-      b: comp.b,
-      c: comp.c,
-      d: comp.d,
-      dx: sdx,
-      dy: sdy,
-    }
     let comp_path = match
       glyf_outline_path_idx(ctx, comp.gid, visited, path_style) {
       None => return None
       Some(p) => p
     }
-    let transformed = glyf_apply_transform(comp_path, t)
+    let transformed = if comp.args_xy {
+      let mut dx = comp.dx
+      let mut dy = comp.dy
+      if comp.have_xform &&
+        (
+          comp.flags &
+          (
+            COMPOSITE_SCALED_COMPONENT_OFFSET |
+            COMPOSITE_UNSCALED_COMPONENT_OFFSET
+          )
+        ) ==
+        COMPOSITE_SCALED_COMPONENT_OFFSET {
+        // Matches FreeType's guess-based scaling.
+        dx = dx * glyf_hypot_guess(comp.a, comp.b)
+        dy = dy * glyf_hypot_guess(comp.d, comp.c)
+      }
+      match (delta_x, delta_y) {
+        (Some(dx_arr), Some(dy_arr)) =>
+          if i < dx_arr.length() && i < dy_arr.length() {
+            match path_style {
+              PathStyle::FreeType => {
+                // FreeType rounds off the fractional part of component deltas.
+                dx = dx + dx_arr.at(i).to_int().to_double()
+                dy = dy + dy_arr.at(i).to_int().to_double()
+              }
+              PathStyle::HarfBuzz => {
+                dx = dx + dx_arr.at(i)
+                dy = dy + dy_arr.at(i)
+              }
+            }
+          }
+        _ => ()
+      }
+      let (sdx, sdy) = match path_style {
+        PathStyle::FreeType => {
+          let dx_i = dx.to_int()
+          let dy_i = dy.to_int()
+          let dx_bits = if ctx.is_scaled {
+            glyf_mul_16_16(dx_i, ctx.scale_bits)
+          } else {
+            dx_i * 64
+          }
+          let mut dy_bits = if ctx.is_scaled {
+            glyf_mul_16_16(dy_i, ctx.scale_bits)
+          } else {
+            dy_i * 64
+          }
+          if ctx.is_scaled &&
+            ctx.is_hinted &&
+            (comp.flags & COMPOSITE_ROUND_XY_TO_GRID) != 0 {
+            // Match fontations-reference (FreeType behavior): only round the y
+            // component, and only when hinting is enabled.
+            dy_bits = (dy_bits + 32) & -64
+          }
+          (
+            glyf_f26dot6_bits_to_double(dx_bits),
+            glyf_f26dot6_bits_to_double(dy_bits),
+          )
+        }
+        PathStyle::HarfBuzz =>
+          // Matches fontations-reference HarfBuzzScaler: component offsets are
+          // applied without scaling, even when points are scaled to 16.16.
+          (dx, dy)
+      }
+      glyf_apply_transform(comp_path, GlyfTransform::{
+        a: comp.a,
+        b: comp.b,
+        c: comp.c,
+        d: comp.d,
+        dx: sdx,
+        dy: sdy,
+      })
+    } else {
+      // Point matching anchors: align component point to a point in the
+      // already-built composite path.
+      let without_offset = glyf_apply_transform(comp_path, GlyfTransform::{
+        a: comp.a,
+        b: comp.b,
+        c: comp.c,
+        d: comp.d,
+        dx: 0.0,
+        dy: 0.0,
+      })
+      let (anchor_dx, anchor_dy) = glyf_composite_point_offset(
+        out,
+        without_offset,
+        comp.base_point_ix,
+        comp.component_point_ix,
+      )
+      glyf_apply_transform(comp_path, GlyfTransform::{
+        a: comp.a,
+        b: comp.b,
+        c: comp.c,
+        d: comp.d,
+        dx: anchor_dx,
+        dy: anchor_dy,
+      })
+    }
     for e in transformed {
       out.push(e)
     }

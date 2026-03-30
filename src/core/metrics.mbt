@@ -534,9 +534,10 @@ pub fn FontRef::font_metrics_at(
 ///|
 /// Glyph specific metrics for a particular size and variation location.
 ///
-/// This is a partial port of `skrifa::metrics::GlyphMetrics`. Currently supports:
-/// - advance width + left side bearing from `hmtx`
-/// - optional metric deltas from `HVAR` + `ItemVariationStore`
+/// Port of `skrifa::metrics::GlyphMetrics`, including:
+/// - base metrics from `hmtx`
+/// - variation deltas from `HVAR`
+/// - glyph-variation phantom-point deltas from `gvar`
 pub struct GlyphMetrics {
   priv font : FontRef
   priv glyph_count : Int

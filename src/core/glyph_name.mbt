@@ -66,6 +66,15 @@ fn glyph_name_truncate(s : String) -> String {
 }
 
 ///|
+fn glyph_name_latin1_string(bytes : BytesView) -> String {
+  let chars : Array[Char] = Array::new()
+  for b in bytes.iter() {
+    chars.push(b.to_int().unsafe_to_char())
+  }
+  String::from_array(chars.op_as_view())
+}
+
+///|
 fn glyph_name_synthesize(gid : GlyphId) -> GlyphName {
   GlyphName::{
     name: glyph_name_truncate("gid" + gid.to_string()),
@@ -98,6 +107,15 @@ fn glyph_name_read_u32_be(view : BytesView, offset : Int) -> UInt? {
 }
 
 ///|
+fn glyph_name_read_u8(view : BytesView, offset : Int) -> Int? {
+  if offset < 0 || offset + 1 > view.length() {
+    None
+  } else {
+    Some(view.at(offset).to_int())
+  }
+}
+
+///|
 fn glyph_name_read_maxp_num_glyphs(font : FontRef) -> Int {
   match font.table(GLYPH_TAG_MAXP) {
     None => 0
@@ -107,12 +125,15 @@ fn glyph_name_read_maxp_num_glyphs(font : FontRef) -> Int {
 
 ///|
 fn glyph_name_post_v2_get(post : BytesView, gid : Int) -> String? {
-  // post v2.0: version(4) .. header(32) numberOfGlyphs(u16) glyphNameIndex[u16] stringData[]
-  if post.length() < 34 {
-    return None
-  }
   let version = glyph_name_read_u32_be(post, 0).unwrap_or(0)
-  if version != 0x00020000 {
+  if version == 0x00010000 {
+    if gid < 0 || gid >= glyph_name_post_standard_names.length() {
+      return None
+    }
+    return Some(glyph_name_post_standard_names.at(gid))
+  }
+  // post v2.0: version(4) .. header(32) numberOfGlyphs(u16) glyphNameIndex[u16] stringData[]
+  if version != 0x00020000 || post.length() < 34 {
     return None
   }
   let number_of_glyphs = glyph_name_read_u16_be(post, 32).unwrap_or(-1)
@@ -130,15 +151,10 @@ fn glyph_name_post_v2_get(post : BytesView, gid : Int) -> String? {
   if name_index < 0 {
     return None
   }
-  // Mac standard name 0 => ".notdef" (good enough for MVP).
-  if name_index == 0 {
-    return Some(".notdef")
+  if name_index < glyph_name_post_standard_names.length() {
+    return Some(glyph_name_post_standard_names.at(name_index))
   }
-  // Custom strings start at index 258.
-  if name_index < 258 {
-    return None
-  }
-  let mut want = name_index - 258
+  let mut want = name_index - glyph_name_post_standard_names.length()
   let mut off = names_end
   while off < post.length() {
     let len = post.at(off).to_int()
@@ -148,12 +164,7 @@ fn glyph_name_post_v2_get(post : BytesView, gid : Int) -> String? {
     }
     if want == 0 {
       let bytes = post[off:off + len]
-      // ASCII only for MVP.
-      let chars : Array[Char] = Array::new()
-      for b in bytes.iter() {
-        chars.push(b.to_int().unsafe_to_char())
-      }
-      return Some(glyph_name_truncate(String::from_array(chars.op_as_view())))
+      return Some(glyph_name_truncate(glyph_name_latin1_string(bytes)))
     }
     want = want - 1
     off = off + len
@@ -334,6 +345,60 @@ fn cff_dict_parse_offsets(data : BytesView) -> CffDictOffsets {
 }
 
 ///|
+fn glyph_name_cff_sid(cff : BytesView, charset_off : Int, gid : Int) -> Int? {
+  if gid < 0 || charset_off < 0 || charset_off >= cff.length() {
+    return None
+  }
+  if gid == 0 {
+    return Some(0)
+  }
+  let format = cff.at(charset_off).to_int()
+  match format {
+    0 => {
+      let sid_pos = charset_off + 1 + (gid - 1) * 2
+      glyph_name_read_u16_be(cff, sid_pos)
+    }
+    1 => {
+      let mut pos = charset_off + 1
+      let mut cur_gid = 1
+      while cur_gid <= gid {
+        let first = glyph_name_read_u16_be(cff, pos).unwrap_or(-1)
+        let n_left = glyph_name_read_u8(cff, pos + 2).unwrap_or(-1)
+        if first < 0 || n_left < 0 {
+          return None
+        }
+        let end_gid = cur_gid + n_left
+        if gid <= end_gid {
+          return Some(first + (gid - cur_gid))
+        }
+        cur_gid = end_gid + 1
+        pos = pos + 3
+      }
+      None
+    }
+    2 => {
+      let mut pos = charset_off + 1
+      let mut cur_gid = 1
+      while cur_gid <= gid {
+        let first = glyph_name_read_u16_be(cff, pos).unwrap_or(-1)
+        let n_left = glyph_name_read_u16_be(cff, pos + 2).unwrap_or(-1)
+        if first < 0 || n_left < 0 {
+          return None
+        }
+        let end_gid = cur_gid + n_left
+        if gid <= end_gid {
+          return Some(first + (gid - cur_gid))
+        }
+        cur_gid = end_gid + 1
+        pos = pos + 4
+      }
+      None
+    }
+    _ => None
+  }
+}
+
+///|
 fn glyph_name_cff_get(cff : BytesView, gid : Int) -> String? {
   if cff.length() < 4 {
     return None
@@ -400,35 +465,22 @@ fn glyph_name_cff_get(cff : BytesView, gid : Int) -> String? {
   if gid < 0 || gid >= glyph_count {
     return None
   }
-  // Only support custom charset format 0 for MVP (charset_off >= 3).
-  if charset_off < 3 || charset_off >= cff.length() {
+  let sid = match glyph_name_cff_sid(cff, charset_off, gid) {
+    None => return None
+    Some(v) => v
+  }
+  if sid < 0 {
     return None
   }
-  let format = cff.at(charset_off).to_int()
-  if format != 0 {
-    return None
+  if sid < glyph_name_cff_standard_strings.length() {
+    return Some(glyph_name_truncate(glyph_name_cff_standard_strings.at(sid)))
   }
-  if gid == 0 {
-    return Some(".notdef")
-  }
-  let sid_pos = charset_off + 1 + (gid - 1) * 2
-  if sid_pos + 2 > cff.length() {
-    return None
-  }
-  let sid = glyph_name_read_u16_be(cff, sid_pos).unwrap_or(-1)
-  if sid < 391 {
-    return None
-  }
-  let custom_idx = sid - 391
+  let custom_idx = sid - glyph_name_cff_standard_strings.length()
   let bytes = match cff_index1_get(str_ix, custom_idx) {
     None => return None
     Some(v) => v
   }
-  let chars : Array[Char] = Array::new()
-  for b in bytes.iter() {
-    chars.push(b.to_int().unsafe_to_char())
-  }
-  Some(glyph_name_truncate(String::from_array(chars.op_as_view())))
+  Some(glyph_name_truncate(glyph_name_latin1_string(bytes)))
 }
 
 ///|
@@ -451,7 +503,7 @@ pub fn GlyphNames::new(font : FontRef) -> GlyphNames {
   match font.table(GLYPH_TAG_POST) {
     None => ()
     Some(post) =>
-      // Prefer post if it looks like v2.0 with names.
+      // Prefer `post` if it resolves at least one glyph name.
       if glyph_name_post_v2_get(post, 0) is Some(_) {
         return GlyphNames::{ inner: Post(post, num_glyphs) }
       }

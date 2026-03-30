@@ -19,6 +19,15 @@
 const COLOR_TAG_CPAL : UInt = 0x4350414C // "CPAL"
 
 ///|
+const COLOR_CPAL_VERSION_1 : Int = 1
+
+///|
+const COLOR_CPAL_PALETTE_USABLE_WITH_LIGHT_BACKGROUND : UInt = 0x00000001
+
+///|
+const COLOR_CPAL_PALETTE_USABLE_WITH_DARK_BACKGROUND : UInt = 0x00000002
+
+///|
 fn color_read_u16_be(view : BytesView, offset : Int) -> Int? {
   if offset < 0 || offset + 2 > view.length() {
     None
@@ -79,39 +88,78 @@ pub fn Color::a(self : Color) -> Byte {
 }
 
 ///|
+pub struct ColorPaletteType {
+  bits : UInt
+}
+
+///|
+pub fn ColorPaletteType::raw(self : ColorPaletteType) -> UInt {
+  self.bits
+}
+
+///|
+pub fn ColorPaletteType::usable_with_light_background(
+  self : ColorPaletteType,
+) -> Bool {
+  (self.bits & COLOR_CPAL_PALETTE_USABLE_WITH_LIGHT_BACKGROUND) != 0
+}
+
+///|
+pub fn ColorPaletteType::usable_with_dark_background(
+  self : ColorPaletteType,
+) -> Bool {
+  (self.bits & COLOR_CPAL_PALETTE_USABLE_WITH_DARK_BACKGROUND) != 0
+}
+
+///|
 pub struct ColorPalettes {
   priv cpal : BytesView?
+  priv version : Int
   priv num_entries : Int
   priv num_palettes : Int
   priv num_records : Int
   priv color_records_off : Int
   priv indices_off : Int
+  priv palette_types_off : Int?
+  priv palette_labels_off : Int?
+  priv palette_entry_labels_off : Int?
 
   fn new(font : FontRef) -> ColorPalettes
 }
 
 ///|
+pub struct ColorPalette {
+  priv palettes : ColorPalettes
+  priv index : Int
+}
+
+///|
+fn ColorPalettes::empty() -> ColorPalettes {
+  ColorPalettes::{
+    cpal: None,
+    version: 0,
+    num_entries: 0,
+    num_palettes: 0,
+    num_records: 0,
+    color_records_off: 0,
+    indices_off: 0,
+    palette_types_off: None,
+    palette_labels_off: None,
+    palette_entry_labels_off: None,
+  }
+}
+
+///|
 pub fn ColorPalettes::new(font : FontRef) -> ColorPalettes {
   match font.table(COLOR_TAG_CPAL) {
-    None =>
-      ColorPalettes::{
-        cpal: None,
-        num_entries: 0,
-        num_palettes: 0,
-        num_records: 0,
-        color_records_off: 0,
-        indices_off: 0,
-      }
+    None => ColorPalettes::empty()
     Some(cpal) => {
       if cpal.length() < 12 {
-        return ColorPalettes::{
-          cpal: None,
-          num_entries: 0,
-          num_palettes: 0,
-          num_records: 0,
-          color_records_off: 0,
-          indices_off: 0,
-        }
+        return ColorPalettes::empty()
+      }
+      let version = color_read_u16_be(cpal, 0).unwrap_or(-1)
+      if version < 0 || version > COLOR_CPAL_VERSION_1 {
+        return ColorPalettes::empty()
       }
       let num_entries = color_read_u16_be(cpal, 2).unwrap_or(-1)
       let num_palettes = color_read_u16_be(cpal, 4).unwrap_or(-1)
@@ -121,45 +169,60 @@ pub fn ColorPalettes::new(font : FontRef) -> ColorPalettes {
         num_palettes < 0 ||
         num_records < 0 ||
         records_off < 0 {
-        return ColorPalettes::{
-          cpal: None,
-          num_entries: 0,
-          num_palettes: 0,
-          num_records: 0,
-          color_records_off: 0,
-          indices_off: 0,
-        }
+        return ColorPalettes::empty()
       }
-      let indices_off = 12
+      let indices_off = if version >= COLOR_CPAL_VERSION_1 { 24 } else { 12 }
+      if indices_off > cpal.length() {
+        return ColorPalettes::empty()
+      }
       let indices_end = indices_off + num_palettes * 2
       let records_end = records_off + num_records * 4
       if indices_end < indices_off || indices_end > cpal.length() {
-        return ColorPalettes::{
-          cpal: None,
-          num_entries: 0,
-          num_palettes: 0,
-          num_records: 0,
-          color_records_off: 0,
-          indices_off: 0,
-        }
+        return ColorPalettes::empty()
       }
       if records_end < records_off || records_end > cpal.length() {
-        return ColorPalettes::{
-          cpal: None,
-          num_entries: 0,
-          num_palettes: 0,
-          num_records: 0,
-          color_records_off: 0,
-          indices_off: 0,
+        return ColorPalettes::empty()
+      }
+      let mut palette_types_off : Int? = None
+      let mut palette_labels_off : Int? = None
+      let mut palette_entry_labels_off : Int? = None
+      if version >= COLOR_CPAL_VERSION_1 {
+        if cpal.length() < 24 {
+          return ColorPalettes::empty()
+        }
+        let types_off = color_read_u32_be_int(cpal, 12).unwrap_or(0)
+        let labels_off = color_read_u32_be_int(cpal, 16).unwrap_or(0)
+        let entry_labels_off = color_read_u32_be_int(cpal, 20).unwrap_or(0)
+        if types_off > 0 {
+          let end = types_off + num_palettes * 4
+          if end >= types_off && end <= cpal.length() {
+            palette_types_off = Some(types_off)
+          }
+        }
+        if labels_off > 0 {
+          let end = labels_off + num_palettes * 2
+          if end >= labels_off && end <= cpal.length() {
+            palette_labels_off = Some(labels_off)
+          }
+        }
+        if entry_labels_off > 0 {
+          let end = entry_labels_off + num_entries * 2
+          if end >= entry_labels_off && end <= cpal.length() {
+            palette_entry_labels_off = Some(entry_labels_off)
+          }
         }
       }
       ColorPalettes::{
         cpal: Some(cpal),
+        version,
         num_entries,
         num_palettes,
         num_records,
         color_records_off: records_off,
         indices_off,
+        palette_types_off,
+        palette_labels_off,
+        palette_entry_labels_off,
       }
     }
   }
@@ -171,8 +234,33 @@ pub fn ColorPalettes::len(self : ColorPalettes) -> Int {
 }
 
 ///|
+pub fn ColorPalettes::version(self : ColorPalettes) -> Int {
+  self.version
+}
+
+///|
+pub fn ColorPalettes::is_empty(self : ColorPalettes) -> Bool {
+  self.num_palettes == 0
+}
+
+///|
 pub fn ColorPalettes::entries_per_palette(self : ColorPalettes) -> Int {
   self.num_entries
+}
+
+///|
+fn ColorPalettes::palette_start_index(
+  self : ColorPalettes,
+  palette : Int,
+) -> Int? {
+  let cpal = match self.cpal {
+    None => return None
+    Some(v) => v
+  }
+  if palette < 0 || palette >= self.num_palettes {
+    return None
+  }
+  color_read_u16_be(cpal, self.indices_off + palette * 2)
 }
 
 ///|
@@ -185,19 +273,17 @@ pub fn ColorPalettes::color(
     None => return None
     Some(v) => v
   }
-  if palette < 0 || palette >= self.num_palettes {
-    return None
-  }
   if entry < 0 || entry >= self.num_entries {
     return None
   }
-  let idx = color_read_u16_be(cpal, self.indices_off + palette * 2).unwrap_or(
-    -1,
-  )
-  if idx < 0 {
+  let start_index = match self.palette_start_index(palette) {
+    None => return None
+    Some(v) => v
+  }
+  if start_index < 0 {
     return None
   }
-  let rec = idx + entry
+  let rec = start_index + entry
   if rec < 0 || rec >= self.num_records {
     return None
   }
@@ -207,6 +293,98 @@ pub fn ColorPalettes::color(
   let r = cpal.at(pos + 2)
   let a = cpal.at(pos + 3)
   Some(Color::{ r, g, b, a })
+}
+
+///|
+pub fn ColorPalettes::get(self : ColorPalettes, index : Int) -> ColorPalette? {
+  let start_index = match self.palette_start_index(index) {
+    None => return None
+    Some(v) => v
+  }
+  if start_index < 0 || start_index + self.num_entries > self.num_records {
+    return None
+  }
+  Some(ColorPalette::{ palettes: self, index })
+}
+
+///|
+pub fn ColorPalettes::color_label(
+  self : ColorPalettes,
+  color_index : Int,
+) -> StringId? {
+  let cpal = match self.cpal {
+    None => return None
+    Some(v) => v
+  }
+  let off = match self.palette_entry_labels_off {
+    None => return None
+    Some(v) => v
+  }
+  if color_index < 0 || color_index >= self.num_entries {
+    return None
+  }
+  let name_id = color_read_u16_be(cpal, off + color_index * 2).unwrap_or(-1)
+  if name_id < 0 || name_id == 0xFFFF {
+    None
+  } else {
+    Some(name_id.to_uint16())
+  }
+}
+
+///|
+pub fn ColorPalette::index(self : ColorPalette) -> Int {
+  self.index
+}
+
+///|
+pub fn ColorPalette::colors(self : ColorPalette) -> Array[Color] {
+  let count = self.palettes.entries_per_palette()
+  let out : Array[Color] = Array::new(capacity=count)
+  for i in 0..<count {
+    if self.color(i) is Some(c) {
+      out.push(c)
+    } else {
+      break
+    }
+  }
+  out
+}
+
+///|
+pub fn ColorPalette::color(self : ColorPalette, entry : Int) -> Color? {
+  self.palettes.color(self.index, entry)
+}
+
+///|
+pub fn ColorPalette::palette_type(self : ColorPalette) -> ColorPaletteType? {
+  let cpal = match self.palettes.cpal {
+    None => return None
+    Some(v) => v
+  }
+  let off = match self.palettes.palette_types_off {
+    None => return None
+    Some(v) => v
+  }
+  let raw = color_read_u32_be(cpal, off + self.index * 4).unwrap_or(0)
+  Some(ColorPaletteType::{ bits: raw })
+}
+
+///|
+pub fn ColorPalette::label(self : ColorPalette) -> StringId? {
+  let cpal = match self.palettes.cpal {
+    None => return None
+    Some(v) => v
+  }
+  let off = match self.palettes.palette_labels_off {
+    None => return None
+    Some(v) => v
+  }
+  let name_id = color_read_u16_be(cpal, off + self.index * 2).unwrap_or(-1)
+  if name_id < 0 || name_id == 0xFFFF {
+    None
+  } else {
+    Some(name_id.to_uint16())
+  }
 }
 
 ///|

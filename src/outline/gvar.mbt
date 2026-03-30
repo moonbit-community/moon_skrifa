@@ -13,7 +13,7 @@
 // limitations under the License.
 
 ///|
-/// gvar support for glyf outlines (MVP: simple glyph deltas + IUP interpolation).
+/// gvar support for glyf outlines.
 ///
 /// Ported from `fontations/skrifa/src/outline/glyf/deltas.rs` and related
 /// gvar parsing logic (Apache-2.0 OR MIT).

@@ -94,6 +94,59 @@ fn color_test_build_cpal() -> Bytes {
 }
 
 ///|
+fn color_test_build_cpal_v1() -> Bytes {
+  let out : Array[Byte] = Array::new()
+  // version 1
+  color_test_push_u16_be(out, 1)
+  // numPaletteEntries=2
+  color_test_push_u16_be(out, 2)
+  // numPalettes=2
+  color_test_push_u16_be(out, 2)
+  // numColorRecords=4
+  color_test_push_u16_be(out, 4)
+  // offsetFirstColorRecord = 24 + 2 * numPalettes = 28
+  color_test_push_u32_be(out, color_test_u32(28))
+  // offsetPaletteTypeArray = 44
+  color_test_push_u32_be(out, color_test_u32(44))
+  // offsetPaletteLabelArray = 52
+  color_test_push_u32_be(out, color_test_u32(52))
+  // offsetPaletteEntryLabelArray = 56
+  color_test_push_u32_be(out, color_test_u32(56))
+  // colorRecordIndices = [0, 2]
+  color_test_push_u16_be(out, 0)
+  color_test_push_u16_be(out, 2)
+  // Color records (BGRA)
+  // palette 0
+  out.push(0 |> Int::to_byte)
+  out.push(0 |> Int::to_byte)
+  out.push(255 |> Int::to_byte)
+  out.push(255 |> Int::to_byte)
+  out.push(0 |> Int::to_byte)
+  out.push(255 |> Int::to_byte)
+  out.push(0 |> Int::to_byte)
+  out.push(255 |> Int::to_byte)
+  // palette 1
+  out.push(255 |> Int::to_byte)
+  out.push(0 |> Int::to_byte)
+  out.push(0 |> Int::to_byte)
+  out.push(255 |> Int::to_byte)
+  out.push(255 |> Int::to_byte)
+  out.push(255 |> Int::to_byte)
+  out.push(255 |> Int::to_byte)
+  out.push(255 |> Int::to_byte)
+  // palette type array
+  color_test_push_u32_be(out, color_test_u32(1))
+  color_test_push_u32_be(out, color_test_u32(2))
+  // palette label array
+  color_test_push_u16_be(out, 300)
+  color_test_push_u16_be(out, 301)
+  // palette entry label array
+  color_test_push_u16_be(out, 400)
+  color_test_push_u16_be(out, 401)
+  Bytes::from_array(out.op_as_view())
+}
+
+///|
 test "CPAL palettes basic" {
   let cpal = color_test_build_cpal()
   let sfnt = color_test_build_sfnt(Array::from_fixed_array([(TAG_CPAL, cpal)]))
@@ -109,4 +162,32 @@ test "CPAL palettes basic" {
   inspect(c1.r().to_int(), content="0")
   inspect(c1.g().to_int(), content="255")
   inspect(c1.b().to_int(), content="0")
+}
+
+///|
+test "CPAL v1 palette metadata APIs" {
+  let cpal = color_test_build_cpal_v1()
+  let sfnt = color_test_build_sfnt(Array::from_fixed_array([(TAG_CPAL, cpal)]))
+  let font = FontRef::new(sfnt).unwrap()
+  let palettes = font.color_palettes()
+  inspect(palettes.len(), content="2")
+  inspect(palettes.is_empty(), content="false")
+  inspect(palettes.color_label(0), content="Some(400)")
+  inspect(palettes.color_label(1), content="Some(401)")
+  let p0 = palettes.get(0).unwrap()
+  inspect(p0.index(), content="0")
+  inspect(p0.colors().length(), content="2")
+  inspect(p0.color(0).unwrap().r().to_int(), content="255")
+  inspect(p0.color(1).unwrap().g().to_int(), content="255")
+  inspect(p0.label(), content="Some(300)")
+  let p0_type = p0.palette_type().unwrap()
+  inspect(p0_type.usable_with_light_background(), content="true")
+  inspect(p0_type.usable_with_dark_background(), content="false")
+  let p1 = palettes.get(1).unwrap()
+  inspect(p1.index(), content="1")
+  inspect(p1.label(), content="Some(301)")
+  let p1_type = p1.palette_type().unwrap()
+  inspect(p1_type.usable_with_light_background(), content="false")
+  inspect(p1_type.usable_with_dark_background(), content="true")
+  inspect(palettes.get(2) is None, content="true")
 }

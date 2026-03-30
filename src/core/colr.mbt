@@ -67,7 +67,63 @@ pub fn ColorLayer::palette_index(self : ColorLayer) -> Int {
 }
 
 ///|
+pub(all) enum ColorGlyphFormat {
+  ColrV0
+  ColrV1
+}
+
+///|
+pub struct ColorGlyph {
+  priv collection : ColorGlyphCollection
+  priv glyph_id : GlyphId
+  priv format : ColorGlyphFormat
+}
+
+///|
+pub fn ColorGlyph::format(self : ColorGlyph) -> ColorGlyphFormat {
+  self.format
+}
+
+///|
+pub fn ColorGlyph::layers(self : ColorGlyph) -> Array[ColorLayer]? {
+  match self.format {
+    ColorGlyphFormat::ColrV0 => self.collection.layers(self.glyph_id)
+    ColorGlyphFormat::ColrV1 => None
+  }
+}
+
+///|
+pub fn[P : ColorPainter] ColorGlyph::paint(
+  self : ColorGlyph,
+  location : LocationRef,
+  painter : P,
+) -> Result[Unit, PaintError] {
+  match self.format {
+    ColorGlyphFormat::ColrV1 =>
+      match self.collection.font {
+        Some(font) => font.paint_colr_v1_at(self.glyph_id, location, painter)
+        None => Err(PaintError::ParseError)
+      }
+    ColorGlyphFormat::ColrV0 =>
+      match self.collection.layers(self.glyph_id) {
+        None => Err(PaintError::GlyphNotFound(self.glyph_id))
+        Some(layers) => {
+          for layer in layers {
+            painter.fill_glyph(
+              layer.glyph_id(),
+              None,
+              Brush::Solid(layer.palette_index(), 1.0),
+            )
+          }
+          Ok(())
+        }
+      }
+  }
+}
+
+///|
 pub struct ColorGlyphCollection {
+  priv font : FontRef?
   priv colr : BytesView?
   priv version : Int
   priv base_off : Int
@@ -86,33 +142,33 @@ pub struct ColorGlyphCollection {
 ///|
 pub fn ColorGlyphCollection::new(font : FontRef) -> ColorGlyphCollection {
   let colr = match font.table(COLR_TAG_COLR) {
-    None => return ColorGlyphCollection::empty()
+    None => return ColorGlyphCollection::empty(Some(font))
     Some(v) => v
   }
   if colr.length() < 14 {
-    return ColorGlyphCollection::empty()
+    return ColorGlyphCollection::empty(Some(font))
   }
   let version = colr_read_u16_be(colr, 0).unwrap_or(-1)
   if version != 0 && version != 1 {
-    return ColorGlyphCollection::empty()
+    return ColorGlyphCollection::empty(Some(font))
   }
   if version == 1 && colr.length() < 34 {
-    return ColorGlyphCollection::empty()
+    return ColorGlyphCollection::empty(Some(font))
   }
   let num_base = colr_read_u16_be(colr, 2).unwrap_or(-1)
   let base_off = colr_read_u32_be_int(colr, 4).unwrap_or(-1)
   let layer_off = colr_read_u32_be_int(colr, 8).unwrap_or(-1)
   let num_layers = colr_read_u16_be(colr, 12).unwrap_or(-1)
   if num_base < 0 || base_off < 0 || layer_off < 0 || num_layers < 0 {
-    return ColorGlyphCollection::empty()
+    return ColorGlyphCollection::empty(Some(font))
   }
   let base_end = base_off + num_base * 6
   let layers_end = layer_off + num_layers * 4
   if base_end < base_off || base_end > colr.length() {
-    return ColorGlyphCollection::empty()
+    return ColorGlyphCollection::empty(Some(font))
   }
   if layers_end < layer_off || layers_end > colr.length() {
-    return ColorGlyphCollection::empty()
+    return ColorGlyphCollection::empty(Some(font))
   }
   let mut _v1_base_glyph_list_off : Int? = None
   let mut _v1_layer_list_off : Int? = None
@@ -143,6 +199,7 @@ pub fn ColorGlyphCollection::new(font : FontRef) -> ColorGlyphCollection {
     }
   }
   ColorGlyphCollection::{
+    font: Some(font),
     colr: Some(colr),
     version,
     base_off,
@@ -158,8 +215,9 @@ pub fn ColorGlyphCollection::new(font : FontRef) -> ColorGlyphCollection {
 }
 
 ///|
-fn ColorGlyphCollection::empty() -> ColorGlyphCollection {
+fn ColorGlyphCollection::empty(font : FontRef?) -> ColorGlyphCollection {
   ColorGlyphCollection::{
+    font,
     colr: None,
     version: 0,
     base_off: 0,
@@ -182,6 +240,96 @@ pub fn ColorGlyphCollection::version(self : ColorGlyphCollection) -> Int {
 ///|
 pub fn ColorGlyphCollection::has_colr_v1(self : ColorGlyphCollection) -> Bool {
   self.colr is Some(_) && self.version == 1
+}
+
+///|
+fn ColorGlyphCollection::v1_has_glyph(
+  self : ColorGlyphCollection,
+  glyph_id : GlyphId,
+) -> Bool {
+  if self.version != 1 {
+    return false
+  }
+  let colr = match self.colr {
+    None => return false
+    Some(v) => v
+  }
+  let base_glyph_list_off = match self._v1_base_glyph_list_off {
+    None => return false
+    Some(v) => v
+  }
+  let gid = glyph_id.to_uint64().to_int()
+  if gid < 0 {
+    return false
+  }
+  let num = colr_read_u32_be_int(colr, base_glyph_list_off).unwrap_or(-1)
+  if num < 0 {
+    return false
+  }
+  let records_off = base_glyph_list_off + 4
+  let records_end = records_off + num * 6
+  if records_end < records_off || records_end > colr.length() {
+    return false
+  }
+  let mut lo = 0
+  let mut hi = num
+  while lo < hi {
+    let mid = (lo + hi) / 2
+    let pos = records_off + mid * 6
+    let mgid = colr_read_u16_be(colr, pos).unwrap_or(-1)
+    if mgid < gid {
+      lo = mid + 1
+    } else {
+      hi = mid
+    }
+  }
+  if lo < 0 || lo >= num {
+    return false
+  }
+  let pos = records_off + lo * 6
+  let found = colr_read_u16_be(colr, pos).unwrap_or(-1)
+  if found != gid {
+    return false
+  }
+  let paint_off = colr_read_u32_be_int(colr, pos + 2).unwrap_or(-1)
+  if paint_off <= 0 {
+    return false
+  }
+  let abs_off = base_glyph_list_off + paint_off
+  abs_off >= 0 && abs_off < colr.length()
+}
+
+///|
+pub fn ColorGlyphCollection::get_with_format(
+  self : ColorGlyphCollection,
+  glyph_id : GlyphId,
+  glyph_format : ColorGlyphFormat,
+) -> ColorGlyph? {
+  match glyph_format {
+    ColorGlyphFormat::ColrV0 =>
+      if self.layers(glyph_id) is Some(_) {
+        Some(ColorGlyph::{ collection: self, glyph_id, format: glyph_format })
+      } else {
+        None
+      }
+    ColorGlyphFormat::ColrV1 =>
+      if self.v1_has_glyph(glyph_id) {
+        Some(ColorGlyph::{ collection: self, glyph_id, format: glyph_format })
+      } else {
+        None
+      }
+  }
+}
+
+///|
+pub fn ColorGlyphCollection::get(
+  self : ColorGlyphCollection,
+  glyph_id : GlyphId,
+) -> ColorGlyph? {
+  match self.get_with_format(glyph_id, ColorGlyphFormat::ColrV1) {
+    None => self.get_with_format(glyph_id, ColorGlyphFormat::ColrV0)
+    Some(v) => Some(v)
+  }
 }
 
 ///|

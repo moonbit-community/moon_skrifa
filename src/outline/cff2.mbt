@@ -13,7 +13,7 @@
 // limitations under the License.
 
 ///|
-/// CFF2 (OpenType `CFF2` table) outline extraction (MVP).
+/// CFF2 (OpenType `CFF2` table) outline extraction.
 ///
 /// This parses the header/top-dict and evaluates Type2 charstrings.
 ///

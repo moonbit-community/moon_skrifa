@@ -13,7 +13,7 @@
 // limitations under the License.
 
 ///|
-/// CFF (OpenType `CFF ` table) outline extraction (MVP).
+/// CFF (OpenType `CFF ` table) outline extraction.
 ///
 /// This supports a single-font CFF FontSet and Type2 charstrings.
 

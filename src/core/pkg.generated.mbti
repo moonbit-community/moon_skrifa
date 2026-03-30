@@ -140,7 +140,9 @@ pub struct BitmapStrikes {
 }
 pub fn BitmapStrikes::format(Self) -> BitmapFormat?
 pub fn BitmapStrikes::get(Self, Int) -> BitmapStrike?
+pub fn BitmapStrikes::glyph_for_size(Self, Size, GlyphId) -> BitmapGlyph?
 pub fn BitmapStrikes::is_empty(Self) -> Bool
+pub fn BitmapStrikes::iter(Self) -> Array[BitmapStrike]
 pub fn BitmapStrikes::len(Self) -> Int
 pub fn BitmapStrikes::new(FontRef) -> Self
 pub fn BitmapStrikes::with_format(FontRef, BitmapFormat) -> Self?
@@ -179,15 +181,29 @@ pub fn Color::b(Self) -> Byte
 pub fn Color::g(Self) -> Byte
 pub fn Color::r(Self) -> Byte
 
+pub struct ColorGlyph {
+  // private fields
+}
+pub fn ColorGlyph::format(Self) -> ColorGlyphFormat
+pub fn ColorGlyph::layers(Self) -> Array[ColorLayer]?
+pub fn[P : ColorPainter] ColorGlyph::paint(Self, LocationRef, P) -> Result[Unit, PaintError]
+
 pub struct ColorGlyphCollection {
   // private fields
 
   fn new(FontRef) -> ColorGlyphCollection
 }
+pub fn ColorGlyphCollection::get(Self, GlyphId) -> ColorGlyph?
+pub fn ColorGlyphCollection::get_with_format(Self, GlyphId, ColorGlyphFormat) -> ColorGlyph?
 pub fn ColorGlyphCollection::has_colr_v1(Self) -> Bool
 pub fn ColorGlyphCollection::layers(Self, GlyphId) -> Array[ColorLayer]?
 pub fn ColorGlyphCollection::new(FontRef) -> Self
 pub fn ColorGlyphCollection::version(Self) -> Int
+
+pub(all) enum ColorGlyphFormat {
+  ColrV0
+  ColrV1
+}
 
 pub struct ColorLayer {
   glyph_id : GlyphId
@@ -196,15 +212,35 @@ pub struct ColorLayer {
 pub fn ColorLayer::glyph_id(Self) -> GlyphId
 pub fn ColorLayer::palette_index(Self) -> Int
 
+pub struct ColorPalette {
+  // private fields
+}
+pub fn ColorPalette::color(Self, Int) -> Color?
+pub fn ColorPalette::colors(Self) -> Array[Color]
+pub fn ColorPalette::index(Self) -> Int
+pub fn ColorPalette::label(Self) -> UInt16?
+pub fn ColorPalette::palette_type(Self) -> ColorPaletteType?
+
+pub struct ColorPaletteType {
+  bits : UInt
+}
+pub fn ColorPaletteType::raw(Self) -> UInt
+pub fn ColorPaletteType::usable_with_dark_background(Self) -> Bool
+pub fn ColorPaletteType::usable_with_light_background(Self) -> Bool
+
 pub struct ColorPalettes {
   // private fields
 
   fn new(FontRef) -> ColorPalettes
 }
 pub fn ColorPalettes::color(Self, Int, Int) -> Color?
+pub fn ColorPalettes::color_label(Self, Int) -> UInt16?
 pub fn ColorPalettes::entries_per_palette(Self) -> Int
+pub fn ColorPalettes::get(Self, Int) -> ColorPalette?
+pub fn ColorPalettes::is_empty(Self) -> Bool
 pub fn ColorPalettes::len(Self) -> Int
 pub fn ColorPalettes::new(FontRef) -> Self
+pub fn ColorPalettes::version(Self) -> Int
 
 pub(all) struct ColorStop {
   offset : Double

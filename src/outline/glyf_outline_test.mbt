@@ -312,6 +312,37 @@ fn glyf_outline_test_glyph_composite_translate(
 }
 
 ///|
+fn glyf_outline_test_glyph_composite_point_match(
+  first_gid : Int,
+  second_gid : Int,
+  base_point_ix : Int,
+  component_point_ix : Int,
+) -> Bytes {
+  // Composite with two components:
+  // 1) first component with XY offset (0,0)
+  // 2) second component anchored by point matching.
+  let out : Array[Byte] = Array::new()
+  glyf_outline_test_push_i16_be(out, -1)
+  glyf_outline_test_push_i16_be(out, 0)
+  glyf_outline_test_push_i16_be(out, 0)
+  glyf_outline_test_push_i16_be(out, 0)
+  glyf_outline_test_push_i16_be(out, 0)
+  // First component flags:
+  // ARG_1_AND_2_ARE_WORDS | ARGS_ARE_XY_VALUES | MORE_COMPONENTS
+  glyf_outline_test_push_u16_be(out, 0x0001 | 0x0002 | 0x0020)
+  glyf_outline_test_push_u16_be(out, first_gid)
+  glyf_outline_test_push_i16_be(out, 0)
+  glyf_outline_test_push_i16_be(out, 0)
+  // Second component flags:
+  // ARG_1_AND_2_ARE_WORDS (point matching mode, no XY flag)
+  glyf_outline_test_push_u16_be(out, 0x0001)
+  glyf_outline_test_push_u16_be(out, second_gid)
+  glyf_outline_test_push_u16_be(out, base_point_ix)
+  glyf_outline_test_push_u16_be(out, component_point_ix)
+  Bytes::from_array(out.op_as_view())
+}
+
+///|
 test "OutlineGlyphCollection::path empty glyph is empty path" {
   let font = glyf_outline_test_make_font(
     Array::from_fixed_array([
@@ -386,6 +417,30 @@ test "glyf composite outline translates component path" {
   let expected = Array::from_fixed_array([
     PathElement::MoveTo(10.0, 20.0),
     PathElement::QuadTo(60.0, 120.0, 110.0, 20.0),
+    PathElement::Close,
+  ])
+  inspect(glyf_outline_test_path_eq(path, expected), content="true")
+}
+
+///|
+test "glyf composite outline supports point matching anchors" {
+  let font = glyf_outline_test_make_font(
+    Array::from_fixed_array([
+      Bytes::from_array(Array::new().op_as_view()),
+      glyf_outline_test_glyph_simple_quad(),
+      glyf_outline_test_glyph_composite_point_match(1, 1, 2, 0),
+    ]),
+  )
+  let c = OutlineGlyphCollection::from_font(font)
+  let path = c
+    .path(@moon_skrifa.GlyphId::new((2).to_uint16()), DrawSettings::default())
+    .unwrap()
+  let expected = Array::from_fixed_array([
+    PathElement::MoveTo(0.0, 0.0),
+    PathElement::QuadTo(50.0, 100.0, 100.0, 0.0),
+    PathElement::Close,
+    PathElement::MoveTo(100.0, 0.0),
+    PathElement::QuadTo(150.0, 100.0, 200.0, 0.0),
     PathElement::Close,
   ])
   inspect(glyf_outline_test_path_eq(path, expected), content="true")

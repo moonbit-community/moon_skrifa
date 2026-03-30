@@ -136,6 +136,43 @@ fn bitmap_test_build_sbix_with_glyph(
 }
 
 ///|
+fn bitmap_test_build_sbix_multi_with_glyph(
+  ppems : Array[Int],
+  origin_x : Int,
+  origin_y : Int,
+  graphic_type : UInt,
+  payload : Bytes,
+) -> Bytes {
+  let num_strikes = ppems.length()
+  let data_len = payload.length()
+  let strike_len = 20 + data_len
+  let strike_offsets_base = 8
+  let strikes_base = strike_offsets_base + num_strikes * 4
+  let out : Array[Byte] = Array::new()
+  bitmap_test_push_u16_be(out, 1) // version
+  bitmap_test_push_u16_be(out, 0) // flags
+  bitmap_test_push_u32_be(out, bitmap_test_u32(num_strikes)) // numStrikes
+  for i in 0..<num_strikes {
+    bitmap_test_push_u32_be(out, bitmap_test_u32(strikes_base + i * strike_len))
+  }
+  for ppem in ppems {
+    let glyph_data_off = 12
+    let glyph_end_off = glyph_data_off + 8 + data_len
+    bitmap_test_push_u16_be(out, ppem)
+    bitmap_test_push_u16_be(out, 72)
+    bitmap_test_push_u32_be(out, bitmap_test_u32(glyph_data_off))
+    bitmap_test_push_u32_be(out, bitmap_test_u32(glyph_end_off))
+    bitmap_test_push_u16_be(out, origin_x & 0xFFFF)
+    bitmap_test_push_u16_be(out, origin_y & 0xFFFF)
+    bitmap_test_push_u32_be(out, graphic_type)
+    for b in payload.iter() {
+      out.push(b)
+    }
+  }
+  Bytes::from_array(out.op_as_view())
+}
+
+///|
 fn bitmap_test_build_cblc_index1(
   ppem_x : Int,
   ppem_y : Int,
@@ -478,4 +515,52 @@ test "bitmap ebdt/eblc glyph (format 1 + indexSubTable1)" {
   inspect(glyph.origin_x(), content="-1")
   inspect(glyph.origin_y(), content="2")
   inspect(glyph.data().length(), content="1")
+}
+
+///|
+test "bitmap strikes iter and glyph_for_size" {
+  let jpg_bytes = Bytes::from_array(
+    Array::from_fixed_array([
+      0xFF |> Int::to_byte,
+      0xD8 |> Int::to_byte,
+      0xFF |> Int::to_byte,
+      0xD9 |> Int::to_byte,
+    ]).op_as_view(),
+  )
+  let sbix = bitmap_test_build_sbix_multi_with_glyph(
+    Array::from_fixed_array([12, 20]),
+    0,
+    0,
+    0x6A706720, // "jpg "
+    jpg_bytes,
+  )
+  let sfnt = bitmap_test_build_sfnt(
+    Array::from_fixed_array([
+      (BITMAP_TEST_TAG_MAXP, bitmap_test_build_maxp(1)),
+      (TAG_SBIX, sbix),
+    ]),
+  )
+  let font = FontRef::new(sfnt).unwrap()
+  let strikes = font.bitmap_strikes()
+  let iter = strikes.iter()
+  inspect(iter.length(), content="2")
+  inspect(iter.at(0).ppem_y(), content="12")
+  inspect(iter.at(1).ppem_y(), content="20")
+  let gid = GlyphId::new((0).to_uint16())
+  inspect(
+    strikes.glyph_for_size(Size::new(12.0), gid).unwrap().ppem_y(),
+    content="12",
+  )
+  inspect(
+    strikes.glyph_for_size(Size::new(15.0), gid).unwrap().ppem_y(),
+    content="20",
+  )
+  inspect(
+    strikes.glyph_for_size(Size::new(25.0), gid).unwrap().ppem_y(),
+    content="20",
+  )
+  inspect(
+    strikes.glyph_for_size(Size::unscaled(), gid).unwrap().ppem_y(),
+    content="20",
+  )
 }
