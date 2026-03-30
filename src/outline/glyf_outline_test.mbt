@@ -291,6 +291,31 @@ fn glyf_outline_test_glyph_first_off_second_on() -> Bytes {
 }
 
 ///|
+fn glyf_outline_test_glyph_negative_tie_quad() -> Bytes {
+  // One contour with 3 points:
+  // (0,0) on, (20,-24) off, (40,0) on.
+  // This triggers negative .5 ties at ppem 14/18 when upem=2048.
+  let out : Array[Byte] = Array::new()
+  glyf_outline_test_push_i16_be(out, 1)
+  glyf_outline_test_push_i16_be(out, 0)
+  glyf_outline_test_push_i16_be(out, -24)
+  glyf_outline_test_push_i16_be(out, 40)
+  glyf_outline_test_push_i16_be(out, 0)
+  glyf_outline_test_push_u16_be(out, 2) // endPts[0]
+  glyf_outline_test_push_u16_be(out, 0) // instructionLength
+  out.push(0x31 |> Int::to_byte)
+  out.push(0x16 |> Int::to_byte)
+  out.push(0x37 |> Int::to_byte)
+  // x bytes: +20, +20
+  out.push(20 |> Int::to_byte)
+  out.push(20 |> Int::to_byte)
+  // y bytes: -24, +24
+  out.push(24 |> Int::to_byte)
+  out.push(24 |> Int::to_byte)
+  Bytes::from_array(out.op_as_view())
+}
+
+///|
 fn glyf_outline_test_glyph_composite_translate(
   comp_gid : Int,
   dx : Int,
@@ -487,6 +512,52 @@ test "path scales with size when unitsPerEm is available" {
     PathElement::Close,
   ])
   inspect(glyf_outline_test_path_eq(path, expected), content="true")
+}
+
+///|
+test "path scaling keeps negative .5 ties away from zero in FreeType mode" {
+  let font = glyf_outline_test_make_font_with_head(
+    glyf_outline_test_make_head_long_loca_with_upem(2048),
+    Array::from_fixed_array([
+      Bytes::from_array(Array::new().op_as_view()),
+      glyf_outline_test_glyph_negative_tie_quad(),
+    ]),
+  )
+  let c = OutlineGlyphCollection::from_font(font)
+
+  let path_14 = c.path(
+    @moon_skrifa.GlyphId::new((1).to_uint16()),
+    DrawSettings::unhinted(
+      @moon_skrifa.Size::new(14.0),
+      @moon_skrifa.LocationRef::default(),
+    ),
+  )
+  let expected_14 = Array::from_fixed_array([
+    PathElement::MoveTo(0.0, 0.0),
+    PathElement::QuadTo(0.140625, -0.171875, 0.28125, 0.0),
+    PathElement::Close,
+  ])
+  inspect(
+    glyf_outline_test_path_eq(path_14.unwrap(), expected_14),
+    content="true",
+  )
+
+  let path_18 = c.path(
+    @moon_skrifa.GlyphId::new((1).to_uint16()),
+    DrawSettings::unhinted(
+      @moon_skrifa.Size::new(18.0),
+      @moon_skrifa.LocationRef::default(),
+    ),
+  )
+  let expected_18 = Array::from_fixed_array([
+    PathElement::MoveTo(0.0, 0.0),
+    PathElement::QuadTo(0.171875, -0.21875, 0.359375, 0.0),
+    PathElement::Close,
+  ])
+  inspect(
+    glyf_outline_test_path_eq(path_18.unwrap(), expected_18),
+    content="true",
+  )
 }
 
 ///|

@@ -136,12 +136,25 @@ fn glyf_compute_scale_bits(
 
 ///|
 fn glyf_mul_16_16(v : Int, scale_bits : Int) -> Int {
-  (v.to_double() * scale_bits.to_double() / 65536.0).round().to_int()
+  glyf_round_half_away_from_zero(
+    v.to_double() * scale_bits.to_double() / 65536.0,
+  )
 }
 
 ///|
 fn glyf_mul_16_16_f(v : Double, scale_bits : Int) -> Int {
-  (v * scale_bits.to_double() / 65536.0).round().to_int()
+  glyf_round_half_away_from_zero(v * scale_bits.to_double() / 65536.0)
+}
+
+///|
+/// Matches font-types fixed-point mul rounding on 16.16 products:
+/// .5 ties are rounded away from zero.
+fn glyf_round_half_away_from_zero(v : Double) -> Int {
+  if v >= 0.0 {
+    (v + 0.5).to_int()
+  } else {
+    -((-v + 0.5).to_int())
+  }
 }
 
 ///|
