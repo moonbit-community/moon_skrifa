@@ -153,7 +153,7 @@ fn glyf_round_half_away_from_zero(v : Double) -> Int {
   if v >= 0.0 {
     (v + 0.5).to_int()
   } else {
-    -((-v + 0.5).to_int())
+    -(-v + 0.5).to_int()
   }
 }
 
