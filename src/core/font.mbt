@@ -18,8 +18,11 @@
 /// Ported from `fontations/skrifa/src/font.rs` (Apache-2.0 OR MIT).
 pub struct GlyphId {
   priv value : UInt16
+}
 
-  fn new(value : UInt16) -> GlyphId
+///|
+pub fn GlyphId::GlyphId(value : UInt16) -> GlyphId {
+  GlyphId::new(value)
 }
 
 ///|
@@ -60,6 +63,11 @@ pub fn GlyphId::to_string(self : GlyphId) -> String {
 ///|
 pub impl Show for GlyphId with output(self, logger) {
   logger.write_string(self.value.to_string())
+}
+
+///|
+pub impl Debug for GlyphId with to_repr(self) {
+  Repr::integer(self.value.to_string())
 }
 
 ///|

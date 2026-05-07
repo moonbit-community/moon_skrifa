@@ -376,8 +376,8 @@ test "bitmap sbix glyph png" {
   inspect(glyph.ppem_y(), content="16")
   inspect(glyph.origin_x(), content="1")
   inspect(glyph.origin_y(), content="2")
-  inspect(glyph.width(), content="Some(2)")
-  inspect(glyph.height(), content="Some(3)")
+  debug_inspect(glyph.width(), content="Some(2)")
+  debug_inspect(glyph.height(), content="Some(3)")
   inspect(glyph.data().length(), content="24")
 }
 
@@ -406,8 +406,8 @@ test "bitmap sbix glyph jpg" {
   let glyph = strike.get(GlyphId::new((0).to_uint16())).unwrap()
   let ok = if glyph.format() is BitmapImageFormat::Jpeg { true } else { false }
   inspect(ok, content="true")
-  inspect(glyph.width(), content="None")
-  inspect(glyph.height(), content="None")
+  debug_inspect(glyph.width(), content="None")
+  debug_inspect(glyph.height(), content="None")
   inspect(glyph.data().length(), content="4")
 }
 
@@ -468,8 +468,8 @@ test "bitmap cbdt/cblc glyph png (format 17 + indexSubTable1)" {
   inspect(glyph.ppem_y(), content="16")
   inspect(glyph.origin_x(), content="1")
   inspect(glyph.origin_y(), content="2")
-  inspect(glyph.width(), content="Some(2)")
-  inspect(glyph.height(), content="Some(3)")
+  debug_inspect(glyph.width(), content="Some(2)")
+  debug_inspect(glyph.height(), content="Some(3)")
   inspect(glyph.data().length(), content="24")
 }
 
@@ -510,8 +510,8 @@ test "bitmap ebdt/eblc glyph (format 1 + indexSubTable1)" {
     .unwrap()
     .get(GlyphId::new((0).to_uint16()))
     .unwrap()
-  inspect(glyph.width(), content="Some(8)")
-  inspect(glyph.height(), content="Some(1)")
+  debug_inspect(glyph.width(), content="Some(8)")
+  debug_inspect(glyph.height(), content="Some(1)")
   inspect(glyph.origin_x(), content="-1")
   inspect(glyph.origin_y(), content="2")
   inspect(glyph.data().length(), content="1")

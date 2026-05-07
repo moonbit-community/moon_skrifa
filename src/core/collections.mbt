@@ -32,8 +32,11 @@ priv enum Storage[T] {
 priv struct SmallVec[T] {
   storage : Storage[T]
   inline_cap : Int
+}
 
-  fn[T : Default] new(inline_cap : Int) -> SmallVec[T]
+///|
+fn[T : Default] SmallVec::SmallVec(inline_cap : Int) -> SmallVec[T] {
+  SmallVec::new(inline_cap)
 }
 
 ///|
@@ -307,9 +310,9 @@ test "pop_inline" {
   vec = vec.push(1)
   vec = vec.push(2)
   let (v1, p1) = vec.pop()
-  inspect(p1, content="Some(2)")
+  debug_inspect(p1, content="Some(2)")
   let (_v2, p2) = v1.pop()
-  inspect(p2, content="Some(1)")
+  debug_inspect(p2, content="Some(1)")
 }
 
 ///|
@@ -323,9 +326,9 @@ test "truncate_inline" {
 ///|
 test "get_bounds" {
   let vec = SmallVec::with_len(2, 9, 4)
-  inspect(vec.get(0), content="Some(9)")
-  inspect(vec.get(1), content="Some(9)")
-  inspect(vec.get(2), content="None")
+  debug_inspect(vec.get(0), content="Some(9)")
+  debug_inspect(vec.get(1), content="Some(9)")
+  debug_inspect(vec.get(2), content="None")
 }
 
 ///|

@@ -401,8 +401,11 @@ fn color_trav_test_build_colr_v1_var_solid_alpha() -> Bytes {
 ///|
 priv struct ColorTravTestPainter {
   ops : Array[String]
+}
 
-  fn new() -> ColorTravTestPainter
+///|
+fn ColorTravTestPainter::ColorTravTestPainter() -> ColorTravTestPainter {
+  ColorTravTestPainter::new()
 }
 
 ///|

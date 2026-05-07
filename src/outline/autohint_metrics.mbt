@@ -54,14 +54,17 @@ priv struct AutoHintScale {
   size : Double
   units_per_em : Int
   flags : Int
+}
 
-  fn new(
-    size : Double,
-    units_per_em : Int,
-    font_style : @moon_skrifa.Style,
-    target : Target,
-    group : AutoHintScriptGroup,
-  ) -> AutoHintScale
+///|
+fn AutoHintScale::AutoHintScale(
+  size : Double,
+  units_per_em : Int,
+  font_style : @moon_skrifa.Style,
+  target : Target,
+  group : AutoHintScriptGroup,
+) -> AutoHintScale {
+  AutoHintScale::new(size, units_per_em, font_style, target, group)
 }
 
 ///|

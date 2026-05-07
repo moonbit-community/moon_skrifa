@@ -123,8 +123,11 @@ pub struct ColorPalettes {
   priv palette_types_off : Int?
   priv palette_labels_off : Int?
   priv palette_entry_labels_off : Int?
+}
 
-  fn new(font : FontRef) -> ColorPalettes
+///|
+pub fn ColorPalettes::ColorPalettes(font : FontRef) -> ColorPalettes {
+  ColorPalettes::new(font)
 }
 
 ///|

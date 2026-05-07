@@ -81,8 +81,11 @@ pub impl OutlinePen for Array[PathElement] with close(out) {
 pub struct SvgPen {
   priv mut s : String
   priv precision : Int?
+}
 
-  fn new() -> SvgPen
+///|
+pub fn SvgPen::SvgPen() -> SvgPen {
+  SvgPen::new()
 }
 
 ///|
@@ -228,14 +231,16 @@ pub impl OutlinePen for SvgPen with close(pen) {
 
 ///|
 /// Pen that drops all drawing output.
-pub struct NullPen {
-
-  fn new() -> NullPen
-}
+pub struct NullPen {}
 
 ///|
 pub fn NullPen::new() -> NullPen {
   NullPen::{  }
+}
+
+///|
+pub fn NullPen::NullPen() -> NullPen {
+  NullPen::new()
 }
 
 ///|

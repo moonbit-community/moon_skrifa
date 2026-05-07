@@ -494,12 +494,15 @@ priv struct Type2Eval {
   mut y : Double
   stack : Array[Double]
   mut stack_ix : Int
+}
 
-  fn new(
-    global_subrs : Type2Index?,
-    local_subrs : Type2Index?,
-    blend_state : Type2BlendState?,
-  ) -> Type2Eval
+///|
+fn Type2Eval::Type2Eval(
+  global_subrs : Type2Index?,
+  local_subrs : Type2Index?,
+  blend_state : Type2BlendState?,
+) -> Type2Eval {
+  Type2Eval::new(global_subrs, local_subrs, blend_state)
 }
 
 ///|

@@ -277,8 +277,11 @@ const CFF_HINT_EPSILON_BITS : Int = 1
 ///|
 priv struct CffBlues {
   pairs : Array[(CffFixed, CffFixed)]
+}
 
-  fn new(values : ArrayView[CffFixed]) -> CffBlues
+///|
+fn CffBlues::CffBlues(values : ArrayView[CffFixed]) -> CffBlues {
+  CffBlues::new(values)
 }
 
 ///|
@@ -362,8 +365,11 @@ priv struct HintState {
   mut darken_y : CffFixed
   mut zones : Array[BlueZone]
   mut zone_count : Int
+}
 
-  fn new(params : HintParams, scale : CffFixed) -> HintState
+///|
+fn HintState::HintState(params : HintParams, scale : CffFixed) -> HintState {
+  HintState::new(params, scale)
 }
 
 ///|
@@ -776,8 +782,11 @@ priv struct HintMap {
   mut len : Int
   mut is_valid : Bool
   scale : CffFixed
+}
 
-  fn new(scale : CffFixed) -> HintMap
+///|
+fn HintMap::HintMap(scale : CffFixed) -> HintMap {
+  HintMap::new(scale)
 }
 
 ///|
@@ -1237,12 +1246,15 @@ priv struct CffHintingSink {
   matrix : CffMatrix?
   mut start_point : (CffFixed, CffFixed)?
   mut pending_line : (CffFixed, CffFixed, CffFixed, CffFixed)?
+}
 
-  fn new(
-    state : HintState,
-    out : Array[PathElement],
-    matrix : CffMatrix?,
-  ) -> CffHintingSink
+///|
+fn CffHintingSink::CffHintingSink(
+  state : HintState,
+  out : Array[PathElement],
+  matrix : CffMatrix?,
+) -> CffHintingSink {
+  CffHintingSink::new(state, out, matrix)
 }
 
 ///|

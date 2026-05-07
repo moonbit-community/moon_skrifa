@@ -23,8 +23,13 @@
 ///|
 pub struct GlyphStyles {
   priv map : GlyphStyleMap
+}
 
-  fn new(outlines : OutlineGlyphCollection) -> GlyphStyles
+///|
+pub fn GlyphStyles::GlyphStyles(
+  outlines : OutlineGlyphCollection,
+) -> GlyphStyles {
+  GlyphStyles::new(outlines)
 }
 
 ///|
@@ -32,8 +37,14 @@ priv struct GlyphStyleMap {
   styles : Array[GlyphStyle]
   metrics_map : Array[Byte]
   mut metrics_count : Int
+}
 
-  fn new(glyph_count : Int, font : @moon_skrifa.FontRef) -> GlyphStyleMap
+///|
+fn GlyphStyleMap::GlyphStyleMap(
+  glyph_count : Int,
+  font : @moon_skrifa.FontRef,
+) -> GlyphStyleMap {
+  GlyphStyleMap::new(glyph_count, font)
 }
 
 ///|

@@ -92,7 +92,7 @@ test "FontRef::new sfnt + table()" {
   let font = FontRef::new(data).unwrap()
   inspect(font.index(), content="0")
   let t = font.table(TAG_TEST).unwrap()
-  inspect(t.to_bytes(), content="b\"abcd\"")
+  inspect(t.to_owned(), content="b\"abcd\"")
 }
 
 ///|
@@ -101,7 +101,7 @@ test "FontRef::new ttc + table()" {
   let font = FontRef::new(data).unwrap()
   inspect(font.index(), content="0")
   let t = font.table(TAG_TEST).unwrap()
-  inspect(t.to_bytes(), content="b\"abcd\"")
+  inspect(t.to_owned(), content="b\"abcd\"")
 }
 
 ///|

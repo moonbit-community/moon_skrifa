@@ -49,8 +49,14 @@ pub(all) suberror HintError {
 pub struct HintingOptions {
   engine : Engine
   target : Target
+}
 
-  fn new(engine : Engine, target : Target) -> HintingOptions
+///|
+pub fn HintingOptions::HintingOptions(
+  engine : Engine,
+  target : Target,
+) -> HintingOptions {
+  HintingOptions::new(engine, target)
 }
 
 ///|
@@ -247,11 +253,14 @@ priv struct AutoHintInstance {
   styles : GlyphStyles
   is_fixed_width : Bool
   font_style : @moon_skrifa.Style
+}
 
-  fn new(
-    outlines : OutlineGlyphCollection,
-    styles : GlyphStyles?,
-  ) -> AutoHintInstance
+///|
+fn AutoHintInstance::AutoHintInstance(
+  outlines : OutlineGlyphCollection,
+  styles : GlyphStyles?,
+) -> AutoHintInstance {
+  AutoHintInstance::new(outlines, styles)
 }
 
 ///|

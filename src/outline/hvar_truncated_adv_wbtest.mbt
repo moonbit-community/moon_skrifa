@@ -141,5 +141,5 @@ test "hvar truncated adv: hinter kind + empty advance" {
   let metrics = glyph
     .draw(DrawSettings::hinted(hinting, false), NullPen::new())
     .unwrap()
-  inspect(metrics.advance_width, content="Some(11)")
+  debug_inspect(metrics.advance_width, content="Some(11)")
 }

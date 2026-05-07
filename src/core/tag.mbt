@@ -18,8 +18,11 @@
 /// Ported from `read-fonts::types::Tag` usage in `fontations/skrifa`.
 pub struct Tag {
   priv value : UInt
+}
 
-  fn new(bytes : Bytes) -> Tag
+///|
+pub fn Tag::Tag(bytes : Bytes) -> Tag {
+  Tag::new(bytes)
 }
 
 ///|

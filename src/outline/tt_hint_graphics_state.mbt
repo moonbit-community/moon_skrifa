@@ -56,8 +56,15 @@ priv struct TtRetainedGraphicsState {
   ppem : Int
   is_rotated : Bool
   is_stretched : Bool
+}
 
-  fn new(scale : Int, ppem : Int, target : Target) -> TtRetainedGraphicsState
+///|
+fn TtRetainedGraphicsState::TtRetainedGraphicsState(
+  scale : Int,
+  ppem : Int,
+  target : Target,
+) -> TtRetainedGraphicsState {
+  TtRetainedGraphicsState::new(scale, ppem, target)
 }
 
 ///|

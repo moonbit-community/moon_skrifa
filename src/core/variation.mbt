@@ -271,8 +271,11 @@ pub struct AxisCollection {
   priv axes : Array[AxisRecord]
   priv instances : Array[InstanceRecord]
   priv avar : AvarData?
+}
 
-  fn new(font : FontRef) -> AxisCollection
+///|
+pub fn AxisCollection::AxisCollection(font : FontRef) -> AxisCollection {
+  AxisCollection::new(font)
 }
 
 ///|
@@ -518,8 +521,13 @@ pub fn NamedInstance::location(self : NamedInstance) -> Location {
 ///|
 pub struct NamedInstanceCollection {
   priv axes : AxisCollection
+}
 
-  fn new(font : FontRef) -> NamedInstanceCollection
+///|
+pub fn NamedInstanceCollection::NamedInstanceCollection(
+  font : FontRef,
+) -> NamedInstanceCollection {
+  NamedInstanceCollection::new(font)
 }
 
 ///|

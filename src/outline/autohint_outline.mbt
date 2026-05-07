@@ -545,8 +545,11 @@ fn autohint_outline_glyf_glyph_slice(
 priv struct AutoHintOutlineData {
   points : Array[AutoHintPoint]
   contours : Array[AutoHintContour]
+}
 
-  fn new() -> AutoHintOutlineData
+///|
+fn AutoHintOutlineData::AutoHintOutlineData() -> AutoHintOutlineData {
+  AutoHintOutlineData::new()
 }
 
 ///|

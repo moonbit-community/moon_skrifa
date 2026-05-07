@@ -493,8 +493,11 @@ priv enum GlyphNamesInner {
 ///|
 pub struct GlyphNames {
   priv inner : GlyphNamesInner
+}
 
-  fn new(font : FontRef) -> GlyphNames
+///|
+pub fn GlyphNames::GlyphNames(font : FontRef) -> GlyphNames {
+  GlyphNames::new(font)
 }
 
 ///|

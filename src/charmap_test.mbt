@@ -225,7 +225,7 @@ test "charmap: choose format 12 over 4" {
   let font = FontRef::new(make_sfnt_with_table(TAG_CMAP, cmap_table)).unwrap()
   let cmap = font.charmap()
   inspect(cmap.has_map(), content="true")
-  inspect(cmap.map(0x1F600), content="Some(100)")
+  debug_inspect(cmap.map(0x1F600), content="Some(100)")
 }
 
 ///|
@@ -234,8 +234,8 @@ test "charmap: choose format 4 when only BMP mapping" {
   let cmap_table = make_cmap_table(Array::from_fixed_array([(3, 1, fmt4)]))
   let font = FontRef::new(make_sfnt_with_table(TAG_CMAP, cmap_table)).unwrap()
   let cmap = font.charmap()
-  inspect(cmap.map(0x41), content="Some(5)")
-  inspect(cmap.map(0x1F600), content="None")
+  debug_inspect(cmap.map(0x41), content="Some(5)")
+  debug_inspect(cmap.map(0x1F600), content="None")
 }
 
 ///|
@@ -250,12 +250,12 @@ test "charmap: symbol mapping duplicates 0..FF into F000..F0FF" {
   let font = FontRef::new(make_sfnt_with_table(TAG_CMAP, cmap_table)).unwrap()
   let cmap = font.charmap()
   inspect(cmap.is_symbol(), content="true")
-  inspect(cmap.map(0xF001), content="Some(1)")
-  inspect(cmap.map(0x1), content="Some(1)")
-  inspect(cmap.map(0x2), content="Some(2)")
-  inspect(cmap.map(0x3), content="Some(3)")
+  debug_inspect(cmap.map(0xF001), content="Some(1)")
+  debug_inspect(cmap.map(0x1), content="Some(1)")
+  debug_inspect(cmap.map(0x2), content="Some(2)")
+  debug_inspect(cmap.map(0x3), content="Some(3)")
   // Symbol mapping is selected, so UCS-4 mapping is not used.
-  inspect(cmap.map(0x1F600), content="None")
+  debug_inspect(cmap.map(0x1F600), content="None")
 }
 
 ///|
@@ -306,6 +306,6 @@ test "charmap: mappings are consistent with map()" {
   for m in cmap.mappings() {
     let (cp, gid) = m
     inspect(gid.to_u16() != 0, content="true")
-    inspect(cmap.map(cp), content="Some(" + gid.to_string() + ")")
+    debug_inspect(cmap.map(cp), content="Some(" + gid.to_string() + ")")
   }
 }

@@ -37,8 +37,14 @@ priv struct TtLoopBudget {
   limit : Int
   mut backward_jumps : Int
   mut loop_calls : Int
+}
 
-  fn new(cvt_len : Int, point_count : Int?) -> TtLoopBudget
+///|
+fn TtLoopBudget::TtLoopBudget(
+  cvt_len : Int,
+  point_count : Int?,
+) -> TtLoopBudget {
+  TtLoopBudget::new(cvt_len, point_count)
 }
 
 ///|
@@ -99,22 +105,28 @@ priv struct TtEngine {
   loop_budget : TtLoopBudget
   axis_count : Int
   coords : ArrayView[@moon_skrifa.NormalizedCoord]
+}
 
-  fn new(
-    font_code : BytesView,
-    prep_code : BytesView,
-    glyph_code : BytesView,
-    retained : TtRetainedGraphicsState,
-    cvt : Array[Int],
-    storage : Array[Int],
-    point_count : Int?,
-    axis_count : Int,
-    coords : ArrayView[@moon_skrifa.NormalizedCoord],
-    max_stack : Int,
-    max_call_depth : Int,
-    max_function_defs : Int,
-    max_instruction_defs : Int,
-  ) -> TtEngine
+///|
+fn TtEngine::TtEngine(
+  font_code : BytesView,
+  prep_code : BytesView,
+  glyph_code : BytesView,
+  retained : TtRetainedGraphicsState,
+  cvt : Array[Int],
+  storage : Array[Int],
+  point_count : Int?,
+  axis_count : Int,
+  coords : ArrayView[@moon_skrifa.NormalizedCoord],
+  max_stack : Int,
+  max_call_depth : Int,
+  max_function_defs : Int,
+  max_instruction_defs : Int,
+) -> TtEngine {
+  TtEngine::new(
+    font_code, prep_code, glyph_code, retained, cvt, storage, point_count, axis_count,
+    coords, max_stack, max_call_depth, max_function_defs, max_instruction_defs,
+  )
 }
 
 ///|

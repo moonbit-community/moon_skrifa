@@ -38,14 +38,17 @@ priv struct TtProgramState {
   mut decoder : TtDecoder
   call_stack : Array[TtCallFrame]
   max_call_depth : Int
+}
 
-  fn new(
-    font : BytesView,
-    prep : BytesView,
-    glyph : BytesView,
-    current : TtProgram,
-    max_call_depth : Int,
-  ) -> TtProgramState
+///|
+fn TtProgramState::TtProgramState(
+  font : BytesView,
+  prep : BytesView,
+  glyph : BytesView,
+  current : TtProgram,
+  max_call_depth : Int,
+) -> TtProgramState {
+  TtProgramState::new(font, prep, glyph, current, max_call_depth)
 }
 
 ///|

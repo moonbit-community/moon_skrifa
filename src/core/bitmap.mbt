@@ -207,8 +207,11 @@ priv enum BitmapStrikesKind {
 pub struct BitmapStrikes {
   priv kind : BitmapStrikesKind
   priv num_glyphs : Int
+}
 
-  fn new(font : FontRef) -> BitmapStrikes
+///|
+pub fn BitmapStrikes::BitmapStrikes(font : FontRef) -> BitmapStrikes {
+  BitmapStrikes::new(font)
 }
 
 ///|

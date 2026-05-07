@@ -29,8 +29,11 @@ priv struct Decycler[T] {
   node_ids : FixedArray[T]
   depth : Int
   max_depth : Int
+}
 
-  fn[T : Default] new(max_depth : Int) -> Decycler[T]
+///|
+fn[T : Default] Decycler::Decycler(max_depth : Int) -> Decycler[T] {
+  Decycler::new(max_depth)
 }
 
 ///|
@@ -127,8 +130,11 @@ const MAX_DEPTH : Int = 64
 ///|
 priv struct Node {
   child_ids : Array[Int]
+}
 
-  fn new(child_ids : Array[Int]) -> Node
+///|
+fn Node::Node(child_ids : Array[Int]) -> Node {
+  Node::new(child_ids)
 }
 
 ///|
