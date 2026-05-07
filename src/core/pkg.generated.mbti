@@ -75,7 +75,6 @@ pub struct Attributes {
   weight : Weight
 }
 pub fn Attributes::Attributes(FontRef) -> Self
-pub fn Attributes::new(FontRef) -> Self
 pub fn Attributes::stretch(Self) -> Stretch
 pub fn Attributes::style(Self) -> Style
 pub fn Attributes::weight(Self) -> Weight
@@ -101,7 +100,6 @@ pub fn AxisCollection::get_by_tag(Self, Tag) -> Axis?
 pub fn AxisCollection::is_empty(Self) -> Bool
 pub fn AxisCollection::len(Self) -> Int
 pub fn AxisCollection::location(Self, ArrayView[Setting[Double]]) -> Location
-pub fn AxisCollection::new(FontRef) -> Self
 
 pub(all) enum BitmapFormat {
   Sbix
@@ -145,7 +143,6 @@ pub fn BitmapStrikes::glyph_for_size(Self, Size, GlyphId) -> BitmapGlyph?
 pub fn BitmapStrikes::is_empty(Self) -> Bool
 pub fn BitmapStrikes::iter(Self) -> Array[BitmapStrike]
 pub fn BitmapStrikes::len(Self) -> Int
-pub fn BitmapStrikes::new(FontRef) -> Self
 pub fn BitmapStrikes::with_format(FontRef, BitmapFormat) -> Self?
 
 pub(all) enum Brush {
@@ -167,7 +164,6 @@ pub fn Charmap::is_symbol(Self) -> Bool
 pub fn Charmap::map(Self, UInt) -> GlyphId?
 pub fn Charmap::map_variant(Self, UInt, UInt) -> MapVariant?
 pub fn Charmap::mappings(Self) -> Array[(UInt, GlyphId)]
-pub fn Charmap::new(FontRef) -> Self
 pub fn Charmap::variant_mappings(Self) -> Array[(UInt, UInt, MapVariant)]
 
 pub struct Color {
@@ -196,7 +192,6 @@ pub fn ColorGlyphCollection::get(Self, GlyphId) -> ColorGlyph?
 pub fn ColorGlyphCollection::get_with_format(Self, GlyphId, ColorGlyphFormat) -> ColorGlyph?
 pub fn ColorGlyphCollection::has_colr_v1(Self) -> Bool
 pub fn ColorGlyphCollection::layers(Self, GlyphId) -> Array[ColorLayer]?
-pub fn ColorGlyphCollection::new(FontRef) -> Self
 pub fn ColorGlyphCollection::version(Self) -> Int
 
 pub(all) enum ColorGlyphFormat {
@@ -237,7 +232,6 @@ pub fn ColorPalettes::entries_per_palette(Self) -> Int
 pub fn ColorPalettes::get(Self, Int) -> ColorPalette?
 pub fn ColorPalettes::is_empty(Self) -> Bool
 pub fn ColorPalettes::len(Self) -> Int
-pub fn ColorPalettes::new(FontRef) -> Self
 pub fn ColorPalettes::version(Self) -> Int
 
 pub(all) struct ColorStop {
@@ -307,6 +301,7 @@ pub fn FontRef::color_palettes(Self) -> ColorPalettes
 pub fn FontRef::data(Self) -> Bytes
 pub fn FontRef::font_metrics(Self, Size) -> Metrics
 pub fn FontRef::font_metrics_at(Self, Size, LocationRef) -> Metrics
+pub fn FontRef::from_bytes(Bytes) -> Self?
 pub fn FontRef::from_index(Bytes, UInt) -> Self?
 pub fn FontRef::glyph_metrics(Self, Size, LocationRef) -> GlyphMetrics
 pub fn FontRef::glyph_names(Self) -> GlyphNames
@@ -315,7 +310,6 @@ pub fn FontRef::index(Self) -> UInt
 pub fn FontRef::localized_strings(Self, UInt16) -> LocalizedStrings
 pub fn FontRef::metrics(Self, Size, LocationRef) -> Metrics
 pub fn FontRef::named_instances(Self) -> NamedInstanceCollection
-pub fn FontRef::new(Bytes) -> Self?
 pub fn[P : ColorPainter] FontRef::paint_colr_v1(Self, GlyphId, P) -> Result[Unit, PaintError]
 pub fn[P : ColorPainter] FontRef::paint_colr_v1_at(Self, GlyphId, LocationRef, P) -> Result[Unit, PaintError]
 pub fn FontRef::table(Self, UInt) -> BytesView?
@@ -335,7 +329,6 @@ pub struct GlyphId {
 }
 pub fn GlyphId::GlyphId(UInt16) -> Self
 pub fn GlyphId::default() -> Self
-pub fn GlyphId::new(UInt16) -> Self
 pub fn GlyphId::notdef() -> Self
 pub fn GlyphId::to_int(Self) -> Int
 pub fn GlyphId::to_string(Self) -> String
@@ -354,7 +347,6 @@ pub fn GlyphMetrics::advance_width(Self, GlyphId) -> Double?
 pub fn GlyphMetrics::bounds(Self, GlyphId) -> GlyphBounds?
 pub fn GlyphMetrics::glyph_count(Self) -> Int
 pub fn GlyphMetrics::left_side_bearing(Self, GlyphId) -> Double?
-pub fn GlyphMetrics::new(FontRef, Size, LocationRef) -> Self
 
 pub struct GlyphName {
   // private fields
@@ -373,7 +365,6 @@ pub struct GlyphNames {
 }
 pub fn GlyphNames::GlyphNames(FontRef) -> Self
 pub fn GlyphNames::get(Self, GlyphId) -> GlyphName?
-pub fn GlyphNames::new(FontRef) -> Self
 pub fn GlyphNames::num_glyphs(Self) -> Int
 pub fn GlyphNames::source(Self) -> GlyphNameSource
 
@@ -381,8 +372,8 @@ pub struct HmtxMetrics {
   // private fields
 }
 pub fn HmtxMetrics::advance_width(Self, GlyphId) -> UInt?
+pub fn HmtxMetrics::from_font(FontRef) -> Self?
 pub fn HmtxMetrics::lsb(Self, GlyphId) -> Int?
-pub fn HmtxMetrics::new(FontRef) -> Self?
 pub fn HmtxMetrics::num_glyphs(Self) -> Int
 pub fn HmtxMetrics::number_of_hmetrics(Self) -> Int
 
@@ -399,7 +390,6 @@ pub struct LocalizedStrings {
 pub fn LocalizedStrings::LocalizedStrings(FontRef, UInt16) -> Self
 pub fn LocalizedStrings::english_or_first(Self) -> LocalizedString?
 pub fn LocalizedStrings::id(Self) -> UInt16
-pub fn LocalizedStrings::new(FontRef, UInt16) -> Self
 pub fn LocalizedStrings::strings(Self) -> ArrayView[LocalizedString]
 
 pub struct Location {
@@ -409,7 +399,6 @@ pub fn Location::Location(Int) -> Self
 pub fn Location::as_ref(Self) -> LocationRef
 pub fn Location::coords(Self) -> ArrayView[Int]
 pub fn Location::from_array(Array[Int]) -> Self
-pub fn Location::new(Int) -> Self
 
 pub struct LocationRef {
   // private fields
@@ -419,7 +408,6 @@ pub fn LocationRef::coords(Self) -> ArrayView[Int]
 pub fn LocationRef::default() -> Self
 pub fn LocationRef::effective_coords(Self) -> ArrayView[Int]
 pub fn LocationRef::is_default(Self) -> Bool
-pub fn LocationRef::new(ArrayView[Int]) -> Self
 
 pub(all) enum MapVariant {
   UseDefault
@@ -432,7 +420,6 @@ pub struct MappingIndex {
 pub fn MappingIndex::MappingIndex(FontRef) -> Self
 pub fn MappingIndex::charmap(Self, FontRef) -> Charmap
 pub fn MappingIndex::default() -> Self
-pub fn MappingIndex::new(FontRef) -> Self
 
 pub struct Metrics {
   units_per_em : UInt16
@@ -461,7 +448,6 @@ pub fn Metrics::is_monospace(Self) -> Bool
 pub fn Metrics::italic_angle(Self) -> Double
 pub fn Metrics::leading(Self) -> Double
 pub fn Metrics::max_width(Self) -> Double?
-pub fn Metrics::new(FontRef, Size, LocationRef) -> Self
 pub fn Metrics::strikeout(Self) -> Decoration?
 pub fn Metrics::underline(Self) -> Decoration?
 pub fn Metrics::units_per_em(Self) -> UInt16
@@ -482,7 +468,6 @@ pub fn NamedInstanceCollection::NamedInstanceCollection(FontRef) -> Self
 pub fn NamedInstanceCollection::get(Self, Int) -> NamedInstance?
 pub fn NamedInstanceCollection::is_empty(Self) -> Bool
 pub fn NamedInstanceCollection::len(Self) -> Int
-pub fn NamedInstanceCollection::new(FontRef) -> Self
 
 pub(all) enum PaintCachedColorGlyph {
   Ok
@@ -505,7 +490,6 @@ pub fn[T] Setting::Setting(Tag, T) -> Self[T]
 pub fn[T] Setting::from_str(String, T) -> Self[T]
 pub fn[T] Setting::from_str_tuple((String, T)) -> Self[T]
 pub fn[T] Setting::from_tuple((Tag, T)) -> Self[T]
-pub fn[T] Setting::new(Tag, T) -> Self[T]
 
 pub struct Size {
   ppem : Double?
@@ -513,7 +497,6 @@ pub struct Size {
 pub fn Size::Size(Double) -> Self
 pub fn Size::fixed_linear_scale(Self, UInt16) -> Int
 pub fn Size::linear_scale(Self, UInt16) -> Double
-pub fn Size::new(Double) -> Self
 pub fn Size::ppem(Self) -> Double?
 pub fn Size::unscaled() -> Self
 pub fn Size::value(Self) -> Double
@@ -527,7 +510,6 @@ pub fn Stretch::default() -> Self
 pub fn Stretch::expanded() -> Self
 pub fn Stretch::extra_condensed() -> Self
 pub fn Stretch::extra_expanded() -> Self
-pub fn Stretch::new(Double) -> Self
 pub fn Stretch::normal() -> Self
 pub fn Stretch::percentage(Self) -> Double
 pub fn Stretch::ratio(Self) -> Double
@@ -551,7 +533,6 @@ pub fn Tag::from_str(String) -> Self?
 pub fn Tag::from_str_or_default(String) -> Self
 pub fn Tag::from_u8s(Int, Int, Int, Int) -> Self?
 pub fn Tag::from_uint(UInt) -> Self
-pub fn Tag::new(Bytes) -> Self
 pub fn Tag::to_string(Self) -> String
 pub fn Tag::to_uint(Self) -> UInt
 
@@ -579,7 +560,6 @@ pub fn Weight::extra_bold() -> Self
 pub fn Weight::extra_light() -> Self
 pub fn Weight::light() -> Self
 pub fn Weight::medium() -> Self
-pub fn Weight::new(Double) -> Self
 pub fn Weight::normal() -> Self
 pub fn Weight::semi_bold() -> Self
 pub fn Weight::semi_light() -> Self

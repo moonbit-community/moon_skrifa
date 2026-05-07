@@ -764,14 +764,6 @@ pub struct LocalizedStrings {
 }
 
 ///|
-pub fn LocalizedStrings::LocalizedStrings(
-  font : FontRef,
-  id : StringId,
-) -> LocalizedStrings {
-  LocalizedStrings::new(font, id)
-}
-
-///|
 pub fn LocalizedStrings::id(self : LocalizedStrings) -> StringId {
   self.id
 }
@@ -814,7 +806,10 @@ pub fn LocalizedStrings::english_or_first(
 }
 
 ///|
-pub fn LocalizedStrings::new(font : FontRef, id : StringId) -> LocalizedStrings {
+pub fn LocalizedStrings::LocalizedStrings(
+  font : FontRef,
+  id : StringId,
+) -> LocalizedStrings {
   FontRef::localized_strings(font, id)
 }
 

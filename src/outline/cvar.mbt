@@ -274,7 +274,9 @@ fn cvar_test_b64_decode(s : String) -> Bytes {
 
 ///|
 fn cvar_test_font() -> @moon_skrifa.FontRef {
-  @moon_skrifa.FontRef::new(cvar_test_b64_decode(cvar_test_font_cvar_b64())).unwrap()
+  @moon_skrifa.FontRef::from_bytes(
+    cvar_test_b64_decode(cvar_test_font_cvar_b64()),
+  ).unwrap()
 }
 
 ///|

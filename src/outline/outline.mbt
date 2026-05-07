@@ -80,13 +80,6 @@ pub struct OutlineGlyphCollection {
 pub fn OutlineGlyphCollection::OutlineGlyphCollection(
   font : @moon_skrifa.FontRef,
 ) -> OutlineGlyphCollection {
-  OutlineGlyphCollection::new(font)
-}
-
-///|
-pub fn OutlineGlyphCollection::new(
-  font : @moon_skrifa.FontRef,
-) -> OutlineGlyphCollection {
   // Upstream selection order: glyf first, then CFF2, then CFF.
   let kind = if font.table(TAG_GLYF) is Some(_) {
     Some(OutlineGlyphFormat::Glyf)
@@ -104,7 +97,7 @@ pub fn OutlineGlyphCollection::new(
 pub fn OutlineGlyphCollection::from_font(
   font : @moon_skrifa.FontRef,
 ) -> OutlineGlyphCollection {
-  OutlineGlyphCollection::new(font)
+  OutlineGlyphCollection(font)
 }
 
 ///|
@@ -453,7 +446,9 @@ pub fn OutlineGlyphCollection::iter(
   let out : Array[(@moon_skrifa.GlyphId, OutlineGlyph)] = Array::new()
   let n = self.glyph_count()
   for i in 0..<n {
-    let gid : @moon_skrifa.GlyphId = @moon_skrifa.GlyphId::new(i.to_uint16())
+    let gid : @moon_skrifa.GlyphId = @moon_skrifa.GlyphId::GlyphId(
+      i.to_uint16(),
+    )
     match self.get(gid) {
       None => ()
       Some(g) => out.push((gid, g))
@@ -728,7 +723,7 @@ pub fn OutlineGlyphCollection::svg_path(
   gid : @moon_skrifa.GlyphId,
   settings : DrawSettings,
 ) -> String? {
-  let pen = SvgPen::new()
+  let pen = SvgPen()
   if self.draw(gid, settings, pen) {
     Some(pen.to_string())
   } else {

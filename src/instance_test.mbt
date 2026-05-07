@@ -14,7 +14,7 @@
 
 ///|
 test "Size::ppem and linear_scale" {
-  let s = Size::new(20.0)
+  let s = Size::Size(20.0)
   debug_inspect(s.ppem(), content="Some(20)")
   inspect(s.linear_scale(1000), content="0.02")
   inspect(s.linear_scale(0), content="1")

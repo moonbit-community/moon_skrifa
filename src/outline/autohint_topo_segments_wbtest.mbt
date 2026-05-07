@@ -71,7 +71,7 @@ fn b64_decode(s : String) -> Bytes {
 
 ///|
 fn golden_font(b64 : String) -> @moon_skrifa.FontRef {
-  @moon_skrifa.FontRef::new(b64_decode(b64)).unwrap()
+  @moon_skrifa.FontRef::from_bytes(b64_decode(b64)).unwrap()
 }
 
 ///|
@@ -175,7 +175,7 @@ fn autohint_segments_debug(segments : Array[AutoHintSegment]) -> String {
 test "autohint topo: segments notoserifhebrew gid=8 horizontal" {
   autohint_parity_font_notoserifhebrew_autohint_metrics_b64() |> ignore
   let font = golden_font(notoserifhebrew_autohint_metrics_b64())
-  let gid = @moon_skrifa.GlyphId::new((8).to_uint16())
+  let gid = @moon_skrifa.GlyphId::GlyphId((8).to_uint16())
   let outline = AutoHintOutline::from_path(Array::new())
   match outline._fill_unscaled(font, gid) {
     Ok(_) => ()
@@ -318,7 +318,7 @@ test "autohint topo: segments notoserifhebrew gid=8 horizontal" {
 ///|
 test "autohint topo: segments notoserifhebrew gid=8 vertical" {
   let font = golden_font(notoserifhebrew_autohint_metrics_b64())
-  let gid = @moon_skrifa.GlyphId::new((8).to_uint16())
+  let gid = @moon_skrifa.GlyphId::GlyphId((8).to_uint16())
   let outline = AutoHintOutline::from_path(Array::new())
   match outline._fill_unscaled(font, gid) {
     Ok(_) => ()

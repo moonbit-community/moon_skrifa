@@ -26,25 +26,10 @@ pub struct GlyphStyles {
 }
 
 ///|
-pub fn GlyphStyles::GlyphStyles(
-  outlines : OutlineGlyphCollection,
-) -> GlyphStyles {
-  GlyphStyles::new(outlines)
-}
-
-///|
 priv struct GlyphStyleMap {
   styles : Array[GlyphStyle]
   metrics_map : Array[Byte]
   mut metrics_count : Int
-}
-
-///|
-fn GlyphStyleMap::GlyphStyleMap(
-  glyph_count : Int,
-  font : @moon_skrifa.FontRef,
-) -> GlyphStyleMap {
-  GlyphStyleMap::new(glyph_count, font)
 }
 
 ///|
@@ -206,7 +191,7 @@ fn autohint_style_for_codepoint(
 }
 
 ///|
-fn GlyphStyleMap::new(
+fn GlyphStyleMap::GlyphStyleMap(
   glyph_count : Int,
   font : @moon_skrifa.FontRef,
 ) -> GlyphStyleMap {
@@ -279,7 +264,9 @@ fn GlyphStyleMap::new(
 ///
 /// This is invariant per font and can be reused when creating multiple
 /// `HintingInstance`s with `Engine::Auto(...)`.
-pub fn GlyphStyles::new(outlines : OutlineGlyphCollection) -> GlyphStyles {
+pub fn GlyphStyles::GlyphStyles(
+  outlines : OutlineGlyphCollection,
+) -> GlyphStyles {
   let font = outlines.font
   let glyph_count = autohint_num_glyphs(font)
   let map = if glyph_count <= 0 {

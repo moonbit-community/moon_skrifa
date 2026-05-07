@@ -64,7 +64,9 @@ fn hvar_b64_decode(s : String) -> Bytes {
 
 ///|
 fn hvar_font() -> @moon_skrifa.FontRef {
-  @moon_skrifa.FontRef::new(hvar_b64_decode(hvar_truncated_adv_index_map_b64())).unwrap()
+  @moon_skrifa.FontRef::from_bytes(
+    hvar_b64_decode(hvar_truncated_adv_index_map_b64()),
+  ).unwrap()
 }
 
 ///|
@@ -120,9 +122,9 @@ test "hvar truncated adv: hinter kind + empty advance" {
   let coords : Array[@moon_skrifa.NormalizedCoord] = Array::from_fixed_array([
     8192,
   ])
-  let loc = @moon_skrifa.LocationRef::new(coords.op_as_view())
-  let size = @moon_skrifa.Size::new(24.0)
-  let hinting = HintingInstance::new(
+  let loc = @moon_skrifa.LocationRef::LocationRef(coords.op_as_view())
+  let size = @moon_skrifa.Size::Size(24.0)
+  let hinting = HintingInstance::create(
     outlines0,
     size,
     loc,
@@ -139,7 +141,7 @@ test "hvar truncated adv: hinter kind + empty advance" {
   let gid = font.charmap().glyph_id((32).reinterpret_as_uint()).unwrap()
   let glyph = outlines.get(gid).unwrap()
   let metrics = glyph
-    .draw(DrawSettings::hinted(hinting, false), NullPen::new())
+    .draw(DrawSettings::hinted(hinting, false), NullPen())
     .unwrap()
   debug_inspect(metrics.advance_width, content="Some(11)")
 }

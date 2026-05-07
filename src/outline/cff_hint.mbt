@@ -280,17 +280,12 @@ priv struct CffBlues {
 }
 
 ///|
-fn CffBlues::CffBlues(values : ArrayView[CffFixed]) -> CffBlues {
-  CffBlues::new(values)
-}
-
-///|
 fn CffBlues::default() -> CffBlues {
   CffBlues::{ pairs: Array::new() }
 }
 
 ///|
-fn CffBlues::new(values : ArrayView[CffFixed]) -> CffBlues {
+fn CffBlues::CffBlues(values : ArrayView[CffFixed]) -> CffBlues {
   let pairs : Array[(CffFixed, CffFixed)] = Array::new()
   let n = values.length()
   let mut i = 0
@@ -368,11 +363,6 @@ priv struct HintState {
 }
 
 ///|
-fn HintState::HintState(params : HintParams, scale : CffFixed) -> HintState {
-  HintState::new(params, scale)
-}
-
-///|
 fn HintState::default() -> HintState {
   let zones : Array[BlueZone] = Array::new()
   for _ in 0..<CFF_HINT_MAX_BLUE_ZONES {
@@ -394,7 +384,7 @@ fn HintState::default() -> HintState {
 }
 
 ///|
-fn HintState::new(params : HintParams, scale : CffFixed) -> HintState {
+fn HintState::HintState(params : HintParams, scale : CffFixed) -> HintState {
   let st = HintState::default()
   st.scale = scale
   st.blue_scale = params.blue_scale
@@ -786,11 +776,6 @@ priv struct HintMap {
 
 ///|
 fn HintMap::HintMap(scale : CffFixed) -> HintMap {
-  HintMap::new(scale)
-}
-
-///|
-fn HintMap::new(scale : CffFixed) -> HintMap {
   let edges : Array[Hint] = Array::new()
   for _ in 0..<CFF_HINT_MAX_HINTS {
     edges.push(Hint::default())
@@ -1053,7 +1038,7 @@ fn cff_hint_msb_mask(bit : Int) -> Int {
 }
 
 ///|
-fn HintMask::new(bytes : ArrayView[Byte]) -> HintMask? {
+fn HintMask::from_bytes(bytes : ArrayView[Byte]) -> HintMask? {
   let len = bytes.length()
   if len > CFF_HINT_MASK_SIZE {
     return None
@@ -1254,15 +1239,6 @@ fn CffHintingSink::CffHintingSink(
   out : Array[PathElement],
   matrix : CffMatrix?,
 ) -> CffHintingSink {
-  CffHintingSink::new(state, out, matrix)
-}
-
-///|
-fn CffHintingSink::new(
-  state : HintState,
-  out : Array[PathElement],
-  matrix : CffMatrix?,
-) -> CffHintingSink {
   let stem_hints : Array[StemHint] = Array::new()
   for _ in 0..<CFF_HINT_MAX_HINTS {
     stem_hints.push(StemHint::default())
@@ -1394,7 +1370,7 @@ fn HintMask::from_bytes_view(bytes : BytesView) -> HintMask? {
   for b in bytes.iter() {
     a.push(b)
   }
-  HintMask::new(a.op_as_view())
+  HintMask::from_bytes(a.op_as_view())
 }
 
 ///|

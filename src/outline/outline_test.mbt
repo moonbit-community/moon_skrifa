@@ -39,7 +39,9 @@ test "OutlineGlyphCollection basic" {
   push_u16_be(out, 0)
   push_u16_be(out, 0)
   push_u16_be(out, 0)
-  let font = @moon_skrifa.FontRef::new(Bytes::from_array(out.op_as_view())).unwrap()
-  let c = OutlineGlyphCollection::new(font)
+  let font = @moon_skrifa.FontRef::from_bytes(
+    Bytes::from_array(out.op_as_view()),
+  ).unwrap()
+  let c = OutlineGlyphCollection::OutlineGlyphCollection(font)
   inspect(c.format() is None, content="true")
 }

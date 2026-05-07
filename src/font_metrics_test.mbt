@@ -202,7 +202,7 @@ test "FontMetrics prefers OS/2 typo metrics when flag set" {
       (FM_TAG_POST, post),
     ]),
   )
-  let font = FontRef::new(sfnt).unwrap()
+  let font = FontRef::from_bytes(sfnt).unwrap()
   let m = font.font_metrics(Size::unscaled())
   inspect(m.units_per_em().to_int(), content="1000")
   inspect(m.ascent(), content="900")
@@ -240,7 +240,7 @@ test "FontMetrics: additional fields (bbox/count/widths/heights)" {
       (FM_TAG_POST, post),
     ]),
   )
-  let font = FontRef::new(sfnt).unwrap()
+  let font = FontRef::from_bytes(sfnt).unwrap()
   let m = font.font_metrics(Size::unscaled())
   inspect(m.glyph_count().to_int(), content="42")
   inspect(m.average_width().unwrap(), content="321")

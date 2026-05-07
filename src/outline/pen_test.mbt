@@ -14,7 +14,7 @@
 
 ///|
 test "SvgPen basic" {
-  let pen = SvgPen::new()
+  let pen = SvgPen::SvgPen()
   OutlinePen::move_to(pen, 0.0, 0.0)
   OutlinePen::line_to(pen, 10.0, 0.0)
   OutlinePen::close(pen)
@@ -23,7 +23,7 @@ test "SvgPen basic" {
 
 ///|
 test "SvgPen precision" {
-  let pen0 = SvgPen::new()
+  let pen0 = SvgPen::SvgPen()
   OutlinePen::move_to(pen0, 1.0, 2.45556)
   OutlinePen::line_to(pen0, 1.2, 4.0)
   OutlinePen::quad_to(pen0, 2.0345, 3.56789, -0.157, -425.07)

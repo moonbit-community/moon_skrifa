@@ -197,11 +197,6 @@ pub struct Charmap {
 }
 
 ///|
-pub fn Charmap::Charmap(font : FontRef) -> Charmap {
-  Charmap::new(font)
-}
-
-///|
 pub fn Charmap::default() -> Charmap {
   Charmap::{
     cmap: None,
@@ -212,7 +207,7 @@ pub fn Charmap::default() -> Charmap {
 }
 
 ///|
-pub fn Charmap::new(font : FontRef) -> Charmap {
+pub fn Charmap::Charmap(font : FontRef) -> Charmap {
   let limits = CmapIterLimits::default_for_font(font)
   match font.table(TAG_CMAP) {
     None =>
@@ -304,7 +299,7 @@ pub fn Charmap::variant_mappings(
 
 ///|
 pub fn FontRef::charmap(self : FontRef) -> Charmap {
-  Charmap::new(self)
+  Charmap(self)
 }
 
 ///|
@@ -313,11 +308,6 @@ pub struct MappingIndex {
   priv codepoint_is_symbol : Bool
   priv variant_index : Int?
   priv cmap12_limits : CmapIterLimits
-}
-
-///|
-pub fn MappingIndex::MappingIndex(font : FontRef) -> MappingIndex {
-  MappingIndex::new(font)
 }
 
 ///|
@@ -331,7 +321,7 @@ pub fn MappingIndex::default() -> MappingIndex {
 }
 
 ///|
-pub fn MappingIndex::new(font : FontRef) -> MappingIndex {
+pub fn MappingIndex::MappingIndex(font : FontRef) -> MappingIndex {
   let limits = CmapIterLimits::default_for_font(font)
   match font.table(TAG_CMAP) {
     None =>
@@ -561,7 +551,7 @@ fn cmap_map_format12(
       if gidi < 0 || gidi > 0xFFFF {
         return None
       }
-      return Some(GlyphId::new(gidi.to_uint16()))
+      return Some(GlyphId(gidi.to_uint16()))
     }
   }
   None
@@ -607,7 +597,7 @@ fn cmap_map_format4(cmap : BytesView, base : Int, codepoint : Int) -> GlyphId? {
     }
     if range_off == 0 {
       let gid = add_delta_u16(codepoint, delta)
-      return Some(GlyphId::new(gid.to_uint16()))
+      return Some(GlyphId(gid.to_uint16()))
     } else {
       let ro_pos = id_range_off_base + i * 2
       let glyph_pos = ro_pos + range_off + 2 * (codepoint - start_code)
@@ -619,7 +609,7 @@ fn cmap_map_format4(cmap : BytesView, base : Int, codepoint : Int) -> GlyphId? {
         return Some(GlyphId::default())
       } else {
         let gid = add_delta_u16(raw_gid, delta)
-        return Some(GlyphId::new(gid.to_uint16()))
+        return Some(GlyphId(gid.to_uint16()))
       }
     }
   }
@@ -656,7 +646,7 @@ fn cmap_iter_format12(
       let gid = start_gid + (cp - start)
       let gidi = gid.to_uint64().to_int()
       if gidi > 0 && gidi <= 0xFFFF {
-        out.push((cp, GlyphId::new(gidi.to_uint16())))
+        out.push((cp, GlyphId(gidi.to_uint16())))
         produced = produced + 1
         if produced >= limits.max_mappings {
           return out
@@ -773,7 +763,7 @@ fn cmap_map_non_default_uvs(
     if gid <= 0 || gid > 0xFFFF {
       return None
     }
-    return Some(GlyphId::new(gid.to_uint16()))
+    return Some(GlyphId(gid.to_uint16()))
   }
   None
 }
@@ -840,7 +830,7 @@ fn cmap_iter_variants(
               (
                 cp.reinterpret_as_uint(),
                 sel_u,
-                Variant(GlyphId::new(gid.to_uint16())),
+                Variant(GlyphId(gid.to_uint16())),
               ),
             )
           }

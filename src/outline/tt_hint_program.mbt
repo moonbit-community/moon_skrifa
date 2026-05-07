@@ -48,17 +48,6 @@ fn TtProgramState::TtProgramState(
   current : TtProgram,
   max_call_depth : Int,
 ) -> TtProgramState {
-  TtProgramState::new(font, prep, glyph, current, max_call_depth)
-}
-
-///|
-fn TtProgramState::new(
-  font : BytesView,
-  prep : BytesView,
-  glyph : BytesView,
-  current : TtProgram,
-  max_call_depth : Int,
-) -> TtProgramState {
   let code = match current {
     TtProgram::Font => font
     TtProgram::ControlValue => prep

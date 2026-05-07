@@ -422,7 +422,7 @@ priv struct Type2BlendState {
 }
 
 ///|
-fn Type2BlendState::new(
+fn Type2BlendState::from_store(
   ctx : Type2IvsCtx,
   coords : ArrayView[@moon_skrifa.NormalizedCoord],
   store_index : Int,
@@ -476,7 +476,7 @@ fn type2_blend_state_new(
 ) -> Type2BlendState? {
   match type2_ivs_ctx(store, store_off) {
     None => None
-    Some(ctx) => Type2BlendState::new(ctx, coords, 0)
+    Some(ctx) => Type2BlendState::from_store(ctx, coords, 0)
   }
 }
 
@@ -498,15 +498,6 @@ priv struct Type2Eval {
 
 ///|
 fn Type2Eval::Type2Eval(
-  global_subrs : Type2Index?,
-  local_subrs : Type2Index?,
-  blend_state : Type2BlendState?,
-) -> Type2Eval {
-  Type2Eval::new(global_subrs, local_subrs, blend_state)
-}
-
-///|
-fn Type2Eval::new(
   global_subrs : Type2Index?,
   local_subrs : Type2Index?,
   blend_state : Type2BlendState?,

@@ -58,7 +58,7 @@ fn provider_test_make_min_sfnt() -> Bytes {
 
 ///|
 test "MetadataProvider facade basic" {
-  let font = FontRef::new(provider_test_make_min_sfnt()).unwrap()
+  let font = FontRef::from_bytes(provider_test_make_min_sfnt()).unwrap()
   let attrs = MetadataProvider::attributes(font)
   inspect(attrs.weight().value(), content="400")
   inspect(attrs.stretch().ratio(), content="1")

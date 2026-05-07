@@ -70,7 +70,7 @@ fn cff_hint_b64_decode(s : String) -> Bytes {
 
 ///|
 fn cff_hint_golden_font(b64 : String) -> @moon_skrifa.FontRef {
-  @moon_skrifa.FontRef::new(cff_hint_b64_decode(b64)).unwrap()
+  @moon_skrifa.FontRef::from_bytes(cff_hint_b64_decode(b64)).unwrap()
 }
 
 ///|
@@ -163,12 +163,14 @@ fn cff_hint_font_notosansjp_regular_subset_otf_b64() -> String {
 test "cff hinting: Cantarell VF (gid=1 size=16) matches fontations hinted SVG" {
   let font = cff_hint_golden_font(cff_hint_font_cantarell_vf_trimmed_b64())
   let outlines0 = OutlineGlyphCollection::from_font(font)
-  let size = @moon_skrifa.Size::new(16.0)
+  let size = @moon_skrifa.Size::Size(16.0)
   let loc = @moon_skrifa.LocationRef::default()
   let opts = Engine::Interpreter.into()
-  let hinter = HintingInstance::new(outlines0, size, loc, opts).unwrap()
+  let hinter = HintingInstance::create(outlines0, size, loc, opts).unwrap()
   let outlines = OutlineGlyphCollection::from_font(font)
-  let glyph = outlines.get(@moon_skrifa.GlyphId::new((1).to_uint16())).unwrap()
+  let glyph = outlines
+    .get(@moon_skrifa.GlyphId::GlyphId((1).to_uint16()))
+    .unwrap()
   let pen = SvgPen::with_precision(6)
   glyph
   .draw(
@@ -189,12 +191,14 @@ test "cff hinting: NotoSansJP-Regular subset (gid=0 size=16) matches fontations 
     cff_hint_font_notosansjp_regular_subset_otf_b64(),
   )
   let outlines0 = OutlineGlyphCollection::from_font(font)
-  let size = @moon_skrifa.Size::new(16.0)
+  let size = @moon_skrifa.Size::Size(16.0)
   let loc = @moon_skrifa.LocationRef::default()
   let opts = Engine::Interpreter.into()
-  let hinter = HintingInstance::new(outlines0, size, loc, opts).unwrap()
+  let hinter = HintingInstance::create(outlines0, size, loc, opts).unwrap()
   let outlines = OutlineGlyphCollection::from_font(font)
-  let glyph = outlines.get(@moon_skrifa.GlyphId::new((0).to_uint16())).unwrap()
+  let glyph = outlines
+    .get(@moon_skrifa.GlyphId::GlyphId((0).to_uint16()))
+    .unwrap()
   let pen = SvgPen::with_precision(6)
   glyph
   .draw(

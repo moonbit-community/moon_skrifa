@@ -405,11 +405,6 @@ priv struct ColorTravTestPainter {
 
 ///|
 fn ColorTravTestPainter::ColorTravTestPainter() -> ColorTravTestPainter {
-  ColorTravTestPainter::new()
-}
-
-///|
-fn ColorTravTestPainter::new() -> ColorTravTestPainter {
   ColorTravTestPainter::{ ops: Array::new() }
 }
 
@@ -515,9 +510,9 @@ test "COLRv1 traversal: layers + glyph + solid" {
   let sfnt = color_trav_test_build_sfnt(
     Array::from_fixed_array([(COLOR_TRAV_TEST_TAG_COLR, colr)]),
   )
-  let font = FontRef::new(sfnt).unwrap()
+  let font = FontRef::from_bytes(sfnt).unwrap()
   let painter = ColorTravTestPainter()
-  match font.paint_colr_v1(GlyphId::new((5).to_uint16()), painter) {
+  match font.paint_colr_v1(GlyphId::GlyphId((5).to_uint16()), painter) {
     Err(_) => inspect("err", content="ok")
     Ok(_) =>
       inspect(
@@ -533,9 +528,9 @@ test "COLRv1 traversal: transform" {
   let sfnt = color_trav_test_build_sfnt(
     Array::from_fixed_array([(COLOR_TRAV_TEST_TAG_COLR, colr)]),
   )
-  let font = FontRef::new(sfnt).unwrap()
+  let font = FontRef::from_bytes(sfnt).unwrap()
   let painter = ColorTravTestPainter()
-  match font.paint_colr_v1(GlyphId::new((7).to_uint16()), painter) {
+  match font.paint_colr_v1(GlyphId::GlyphId((7).to_uint16()), painter) {
     Err(_) => inspect("err", content="ok")
     Ok(_) =>
       inspect(
@@ -551,9 +546,9 @@ test "COLRv1 traversal: composite layering order" {
   let sfnt = color_trav_test_build_sfnt(
     Array::from_fixed_array([(COLOR_TRAV_TEST_TAG_COLR, colr)]),
   )
-  let font = FontRef::new(sfnt).unwrap()
+  let font = FontRef::from_bytes(sfnt).unwrap()
   let painter = ColorTravTestPainter()
-  match font.paint_colr_v1(GlyphId::new((12).to_uint16()), painter) {
+  match font.paint_colr_v1(GlyphId::GlyphId((12).to_uint16()), painter) {
     Err(_) => inspect("err", content="ok")
     Ok(_) =>
       inspect(
@@ -569,9 +564,10 @@ test "COLRv1 traversal: paint cycle detection" {
   let sfnt = color_trav_test_build_sfnt(
     Array::from_fixed_array([(COLOR_TRAV_TEST_TAG_COLR, colr)]),
   )
-  let font = FontRef::new(sfnt).unwrap()
+  let font = FontRef::from_bytes(sfnt).unwrap()
   let painter = ColorTravTestPainter()
-  let ok = match font.paint_colr_v1(GlyphId::new((100).to_uint16()), painter) {
+  let ok = match
+    font.paint_colr_v1(GlyphId::GlyphId((100).to_uint16()), painter) {
     Err(PaintCycleDetected) => true
     _ => false
   }
@@ -584,9 +580,9 @@ test "COLRv1 traversal: linear gradient + clip box" {
   let sfnt = color_trav_test_build_sfnt(
     Array::from_fixed_array([(COLOR_TRAV_TEST_TAG_COLR, colr)]),
   )
-  let font = FontRef::new(sfnt).unwrap()
+  let font = FontRef::from_bytes(sfnt).unwrap()
   let painter = ColorTravTestPainter()
-  match font.paint_colr_v1(GlyphId::new((1).to_uint16()), painter) {
+  match font.paint_colr_v1(GlyphId::GlyphId((1).to_uint16()), painter) {
     Err(_) => inspect("err", content="ok")
     Ok(_) =>
       inspect(
@@ -602,9 +598,9 @@ test "COLRv1 traversal: var solid alpha delta" {
   let sfnt = color_trav_test_build_sfnt(
     Array::from_fixed_array([(COLOR_TRAV_TEST_TAG_COLR, colr)]),
   )
-  let font = FontRef::new(sfnt).unwrap()
+  let font = FontRef::from_bytes(sfnt).unwrap()
   let painter0 = ColorTravTestPainter()
-  match font.paint_colr_v1(GlyphId::new((2).to_uint16()), painter0) {
+  match font.paint_colr_v1(GlyphId::GlyphId((2).to_uint16()), painter0) {
     Err(_) => inspect("err", content="ok")
     Ok(_) => inspect(painter0.dump(), content="fill_solid pi=3 a=8192")
   }
@@ -612,8 +608,8 @@ test "COLRv1 traversal: var solid alpha delta" {
   let painter1 = ColorTravTestPainter()
   match
     font.paint_colr_v1_at(
-      GlyphId::new((2).to_uint16()),
-      LocationRef::new(coords.op_as_view()),
+      GlyphId::GlyphId((2).to_uint16()),
+      LocationRef::LocationRef(coords.op_as_view()),
       painter1,
     ) {
     Err(_) => inspect("err", content="ok")

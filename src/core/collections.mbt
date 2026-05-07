@@ -36,11 +36,6 @@ priv struct SmallVec[T] {
 
 ///|
 fn[T : Default] SmallVec::SmallVec(inline_cap : Int) -> SmallVec[T] {
-  SmallVec::new(inline_cap)
-}
-
-///|
-fn[T : Default] SmallVec::new(inline_cap : Int) -> SmallVec[T] {
   let buf = FixedArray::make(inline_cap, T::default())
   SmallVec::{ storage: Inline(buf, 0), inline_cap }
 }

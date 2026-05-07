@@ -181,12 +181,15 @@ test "gvar applies sparse tuple + IUP shift for single delta point" {
       (0x67766172, gvar_test_make_gvar_one_tuple_sparse_point()), // "gvar"
     ]),
   )
-  let font = @moon_skrifa.FontRef::new(sfnt).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
   let c = OutlineGlyphCollection::from_font(font)
 
   // Default coords => base outline.
   let base = c
-    .path(@moon_skrifa.GlyphId::new((1).to_uint16()), DrawSettings::default())
+    .path(
+      @moon_skrifa.GlyphId::GlyphId((1).to_uint16()),
+      DrawSettings::default(),
+    )
     .unwrap()
   let expected_base = Array::from_fixed_array([
     PathElement::MoveTo(0.0, 0.0),
@@ -201,10 +204,10 @@ test "gvar applies sparse tuple + IUP shift for single delta point" {
   ])
   let settings = DrawSettings::unhinted(
     @moon_skrifa.Size::unscaled(),
-    @moon_skrifa.LocationRef::new(coords.op_as_view()),
+    @moon_skrifa.LocationRef::LocationRef(coords.op_as_view()),
   )
   let varied = c
-    .path(@moon_skrifa.GlyphId::new((1).to_uint16()), settings)
+    .path(@moon_skrifa.GlyphId::GlyphId((1).to_uint16()), settings)
     .unwrap()
   let expected_varied = Array::from_fixed_array([
     PathElement::MoveTo(5.0, 0.0),

@@ -22,17 +22,12 @@ pub struct GlyphId {
 
 ///|
 pub fn GlyphId::GlyphId(value : UInt16) -> GlyphId {
-  GlyphId::new(value)
-}
-
-///|
-pub fn GlyphId::new(value : UInt16) -> GlyphId {
   GlyphId::{ value, }
 }
 
 ///|
 pub fn GlyphId::default() -> GlyphId {
-  GlyphId::new(0)
+  GlyphId(0)
 }
 
 ///|
@@ -165,7 +160,7 @@ pub struct FontRef {
 }
 
 ///|
-pub fn FontRef::new(data : Bytes) -> FontRef? {
+pub fn FontRef::from_bytes(data : Bytes) -> FontRef? {
   match read_u32_be(data, 0) {
     None => None
     Some(TAG_TTCF) => FontRef::from_index(data, 0)

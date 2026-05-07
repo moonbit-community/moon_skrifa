@@ -21,11 +21,6 @@ pub struct Tag {
 }
 
 ///|
-pub fn Tag::Tag(bytes : Bytes) -> Tag {
-  Tag::new(bytes)
-}
-
-///|
 pub fn Tag::from_uint(value : UInt) -> Tag {
   Tag::{ value, }
 }
@@ -42,7 +37,7 @@ pub fn Tag::to_uint(self : Tag) -> UInt {
 
 ///|
 /// Creates a tag from 4 ASCII bytes (e.g. `b"wght"`). Returns default on invalid length.
-pub fn Tag::new(bytes : Bytes) -> Tag {
+pub fn Tag::Tag(bytes : Bytes) -> Tag {
   if bytes.length() != 4 {
     Tag::default()
   } else {

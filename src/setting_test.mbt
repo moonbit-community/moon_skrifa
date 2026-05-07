@@ -15,7 +15,7 @@
 ///|
 test "Setting::new" {
   let tag = Tag::from_str("wght").unwrap()
-  let s : Setting[Double] = Setting::new(tag, 400.0)
+  let s : Setting[Double] = Setting::Setting(tag, 400.0)
   inspect(s.selector.to_string(), content="wght")
   inspect(s.value, content="400")
 }

@@ -124,25 +124,25 @@ test "Metrics basic accessors and lookup" {
       (TAG_HMTX, metrics_test_make_hmtx()),
     ]),
   )
-  let font = FontRef::new(sfnt).unwrap()
-  let m = HmtxMetrics::new(font).unwrap()
+  let font = FontRef::from_bytes(sfnt).unwrap()
+  let m = HmtxMetrics::from_font(font).unwrap()
   inspect(m.num_glyphs(), content="3")
   inspect(m.number_of_hmetrics(), content="2")
   debug_inspect(
-    m.advance_width(GlyphId::new((0).to_uint16())),
+    m.advance_width(GlyphId::GlyphId((0).to_uint16())),
     content="Some(500)",
   )
-  debug_inspect(m.lsb(GlyphId::new((0).to_uint16())), content="Some(-10)")
+  debug_inspect(m.lsb(GlyphId::GlyphId((0).to_uint16())), content="Some(-10)")
   debug_inspect(
-    m.advance_width(GlyphId::new((1).to_uint16())),
+    m.advance_width(GlyphId::GlyphId((1).to_uint16())),
     content="Some(600)",
   )
-  debug_inspect(m.lsb(GlyphId::new((1).to_uint16())), content="Some(20)")
+  debug_inspect(m.lsb(GlyphId::GlyphId((1).to_uint16())), content="Some(20)")
   debug_inspect(
-    m.advance_width(GlyphId::new((2).to_uint16())),
+    m.advance_width(GlyphId::GlyphId((2).to_uint16())),
     content="Some(600)",
   )
-  debug_inspect(m.lsb(GlyphId::new((2).to_uint16())), content="Some(30)")
+  debug_inspect(m.lsb(GlyphId::GlyphId((2).to_uint16())), content="Some(30)")
 }
 
 ///|
@@ -164,10 +164,13 @@ test "Metrics out of range glyph id" {
       ),
     ]),
   )
-  let font = FontRef::new(sfnt).unwrap()
-  let m = HmtxMetrics::new(font).unwrap()
-  debug_inspect(m.advance_width(GlyphId::new((1).to_uint16())), content="None")
-  debug_inspect(m.lsb(GlyphId::new((1).to_uint16())), content="None")
+  let font = FontRef::from_bytes(sfnt).unwrap()
+  let m = HmtxMetrics::from_font(font).unwrap()
+  debug_inspect(
+    m.advance_width(GlyphId::GlyphId((1).to_uint16())),
+    content="None",
+  )
+  debug_inspect(m.lsb(GlyphId::GlyphId((1).to_uint16())), content="None")
 }
 
 ///|
@@ -178,8 +181,8 @@ test "Metrics::new returns None when table missing" {
       (TAG_HHEA, metrics_test_make_hhea(1)),
     ]),
   )
-  let font = FontRef::new(sfnt).unwrap()
-  let ok = match HmtxMetrics::new(font) {
+  let font = FontRef::from_bytes(sfnt).unwrap()
+  let ok = match HmtxMetrics::from_font(font) {
     None => true
     Some(_) => false
   }

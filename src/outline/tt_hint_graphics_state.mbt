@@ -59,15 +59,6 @@ priv struct TtRetainedGraphicsState {
 }
 
 ///|
-fn TtRetainedGraphicsState::TtRetainedGraphicsState(
-  scale : Int,
-  ppem : Int,
-  target : Target,
-) -> TtRetainedGraphicsState {
-  TtRetainedGraphicsState::new(scale, ppem, target)
-}
-
-///|
 fn TtRetainedGraphicsState::default() -> TtRetainedGraphicsState {
   TtRetainedGraphicsState::{
     auto_flip: true,
@@ -91,7 +82,7 @@ fn TtRetainedGraphicsState::default() -> TtRetainedGraphicsState {
 }
 
 ///|
-fn TtRetainedGraphicsState::new(
+fn TtRetainedGraphicsState::TtRetainedGraphicsState(
   scale : Int,
   ppem : Int,
   target : Target,

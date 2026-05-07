@@ -85,11 +85,6 @@ pub struct SvgPen {
 
 ///|
 pub fn SvgPen::SvgPen() -> SvgPen {
-  SvgPen::new()
-}
-
-///|
-pub fn SvgPen::new() -> SvgPen {
   SvgPen::{ s: "", precision: None }
 }
 
@@ -234,13 +229,8 @@ pub impl OutlinePen for SvgPen with close(pen) {
 pub struct NullPen {}
 
 ///|
-pub fn NullPen::new() -> NullPen {
-  NullPen::{  }
-}
-
-///|
 pub fn NullPen::NullPen() -> NullPen {
-  NullPen::new()
+  NullPen::{  }
 }
 
 ///|

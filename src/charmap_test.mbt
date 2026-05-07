@@ -222,7 +222,7 @@ test "charmap: choose format 12 over 4" {
       (3, 10, fmt12),
     ]),
   )
-  let font = FontRef::new(make_sfnt_with_table(TAG_CMAP, cmap_table)).unwrap()
+  let font = FontRef::from_bytes(make_sfnt_with_table(TAG_CMAP, cmap_table)).unwrap()
   let cmap = font.charmap()
   inspect(cmap.has_map(), content="true")
   debug_inspect(cmap.map(0x1F600), content="Some(100)")
@@ -232,7 +232,7 @@ test "charmap: choose format 12 over 4" {
 test "charmap: choose format 4 when only BMP mapping" {
   let fmt4 = make_cmap_subtable_format4_delta(0x0041, 0x0041, 5)
   let cmap_table = make_cmap_table(Array::from_fixed_array([(3, 1, fmt4)]))
-  let font = FontRef::new(make_sfnt_with_table(TAG_CMAP, cmap_table)).unwrap()
+  let font = FontRef::from_bytes(make_sfnt_with_table(TAG_CMAP, cmap_table)).unwrap()
   let cmap = font.charmap()
   debug_inspect(cmap.map(0x41), content="Some(5)")
   debug_inspect(cmap.map(0x1F600), content="None")
@@ -247,7 +247,7 @@ test "charmap: symbol mapping duplicates 0..FF into F000..F0FF" {
     Array::from_fixed_array([(3, 10, fmt12), (3, 0, fmt4)], // symbol
     ),
   )
-  let font = FontRef::new(make_sfnt_with_table(TAG_CMAP, cmap_table)).unwrap()
+  let font = FontRef::from_bytes(make_sfnt_with_table(TAG_CMAP, cmap_table)).unwrap()
   let cmap = font.charmap()
   inspect(cmap.is_symbol(), content="true")
   debug_inspect(cmap.map(0xF001), content="Some(1)")
@@ -271,7 +271,7 @@ test "charmap: format 14 map_variant + variant_mappings" {
   let cmap_table = make_cmap_table(
     Array::from_fixed_array([(3, 1, fmt4), (0, 5, fmt14)]),
   )
-  let font = FontRef::new(make_sfnt_with_table(TAG_CMAP, cmap_table)).unwrap()
+  let font = FontRef::from_bytes(make_sfnt_with_table(TAG_CMAP, cmap_table)).unwrap()
   let cmap = font.charmap()
   inspect(cmap.has_variant_map(), content="true")
   let v0 = cmap.map_variant(0x4E00, selector.reinterpret_as_uint())
@@ -301,7 +301,7 @@ test "charmap: format 14 map_variant + variant_mappings" {
 test "charmap: mappings are consistent with map()" {
   let fmt4 = make_cmap_subtable_format4_delta(0x0041, 0x0043, 1)
   let cmap_table = make_cmap_table(Array::from_fixed_array([(3, 1, fmt4)]))
-  let font = FontRef::new(make_sfnt_with_table(TAG_CMAP, cmap_table)).unwrap()
+  let font = FontRef::from_bytes(make_sfnt_with_table(TAG_CMAP, cmap_table)).unwrap()
   let cmap = font.charmap()
   for m in cmap.mappings() {
     let (cp, gid) = m

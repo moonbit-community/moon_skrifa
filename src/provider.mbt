@@ -38,12 +38,12 @@ pub impl MetadataProvider for FontRef with attributes(font) {
 
 ///|
 pub impl MetadataProvider for FontRef with axes(font) {
-  AxisCollection::new(font)
+  AxisCollection(font)
 }
 
 ///|
 pub impl MetadataProvider for FontRef with named_instances(font) {
-  NamedInstanceCollection::new(font)
+  NamedInstanceCollection(font)
 }
 
 ///|
@@ -53,7 +53,7 @@ pub impl MetadataProvider for FontRef with localized_strings(font, id) {
 
 ///|
 pub impl MetadataProvider for FontRef with glyph_names(font) {
-  GlyphNames::new(font)
+  GlyphNames(font)
 }
 
 ///|
@@ -68,7 +68,7 @@ pub impl MetadataProvider for FontRef with glyph_metrics(font, size, location) {
 
 ///|
 pub impl MetadataProvider for FontRef with charmap(font) {
-  Charmap::new(font)
+  Charmap(font)
 }
 
 ///|
@@ -78,15 +78,15 @@ pub impl MetadataProvider for FontRef with outline_glyphs(font) {
 
 ///|
 pub impl MetadataProvider for FontRef with bitmap_strikes(font) {
-  BitmapStrikes::new(font)
+  BitmapStrikes(font)
 }
 
 ///|
 pub impl MetadataProvider for FontRef with color_palettes(font) {
-  ColorPalettes::new(font)
+  ColorPalettes(font)
 }
 
 ///|
 pub impl MetadataProvider for FontRef with color_glyphs(font) {
-  ColorGlyphCollection::new(font)
+  ColorGlyphCollection(font)
 }

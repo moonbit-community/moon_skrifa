@@ -205,9 +205,9 @@ impl ColorPainter for ColrTestPainter with pop_layer_with_mode(_p, _mode) {
 test "COLR v0 layers basic" {
   let colr = colr_test_build_colr()
   let sfnt = colr_test_build_sfnt(Array::from_fixed_array([(TAG_COLR, colr)]))
-  let font = FontRef::new(sfnt).unwrap()
+  let font = FontRef::from_bytes(sfnt).unwrap()
   let cg = font.color_glyphs()
-  let layers = cg.layers(GlyphId::new((5).to_uint16())).unwrap()
+  let layers = cg.layers(GlyphId::GlyphId((5).to_uint16())).unwrap()
   inspect(layers.length(), content="2")
   inspect(layers.at(0).glyph_id().to_string(), content="10")
   inspect(layers.at(0).palette_index(), content="1")
@@ -219,21 +219,24 @@ test "COLR v0 layers basic" {
 test "COLR v1: header detection" {
   let colr = colr_test_build_colr_v1_empty()
   let sfnt = colr_test_build_sfnt(Array::from_fixed_array([(TAG_COLR, colr)]))
-  let font = FontRef::new(sfnt).unwrap()
+  let font = FontRef::from_bytes(sfnt).unwrap()
   let cg = font.color_glyphs()
   inspect(cg.version(), content="1")
   inspect(cg.has_colr_v1(), content="true")
-  inspect(cg.layers(GlyphId::new((5).to_uint16())) is None, content="true")
+  inspect(cg.layers(GlyphId::GlyphId((5).to_uint16())) is None, content="true")
 }
 
 ///|
 test "COLR get_with_format/get APIs" {
   let colr = colr_test_build_colr()
   let sfnt = colr_test_build_sfnt(Array::from_fixed_array([(TAG_COLR, colr)]))
-  let font = FontRef::new(sfnt).unwrap()
+  let font = FontRef::from_bytes(sfnt).unwrap()
   let collection = font.color_glyphs()
   let glyph = collection
-    .get_with_format(GlyphId::new((5).to_uint16()), ColorGlyphFormat::ColrV0)
+    .get_with_format(
+      GlyphId::GlyphId((5).to_uint16()),
+      ColorGlyphFormat::ColrV0,
+    )
     .unwrap()
   inspect(glyph.format() is ColorGlyphFormat::ColrV0, content="true")
   inspect(glyph.layers().unwrap().length(), content="2")
@@ -256,9 +259,9 @@ test "COLR get_with_format/get APIs" {
 test "COLR v1 get_with_format/get APIs" {
   let colr = colr_test_build_colr_v1_with_base_glyph(8)
   let sfnt = colr_test_build_sfnt(Array::from_fixed_array([(TAG_COLR, colr)]))
-  let font = FontRef::new(sfnt).unwrap()
+  let font = FontRef::from_bytes(sfnt).unwrap()
   let collection = font.color_glyphs()
-  let gid = GlyphId::new((8).to_uint16())
+  let gid = GlyphId::GlyphId((8).to_uint16())
   let glyph = collection.get_with_format(gid, ColorGlyphFormat::ColrV1).unwrap()
   inspect(glyph.format() is ColorGlyphFormat::ColrV1, content="true")
   inspect(
@@ -267,7 +270,7 @@ test "COLR v1 get_with_format/get APIs" {
   )
   inspect(
     collection.get_with_format(
-      GlyphId::new((9).to_uint16()),
+      GlyphId::GlyphId((9).to_uint16()),
       ColorGlyphFormat::ColrV1,
     )
     is None,

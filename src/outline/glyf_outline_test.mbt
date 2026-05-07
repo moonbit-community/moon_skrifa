@@ -156,7 +156,7 @@ fn glyf_outline_test_make_font(glyphs : Array[Bytes]) -> @moon_skrifa.FontRef {
       (0x676C7966, Bytes::from_array(glyf_out.op_as_view())), // "glyf"
     ]),
   )
-  @moon_skrifa.FontRef::new(sfnt).unwrap()
+  @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
 }
 
 ///|
@@ -186,7 +186,7 @@ fn glyf_outline_test_make_font_with_head(
       (0x676C7966, Bytes::from_array(glyf_out.op_as_view())), // "glyf"
     ]),
   )
-  @moon_skrifa.FontRef::new(sfnt).unwrap()
+  @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
 }
 
 ///|
@@ -378,7 +378,10 @@ test "OutlineGlyphCollection::path empty glyph is empty path" {
   let c = OutlineGlyphCollection::from_font(font)
   inspect(
     c
-    .path(@moon_skrifa.GlyphId::new((0).to_uint16()), DrawSettings::default())
+    .path(
+      @moon_skrifa.GlyphId::GlyphId((0).to_uint16()),
+      DrawSettings::default(),
+    )
     .unwrap()
     .length(),
     content="0",
@@ -395,7 +398,10 @@ test "glyf simple outline uses MoveTo/QuadTo/Close" {
   )
   let c = OutlineGlyphCollection::from_font(font)
   let path = c
-    .path(@moon_skrifa.GlyphId::new((1).to_uint16()), DrawSettings::default())
+    .path(
+      @moon_skrifa.GlyphId::GlyphId((1).to_uint16()),
+      DrawSettings::default(),
+    )
     .unwrap()
   let expected = Array::from_fixed_array([
     PathElement::MoveTo(0.0, 0.0),
@@ -415,7 +421,10 @@ test "glyf consecutive off-curve points insert implied on-curve midpoint" {
   )
   let c = OutlineGlyphCollection::from_font(font)
   let path = c
-    .path(@moon_skrifa.GlyphId::new((1).to_uint16()), DrawSettings::default())
+    .path(
+      @moon_skrifa.GlyphId::GlyphId((1).to_uint16()),
+      DrawSettings::default(),
+    )
     .unwrap()
   let expected = Array::from_fixed_array([
     PathElement::MoveTo(0.0, 0.0),
@@ -437,7 +446,10 @@ test "glyf composite outline translates component path" {
   )
   let c = OutlineGlyphCollection::from_font(font)
   let path = c
-    .path(@moon_skrifa.GlyphId::new((2).to_uint16()), DrawSettings::default())
+    .path(
+      @moon_skrifa.GlyphId::GlyphId((2).to_uint16()),
+      DrawSettings::default(),
+    )
     .unwrap()
   let expected = Array::from_fixed_array([
     PathElement::MoveTo(10.0, 20.0),
@@ -458,7 +470,10 @@ test "glyf composite outline supports point matching anchors" {
   )
   let c = OutlineGlyphCollection::from_font(font)
   let path = c
-    .path(@moon_skrifa.GlyphId::new((2).to_uint16()), DrawSettings::default())
+    .path(
+      @moon_skrifa.GlyphId::GlyphId((2).to_uint16()),
+      DrawSettings::default(),
+    )
     .unwrap()
   let expected = Array::from_fixed_array([
     PathElement::MoveTo(0.0, 0.0),
@@ -481,7 +496,10 @@ test "glyf composite recursion is guarded" {
   )
   let c = OutlineGlyphCollection::from_font(font)
   let ok = match
-    c.path(@moon_skrifa.GlyphId::new((1).to_uint16()), DrawSettings::default()) {
+    c.path(
+      @moon_skrifa.GlyphId::GlyphId((1).to_uint16()),
+      DrawSettings::default(),
+    ) {
     None => true
     Some(_) => false
   }
@@ -499,11 +517,11 @@ test "path scales with size when unitsPerEm is available" {
   )
   let c = OutlineGlyphCollection::from_font(font)
   let settings = DrawSettings::unhinted(
-    @moon_skrifa.Size::new(16.0),
+    @moon_skrifa.Size::Size(16.0),
     @moon_skrifa.LocationRef::default(),
   )
   let path = c
-    .path(@moon_skrifa.GlyphId::new((1).to_uint16()), settings)
+    .path(@moon_skrifa.GlyphId::GlyphId((1).to_uint16()), settings)
     .unwrap()
   let expected = Array::from_fixed_array([
     PathElement::MoveTo(0.0, 0.0),
@@ -526,9 +544,9 @@ test "path scaling keeps negative .5 ties away from zero in FreeType mode" {
   let c = OutlineGlyphCollection::from_font(font)
 
   let path_14 = c.path(
-    @moon_skrifa.GlyphId::new((1).to_uint16()),
+    @moon_skrifa.GlyphId::GlyphId((1).to_uint16()),
     DrawSettings::unhinted(
-      @moon_skrifa.Size::new(14.0),
+      @moon_skrifa.Size::Size(14.0),
       @moon_skrifa.LocationRef::default(),
     ),
   )
@@ -543,9 +561,9 @@ test "path scaling keeps negative .5 ties away from zero in FreeType mode" {
   )
 
   let path_18 = c.path(
-    @moon_skrifa.GlyphId::new((1).to_uint16()),
+    @moon_skrifa.GlyphId::GlyphId((1).to_uint16()),
     DrawSettings::unhinted(
-      @moon_skrifa.Size::new(18.0),
+      @moon_skrifa.Size::Size(18.0),
       @moon_skrifa.LocationRef::default(),
     ),
   )
@@ -571,11 +589,11 @@ test "HarfBuzz path_style uses 16.16 fixed-point scaling when size is set" {
   )
   let c = OutlineGlyphCollection::from_font(font)
   let settings = DrawSettings::unhinted(
-    @moon_skrifa.Size::new(16.0),
+    @moon_skrifa.Size::Size(16.0),
     @moon_skrifa.LocationRef::default(),
   ).with_path_style(PathStyle::HarfBuzz)
   let path = c
-    .path(@moon_skrifa.GlyphId::new((1).to_uint16()), settings)
+    .path(@moon_skrifa.GlyphId::GlyphId((1).to_uint16()), settings)
     .unwrap()
   let expected = Array::from_fixed_array([
     PathElement::MoveTo(0.0, 0.0),
@@ -596,8 +614,8 @@ test "glyf draw_memory_size matches upstream sizing" {
     ]),
   )
   let outlines = OutlineGlyphCollection::from_font(font)
-  let g1 = outlines.get(@moon_skrifa.GlyphId::new((1).to_uint16())).unwrap()
-  let g2 = outlines.get(@moon_skrifa.GlyphId::new((2).to_uint16())).unwrap()
+  let g1 = outlines.get(@moon_skrifa.GlyphId::GlyphId((1).to_uint16())).unwrap()
+  let g2 = outlines.get(@moon_skrifa.GlyphId::GlyphId((2).to_uint16())).unwrap()
   // Computed against fontations-reference formula with Point=8, flags=1, align=4.
   inspect(g1.draw_memory_size(Hinting::none()), content="125")
   inspect(g2.draw_memory_size(Hinting::Embedded), content="377")
@@ -636,18 +654,18 @@ test "hinted (disabled instance) rounds advance width to integer pixels" {
       (0x676C7966, Bytes::from_array(glyf_out.op_as_view())), // "glyf"
     ]),
   )
-  let font = @moon_skrifa.FontRef::new(sfnt).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
   let outlines0 = OutlineGlyphCollection::from_font(font)
-  let h = HintingInstance::new(
+  let h = HintingInstance::create(
     outlines0,
-    @moon_skrifa.Size::new(17.0),
+    @moon_skrifa.Size::Size(17.0),
     @moon_skrifa.LocationRef::default(),
     HintingOptions::default(),
   ).unwrap()
   let settings = DrawSettings::hinted(h, false)
   let outlines = OutlineGlyphCollection::from_font(font)
-  let g = outlines.get(@moon_skrifa.GlyphId::new((1).to_uint16())).unwrap()
-  let metrics = g.draw(settings, NullPen::new()).unwrap()
+  let g = outlines.get(@moon_skrifa.GlyphId::GlyphId((1).to_uint16())).unwrap()
+  let metrics = g.draw(settings, NullPen::NullPen()).unwrap()
   // advance = 500 * (17/1000) = 8.5 => rounded to 9.0
   let ok = (metrics.advance_width.unwrap() - 9.0).abs() <= 0.000001
   inspect(ok, content="true")
@@ -663,7 +681,10 @@ test "path_style affects start point selection when first point is off-curve" {
   )
   let c = OutlineGlyphCollection::from_font(font)
   let free = c
-    .path(@moon_skrifa.GlyphId::new((1).to_uint16()), DrawSettings::default())
+    .path(
+      @moon_skrifa.GlyphId::GlyphId((1).to_uint16()),
+      DrawSettings::default(),
+    )
     .unwrap()
   let expected_free = Array::from_fixed_array([
     PathElement::MoveTo(0.0, 0.0),
@@ -672,7 +693,7 @@ test "path_style affects start point selection when first point is off-curve" {
   ])
   inspect(glyf_outline_test_path_eq(free, expected_free), content="true")
   let hb = c.path(
-    @moon_skrifa.GlyphId::new((1).to_uint16()),
+    @moon_skrifa.GlyphId::GlyphId((1).to_uint16()),
     DrawSettings::default().with_path_style(PathStyle::HarfBuzz),
   )
   let expected_hb = Array::from_fixed_array([

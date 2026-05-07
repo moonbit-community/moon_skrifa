@@ -32,7 +32,7 @@ import {
 ## Quick Start
 
 ```moonbit
-let font = @moon_skrifa.FontRef::new(font_bytes).unwrap()
+let font = @moon_skrifa.FontRef::from_bytes(font_bytes).unwrap()
 let outlines = @moon_skrifa_outline.OutlineGlyphCollection::from_font(font)
 
 let cmap = font.charmap().unwrap()
@@ -40,7 +40,7 @@ let gid = cmap.glyph_id(0x41).unwrap() // 'A'
 
 let settings =
   @moon_skrifa_outline.DrawSettings::unhinted(
-    @moon_skrifa.Size::new(16.0),
+    @moon_skrifa.Size::Size(16.0),
     @moon_skrifa.LocationRef::default(),
   )
 
@@ -56,7 +56,7 @@ Build normalized locations from user-space axis values:
 ```moonbit
 let axes = font.axes()
 let settings : Array[@moon_skrifa.VariationSetting] = Array::from_fixed_array([
-  @moon_skrifa.Setting::new(@moon_skrifa.Tag::from_str("wght").unwrap(), 700.0),
+  @moon_skrifa.Setting::Setting(@moon_skrifa.Tag::from_str("wght").unwrap(), 700.0),
 ])
 let loc = axes.location(settings.op_as_view()).as_ref()
 ```
@@ -87,7 +87,7 @@ match family.english_or_first() {
 
 ```moonbit
 let fm = font.metrics(
-  @moon_skrifa.Size::new(16.0),
+  @moon_skrifa.Size::Size(16.0),
   @moon_skrifa.LocationRef::default(),
 )
 let gm = font.glyph_metrics(
@@ -132,7 +132,7 @@ try! font.paint_colr_v1_at(gid, loc, painter) |> ignore
 ```moonbit
 let settings =
   @moon_skrifa_outline.DrawSettings::unhinted(
-    @moon_skrifa.Size::new(16.0),
+    @moon_skrifa.Size::Size(16.0),
     @moon_skrifa.LocationRef::default(),
   )
 let path = outlines.path(gid, settings)
@@ -143,9 +143,9 @@ path |> ignore
 
 ```moonbit
 let hinter =
-  @moon_skrifa_outline.HintingInstance::new(
+  @moon_skrifa_outline.HintingInstance::create(
     outlines,
-    @moon_skrifa.Size::new(16.0),
+    @moon_skrifa.Size::Size(16.0),
     @moon_skrifa.LocationRef::default(),
     @moon_skrifa_outline.HintingOptions::default(),
   ).unwrap()
@@ -166,7 +166,7 @@ Set with:
 ```moonbit
 let settings =
   @moon_skrifa_outline.DrawSettings::unhinted(
-    @moon_skrifa.Size::new(16.0),
+    @moon_skrifa.Size::Size(16.0),
     @moon_skrifa.LocationRef::default(),
   ).with_path_style(@moon_skrifa_outline.PathStyle::HarfBuzz)
 settings |> ignore

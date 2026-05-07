@@ -259,7 +259,7 @@ test "CFF outline path uses callsubr (local subrs)" {
   let sfnt = cff_test_build_sfnt(
     Array::from_fixed_array([(CFF_TEST_TAG_CFF, cff)]),
   )
-  let font = @moon_skrifa.FontRef::new(sfnt).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
   let c = OutlineGlyphCollection::from_font(font)
   let path = c.path(outline_test_gid(1), DrawSettings::default()).unwrap()
   let expected = Array::from_fixed_array([

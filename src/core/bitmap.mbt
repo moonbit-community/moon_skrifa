@@ -210,11 +210,6 @@ pub struct BitmapStrikes {
 }
 
 ///|
-pub fn BitmapStrikes::BitmapStrikes(font : FontRef) -> BitmapStrikes {
-  BitmapStrikes::new(font)
-}
-
-///|
 fn bitmap_num_glyphs(font : FontRef) -> Int {
   match font.table(BITMAP_TAG_MAXP) {
     None => 0
@@ -223,7 +218,7 @@ fn bitmap_num_glyphs(font : FontRef) -> Int {
 }
 
 ///|
-pub fn BitmapStrikes::new(font : FontRef) -> BitmapStrikes {
+pub fn BitmapStrikes::BitmapStrikes(font : FontRef) -> BitmapStrikes {
   let num_glyphs = bitmap_num_glyphs(font)
   match BitmapStrikes::with_format(font, BitmapFormat::Sbix) {
     None =>
@@ -674,5 +669,5 @@ fn bitmap_sbix_strike_glyph(
 
 ///|
 pub fn FontRef::bitmap_strikes(self : FontRef) -> BitmapStrikes {
-  BitmapStrikes::new(self)
+  BitmapStrikes(self)
 }

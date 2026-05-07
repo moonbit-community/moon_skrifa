@@ -1116,7 +1116,7 @@ fn glyf_outline_path_idx(
               glyf_composite_path(
                 ctx,
                 glyph,
-                @moon_skrifa.GlyphId::new(idx.to_uint16()),
+                @moon_skrifa.GlyphId::GlyphId(idx.to_uint16()),
                 visited,
                 path_style,
               )
@@ -1124,7 +1124,7 @@ fn glyf_outline_path_idx(
               glyf_simple_path(
                 ctx,
                 glyph,
-                @moon_skrifa.GlyphId::new(idx.to_uint16()),
+                @moon_skrifa.GlyphId::GlyphId(idx.to_uint16()),
                 path_style,
               )
             }
@@ -1206,7 +1206,7 @@ fn glyf_outline_path(
         0.0
       } else {
         let x_min = glyf_read_i16_be(glyph, 2).unwrap_or(0).to_double()
-        let loc = @moon_skrifa.LocationRef::new(coords)
+        let loc = @moon_skrifa.LocationRef::LocationRef(coords)
         let lsb = @moon_skrifa.FontRef::glyph_metrics(
             font,
             @moon_skrifa.Size::unscaled(),

@@ -39,11 +39,6 @@ priv struct TtDecoder {
 
 ///|
 fn TtDecoder::TtDecoder(code : BytesView) -> TtDecoder {
-  TtDecoder::new(code)
-}
-
-///|
-fn TtDecoder::new(code : BytesView) -> TtDecoder {
   TtDecoder::{ code, pc: 0 }
 }
 

@@ -56,7 +56,7 @@ fn make_sfnt_with_tags(tags : Array[UInt]) -> Bytes {
 
 ///|
 fn make_font(tags : Array[UInt]) -> @moon_skrifa.FontRef {
-  @moon_skrifa.FontRef::new(make_sfnt_with_tags(tags)).unwrap()
+  @moon_skrifa.FontRef::from_bytes(make_sfnt_with_tags(tags)).unwrap()
 }
 
 ///|
@@ -71,21 +71,21 @@ const TAG_CFF2 : UInt = 0x43464632 // "CFF2"
 ///|
 test "OutlineGlyphCollection::format None when no font" {
   let font = make_font(Array::new())
-  let c = OutlineGlyphCollection::new(font)
+  let c = OutlineGlyphCollection::OutlineGlyphCollection(font)
   inspect(c.format() is None, content="true")
 }
 
 ///|
 test "OutlineGlyphCollection::format None when no outline tables" {
   let font = make_font(Array::new())
-  let c = OutlineGlyphCollection::new(font)
+  let c = OutlineGlyphCollection::OutlineGlyphCollection(font)
   inspect(c.format() is None, content="true")
 }
 
 ///|
 test "OutlineGlyphCollection::format glyf" {
   let font = make_font(Array::from_fixed_array([TAG_GLYF]))
-  let c = OutlineGlyphCollection::new(font)
+  let c = OutlineGlyphCollection::OutlineGlyphCollection(font)
   let ok = match c.format() {
     Some(OutlineGlyphFormat::Glyf) => true
     _ => false
@@ -96,7 +96,7 @@ test "OutlineGlyphCollection::format glyf" {
 ///|
 test "OutlineGlyphCollection::format CFF" {
   let font = make_font(Array::from_fixed_array([TAG_CFF]))
-  let c = OutlineGlyphCollection::new(font)
+  let c = OutlineGlyphCollection::OutlineGlyphCollection(font)
   let ok = match c.format() {
     Some(OutlineGlyphFormat::Cff) => true
     _ => false
@@ -107,7 +107,7 @@ test "OutlineGlyphCollection::format CFF" {
 ///|
 test "OutlineGlyphCollection::format CFF2" {
   let font = make_font(Array::from_fixed_array([TAG_CFF2]))
-  let c = OutlineGlyphCollection::new(font)
+  let c = OutlineGlyphCollection::OutlineGlyphCollection(font)
   let ok = match c.format() {
     Some(OutlineGlyphFormat::Cff2) => true
     _ => false
@@ -118,7 +118,7 @@ test "OutlineGlyphCollection::format CFF2" {
 ///|
 test "OutlineGlyphCollection::format prefers glyf" {
   let font = make_font(Array::from_fixed_array([TAG_CFF, TAG_GLYF, TAG_CFF2]))
-  let c = OutlineGlyphCollection::new(font)
+  let c = OutlineGlyphCollection::OutlineGlyphCollection(font)
   let ok = match c.format() {
     Some(OutlineGlyphFormat::Glyf) => true
     _ => false

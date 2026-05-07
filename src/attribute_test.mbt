@@ -98,7 +98,7 @@ test "missing_os2 uses head.macStyle italic+bold" {
   let sfnt = attr_test_build_sfnt(
     Array::from_fixed_array([(TAG_HEAD, Bytes::from_array(head.op_as_view()))]),
   )
-  let font = FontRef::new(sfnt).unwrap()
+  let font = FontRef::from_bytes(sfnt).unwrap()
   let attrs = font.attributes()
   inspect(attrs.stretch().ratio(), content="1")
   let style_ok = match attrs.style() {
@@ -129,7 +129,7 @@ test "so_stylish uses OS/2 + post italicAngle" {
       (TAG_POST, Bytes::from_array(post.op_as_view())),
     ]),
   )
-  let font = FontRef::new(sfnt).unwrap()
+  let font = FontRef::from_bytes(sfnt).unwrap()
   let attrs = font.attributes()
   inspect(attrs.stretch().ratio(), content="0.875")
   let style_ok = match attrs.style() {

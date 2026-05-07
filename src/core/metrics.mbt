@@ -149,7 +149,7 @@ pub struct HmtxMetrics {
 
 ///|
 /// Parses required tables (maxp/hhea/hmtx) from the font.
-pub fn HmtxMetrics::new(font : FontRef) -> HmtxMetrics? {
+pub fn HmtxMetrics::from_font(font : FontRef) -> HmtxMetrics? {
   let maxp = match font.table(TAG_MAXP) {
     None => return None
     Some(v) => v
@@ -236,7 +236,7 @@ pub fn HmtxMetrics::lsb(self : HmtxMetrics, gid : GlyphId) -> Int? {
 
 ///|
 pub fn FontRef::hmtx_metrics(self : FontRef) -> HmtxMetrics? {
-  HmtxMetrics::new(self)
+  HmtxMetrics::from_font(self)
 }
 
 ///|
@@ -271,15 +271,6 @@ pub struct Metrics {
   underline : Decoration?
   strikeout : Decoration?
   bounds : GlyphBounds?
-}
-
-///|
-pub fn Metrics::Metrics(
-  font : FontRef,
-  size : Size,
-  _location : LocationRef,
-) -> Metrics {
-  Metrics::new(font, size, _location)
 }
 
 ///|
@@ -353,7 +344,7 @@ pub fn Metrics::bounds(self : Metrics) -> GlyphBounds? {
 }
 
 ///|
-pub fn Metrics::new(
+pub fn Metrics::Metrics(
   font : FontRef,
   size : Size,
   _location : LocationRef,
@@ -521,12 +512,12 @@ pub fn FontRef::metrics(
   size : Size,
   location : LocationRef,
 ) -> Metrics {
-  Metrics::new(self, size, location)
+  Metrics(self, size, location)
 }
 
 ///|
 pub fn FontRef::font_metrics(self : FontRef, size : Size) -> Metrics {
-  Metrics::new(self, size, LocationRef::default())
+  Metrics(self, size, LocationRef::default())
 }
 
 ///|
@@ -535,7 +526,7 @@ pub fn FontRef::font_metrics_at(
   size : Size,
   location : LocationRef,
 ) -> Metrics {
-  Metrics::new(self, size, location)
+  Metrics(self, size, location)
 }
 
 ///|
@@ -562,15 +553,6 @@ pub struct GlyphMetrics {
   priv gvar_glyph_count : Int
   priv gvar_flags : Int
   priv gvar_data_array_off : Int
-}
-
-///|
-pub fn GlyphMetrics::GlyphMetrics(
-  font : FontRef,
-  size : Size,
-  location : LocationRef,
-) -> GlyphMetrics {
-  GlyphMetrics::new(font, size, location)
 }
 
 ///|
@@ -602,7 +584,7 @@ pub fn GlyphBounds::y_max(self : GlyphBounds) -> Double {
 }
 
 ///|
-pub fn GlyphMetrics::new(
+pub fn GlyphMetrics::GlyphMetrics(
   font : FontRef,
   size : Size,
   location : LocationRef,
@@ -612,7 +594,7 @@ pub fn GlyphMetrics::new(
     None => ()
     Some(maxp) => glyph_count = metrics_read_u16_be(maxp, 4).unwrap_or(0)
   }
-  let base = HmtxMetrics::new(font)
+  let base = HmtxMetrics::from_font(font)
   let mut upem : UInt16 = 0
   match font.table(METRICS_TAG_HEAD) {
     None => ()
@@ -1709,5 +1691,5 @@ pub fn FontRef::glyph_metrics(
   size : Size,
   location : LocationRef,
 ) -> GlyphMetrics {
-  GlyphMetrics::new(self, size, location)
+  GlyphMetrics(self, size, location)
 }

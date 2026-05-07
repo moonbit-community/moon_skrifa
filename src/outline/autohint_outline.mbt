@@ -52,7 +52,7 @@ fn AutoHintDirection::to_int(self : AutoHintDirection) -> Int {
 }
 
 ///|
-fn AutoHintDirection::new(dx : Int, dy : Int) -> AutoHintDirection {
+fn AutoHintDirection::from_delta(dx : Int, dy : Int) -> AutoHintDirection {
   let (dir, long_arm, short_arm) = if dy >= dx {
     if dy >= -dx {
       (AutoHintDirection::Up, dy, dx)
@@ -549,11 +549,6 @@ priv struct AutoHintOutlineData {
 
 ///|
 fn AutoHintOutlineData::AutoHintOutlineData() -> AutoHintOutlineData {
-  AutoHintOutlineData::new()
-}
-
-///|
-fn AutoHintOutlineData::new() -> AutoHintOutlineData {
   AutoHintOutlineData::{ points: Array::new(), contours: Array::new() }
 }
 
@@ -829,7 +824,7 @@ fn autohint_outline_build_glyf_raw(
       d = autohint_outline_read_i16_be(glyph, off + 6).unwrap_or(0)
       off = off + 8
     }
-    let comp_gid = @moon_skrifa.GlyphId::new(comp_gid_u16.to_uint16())
+    let comp_gid = @moon_skrifa.GlyphId::GlyphId(comp_gid_u16.to_uint16())
     let comp = match
       autohint_outline_build_glyf_raw(font, comp_gid, depth + 1) {
       Ok(v) => v
@@ -978,7 +973,7 @@ fn AutoHintOutline::compute_directions(
         }
         continue
       }
-      let out_dir = AutoHintDirection::new(out_x, out_y)
+      let out_dir = AutoHintDirection::from_delta(out_x, out_y)
       let nextp = self.points.at(next_ix)
       nextp.in_dir = out_dir
       nextp.v = ix

@@ -150,7 +150,7 @@ fn color_test_build_cpal_v1() -> Bytes {
 test "CPAL palettes basic" {
   let cpal = color_test_build_cpal()
   let sfnt = color_test_build_sfnt(Array::from_fixed_array([(TAG_CPAL, cpal)]))
-  let font = FontRef::new(sfnt).unwrap()
+  let font = FontRef::from_bytes(sfnt).unwrap()
   let palettes = font.color_palettes()
   inspect(palettes.len(), content="1")
   inspect(palettes.entries_per_palette(), content="2")
@@ -168,7 +168,7 @@ test "CPAL palettes basic" {
 test "CPAL v1 palette metadata APIs" {
   let cpal = color_test_build_cpal_v1()
   let sfnt = color_test_build_sfnt(Array::from_fixed_array([(TAG_CPAL, cpal)]))
-  let font = FontRef::new(sfnt).unwrap()
+  let font = FontRef::from_bytes(sfnt).unwrap()
   let palettes = font.color_palettes()
   inspect(palettes.len(), content="2")
   inspect(palettes.is_empty(), content="false")

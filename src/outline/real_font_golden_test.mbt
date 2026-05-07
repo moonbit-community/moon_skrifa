@@ -157,18 +157,20 @@ fn b64_decode(s : String) -> Bytes {
 
 ///|
 fn golden_font(b64 : String) -> @moon_skrifa.FontRef {
-  @moon_skrifa.FontRef::new(b64_decode(b64)).unwrap()
+  @moon_skrifa.FontRef::from_bytes(b64_decode(b64)).unwrap()
 }
 
 ///|
 test "golden: glyf Vazirmatn gid=2 size=16 ft coords=0" {
   let font = golden_font(font_vazirmatn_var_trimmed_b64())
   let outlines = OutlineGlyphCollection::from_font(font)
-  let glyph = outlines.get(@moon_skrifa.GlyphId::new((2).to_uint16())).unwrap()
+  let glyph = outlines
+    .get(@moon_skrifa.GlyphId::GlyphId((2).to_uint16()))
+    .unwrap()
   let coords : Array[@moon_skrifa.NormalizedCoord] = Array::from_fixed_array([0])
   let settings = DrawSettings::unhinted(
-    @moon_skrifa.Size::new(16.0),
-    @moon_skrifa.LocationRef::new(coords.op_as_view()),
+    @moon_skrifa.Size::Size(16.0),
+    @moon_skrifa.LocationRef::LocationRef(coords.op_as_view()),
   ).with_path_style(PathStyle::FreeType)
   let pen = SvgPen::with_precision(3)
   glyph.draw(settings, pen).unwrap() |> ignore
@@ -182,13 +184,15 @@ test "golden: glyf Vazirmatn gid=2 size=16 ft coords=0" {
 test "golden: glyf Vazirmatn gid=2 size=16 ft coords=0.5" {
   let font = golden_font(font_vazirmatn_var_trimmed_b64())
   let outlines = OutlineGlyphCollection::from_font(font)
-  let glyph = outlines.get(@moon_skrifa.GlyphId::new((2).to_uint16())).unwrap()
+  let glyph = outlines
+    .get(@moon_skrifa.GlyphId::GlyphId((2).to_uint16()))
+    .unwrap()
   let coords : Array[@moon_skrifa.NormalizedCoord] = Array::from_fixed_array([
     8192,
   ])
   let settings = DrawSettings::unhinted(
-    @moon_skrifa.Size::new(16.0),
-    @moon_skrifa.LocationRef::new(coords.op_as_view()),
+    @moon_skrifa.Size::Size(16.0),
+    @moon_skrifa.LocationRef::LocationRef(coords.op_as_view()),
   ).with_path_style(PathStyle::FreeType)
   let pen = SvgPen::with_precision(3)
   glyph.draw(settings, pen).unwrap() |> ignore
@@ -202,11 +206,13 @@ test "golden: glyf Vazirmatn gid=2 size=16 ft coords=0.5" {
 test "golden: glyf Vazirmatn gid=2 size=16 hb coords=0 (16.16 fixed)" {
   let font = golden_font(font_vazirmatn_var_trimmed_b64())
   let outlines = OutlineGlyphCollection::from_font(font)
-  let glyph = outlines.get(@moon_skrifa.GlyphId::new((2).to_uint16())).unwrap()
+  let glyph = outlines
+    .get(@moon_skrifa.GlyphId::GlyphId((2).to_uint16()))
+    .unwrap()
   let coords : Array[@moon_skrifa.NormalizedCoord] = Array::from_fixed_array([0])
   let settings = DrawSettings::unhinted(
-    @moon_skrifa.Size::new(16.0),
-    @moon_skrifa.LocationRef::new(coords.op_as_view()),
+    @moon_skrifa.Size::Size(16.0),
+    @moon_skrifa.LocationRef::LocationRef(coords.op_as_view()),
   ).with_path_style(PathStyle::HarfBuzz)
   let pen = SvgPen::with_precision(3)
   glyph.draw(settings, pen).unwrap() |> ignore
@@ -220,13 +226,15 @@ test "golden: glyf Vazirmatn gid=2 size=16 hb coords=0 (16.16 fixed)" {
 test "golden: glyf Vazirmatn gid=2 size=16 hb coords=0.5 (16.16 fixed)" {
   let font = golden_font(font_vazirmatn_var_trimmed_b64())
   let outlines = OutlineGlyphCollection::from_font(font)
-  let glyph = outlines.get(@moon_skrifa.GlyphId::new((2).to_uint16())).unwrap()
+  let glyph = outlines
+    .get(@moon_skrifa.GlyphId::GlyphId((2).to_uint16()))
+    .unwrap()
   let coords : Array[@moon_skrifa.NormalizedCoord] = Array::from_fixed_array([
     8192,
   ])
   let settings = DrawSettings::unhinted(
-    @moon_skrifa.Size::new(16.0),
-    @moon_skrifa.LocationRef::new(coords.op_as_view()),
+    @moon_skrifa.Size::Size(16.0),
+    @moon_skrifa.LocationRef::LocationRef(coords.op_as_view()),
   ).with_path_style(PathStyle::HarfBuzz)
   let pen = SvgPen::with_precision(3)
   glyph.draw(settings, pen).unwrap() |> ignore
@@ -240,9 +248,11 @@ test "golden: glyf Vazirmatn gid=2 size=16 hb coords=0.5 (16.16 fixed)" {
 test "golden: CFF2 NotoSansJP-VF gid=0 size=16" {
   let font = golden_font(font_notosansjp_vf_subset_otf_b64())
   let outlines = OutlineGlyphCollection::from_font(font)
-  let glyph = outlines.get(@moon_skrifa.GlyphId::new((0).to_uint16())).unwrap()
+  let glyph = outlines
+    .get(@moon_skrifa.GlyphId::GlyphId((0).to_uint16()))
+    .unwrap()
   let settings = DrawSettings::unhinted(
-    @moon_skrifa.Size::new(16.0),
+    @moon_skrifa.Size::Size(16.0),
     @moon_skrifa.LocationRef::default(),
   ).with_path_style(PathStyle::FreeType)
   let pen = SvgPen::with_precision(3)

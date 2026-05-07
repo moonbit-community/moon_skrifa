@@ -141,11 +141,6 @@ pub struct ColorGlyphCollection {
 pub fn ColorGlyphCollection::ColorGlyphCollection(
   font : FontRef,
 ) -> ColorGlyphCollection {
-  ColorGlyphCollection::new(font)
-}
-
-///|
-pub fn ColorGlyphCollection::new(font : FontRef) -> ColorGlyphCollection {
   let colr = match font.table(COLR_TAG_COLR) {
     None => return ColorGlyphCollection::empty(Some(font))
     Some(v) => v
@@ -388,7 +383,7 @@ pub fn ColorGlyphCollection::layers(
       continue
     }
     out.push(ColorLayer::{
-      glyph_id: GlyphId::new(layer_gid.to_uint16()),
+      glyph_id: GlyphId(layer_gid.to_uint16()),
       palette_index: palette_idx,
     })
   }
@@ -397,5 +392,5 @@ pub fn ColorGlyphCollection::layers(
 
 ///|
 pub fn FontRef::color_glyphs(self : FontRef) -> ColorGlyphCollection {
-  ColorGlyphCollection::new(self)
+  ColorGlyphCollection(self)
 }

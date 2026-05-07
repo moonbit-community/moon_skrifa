@@ -273,7 +273,7 @@ test "localized() from name v0" {
     ]),
   )
   let sfnt = string_test_build_sfnt(Array::from_fixed_array([(TAG_NAME, name)]))
-  let font = FontRef::new(sfnt).unwrap()
+  let font = FontRef::from_bytes(sfnt).unwrap()
   let strings = font.localized_strings(STRING_ID_SUBFAMILY_NAME)
   let pairs : Array[(String, String)] = Array::new()
   for s in strings.strings().iter() {
@@ -300,7 +300,7 @@ test "find_by_language" {
     ]),
   )
   let sfnt = string_test_build_sfnt(Array::from_fixed_array([(TAG_NAME, name)]))
-  let font = FontRef::new(sfnt).unwrap()
+  let font = FontRef::from_bytes(sfnt).unwrap()
   let strings = font.localized_strings(STRING_ID_SUBFAMILY_NAME)
   let mut found : String? = None
   for s in strings.strings().iter() {
@@ -319,7 +319,7 @@ test "LocalizedString::chars" {
     ]),
   )
   let sfnt = string_test_build_sfnt(Array::from_fixed_array([(TAG_NAME, name)]))
-  let font = FontRef::new(sfnt).unwrap()
+  let font = FontRef::from_bytes(sfnt).unwrap()
   let s = font.localized_strings(STRING_ID_SUBFAMILY_NAME).strings().at(0)
   let cs = s.chars()
   inspect(cs.length(), content="2")
@@ -336,7 +336,7 @@ test "english_or_first" {
     ]),
   )
   let sfnt = string_test_build_sfnt(Array::from_fixed_array([(TAG_NAME, name)]))
-  let font = FontRef::new(sfnt).unwrap()
+  let font = FontRef::from_bytes(sfnt).unwrap()
   inspect(
     font
     .localized_strings(STRING_ID_SUBFAMILY_NAME)
@@ -359,7 +359,7 @@ test "name v1 language tags win over langid mapping" {
     Array::from_fixed_array(["en-US"]),
   )
   let sfnt = string_test_build_sfnt(Array::from_fixed_array([(TAG_NAME, name)]))
-  let font = FontRef::new(sfnt).unwrap()
+  let font = FontRef::from_bytes(sfnt).unwrap()
   inspect(
     font
     .localized_strings(STRING_ID_SUBFAMILY_NAME)
@@ -381,7 +381,7 @@ test "macroman decoding (platform 1, encoding 0)" {
     ]),
   )
   let sfnt = string_test_build_sfnt(Array::from_fixed_array([(TAG_NAME, name)]))
-  let font = FontRef::new(sfnt).unwrap()
+  let font = FontRef::from_bytes(sfnt).unwrap()
   inspect(
     font.localized_strings(STRING_ID_SUBFAMILY_NAME).strings().at(0).to_string(),
     content="é",
@@ -396,7 +396,7 @@ test "expanded language mapping includes de-DE" {
     ]),
   )
   let sfnt = string_test_build_sfnt(Array::from_fixed_array([(TAG_NAME, name)]))
-  let font = FontRef::new(sfnt).unwrap()
+  let font = FontRef::from_bytes(sfnt).unwrap()
   inspect(
     font
     .localized_strings(STRING_ID_SUBFAMILY_NAME)

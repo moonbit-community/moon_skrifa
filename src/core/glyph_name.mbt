@@ -497,11 +497,6 @@ pub struct GlyphNames {
 
 ///|
 pub fn GlyphNames::GlyphNames(font : FontRef) -> GlyphNames {
-  GlyphNames::new(font)
-}
-
-///|
-pub fn GlyphNames::new(font : FontRef) -> GlyphNames {
   let num_glyphs = glyph_name_read_maxp_num_glyphs(font)
   match font.table(GLYPH_TAG_POST) {
     None => ()
@@ -561,5 +556,5 @@ pub fn GlyphNames::get(self : GlyphNames, glyph_id : GlyphId) -> GlyphName? {
 
 ///|
 pub fn FontRef::glyph_names(self : FontRef) -> GlyphNames {
-  GlyphNames::new(self)
+  GlyphNames(self)
 }

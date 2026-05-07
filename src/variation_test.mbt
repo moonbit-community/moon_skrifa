@@ -109,7 +109,7 @@ test "variation axis + named instance basic" {
   let sfnt = variation_test_build_sfnt(
     Array::from_fixed_array([(TAG_FVAR, fvar)]),
   )
-  let font = FontRef::new(sfnt).unwrap()
+  let font = FontRef::from_bytes(sfnt).unwrap()
   let axes = font.axes()
   inspect(axes.len(), content="1")
   let axis = axes.get(0).unwrap()

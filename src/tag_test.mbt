@@ -20,10 +20,10 @@ test "Tag parse + roundtrip" {
 }
 
 ///|
-test "Tag::new from bytes" {
-  let tag = Tag::new(b"wght")
+test "Tag constructor from bytes" {
+  let tag = Tag::Tag(b"wght")
   inspect(tag.to_string(), content="wght")
-  inspect(Tag::new(b"abc").to_uint(), content="0")
+  inspect(Tag::Tag(b"abc").to_uint(), content="0")
 }
 
 ///|

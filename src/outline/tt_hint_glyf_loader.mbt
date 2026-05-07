@@ -798,7 +798,7 @@ fn tt2_load_glyph_zone_for_hinting_impl(
       }
       comps.push(Tt2Component::{
         flags: flags_last,
-        gid: @moon_skrifa.GlyphId::new(comp_gid_i.to_uint16()),
+        gid: @moon_skrifa.GlyphId::GlyphId(comp_gid_i.to_uint16()),
         anchor,
         xx16: tt2_f2dot14_to_16_16(xx14),
         yx16: tt2_f2dot14_to_16_16(yx14),

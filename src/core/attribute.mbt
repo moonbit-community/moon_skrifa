@@ -78,11 +78,6 @@ pub struct Attributes {
 
 ///|
 pub fn Attributes::Attributes(font : FontRef) -> Attributes {
-  Attributes::new(font)
-}
-
-///|
-pub fn Attributes::new(font : FontRef) -> Attributes {
   font.attributes()
 }
 
@@ -107,57 +102,52 @@ pub struct Stretch {
 }
 
 ///|
-pub fn Stretch::Stretch(ratio : Double) -> Stretch {
-  Stretch::new(ratio)
-}
-
-///|
 pub fn Stretch::ultra_condensed() -> Stretch {
-  Stretch::new(0.5)
+  Stretch(0.5)
 }
 
 ///|
 pub fn Stretch::extra_condensed() -> Stretch {
-  Stretch::new(0.625)
+  Stretch(0.625)
 }
 
 ///|
 pub fn Stretch::condensed() -> Stretch {
-  Stretch::new(0.75)
+  Stretch(0.75)
 }
 
 ///|
 pub fn Stretch::semi_condensed() -> Stretch {
-  Stretch::new(0.875)
+  Stretch(0.875)
 }
 
 ///|
 pub fn Stretch::normal() -> Stretch {
-  Stretch::new(1.0)
+  Stretch(1.0)
 }
 
 ///|
 pub fn Stretch::semi_expanded() -> Stretch {
-  Stretch::new(1.125)
+  Stretch(1.125)
 }
 
 ///|
 pub fn Stretch::expanded() -> Stretch {
-  Stretch::new(1.25)
+  Stretch(1.25)
 }
 
 ///|
 pub fn Stretch::extra_expanded() -> Stretch {
-  Stretch::new(1.5)
+  Stretch(1.5)
 }
 
 ///|
 pub fn Stretch::ultra_expanded() -> Stretch {
-  Stretch::new(2.0)
+  Stretch(2.0)
 }
 
 ///|
-pub fn Stretch::new(ratio : Double) -> Stretch {
+pub fn Stretch::Stretch(ratio : Double) -> Stretch {
   Stretch::{ ratio, }
 }
 
@@ -204,67 +194,62 @@ pub struct Weight {
 }
 
 ///|
-pub fn Weight::Weight(value : Double) -> Weight {
-  Weight::new(value)
-}
-
-///|
 pub fn Weight::thin() -> Weight {
-  Weight::new(100.0)
+  Weight(100.0)
 }
 
 ///|
 pub fn Weight::extra_light() -> Weight {
-  Weight::new(200.0)
+  Weight(200.0)
 }
 
 ///|
 pub fn Weight::light() -> Weight {
-  Weight::new(300.0)
+  Weight(300.0)
 }
 
 ///|
 pub fn Weight::semi_light() -> Weight {
-  Weight::new(350.0)
+  Weight(350.0)
 }
 
 ///|
 pub fn Weight::normal() -> Weight {
-  Weight::new(400.0)
+  Weight(400.0)
 }
 
 ///|
 pub fn Weight::medium() -> Weight {
-  Weight::new(500.0)
+  Weight(500.0)
 }
 
 ///|
 pub fn Weight::semi_bold() -> Weight {
-  Weight::new(600.0)
+  Weight(600.0)
 }
 
 ///|
 pub fn Weight::bold() -> Weight {
-  Weight::new(700.0)
+  Weight(700.0)
 }
 
 ///|
 pub fn Weight::extra_bold() -> Weight {
-  Weight::new(800.0)
+  Weight(800.0)
 }
 
 ///|
 pub fn Weight::black() -> Weight {
-  Weight::new(900.0)
+  Weight(900.0)
 }
 
 ///|
 pub fn Weight::extra_black() -> Weight {
-  Weight::new(950.0)
+  Weight(950.0)
 }
 
 ///|
-pub fn Weight::new(value : Double) -> Weight {
+pub fn Weight::Weight(value : Double) -> Weight {
   Weight::{ value, }
 }
 
@@ -303,11 +288,7 @@ pub fn FontRef::attributes(self : FontRef) -> Attributes {
       } else {
         Normal
       }
-      Attributes::{
-        stretch,
-        style,
-        weight: Weight::new(weight_class.to_double()),
-      }
+      Attributes::{ stretch, style, weight: Weight(weight_class.to_double()) }
     }
     None =>
       match self.table(TAG_HEAD) {

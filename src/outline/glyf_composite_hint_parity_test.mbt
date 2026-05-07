@@ -39,15 +39,15 @@ fn font_glyf_components_b64() -> String {
 ///|
 test "hint: composite glyf nonuniform scale (glyf_components gid=3 size=16)" {
   let font = golden_font(font_glyf_components_b64())
-  let gid = @moon_skrifa.GlyphId::new((3).to_uint16())
-  let size = @moon_skrifa.Size::new(16.0)
+  let gid = @moon_skrifa.GlyphId::GlyphId((3).to_uint16())
+  let size = @moon_skrifa.Size::Size(16.0)
   let loc = @moon_skrifa.LocationRef::default()
   let opts = Engine::Interpreter.into()
   let outlines0 = OutlineGlyphCollection::from_font(font)
-  let hinter = HintingInstance::new(outlines0, size, loc, opts).unwrap()
+  let hinter = HintingInstance::create(outlines0, size, loc, opts).unwrap()
   let outlines = OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(gid).unwrap()
-  let pen = SvgPen::new()
+  let pen = SvgPen::SvgPen()
   glyph
   .draw(
     DrawSettings::hinted(hinter, false).with_path_style(PathStyle::FreeType),
@@ -64,15 +64,15 @@ test "hint: composite glyf nonuniform scale (glyf_components gid=3 size=16)" {
 ///|
 test "hint: composite glyf scaled component offset (glyf_components gid=7 size=16)" {
   let font = golden_font(font_glyf_components_b64())
-  let gid = @moon_skrifa.GlyphId::new((7).to_uint16())
-  let size = @moon_skrifa.Size::new(16.0)
+  let gid = @moon_skrifa.GlyphId::GlyphId((7).to_uint16())
+  let size = @moon_skrifa.Size::Size(16.0)
   let loc = @moon_skrifa.LocationRef::default()
   let opts = Engine::Interpreter.into()
   let outlines0 = OutlineGlyphCollection::from_font(font)
-  let hinter = HintingInstance::new(outlines0, size, loc, opts).unwrap()
+  let hinter = HintingInstance::create(outlines0, size, loc, opts).unwrap()
   let outlines = OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(gid).unwrap()
-  let pen = SvgPen::new()
+  let pen = SvgPen::SvgPen()
   glyph
   .draw(
     DrawSettings::hinted(hinter, false).with_path_style(PathStyle::FreeType),
@@ -89,15 +89,15 @@ test "hint: composite glyf scaled component offset (glyf_components gid=7 size=1
 ///|
 test "hint: composite glyf unscaled component offset (glyf_components gid=8 size=16)" {
   let font = golden_font(font_glyf_components_b64())
-  let gid = @moon_skrifa.GlyphId::new((8).to_uint16())
-  let size = @moon_skrifa.Size::new(16.0)
+  let gid = @moon_skrifa.GlyphId::GlyphId((8).to_uint16())
+  let size = @moon_skrifa.Size::Size(16.0)
   let loc = @moon_skrifa.LocationRef::default()
   let opts = Engine::Interpreter.into()
   let outlines0 = OutlineGlyphCollection::from_font(font)
-  let hinter = HintingInstance::new(outlines0, size, loc, opts).unwrap()
+  let hinter = HintingInstance::create(outlines0, size, loc, opts).unwrap()
   let outlines = OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(gid).unwrap()
-  let pen = SvgPen::new()
+  let pen = SvgPen::SvgPen()
   glyph
   .draw(
     DrawSettings::hinted(hinter, false).with_path_style(PathStyle::FreeType),

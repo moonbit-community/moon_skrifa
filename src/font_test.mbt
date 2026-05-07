@@ -87,18 +87,18 @@ fn make_min_ttc() -> Bytes {
 }
 
 ///|
-test "FontRef::new sfnt + table()" {
+test "FontRef::from_bytes sfnt + table()" {
   let data = make_min_sfnt()
-  let font = FontRef::new(data).unwrap()
+  let font = FontRef::from_bytes(data).unwrap()
   inspect(font.index(), content="0")
   let t = font.table(TAG_TEST).unwrap()
   inspect(t.to_owned(), content="b\"abcd\"")
 }
 
 ///|
-test "FontRef::new ttc + table()" {
+test "FontRef::from_bytes ttc + table()" {
   let data = make_min_ttc()
-  let font = FontRef::new(data).unwrap()
+  let font = FontRef::from_bytes(data).unwrap()
   inspect(font.index(), content="0")
   let t = font.table(TAG_TEST).unwrap()
   inspect(t.to_owned(), content="b\"abcd\"")
@@ -116,7 +116,7 @@ test "FontRef::from_index bounds" {
 
 ///|
 test "GlyphId helpers" {
-  let gid : GlyphId = GlyphId::new(5)
+  let gid : GlyphId = GlyphId::GlyphId(5)
   inspect(gid.to_u16().to_int(), content="5")
   inspect(GlyphId::notdef().to_u16().to_int(), content="0")
 }

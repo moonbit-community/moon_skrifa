@@ -87,7 +87,6 @@ pub struct GlyphStyles {
 }
 pub fn GlyphStyles::GlyphStyles(OutlineGlyphCollection) -> Self
 pub fn GlyphStyles::is_digit(Self, @core.GlyphId) -> Bool
-pub fn GlyphStyles::new(OutlineGlyphCollection) -> Self
 pub fn GlyphStyles::style_index(Self, @core.GlyphId) -> Int?
 
 pub(all) enum Hinting {
@@ -100,9 +99,9 @@ pub fn Hinting::none() -> Self
 pub struct HintingInstance {
   // private fields
 }
+pub fn HintingInstance::create(OutlineGlyphCollection, @core.Size, @core.LocationRef, HintingOptions) -> Result[Self, DrawError]
 pub fn HintingInstance::is_enabled(Self) -> Bool
 pub fn HintingInstance::location(Self) -> @core.LocationRef
-pub fn HintingInstance::new(OutlineGlyphCollection, @core.Size, @core.LocationRef, HintingOptions) -> Result[Self, DrawError]
 pub fn HintingInstance::reconfigure(Self, OutlineGlyphCollection, @core.Size, @core.LocationRef, HintingOptions) -> Result[Unit, DrawError]
 pub fn HintingInstance::size(Self) -> @core.Size
 pub fn HintingInstance::target(Self) -> Target
@@ -119,7 +118,6 @@ pub struct HintingOptions {
 }
 pub fn HintingOptions::HintingOptions(Engine, Target) -> Self
 pub fn HintingOptions::default() -> Self
-pub fn HintingOptions::new(Engine, Target) -> Self
 
 pub(all) enum LcdLayout {
   Horizontal
@@ -129,7 +127,6 @@ pub(all) enum LcdLayout {
 pub struct NullPen {
 }
 pub fn NullPen::NullPen() -> Self
-pub fn NullPen::new() -> Self
 pub impl OutlinePen for NullPen
 
 pub struct OutlineGlyph {
@@ -155,7 +152,6 @@ pub fn OutlineGlyphCollection::from_font(@core.FontRef) -> Self
 pub fn OutlineGlyphCollection::get(Self, @core.GlyphId) -> OutlineGlyph?
 pub fn OutlineGlyphCollection::glyph_count(Self) -> Int
 pub fn OutlineGlyphCollection::iter(Self) -> Array[(@core.GlyphId, OutlineGlyph)]
-pub fn OutlineGlyphCollection::new(@core.FontRef) -> Self
 pub fn OutlineGlyphCollection::path(Self, @core.GlyphId, DrawSettings) -> Array[PathElement]?
 pub fn OutlineGlyphCollection::path_unscaled(Self, @core.GlyphId) -> Array[PathElement]?
 pub fn OutlineGlyphCollection::prefer_interpreter(Self) -> Bool
@@ -197,7 +193,6 @@ pub struct SvgPen {
 }
 pub fn SvgPen::SvgPen() -> Self
 pub fn SvgPen::clear(Self) -> Unit
-pub fn SvgPen::new() -> Self
 pub fn SvgPen::to_string(Self) -> String
 pub fn SvgPen::with_precision(Int) -> Self
 pub impl OutlinePen for SvgPen

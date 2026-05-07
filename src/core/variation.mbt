@@ -275,11 +275,6 @@ pub struct AxisCollection {
 
 ///|
 pub fn AxisCollection::AxisCollection(font : FontRef) -> AxisCollection {
-  AxisCollection::new(font)
-}
-
-///|
-pub fn AxisCollection::new(font : FontRef) -> AxisCollection {
   let fvar = match font.table(TAG_FVAR) {
     None =>
       return AxisCollection::{
@@ -527,12 +522,7 @@ pub struct NamedInstanceCollection {
 pub fn NamedInstanceCollection::NamedInstanceCollection(
   font : FontRef,
 ) -> NamedInstanceCollection {
-  NamedInstanceCollection::new(font)
-}
-
-///|
-pub fn NamedInstanceCollection::new(font : FontRef) -> NamedInstanceCollection {
-  NamedInstanceCollection::{ axes: AxisCollection::new(font) }
+  NamedInstanceCollection::{ axes: AxisCollection(font) }
 }
 
 ///|
@@ -560,10 +550,10 @@ pub fn NamedInstanceCollection::get(
 
 ///|
 pub fn FontRef::axes(self : FontRef) -> AxisCollection {
-  AxisCollection::new(self)
+  AxisCollection(self)
 }
 
 ///|
 pub fn FontRef::named_instances(self : FontRef) -> NamedInstanceCollection {
-  NamedInstanceCollection::new(self)
+  NamedInstanceCollection(self)
 }

@@ -126,11 +126,6 @@ pub struct ColorPalettes {
 }
 
 ///|
-pub fn ColorPalettes::ColorPalettes(font : FontRef) -> ColorPalettes {
-  ColorPalettes::new(font)
-}
-
-///|
 pub struct ColorPalette {
   priv palettes : ColorPalettes
   priv index : Int
@@ -153,7 +148,7 @@ fn ColorPalettes::empty() -> ColorPalettes {
 }
 
 ///|
-pub fn ColorPalettes::new(font : FontRef) -> ColorPalettes {
+pub fn ColorPalettes::ColorPalettes(font : FontRef) -> ColorPalettes {
   match font.table(COLOR_TAG_CPAL) {
     None => ColorPalettes::empty()
     Some(cpal) => {
@@ -392,5 +387,5 @@ pub fn ColorPalette::label(self : ColorPalette) -> StringId? {
 
 ///|
 pub fn FontRef::color_palettes(self : FontRef) -> ColorPalettes {
-  ColorPalettes::new(self)
+  ColorPalettes(self)
 }

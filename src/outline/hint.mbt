@@ -52,21 +52,16 @@ pub struct HintingOptions {
 }
 
 ///|
-pub fn HintingOptions::HintingOptions(
-  engine : Engine,
-  target : Target,
-) -> HintingOptions {
-  HintingOptions::new(engine, target)
-}
-
-///|
 pub fn HintingOptions::default() -> HintingOptions {
   HintingOptions::{ engine: Engine::AutoFallback, target: Target::default() }
 }
 
 ///|
 /// Creates hinting options with explicit engine + target.
-pub fn HintingOptions::new(engine : Engine, target : Target) -> HintingOptions {
+pub fn HintingOptions::HintingOptions(
+  engine : Engine,
+  target : Target,
+) -> HintingOptions {
   HintingOptions::{ engine, target }
 }
 
@@ -101,7 +96,7 @@ pub fn Engine::resolve_auto_fallback(
 ///|
 /// Converts an engine selection into `HintingOptions` with default target.
 pub fn Engine::into(self : Engine) -> HintingOptions {
-  HintingOptions::new(self, Target::default())
+  HintingOptions(self, Target::default())
 }
 
 ///|
@@ -256,14 +251,6 @@ priv struct AutoHintInstance {
 }
 
 ///|
-fn AutoHintInstance::AutoHintInstance(
-  outlines : OutlineGlyphCollection,
-  styles : GlyphStyles?,
-) -> AutoHintInstance {
-  AutoHintInstance::new(outlines, styles)
-}
-
-///|
 const AUTOHINT_TAG_POST : UInt = 0x706F7374 // "post"
 
 ///|
@@ -296,13 +283,13 @@ fn autohint_is_fixed_width(font : @moon_skrifa.FontRef) -> Bool {
 }
 
 ///|
-fn AutoHintInstance::new(
+fn AutoHintInstance::AutoHintInstance(
   outlines : OutlineGlyphCollection,
   styles : GlyphStyles?,
 ) -> AutoHintInstance {
   let resolved = match styles {
     Some(s) => s
-    None => GlyphStyles::new(outlines)
+    None => GlyphStyles(outlines)
   }
   let attrs = outlines.font.attributes()
   AutoHintInstance::{
@@ -328,7 +315,7 @@ fn hint_round_ppem(scale_bits : Int, upem : Int) -> Int {
 }
 
 ///|
-pub fn HintingInstance::new(
+pub fn HintingInstance::create(
   outlines : OutlineGlyphCollection,
   size : @moon_skrifa.Size,
   location : @moon_skrifa.LocationRef,
@@ -355,7 +342,7 @@ pub fn HintingInstance::size(self : HintingInstance) -> @moon_skrifa.Size {
 pub fn HintingInstance::location(
   self : HintingInstance,
 ) -> @moon_skrifa.LocationRef {
-  @moon_skrifa.LocationRef::new(self.coords.op_as_view())
+  @moon_skrifa.LocationRef::LocationRef(self.coords.op_as_view())
 }
 
 ///|
@@ -413,7 +400,7 @@ pub fn HintingInstance::reconfigure(
               if outlines.fractional_size_hinting() {
                 size
               } else {
-                @moon_skrifa.Size::new(ppem.round())
+                @moon_skrifa.Size::Size(ppem.round())
               }
           }
           let (_, scale_bits) = glyf_compute_scale_bits(
@@ -695,7 +682,7 @@ fn HintingInstance::hinted_path(
       a.hinted_path(
         glyph,
         self.size,
-        @moon_skrifa.LocationRef::new(self.coords.op_as_view()),
+        @moon_skrifa.LocationRef::LocationRef(self.coords.op_as_view()),
         path_style,
         self.target,
       )
@@ -706,9 +693,9 @@ fn HintingInstance::hinted_path(
       if !tt.is_enabled() {
         let settings = DrawSettings::unhinted(
           self.size,
-          @moon_skrifa.LocationRef::new(self.coords.op_as_view()),
+          @moon_skrifa.LocationRef::LocationRef(self.coords.op_as_view()),
         ).with_path_style(path_style)
-        let metrics0 = match glyph.draw(settings, NullPen::new()) {
+        let metrics0 = match glyph.draw(settings, NullPen()) {
           Err(e) => return Err(e)
           Ok(m) => m
         }
@@ -732,7 +719,9 @@ fn HintingInstance::hinted_path(
       if path_style is PathStyle::HarfBuzz {
         return Err(DrawError::HarfBuzzHintingUnsupported)
       }
-      let location = @moon_skrifa.LocationRef::new(self.coords.op_as_view())
+      let location = @moon_skrifa.LocationRef::LocationRef(
+        self.coords.op_as_view(),
+      )
       let path = if is_cff2 {
         cff2_outline_path_hinted(
           glyph.font,

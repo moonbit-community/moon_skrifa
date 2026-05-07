@@ -57,17 +57,6 @@ priv struct AutoHintScale {
 }
 
 ///|
-fn AutoHintScale::AutoHintScale(
-  size : Double,
-  units_per_em : Int,
-  font_style : @moon_skrifa.Style,
-  target : Target,
-  group : AutoHintScriptGroup,
-) -> AutoHintScale {
-  AutoHintScale::new(size, units_per_em, font_style, target, group)
-}
-
-///|
 priv struct AutoHintWidthMetrics {
   edge_distance_threshold : Int
   standard_width : Int
@@ -291,7 +280,7 @@ fn autohint_fixed_mul_div(a : Int, b : Int, c : Int) -> Int {
 }
 
 ///|
-fn AutoHintScale::new(
+fn AutoHintScale::AutoHintScale(
   size : Double,
   units_per_em : Int,
   font_style : @moon_skrifa.Style,
