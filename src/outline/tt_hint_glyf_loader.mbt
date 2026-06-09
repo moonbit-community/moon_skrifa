@@ -125,45 +125,45 @@ fn tt2_glyph_slice(
   gid : @moon_skrifa.GlyphId,
 ) -> Result[BytesView, DrawError] {
   let head = match font.table(TAG_HEAD_TT) {
-    None => return Err(DrawError::Read)
+    None => return Err(Read)
     Some(v) => v
   }
   let loca = match font.table(TAG_LOCA_TT) {
-    None => return Err(DrawError::Read)
+    None => return Err(Read)
     Some(v) => v
   }
   let glyf = match font.table(TAG_GLYF_TT) {
-    None => return Err(DrawError::Read)
+    None => return Err(Read)
     Some(v) => v
   }
   let maxp = match font.table(TAG_MAXP_TT2) {
-    None => return Err(DrawError::Read)
+    None => return Err(Read)
     Some(v) => v
   }
   let num_glyphs = match tt2_read_u16_be(maxp, 4) {
-    None => return Err(DrawError::Read)
+    None => return Err(Read)
     Some(v) => v
   }
   let idx = gid.to_uint64().to_int()
   if idx < 0 || idx >= num_glyphs {
-    return Err(DrawError::GlyphNotFound(gid))
+    return Err(GlyphNotFound(gid))
   }
   let index_to_loc_format = match tt2_read_i16_be(head, 50) {
-    None => return Err(DrawError::Read)
+    None => return Err(Read)
     Some(v) => v
   }
   let (start, end) = if index_to_loc_format == 0 {
     let need = (num_glyphs + 1) * 2
     if loca.length() < need {
-      return Err(DrawError::Read)
+      return Err(Read)
     }
     let o0 = match tt2_read_u16_be(loca, idx * 2) {
-      None => return Err(DrawError::Read)
+      None => return Err(Read)
       Some(v) => v
     }
     let o0 = o0 * 2
     let o1 = match tt2_read_u16_be(loca, (idx + 1) * 2) {
-      None => return Err(DrawError::Read)
+      None => return Err(Read)
       Some(v) => v
     }
     let o1 = o1 * 2
@@ -171,14 +171,14 @@ fn tt2_glyph_slice(
   } else {
     let need = (num_glyphs + 1) * 4
     if loca.length() < need {
-      return Err(DrawError::Read)
+      return Err(Read)
     }
     let o0_u = match tt2_read_u32_be(loca, idx * 4) {
-      None => return Err(DrawError::Read)
+      None => return Err(Read)
       Some(v) => v
     }
     let o1_u = match tt2_read_u32_be(loca, (idx + 1) * 4) {
-      None => return Err(DrawError::Read)
+      None => return Err(Read)
       Some(v) => v
     }
     let o0 = o0_u.to_uint64().to_int()
@@ -186,7 +186,7 @@ fn tt2_glyph_slice(
     (o0, o1)
   }
   if start < 0 || end < start || end > glyf.length() {
-    Err(DrawError::Read)
+    Err(Read)
   } else {
     Ok(glyf[start:end])
   }
@@ -343,18 +343,9 @@ fn tt2_decode_simple_glyph_for_hinting(
   }
   // Build point arrays (+ phantom points).
   let total_points = num_points + 4
-  let unscaled : Array[TtPoint] = Array::make(total_points, TtPoint::{
-    x: 0,
-    y: 0,
-  })
-  let original : Array[TtPoint] = Array::make(total_points, TtPoint::{
-    x: 0,
-    y: 0,
-  })
-  let points : Array[TtPoint] = Array::make(total_points, TtPoint::{
-    x: 0,
-    y: 0,
-  })
+  let unscaled : Array[TtPoint] = Array::make(total_points, { x: 0, y: 0 })
+  let original : Array[TtPoint] = Array::make(total_points, { x: 0, y: 0 })
+  let points : Array[TtPoint] = Array::make(total_points, { x: 0, y: 0 })
   let flags : Array[Int] = Array::make(total_points, 0)
   let mut x = 0
   let mut y = 0
@@ -362,7 +353,7 @@ fn tt2_decode_simple_glyph_for_hinting(
     x = x + dxs.at(i)
     y = y + dys.at(i)
     let on = (point_flags.at(i) & 0x01) != 0
-    unscaled.set(i, TtPoint::{ x, y })
+    unscaled.set(i, { x, y })
     let sx = tt2_scale_funits_to_26_6(x, scale_bits)
     let sy = tt2_scale_funits_to_26_6(y, scale_bits)
     let sp = TtPoint::{ x: sx, y: sy }
@@ -373,14 +364,14 @@ fn tt2_decode_simple_glyph_for_hinting(
   // Phantom points in font units (see FreeType).
   let phantom0_x = x_min - lsb
   let phantom1_x = phantom0_x + advance
-  unscaled.set(num_points, TtPoint::{ x: phantom0_x, y: 0 })
-  unscaled.set(num_points + 1, TtPoint::{ x: phantom1_x, y: 0 })
+  unscaled.set(num_points, { x: phantom0_x, y: 0 })
+  unscaled.set(num_points + 1, { x: phantom1_x, y: 0 })
   // Vertical phantom points: based on OS/2 sTypoAscender/Descender.
   // See fontations `Scaler::load` and `setup_phantom_points`.
   // phantom[2].y = yMax + tsb = ascent
   // phantom[3].y = phantom[2].y - vadvance = descent
-  unscaled.set(num_points + 2, TtPoint::{ x: 0, y: os2_ascent })
-  unscaled.set(num_points + 3, TtPoint::{ x: 0, y: os2_descent })
+  unscaled.set(num_points + 2, { x: 0, y: os2_ascent })
+  unscaled.set(num_points + 3, { x: 0, y: os2_descent })
   for i in 0..<4 {
     let p = unscaled.at(num_points + i)
     let sx = tt2_scale_funits_to_26_6(p.x, scale_bits)
@@ -395,7 +386,7 @@ fn tt2_decode_simple_glyph_for_hinting(
   if instr.length() > 0 {
     for i in 0..<4 {
       let p = points.at(num_points + i)
-      points.set(num_points + i, TtPoint::{
+      points.set(num_points + i, {
         x: tt2_round_grid_26_6(p.x),
         y: tt2_round_grid_26_6(p.y),
       })
@@ -447,7 +438,7 @@ fn tt2_apply_xform_point(p : TtPoint, comp : Tt2Component) -> TtPoint {
   let y = p.y
   let nx = tt_hint_mul_16_16(x, comp.xx16) + tt_hint_mul_16_16(y, comp.xy16)
   let ny = tt_hint_mul_16_16(x, comp.yx16) + tt_hint_mul_16_16(y, comp.yy16)
-  TtPoint::{ x: nx, y: ny }
+  { x: nx, y: ny }
 }
 
 ///|
@@ -482,7 +473,7 @@ fn tt2_component_offset_bits(
   let mut dx = 0
   let mut dy = 0
   match comp.anchor {
-    Tt2Anchor::Offset(x, y) => {
+    Offset(x, y) => {
       dx = x
       dy = y
     }
@@ -558,7 +549,7 @@ fn tt2_load_glyph_zone_for_hinting_impl(
   depth : Int,
 ) -> Result[TtZone, DrawError] {
   if depth > 16 {
-    return Err(DrawError::RecursionLimitExceeded(gid))
+    return Err(RecursionLimitExceeded(gid))
   }
   let glyph = match tt2_glyph_slice(font, gid) {
     Err(e) => return Err(e)
@@ -571,14 +562,14 @@ fn tt2_load_glyph_zone_for_hinting_impl(
     let (os2_ascent, os2_descent) = tt2_os2_vmetrics(font)
     let phantom0_x = 0 - lsb
     let phantom1_x = phantom0_x + aw
-    let unscaled : Array[TtPoint] = Array::make(4, TtPoint::{ x: 0, y: 0 })
-    let original : Array[TtPoint] = Array::make(4, TtPoint::{ x: 0, y: 0 })
-    let points : Array[TtPoint] = Array::make(4, TtPoint::{ x: 0, y: 0 })
+    let unscaled : Array[TtPoint] = Array::make(4, { x: 0, y: 0 })
+    let original : Array[TtPoint] = Array::make(4, { x: 0, y: 0 })
+    let points : Array[TtPoint] = Array::make(4, { x: 0, y: 0 })
     let flags : Array[Int] = Array::make(4, 0)
-    unscaled.set(0, TtPoint::{ x: phantom0_x, y: 0 })
-    unscaled.set(1, TtPoint::{ x: phantom1_x, y: 0 })
-    unscaled.set(2, TtPoint::{ x: 0, y: os2_ascent })
-    unscaled.set(3, TtPoint::{ x: 0, y: os2_descent })
+    unscaled.set(0, { x: phantom0_x, y: 0 })
+    unscaled.set(1, { x: phantom1_x, y: 0 })
+    unscaled.set(2, { x: 0, y: os2_ascent })
+    unscaled.set(3, { x: 0, y: os2_descent })
     for i in 0..<4 {
       let p = unscaled.at(i)
       let sx = tt2_scale_funits_to_26_6(p.x, scale_bits)
@@ -588,23 +579,17 @@ fn tt2_load_glyph_zone_for_hinting_impl(
       points.set(i, sp)
       flags.set(i, 0)
     }
-    return Ok(TtZone::{
-      unscaled,
-      original,
-      points,
-      flags,
-      contours: Array::new(),
-    })
+    return Ok({ unscaled, original, points, flags, contours: Array::new() })
   }
   if glyph.length() < 10 {
-    return Err(DrawError::Read)
+    return Err(Read)
   }
   let number_of_contours = match tt2_read_i16_be(glyph, 0) {
-    None => return Err(DrawError::Read)
+    None => return Err(Read)
     Some(v) => v
   }
   let x_min = match tt2_read_i16_be(glyph, 2) {
-    None => return Err(DrawError::Read)
+    None => return Err(Read)
     Some(v) => v
   }
   let (aw, lsb) = tt2_hmtx_metrics(font, gid).unwrap_or((0, 0))
@@ -614,13 +599,13 @@ fn tt2_load_glyph_zone_for_hinting_impl(
       tt2_decode_simple_glyph_for_hinting(
         glyph, scale_bits, aw, lsb, os2_ascent, os2_descent,
       ) {
-      None => return Err(DrawError::Read)
+      None => return Err(Read)
       Some(v) => v
     }
     // Apply gvar deltas (including phantom points) for hinted glyph loading.
     if !coords.is_empty() {
       let point_count = match tt2_zone_outline_count(zone0) {
-        None => return Err(DrawError::Read)
+        None => return Err(Read)
         Some(v) => v
       }
       let xs : Array[Double] = Array::new()
@@ -649,11 +634,11 @@ fn tt2_load_glyph_zone_for_hinting_impl(
               dy_bits.at(i),
               scale_bits,
             )
-            zone0.original.set(i, TtPoint::{ x: sx, y: sy })
-            zone0.points.set(i, TtPoint::{ x: sx, y: sy })
+            zone0.original.set(i, { x: sx, y: sy })
+            zone0.points.set(i, { x: sx, y: sy })
             if code.length() > 0 {
               // For hinting, adjust unscaled points by rounding off the deltas.
-              zone0.unscaled.set(i, TtPoint::{
+              zone0.unscaled.set(i, {
                 x: u.x + gvar_fixed16_16_to_i32(dx_bits.at(i)),
                 y: u.y + gvar_fixed16_16_to_i32(dy_bits.at(i)),
               })
@@ -662,7 +647,7 @@ fn tt2_load_glyph_zone_for_hinting_impl(
           if code.length() > 0 {
             for i in 0..<4 {
               let p = zone0.points.at(point_count + i)
-              zone0.points.set(point_count + i, TtPoint::{
+              zone0.points.set(point_count + i, {
                 x: tt2_round_grid_26_6(p.x),
                 y: tt2_round_grid_26_6(p.y),
               })
@@ -685,7 +670,7 @@ fn tt2_load_glyph_zone_for_hinting_impl(
         tt_fvar_axis_count(font),
         coords,
       ) {
-      Err(e) => Err(DrawError::HintingFailed(e))
+      Err(e) => Err(HintingFailed(e))
       Ok(z) => Ok(z)
     }
   } else {
@@ -696,11 +681,11 @@ fn tt2_load_glyph_zone_for_hinting_impl(
     let mut flags_last = 0
     while true {
       flags_last = match tt2_read_u16_be(glyph, off) {
-        None => return Err(DrawError::Read)
+        None => return Err(Read)
         Some(v) => v
       }
       let comp_gid_i = match tt2_read_u16_be(glyph, off + 2) {
-        None => return Err(DrawError::Read)
+        None => return Err(Read)
         Some(v) => v
       }
       off = off + 4
@@ -709,30 +694,30 @@ fn tt2_load_glyph_zone_for_hinting_impl(
       let anchor = if arg_words {
         if args_xy {
           let v1 = match tt2_read_i16_be(glyph, off) {
-            None => return Err(DrawError::Read)
+            None => return Err(Read)
             Some(v) => v
           }
           let v2 = match tt2_read_i16_be(glyph, off + 2) {
-            None => return Err(DrawError::Read)
+            None => return Err(Read)
             Some(v) => v
           }
           off = off + 4
           Tt2Anchor::Offset(v1, v2)
         } else {
           let v1 = match tt2_read_u16_be(glyph, off) {
-            None => return Err(DrawError::Read)
+            None => return Err(Read)
             Some(v) => v
           }
           let v2 = match tt2_read_u16_be(glyph, off + 2) {
-            None => return Err(DrawError::Read)
+            None => return Err(Read)
             Some(v) => v
           }
           off = off + 4
-          Tt2Anchor::Point(v1, v2)
+          Point(v1, v2)
         }
       } else {
         if off + 2 > glyph.length() {
-          return Err(DrawError::Read)
+          return Err(Read)
         }
         let b1 = glyph.at(off).to_int()
         let b2 = glyph.at(off + 1).to_int()
@@ -740,9 +725,9 @@ fn tt2_load_glyph_zone_for_hinting_impl(
         if args_xy {
           let v1 = if b1 >= 128 { b1 - 256 } else { b1 }
           let v2 = if b2 >= 128 { b2 - 256 } else { b2 }
-          Tt2Anchor::Offset(v1, v2)
+          Offset(v1, v2)
         } else {
-          Tt2Anchor::Point(b1, b2)
+          Point(b1, b2)
         }
       }
       let mut xx14 = 0x4000
@@ -752,7 +737,7 @@ fn tt2_load_glyph_zone_for_hinting_impl(
       let mut have_xform = false
       if (flags_last & COMPOSITE_WE_HAVE_A_SCALE) != 0 {
         let s = match tt2_read_f2dot14_bits(glyph, off) {
-          None => return Err(DrawError::Read)
+          None => return Err(Read)
           Some(v) => v
         }
         off = off + 2
@@ -761,11 +746,11 @@ fn tt2_load_glyph_zone_for_hinting_impl(
         have_xform = true
       } else if (flags_last & COMPOSITE_WE_HAVE_AN_X_AND_Y_SCALE) != 0 {
         let sx = match tt2_read_f2dot14_bits(glyph, off) {
-          None => return Err(DrawError::Read)
+          None => return Err(Read)
           Some(v) => v
         }
         let sy = match tt2_read_f2dot14_bits(glyph, off + 2) {
-          None => return Err(DrawError::Read)
+          None => return Err(Read)
           Some(v) => v
         }
         off = off + 4
@@ -774,19 +759,19 @@ fn tt2_load_glyph_zone_for_hinting_impl(
         have_xform = true
       } else if (flags_last & COMPOSITE_WE_HAVE_A_TWO_BY_TWO) != 0 {
         let a = match tt2_read_f2dot14_bits(glyph, off) {
-          None => return Err(DrawError::Read)
+          None => return Err(Read)
           Some(v) => v
         }
         let b = match tt2_read_f2dot14_bits(glyph, off + 2) {
-          None => return Err(DrawError::Read)
+          None => return Err(Read)
           Some(v) => v
         }
         let c = match tt2_read_f2dot14_bits(glyph, off + 4) {
-          None => return Err(DrawError::Read)
+          None => return Err(Read)
           Some(v) => v
         }
         let d = match tt2_read_f2dot14_bits(glyph, off + 6) {
-          None => return Err(DrawError::Read)
+          None => return Err(Read)
           Some(v) => v
         }
         off = off + 8
@@ -796,9 +781,9 @@ fn tt2_load_glyph_zone_for_hinting_impl(
         yy14 = d
         have_xform = true
       }
-      comps.push(Tt2Component::{
+      comps.push({
         flags: flags_last,
-        gid: @moon_skrifa.GlyphId::GlyphId(comp_gid_i.to_uint16()),
+        gid: GlyphId(comp_gid_i.to_uint16()),
         anchor,
         xx16: tt2_f2dot14_to_16_16(xx14),
         yx16: tt2_f2dot14_to_16_16(yx14),
@@ -812,15 +797,15 @@ fn tt2_load_glyph_zone_for_hinting_impl(
     }
     let ins_len = if (flags_last & COMPOSITE_WE_HAVE_INSTRUCTIONS) != 0 {
       if off + 2 > glyph.length() {
-        return Err(DrawError::Read)
+        return Err(Read)
       }
       let n = match tt2_read_u16_be(glyph, off) {
-        None => return Err(DrawError::Read)
+        None => return Err(Read)
         Some(v) => v
       }
       off = off + 2
       if n < 0 || off + n > glyph.length() {
-        return Err(DrawError::Read)
+        return Err(Read)
       }
       n
     } else {
@@ -907,12 +892,12 @@ fn tt2_load_glyph_zone_for_hinting_impl(
         Ok(z) => z
       }
       let outline_n = match tt2_zone_outline_count(zone_c) {
-        None => return Err(DrawError::Read)
+        None => return Err(Read)
         Some(v) => v
       }
       let (cph0, cph1, cph2, cph3) = match
         tt2_zone_phantoms(zone_c, outline_n) {
-        None => return Err(DrawError::Read)
+        None => return Err(Read)
         Some(v) => v
       }
       if (comp.flags & TT2_COMPOSITE_USE_MY_METRICS) != 0 {
@@ -937,7 +922,7 @@ fn tt2_load_glyph_zone_for_hinting_impl(
       }
       // Compute anchor offset.
       let (ox, oy) = match comp.anchor {
-        Tt2Anchor::Offset(_, _) => {
+        Offset(_, _) => {
           let mut dx = 0
           let mut dy = 0
           match comp_deltas {
@@ -950,14 +935,12 @@ fn tt2_load_glyph_zone_for_hinting_impl(
           }
           tt2_component_offset_bits(comp, scale_bits, true, dx, dy)
         }
-        Tt2Anchor::Point(base, component) => {
+        Point(base, component) => {
           if base < 0 || base >= points_out.length() {
-            return Err(DrawError::InvalidAnchorPoint(gid, base.to_uint16()))
+            return Err(InvalidAnchorPoint(gid, base.to_uint16()))
           }
           if component < 0 || component >= comp_points.length() {
-            return Err(
-              DrawError::InvalidAnchorPoint(gid, component.to_uint16()),
-            )
+            return Err(InvalidAnchorPoint(gid, component.to_uint16()))
           }
           let bp = points_out.at(base)
           let cp = comp_points.at(component)
@@ -967,7 +950,7 @@ fn tt2_load_glyph_zone_for_hinting_impl(
       if ox != 0 || oy != 0 {
         for j in 0..<comp_points.length() {
           let p = comp_points.at(j)
-          comp_points.set(j, TtPoint::{ x: p.x + ox, y: p.y + oy })
+          comp_points.set(j, { x: p.x + ox, y: p.y + oy })
         }
       }
       // Append points and contours.
@@ -985,18 +968,9 @@ fn tt2_load_glyph_zone_for_hinting_impl(
       base_point = points_out.length()
     }
     let total_points = points_out.length() + 4
-    let unscaled : Array[TtPoint] = Array::make(total_points, TtPoint::{
-      x: 0,
-      y: 0,
-    })
-    let original : Array[TtPoint] = Array::make(total_points, TtPoint::{
-      x: 0,
-      y: 0,
-    })
-    let points : Array[TtPoint] = Array::make(total_points, TtPoint::{
-      x: 0,
-      y: 0,
-    })
+    let unscaled : Array[TtPoint] = Array::make(total_points, { x: 0, y: 0 })
+    let original : Array[TtPoint] = Array::make(total_points, { x: 0, y: 0 })
+    let points : Array[TtPoint] = Array::make(total_points, { x: 0, y: 0 })
     let flags : Array[Int] = Array::make(total_points, 0)
     for i in 0..<points_out.length() {
       let p = points_out.at(i)
@@ -1026,7 +1000,7 @@ fn tt2_load_glyph_zone_for_hinting_impl(
     if ins.length() > 0 {
       for i in 0..<4 {
         let p = points.at(points_out.length() + i)
-        points.set(points_out.length() + i, TtPoint::{
+        points.set(points_out.length() + i, {
           x: tt2_round_grid_26_6(p.x),
           y: tt2_round_grid_26_6(p.y),
         })
@@ -1053,7 +1027,7 @@ fn tt2_load_glyph_zone_for_hinting_impl(
         tt_fvar_axis_count(font),
         coords,
       ) {
-      Err(e) => Err(DrawError::HintingFailed(e))
+      Err(e) => Err(HintingFailed(e))
       Ok(z) => Ok(z)
     }
   }
@@ -1071,12 +1045,12 @@ fn tt_load_glyph_zone_for_hinting(
   is_pedantic : Bool,
 ) -> Result[TtZone, DrawError] {
   let maxp = match font.table(TAG_MAXP_TT2) {
-    None => return Err(DrawError::Read)
+    None => return Err(Read)
     Some(v) => v
   }
   let num_glyphs = tt2_read_u16_be(maxp, 4).unwrap_or(0)
   if num_glyphs <= 0 {
-    return Err(DrawError::Read)
+    return Err(Read)
   }
   tt2_load_glyph_zone_for_hinting_impl(
     font, gid, coords, scale_bits, tt, fpgm, prep, is_pedantic, 0,

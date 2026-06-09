@@ -34,22 +34,22 @@ fn tt_make_engine_for_delta() -> TtEngine {
   )
 
   // Match fontations MockEngine zone layout enough for delta ops.
-  let unscaled : Array[TtPoint] = Array::make(32, TtPoint::{ x: 0, y: 0 })
+  let unscaled : Array[TtPoint] = Array::make(32, { x: 0, y: 0 })
   for i in 0..<32 {
     let x = 57 + i * 2
-    unscaled.set(i, TtPoint::{ x, y: -x * 3 })
+    unscaled.set(i, { x, y: -x * 3 })
   }
   let glyph = TtZone::{
     unscaled,
-    original: Array::make(32, TtPoint::{ x: 0, y: 0 }),
-    points: Array::make(32, TtPoint::{ x: 0, y: 0 }),
+    original: Array::make(32, { x: 0, y: 0 }),
+    points: Array::make(32, { x: 0, y: 0 }),
     flags: Array::make(32, 0),
     contours: Array::from_fixed_array([31]),
   }
   let twilight = TtZone::{
     unscaled: Array::new(),
-    original: Array::make(16, TtPoint::{ x: 0, y: 0 }),
-    points: Array::make(16, TtPoint::{ x: 0, y: 0 }),
+    original: Array::make(16, { x: 0, y: 0 }),
+    points: Array::make(16, { x: 0, y: 0 }),
     flags: Array::make(16, 0),
     contours: Array::new(),
   }
@@ -63,7 +63,7 @@ fn tt_make_engine_for_delta() -> TtEngine {
 test "tt_hint: delta DELTAP" {
   let engine = tt_make_engine_for_delta()
   engine.graphics.backward_compatibility = false
-  engine.graphics.zp0 = TtZonePointer::Glyph
+  engine.graphics.zp0 = Glyph
   let raw_ppem = 16
   let raw_adjustment = 7
 
@@ -161,7 +161,7 @@ test "tt_hint: delta negative count does not hang (DELTAP/DELTAC)" {
     engine.value_stack.push(v).unwrap() |> ignore
   }
   match engine.op_deltap(0x72) {
-    Err(HintError::InvalidStackValue(-1)) => ()
+    Err(InvalidStackValue(-1)) => ()
     Ok(_) => fail("expected InvalidStackValue(-1)")
     Err(_) => fail("expected InvalidStackValue(-1)")
   }
@@ -169,7 +169,7 @@ test "tt_hint: delta negative count does not hang (DELTAP/DELTAC)" {
     engine.value_stack.push(v).unwrap() |> ignore
   }
   match engine.op_deltac(0x75) {
-    Err(HintError::InvalidStackValue(-1)) => ()
+    Err(InvalidStackValue(-1)) => ()
     Ok(_) => fail("expected InvalidStackValue(-1)")
     Err(_) => fail("expected InvalidStackValue(-1)")
   }

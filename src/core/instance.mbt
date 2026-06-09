@@ -25,12 +25,12 @@ pub struct Size {
 
 ///|
 pub fn Size::Size(size : Double) -> Size {
-  Size::{ ppem: Some(size) }
+  { ppem: Some(size) }
 }
 
 ///|
 pub fn Size::unscaled() -> Size {
-  Size::{ ppem: None }
+  { ppem: None }
 }
 
 ///|
@@ -101,7 +101,7 @@ pub struct LocationRef {
 pub fn LocationRef::LocationRef(
   coords : ArrayView[NormalizedCoord],
 ) -> LocationRef {
-  LocationRef::{ coords, }
+  { coords, }
 }
 
 ///|
@@ -143,7 +143,7 @@ pub struct Location {
 
 ///|
 pub fn Location::Location(len : Int) -> Location {
-  Location::{ coords: SmallVec::with_len(len, 0, MAX_INLINE_COORDS) }
+  { coords: SmallVec::with_len(len, 0, MAX_INLINE_COORDS) }
 }
 
 ///|
@@ -153,7 +153,7 @@ pub fn Location::from_array(coords : Array[NormalizedCoord]) -> Location {
   for i in 0..<len {
     v = v.set(i, coords.at(i))
   }
-  Location::{ coords: v }
+  { coords: v }
 }
 
 ///|

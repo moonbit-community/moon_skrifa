@@ -29,13 +29,13 @@ priv enum AutoHintDirection {
 }
 
 ///|
-impl Eq for AutoHintDirection with equal(a, b) {
+impl Eq for AutoHintDirection with fn equal(a, b) {
   match (a, b) {
-    (AutoHintDirection::None_, AutoHintDirection::None_) => true
-    (AutoHintDirection::Right, AutoHintDirection::Right) => true
-    (AutoHintDirection::Left, AutoHintDirection::Left) => true
-    (AutoHintDirection::Up, AutoHintDirection::Up) => true
-    (AutoHintDirection::Down, AutoHintDirection::Down) => true
+    (None_, None_) => true
+    (Right, Right) => true
+    (Left, Left) => true
+    (Up, Up) => true
+    (Down, Down) => true
     _ => false
   }
 }
@@ -43,11 +43,11 @@ impl Eq for AutoHintDirection with equal(a, b) {
 ///|
 fn AutoHintDirection::to_int(self : AutoHintDirection) -> Int {
   match self {
-    AutoHintDirection::None_ => 4
-    AutoHintDirection::Right => 1
-    AutoHintDirection::Left => -1
-    AutoHintDirection::Up => 2
-    AutoHintDirection::Down => -2
+    None_ => 4
+    Right => 1
+    Left => -1
+    Up => 2
+    Down => -2
   }
 }
 
@@ -57,15 +57,15 @@ fn AutoHintDirection::from_delta(dx : Int, dy : Int) -> AutoHintDirection {
     if dy >= -dx {
       (AutoHintDirection::Up, dy, dx)
     } else {
-      (AutoHintDirection::Left, -dx, dy)
+      (Left, -dx, dy)
     }
   } else if dy >= -dx {
-    (AutoHintDirection::Right, dx, dy)
+    (Right, dx, dy)
   } else {
-    (AutoHintDirection::Down, -dy, dx)
+    (Down, -dy, dx)
   }
   if long_arm <= 14 * short_arm.abs() {
-    AutoHintDirection::None_
+    None_
   } else {
     dir
   }
@@ -90,8 +90,8 @@ fn AutoHintDirection::is_same_axis(
 ///|
 fn AutoHintDirection::normalize(self : AutoHintDirection) -> AutoHintDirection {
   match self {
-    AutoHintDirection::Left => AutoHintDirection::Right
-    AutoHintDirection::Down => AutoHintDirection::Up
+    Left => Right
+    Down => Up
     _ => self
   }
 }
@@ -109,7 +109,7 @@ priv struct AutoHintPointFlags {
 
 ///|
 fn AutoHintPointFlags::default() -> AutoHintPointFlags {
-  AutoHintPointFlags::{ bits: 0 }
+  { bits: 0 }
 }
 
 ///|
@@ -123,16 +123,16 @@ priv enum AutoHintPointMarker {
 ///|
 fn AutoHintPointMarker::bit(self : AutoHintPointMarker) -> Int {
   match self {
-    AutoHintPointMarker::Near => 1 << 1
-    AutoHintPointMarker::WeakInterpolation => 1 << 2
-    AutoHintPointMarker::TouchedX => 1 << 3
-    AutoHintPointMarker::TouchedY => 1 << 4
+    Near => 1 << 1
+    WeakInterpolation => 1 << 2
+    TouchedX => 1 << 3
+    TouchedY => 1 << 4
   }
 }
 
 ///|
 fn AutoHintPointFlags::with_on_curve(on_curve : Bool) -> AutoHintPointFlags {
-  AutoHintPointFlags::{ bits: if on_curve { 1 } else { 0 } }
+  { bits: if on_curve { 1 } else { 0 } }
 }
 
 ///|
@@ -183,7 +183,7 @@ priv struct AutoHintPoint {
 
 ///|
 fn AutoHintPoint::default() -> AutoHintPoint {
-  AutoHintPoint::{
+  {
     flags: AutoHintPointFlags::default(),
     fx: 0,
     fy: 0,
@@ -191,8 +191,8 @@ fn AutoHintPoint::default() -> AutoHintPoint {
     oy: 0,
     x: 0,
     y: 0,
-    in_dir: AutoHintDirection::None_,
-    out_dir: AutoHintDirection::None_,
+    in_dir: None_,
+    out_dir: None_,
     u: 0,
     v: 0,
     next_ix: 0,
@@ -274,9 +274,9 @@ fn AutoHintOutline::from_path(path : Array[PathElement]) -> AutoHintOutline {
   let mut contour_start = 0
   for e in path.iter() {
     match e {
-      PathElement::MoveTo(x, y) => {
+      MoveTo(x, y) => {
         if in_contour && points.length() > contour_start {
-          contours.push(AutoHintContour::{
+          contours.push({
             first_ix: contour_start,
             last_ix: points.length() - 1,
           })
@@ -295,7 +295,7 @@ fn AutoHintOutline::from_path(path : Array[PathElement]) -> AutoHintOutline {
         points.push(p)
         in_contour = true
       }
-      PathElement::LineTo(x, y) =>
+      LineTo(x, y) =>
         if in_contour {
           let px = autohint_round_font_units(x)
           let py = autohint_round_font_units(y)
@@ -309,7 +309,7 @@ fn AutoHintOutline::from_path(path : Array[PathElement]) -> AutoHintOutline {
           p.y = py
           points.push(p)
         }
-      PathElement::QuadTo(cx0, cy0, x, y) =>
+      QuadTo(cx0, cy0, x, y) =>
         if in_contour {
           let cpx = autohint_round_font_units(cx0)
           let cpy = autohint_round_font_units(cy0)
@@ -334,7 +334,7 @@ fn AutoHintOutline::from_path(path : Array[PathElement]) -> AutoHintOutline {
           p.y = py
           points.push(p)
         }
-      PathElement::CurveTo(cx0, cy0, cx1, cy1, x, y) =>
+      CurveTo(cx0, cy0, cx1, cy1, x, y) =>
         if in_contour {
           let c0x = autohint_round_font_units(cx0)
           let c0y = autohint_round_font_units(cy0)
@@ -370,10 +370,10 @@ fn AutoHintOutline::from_path(path : Array[PathElement]) -> AutoHintOutline {
           p.y = py
           points.push(p)
         }
-      PathElement::Close =>
+      Close =>
         if in_contour {
           if points.length() > contour_start {
-            contours.push(AutoHintContour::{
+            contours.push({
               first_ix: contour_start,
               last_ix: points.length() - 1,
             })
@@ -383,10 +383,7 @@ fn AutoHintOutline::from_path(path : Array[PathElement]) -> AutoHintOutline {
     }
   }
   if in_contour && points.length() > contour_start {
-    contours.push(AutoHintContour::{
-      first_ix: contour_start,
-      last_ix: points.length() - 1,
-    })
+    contours.push({ first_ix: contour_start, last_ix: points.length() - 1 })
   }
   let outline = AutoHintOutline::{
     units_per_em: 0,
@@ -549,7 +546,7 @@ priv struct AutoHintOutlineData {
 
 ///|
 fn AutoHintOutlineData::AutoHintOutlineData() -> AutoHintOutlineData {
-  AutoHintOutlineData::{ points: Array::new(), contours: Array::new() }
+  { points: Array::new(), contours: Array::new() }
 }
 
 ///|
@@ -562,10 +559,7 @@ fn autohint_outline_data_append(
     dst.points.push(p)
   }
   for c in src.contours.iter() {
-    dst.contours.push(AutoHintContour::{
-      first_ix: c.first_ix + base,
-      last_ix: c.last_ix + base,
-    })
+    dst.contours.push({ first_ix: c.first_ix + base, last_ix: c.last_ix + base })
   }
 }
 
@@ -615,7 +609,7 @@ fn autohint_outline_decode_simple_glyf(
   let end_pts : Array[Int] = Array::new()
   for _ in 0..<number_of_contours {
     let v = match autohint_outline_read_u16_be(glyph, off) {
-      None => return Err(DrawError::Read)
+      None => return Err(Read)
       Some(u) => u
     }
     end_pts.push(v)
@@ -624,7 +618,7 @@ fn autohint_outline_decode_simple_glyf(
   let instruction_len = autohint_outline_read_u16_be(glyph, off).unwrap_or(-1)
   off = off + 2
   if instruction_len < 0 || off + instruction_len > glyph.length() {
-    return Err(DrawError::Read)
+    return Err(Read)
   }
   off = off + instruction_len
   let last_end = end_pts.at(end_pts.length() - 1)
@@ -636,14 +630,14 @@ fn autohint_outline_decode_simple_glyf(
   let flags : Array[Int] = Array::new()
   while flags.length() < num_points {
     if off >= glyph.length() {
-      return Err(DrawError::Read)
+      return Err(Read)
     }
     let flag = glyph.at(off).to_int()
     off = off + 1
     flags.push(flag)
     if (flag & 0x08) != 0 {
       if off >= glyph.length() {
-        return Err(DrawError::Read)
+        return Err(Read)
       }
       let repeat = glyph.at(off).to_int()
       off = off + 1
@@ -660,7 +654,7 @@ fn autohint_outline_decode_simple_glyf(
     let same = (f & 0x10) != 0
     if short {
       if off >= glyph.length() {
-        return Err(DrawError::Read)
+        return Err(Read)
       }
       let b = glyph.at(off).to_int()
       off = off + 1
@@ -669,7 +663,7 @@ fn autohint_outline_decode_simple_glyf(
       dxs.push(0)
     } else {
       let d = match autohint_outline_read_i16_be(glyph, off) {
-        None => return Err(DrawError::Read)
+        None => return Err(Read)
         Some(v) => v
       }
       off = off + 2
@@ -683,7 +677,7 @@ fn autohint_outline_decode_simple_glyf(
     let same = (f & 0x20) != 0
     if short {
       if off >= glyph.length() {
-        return Err(DrawError::Read)
+        return Err(Read)
       }
       let b = glyph.at(off).to_int()
       off = off + 1
@@ -692,7 +686,7 @@ fn autohint_outline_decode_simple_glyf(
       dys.push(0)
     } else {
       let d = match autohint_outline_read_i16_be(glyph, off) {
-        None => return Err(DrawError::Read)
+        None => return Err(Read)
         Some(v) => v
       }
       off = off + 2
@@ -719,12 +713,9 @@ fn autohint_outline_decode_simple_glyf(
   for c in 0..<number_of_contours {
     let end = end_pts.at(c)
     if end < contour_start || end >= data.points.length() {
-      return Err(DrawError::Read)
+      return Err(Read)
     }
-    data.contours.push(AutoHintContour::{
-      first_ix: contour_start,
-      last_ix: end,
-    })
+    data.contours.push({ first_ix: contour_start, last_ix: end })
     contour_start = end + 1
   }
   Ok(data)
@@ -758,17 +749,17 @@ fn autohint_outline_build_glyf_raw(
   depth : Int,
 ) -> Result[AutoHintOutlineData, DrawError] {
   if depth > 16 {
-    return Err(DrawError::Read)
+    return Err(Read)
   }
   let glyph = match autohint_outline_glyf_glyph_slice(font, gid) {
-    None => return Err(DrawError::GlyphNotFound(gid))
+    None => return Err(GlyphNotFound(gid))
     Some(v) => v
   }
   if glyph.length() == 0 {
     return Ok(AutoHintOutlineData())
   }
   if glyph.length() < 10 {
-    return Err(DrawError::Read)
+    return Err(Read)
   }
   let number_of_contours = autohint_outline_read_i16_be(glyph, 0).unwrap_or(0)
   if number_of_contours == 0 {
@@ -787,7 +778,7 @@ fn autohint_outline_build_glyf_raw(
       -1,
     )
     if flags < 0 || comp_gid_u16 < 0 {
-      return Err(DrawError::Read)
+      return Err(Read)
     }
     last_flags = flags
     off = off + 4
@@ -835,10 +826,10 @@ fn autohint_outline_build_glyf_raw(
       (arg1, arg2)
     } else {
       if arg2 < 0 || arg2 >= data.points.length() {
-        return Err(DrawError::Read)
+        return Err(Read)
       }
       if arg1 < 0 || arg1 >= comp.points.length() {
-        return Err(DrawError::Read)
+        return Err(Read)
       }
       let p_parent = data.points.at(arg2)
       let p_comp = comp.points.at(arg1)
@@ -864,7 +855,7 @@ fn autohint_outline_build_glyf_raw(
     let instr_len = autohint_outline_read_u16_be(glyph, off).unwrap_or(-1)
     off = off + 2
     if instr_len < 0 || off + instr_len > glyph.length() {
-      return Err(DrawError::Read)
+      return Err(Read)
     }
   }
   Ok(data)
@@ -966,7 +957,7 @@ fn AutoHintOutline::compute_directions(
       out_y = out_y + (next0.fy - point0.fy)
       if out_x.abs() + out_y.abs() < near_limit {
         let p = self.points.at(next_ix)
-        p.flags.set_marker(AutoHintPointMarker::WeakInterpolation)
+        p.flags.set_marker(WeakInterpolation)
         self.points.set(next_ix, p)
         if next_ix == first_ix {
           break
@@ -1020,7 +1011,7 @@ fn AutoHintOutline::mark_near_points(
       let out_x = point.fx - prev.fx
       let out_y = point.fy - prev.fy
       if out_x.abs() + out_y.abs() < near_limit {
-        prev.flags.set_marker(AutoHintPointMarker::Near)
+        prev.flags.set_marker(Near)
         self.points.set(prev_ix, prev)
       }
       prev_ix = ix
@@ -1032,11 +1023,10 @@ fn AutoHintOutline::mark_near_points(
 fn AutoHintOutline::simplify_topology(self : AutoHintOutline) -> Unit {
   for i in 0..<self.points.length() {
     let point = self.points.at(i)
-    if point.flags.has_marker(AutoHintPointMarker::WeakInterpolation) {
+    if point.flags.has_marker(WeakInterpolation) {
       continue
     }
-    if point.in_dir == AutoHintDirection::None_ &&
-      point.out_dir == AutoHintDirection::None_ {
+    if point.in_dir == None_ && point.out_dir == None_ {
       let u_index = point.u
       let v_index = point.v
       let next_u = self.points.at(u_index)
@@ -1047,7 +1037,7 @@ fn AutoHintOutline::simplify_topology(self : AutoHintOutline) -> Unit {
       let out_y = next_u.fy - point.fy
       if (in_x ^ out_x) >= 0 && (in_y ^ out_y) >= 0 {
         let p = self.points.at(i)
-        p.flags.set_marker(AutoHintPointMarker::WeakInterpolation)
+        p.flags.set_marker(WeakInterpolation)
         self.points.set(i, p)
         let pv = self.points.at(v_index)
         pv.u = u_index
@@ -1090,13 +1080,13 @@ fn AutoHintOutline::check_remaining_weak_points(self : AutoHintOutline) -> Unit 
   for i in 0..<self.points.length() {
     let point = self.points.at(i)
     let mut make_weak = false
-    if point.flags.has_marker(AutoHintPointMarker::WeakInterpolation) {
+    if point.flags.has_marker(WeakInterpolation) {
       continue
     }
     if !point.flags.is_on_curve() {
       make_weak = true
     } else if point.out_dir == point.in_dir {
-      if point.out_dir != AutoHintDirection::None_ {
+      if point.out_dir != None_ {
         make_weak = true
       } else {
         let u_index = point.u
@@ -1123,7 +1113,7 @@ fn AutoHintOutline::check_remaining_weak_points(self : AutoHintOutline) -> Unit 
     }
     if make_weak {
       let p = self.points.at(i)
-      p.flags.set_marker(AutoHintPointMarker::WeakInterpolation)
+      p.flags.set_marker(WeakInterpolation)
       self.points.set(i, p)
     }
   }
@@ -1149,9 +1139,9 @@ fn AutoHintOutline::compute_orientation(self : AutoHintOutline) -> Unit {
   }
   // Match fontations' winding convention: positive area => Clockwise.
   if sum > 0 {
-    self.orientation = Some(AutoHintOrientation::Clockwise)
+    self.orientation = Some(Clockwise)
   } else if sum < 0 {
-    self.orientation = Some(AutoHintOrientation::CounterClockwise)
+    self.orientation = Some(CounterClockwise)
   } else {
     self.orientation = None
   }

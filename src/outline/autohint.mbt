@@ -63,7 +63,7 @@ const AUTOHINT_MAX_STYLES : Int = 90
 
 ///|
 fn GlyphStyle::default() -> GlyphStyle {
-  GlyphStyle::{ bits: AUTOHINT_STYLE_UNASSIGNED }
+  { bits: AUTOHINT_STYLE_UNASSIGNED }
 }
 
 ///|
@@ -93,14 +93,12 @@ fn GlyphStyle::style_index(self : GlyphStyle) -> Int? {
 
 ///|
 fn GlyphStyle::with_style_index(style_index : Int) -> GlyphStyle {
-  GlyphStyle::{ bits: style_index & AUTOHINT_STYLE_INDEX_MASK }
+  { bits: style_index & AUTOHINT_STYLE_INDEX_MASK }
 }
 
 ///|
 fn GlyphStyle::with_style_index_non_base(style_index : Int) -> GlyphStyle {
-  GlyphStyle::{
-    bits: (style_index & AUTOHINT_STYLE_INDEX_MASK) | AUTOHINT_STYLE_NON_BASE,
-  }
+  { bits: (style_index & AUTOHINT_STYLE_INDEX_MASK) | AUTOHINT_STYLE_NON_BASE }
 }
 
 ///|
@@ -111,7 +109,7 @@ fn GlyphStyle::maybe_assign(
   let other_ix = other.bits & AUTOHINT_STYLE_INDEX_MASK
   let self_ix = self.bits & AUTOHINT_STYLE_INDEX_MASK
   if other_ix <= self_ix {
-    GlyphStyle::{
+    {
       bits: (self.bits & AUTOHINT_STYLE_INDEX_KEEP_MASK) |
       other_ix |
       (other.bits & AUTOHINT_STYLE_INDEX_KEEP_MASK),
@@ -123,7 +121,7 @@ fn GlyphStyle::maybe_assign(
 
 ///|
 fn GlyphStyle::set_digit(self : GlyphStyle) -> GlyphStyle {
-  GlyphStyle::{ bits: self.bits | AUTOHINT_STYLE_DIGIT }
+  { bits: self.bits | AUTOHINT_STYLE_DIGIT }
 }
 
 ///|
@@ -133,7 +131,7 @@ fn GlyphStyleMap::default() -> GlyphStyleMap {
   for _ in 0..<AUTOHINT_MAX_STYLES {
     metrics_map.push((0xFF).to_byte())
   }
-  GlyphStyleMap::{ styles, metrics_map, metrics_count: 0 }
+  { styles, metrics_map, metrics_count: 0 }
 }
 
 ///|
@@ -274,7 +272,7 @@ pub fn GlyphStyles::GlyphStyles(
   } else {
     GlyphStyleMap(glyph_count, font)
   }
-  GlyphStyles::{ map, }
+  { map, }
 }
 
 ///|

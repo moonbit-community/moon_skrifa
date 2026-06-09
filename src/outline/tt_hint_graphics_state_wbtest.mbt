@@ -16,13 +16,13 @@
 fn tt_make_mock_gs(fv_x : Int, fv_y : Int) -> TtGraphicsState {
   let points = Array::from_fixed_array([
     TtPoint::{ x: -5, y: -20 },
-    TtPoint::{ x: 10, y: 10 },
-    TtPoint::{ x: 20, y: 20 },
+    { x: 10, y: 10 },
+    { x: 20, y: 20 },
   ])
   let original = Array::from_fixed_array([
     TtPoint::{ x: 0, y: 0 },
-    TtPoint::{ x: 10, y: 10 },
-    TtPoint::{ x: 20, y: -42 },
+    { x: 10, y: 10 },
+    { x: 20, y: -42 },
   ])
   let flags = Array::make(3, 0)
   let glyph = TtZone::{
@@ -34,11 +34,11 @@ fn tt_make_mock_gs(fv_x : Int, fv_y : Int) -> TtGraphicsState {
   }
   let gs = TtGraphicsState::default()
   let (nx, ny) = tt_hint_normalize14(fv_x, fv_y)
-  gs.freedom_vector = TtVec14::{ x: nx, y: ny }
-  gs.proj_vector = TtVec14::{ x: nx, y: ny }
-  gs.zp0 = TtZonePointer::Glyph
-  gs.zp1 = TtZonePointer::Glyph
-  gs.zp2 = TtZonePointer::Glyph
+  gs.freedom_vector = { x: nx, y: ny }
+  gs.proj_vector = { x: nx, y: ny }
+  gs.zp0 = Glyph
+  gs.zp1 = Glyph
+  gs.zp2 = Glyph
   gs.glyph = glyph
   gs.update_projection_state()
   gs
@@ -50,11 +50,11 @@ test "tt_hint: graphics move_point x" {
   let orig_x = gs.glyph.point(0).unwrap().x
   let dx = 10
   // backward compatibility is on by default: x movement is blocked.
-  gs.move_point(TtZonePointer::Glyph, 0, dx).unwrap() |> ignore
+  gs.move_point(Glyph, 0, dx).unwrap() |> ignore
   inspect(gs.glyph.point(0).unwrap().x == orig_x, content="true")
   // disable and retry
   gs.backward_compatibility = false
-  gs.move_point(TtZonePointer::Glyph, 0, dx).unwrap() |> ignore
+  gs.move_point(Glyph, 0, dx).unwrap() |> ignore
   inspect(gs.glyph.point(0).unwrap().x == orig_x + dx, content="true")
 }
 
@@ -66,12 +66,12 @@ test "tt_hint: graphics move_point y" {
   // movement in y is prevented post-iup when backward compatibility is enabled
   gs.did_iup_x = true
   gs.did_iup_y = true
-  gs.move_point(TtZonePointer::Glyph, 0, dy).unwrap() |> ignore
+  gs.move_point(Glyph, 0, dy).unwrap() |> ignore
   inspect(gs.glyph.point(0).unwrap().y == orig_y, content="true")
   // allow movement
   gs.did_iup_x = false
   gs.did_iup_y = false
-  gs.move_point(TtZonePointer::Glyph, 0, dy).unwrap() |> ignore
+  gs.move_point(Glyph, 0, dy).unwrap() |> ignore
   inspect(gs.glyph.point(0).unwrap().y == orig_y + dy, content="true")
 }
 
@@ -83,14 +83,14 @@ test "tt_hint: graphics move_point x and y" {
   // prevent movement in x and y
   gs.did_iup_x = true
   gs.did_iup_y = true
-  gs.move_point(TtZonePointer::Glyph, 0, dist).unwrap() |> ignore
+  gs.move_point(Glyph, 0, dist).unwrap() |> ignore
   inspect(gs.glyph.point(0).unwrap().x == orig.x, content="true")
   inspect(gs.glyph.point(0).unwrap().y == orig.y, content="true")
   // allow movement
   gs.backward_compatibility = false
   gs.did_iup_x = false
   gs.did_iup_y = false
-  gs.move_point(TtZonePointer::Glyph, 0, dist).unwrap() |> ignore
+  gs.move_point(Glyph, 0, dist).unwrap() |> ignore
   let p = gs.glyph.point(0).unwrap()
   inspect(p.x == 4 && p.y == -16, content="true")
 }
@@ -98,7 +98,7 @@ test "tt_hint: graphics move_point x and y" {
 ///|
 test "tt_hint: graphics move_zp2_point" {
   let gs = tt_make_mock_gs(100, 50)
-  gs.zp2 = TtZonePointer::Glyph
+  gs.zp2 = Glyph
   let point_ix = 0
   let orig = gs.glyph.point(point_ix).unwrap()
   let dx = 10
@@ -121,15 +121,15 @@ test "tt_hint: graphics move_zp2_point" {
 ///|
 test "tt_hint: graphics point displacement" {
   let gs = tt_make_mock_gs(100, 50)
-  gs.zp0 = TtZonePointer::Glyph
+  gs.zp0 = Glyph
   gs.rp1 = 0
   let d0 = gs.point_displacement(1).unwrap()
-  inspect(d0.zone is TtZonePointer::Glyph, content="true")
+  inspect(d0.zone is Glyph, content="true")
   inspect(d0.point_ix == 0, content="true")
   inspect(d0.dx == -12 && d0.dy == -6, content="true")
   gs.rp2 = 2
   let d1 = gs.point_displacement(0).unwrap()
-  inspect(d1.zone is TtZonePointer::Glyph, content="true")
+  inspect(d1.zone is Glyph, content="true")
   inspect(d1.point_ix == 2, content="true")
   inspect(d1.dx == 25 && d1.dy == 13, content="true")
 }

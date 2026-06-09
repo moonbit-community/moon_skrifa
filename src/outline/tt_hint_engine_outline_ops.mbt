@@ -32,8 +32,8 @@ fn tt_in_bounds(
   p : Int,
 ) -> Bool {
   let zone = match zone_ptr {
-    TtZonePointer::Twilight => gs.twilight
-    TtZonePointer::Glyph => gs.glyph
+    Twilight => gs.twilight
+    Glyph => gs.glyph
   }
   p >= 0 && p < zone.points.length()
 }
@@ -84,7 +84,7 @@ fn TtEngine::set_on_curve_for_range(
   // high_point is inclusive; convert to exclusive.
   let high = high0 + 1
   if high <= high0 {
-    return Err(HintError::InvalidPointIndex(high0))
+    return Err(InvalidPointIndex(high0))
   }
   if self.graphics.backward_compatibility &&
     self.graphics.did_iup_x &&
@@ -224,7 +224,7 @@ fn TtEngine::op_shpix(self : TtEngine) -> Result[Unit, HintError] {
       Ok(v) => v
     }
     if gs.backward_compatibility {
-      let touched_y = match gs.zp2_zone().is_touched(p, TtAxis::Y) {
+      let touched_y = match gs.zp2_zone().is_touched(p, Y) {
         Err(e) => return Err(e)
         Ok(v) => v
       }
@@ -331,7 +331,7 @@ fn TtEngine::op_mdap(self : TtEngine, opcode : Int) -> Result[Unit, HintError] {
         Err(e) => return Err(e)
         Ok(v) => v
       },
-      TtPoint::{ x: 0, y: 0 },
+      { x: 0, y: 0 },
     )
     self.graphics.round(cur_dist) - cur_dist
   } else {
@@ -357,7 +357,7 @@ fn TtEngine::op_miap(self : TtEngine, opcode : Int) -> Result[Unit, HintError] {
     Ok(v) => v
   }
   if cvt_entry < 0 || cvt_entry >= self.cvt.length() {
-    return Err(HintError::InvalidCvtIndex(cvt_entry))
+    return Err(InvalidCvtIndex(cvt_entry))
   }
   let mut distance = self.cvt.at(cvt_entry)
   let gs = self.graphics
@@ -382,7 +382,7 @@ fn TtEngine::op_miap(self : TtEngine, opcode : Int) -> Result[Unit, HintError] {
       Err(e) => return Err(e)
       Ok(v) => v
     },
-    TtPoint::{ x: 0, y: 0 },
+    { x: 0, y: 0 },
   )
   if (opcode & 1) != 0 {
     let delta = tt_abs_i(distance - original_distance)
@@ -675,15 +675,15 @@ fn TtEngine::op_isect(self : TtEngine) -> Result[Unit, HintError] {
   } else {
     ((pa0.x + pa1.x + pb0.x + pb1.x) / 4, (pa0.y + pa1.y + pb0.y + pb1.y) / 4)
   }
-  match z2.set_point(point_ix, TtPoint::{ x: new_x, y: new_y }) {
+  match z2.set_point(point_ix, { x: new_x, y: new_y }) {
     Err(e) => return Err(e)
     Ok(_) => ()
   }
-  match z2.touch(point_ix, TtAxis::X) {
+  match z2.touch(point_ix, X) {
     Err(e) => return Err(e)
     Ok(_) => ()
   }
-  z2.touch(point_ix, TtAxis::Y)
+  z2.touch(point_ix, Y)
 }
 
 ///|
@@ -813,13 +813,13 @@ fn TtEngine::op_ip(self : TtEngine) -> Result[Unit, HintError] {
 
 ///|
 fn TtEngine::op_iup(self : TtEngine, opcode : Int) -> Result[Unit, HintError] {
-  let axis = if (opcode & 1) != 0 { TtAxis::X } else { TtAxis::Y }
+  let axis = if (opcode & 1) != 0 { TtAxis::X } else { Y }
   let mut run = true
   if self.graphics.backward_compatibility {
     if self.graphics.did_iup_x && self.graphics.did_iup_y {
       run = false
     }
-    if axis is TtAxis::X {
+    if axis is X {
       self.graphics.did_iup_x = true
     } else {
       self.graphics.did_iup_y = true
@@ -848,13 +848,13 @@ fn TtEngine::op_utp(self : TtEngine) -> Result[Unit, HintError] {
   }
   let z0 = self.graphics.zp0_zone()
   if has_x {
-    match z0.untouch(p, TtAxis::X) {
+    match z0.untouch(p, X) {
       Err(e) => return Err(e)
       Ok(_) => ()
     }
   }
   if has_y {
-    match z0.untouch(p, TtAxis::Y) {
+    match z0.untouch(p, Y) {
       Err(e) => return Err(e)
       Ok(_) => ()
     }

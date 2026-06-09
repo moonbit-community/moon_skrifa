@@ -18,7 +18,7 @@ test "tt_hint: round to grid" {
   for pair in cases {
     let (v, expected) = pair
     let state = TtRoundState::default()
-    state.mode = TtRoundMode::Grid
+    state.mode = Grid
     let got = state.round(v)
     inspect(got == expected, content="true")
   }
@@ -30,7 +30,7 @@ test "tt_hint: round to half grid" {
   for pair in cases {
     let (v, expected) = pair
     let state = TtRoundState::default()
-    state.mode = TtRoundMode::HalfGrid
+    state.mode = HalfGrid
     let got = state.round(v)
     inspect(got == expected, content="true")
   }
@@ -42,7 +42,7 @@ test "tt_hint: round to double grid" {
   for pair in cases {
     let (v, expected) = pair
     let state = TtRoundState::default()
-    state.mode = TtRoundMode::DoubleGrid
+    state.mode = DoubleGrid
     let got = state.round(v)
     inspect(got == expected, content="true")
   }
@@ -54,7 +54,7 @@ test "tt_hint: round down to grid" {
   for pair in cases {
     let (v, expected) = pair
     let state = TtRoundState::default()
-    state.mode = TtRoundMode::DownToGrid
+    state.mode = DownToGrid
     let got = state.round(v)
     inspect(got == expected, content="true")
   }
@@ -66,7 +66,7 @@ test "tt_hint: round up to grid" {
   for pair in cases {
     let (v, expected) = pair
     let state = TtRoundState::default()
-    state.mode = TtRoundMode::UpToGrid
+    state.mode = UpToGrid
     let got = state.round(v)
     inspect(got == expected, content="true")
   }
@@ -78,7 +78,7 @@ test "tt_hint: round off" {
   for pair in cases {
     let (v, expected) = pair
     let state = TtRoundState::default()
-    state.mode = TtRoundMode::Off
+    state.mode = Off
     let got = state.round(v)
     inspect(got == expected, content="true")
   }

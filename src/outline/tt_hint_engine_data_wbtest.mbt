@@ -34,22 +34,22 @@ fn tt_make_engine_for_data_ops() -> TtEngine {
   )
 
   // Mirror fontations MockEngine setup (shape + unscaled point pattern).
-  let unscaled : Array[TtPoint] = Array::make(32, TtPoint::{ x: 0, y: 0 })
+  let unscaled : Array[TtPoint] = Array::make(32, { x: 0, y: 0 })
   for i in 0..<32 {
     let x = 57 + i * 2
-    unscaled.set(i, TtPoint::{ x, y: -x * 3 })
+    unscaled.set(i, { x, y: -x * 3 })
   }
-  engine.graphics.glyph = TtZone::{
+  engine.graphics.glyph = {
     unscaled,
-    original: Array::make(32, TtPoint::{ x: 0, y: 0 }),
-    points: Array::make(32, TtPoint::{ x: 0, y: 0 }),
+    original: Array::make(32, { x: 0, y: 0 }),
+    points: Array::make(32, { x: 0, y: 0 }),
     flags: Array::make(32, 0),
     contours: Array::from_fixed_array([31]),
   }
-  engine.graphics.twilight = TtZone::{
+  engine.graphics.twilight = {
     unscaled: Array::new(),
-    original: Array::make(16, TtPoint::{ x: 0, y: 0 }),
-    points: Array::make(16, TtPoint::{ x: 0, y: 0 }),
+    original: Array::make(16, { x: 0, y: 0 }),
+    points: Array::make(16, { x: 0, y: 0 }),
     flags: Array::make(16, 0),
     contours: Array::new(),
   }
@@ -89,16 +89,16 @@ test "tt_hint: data MPPEM/MPS" {
 test "tt_hint: data GC" {
   let engine = tt_make_engine_for_data_ops()
   tt_set_test_vectors(engine)
-  engine.graphics.zp2 = TtZonePointer::Glyph
+  engine.graphics.zp2 = Glyph
 
   // current point projected coord
-  engine.graphics.glyph.points.set(1, TtPoint::{ x: 132, y: -256 })
+  engine.graphics.glyph.points.set(1, { x: 132, y: -256 })
   engine.value_stack.push(1).unwrap() |> ignore
   engine.op_gc(0).unwrap() |> ignore
   inspect(engine.value_stack.pop().unwrap() == 4, content="true")
 
   // original point projected coord
-  engine.graphics.glyph.original.set(1, TtPoint::{ x: -64, y: 521 })
+  engine.graphics.glyph.original.set(1, { x: -64, y: 521 })
   engine.value_stack.push(1).unwrap() |> ignore
   engine.op_gc(1).unwrap() |> ignore
   inspect(engine.value_stack.pop().unwrap() == 176, content="true")
@@ -113,8 +113,8 @@ test "tt_hint: data SCFS updates twilight original" {
   engine.graphics.backward_compatibility = false
   engine.graphics.did_iup_x = true
   engine.graphics.did_iup_y = true
-  engine.graphics.zp2 = TtZonePointer::Twilight
-  engine.graphics.twilight.points.set(1, TtPoint::{ x: 132, y: -256 })
+  engine.graphics.zp2 = Twilight
+  engine.graphics.twilight.points.set(1, { x: 132, y: -256 })
   let p0 = engine.graphics.twilight.point(1).unwrap()
   let o0 = engine.graphics.twilight.original_point(1).unwrap()
   inspect(!(p0.x == o0.x && p0.y == o0.y), content="true")
@@ -133,10 +133,10 @@ test "tt_hint: data SCFS updates twilight original" {
 test "tt_hint: data MD scaled" {
   let engine = tt_make_engine_for_data_ops()
   tt_set_test_vectors(engine)
-  engine.graphics.zp0 = TtZonePointer::Glyph
-  engine.graphics.zp1 = TtZonePointer::Glyph
-  engine.graphics.glyph.points.set(1, TtPoint::{ x: 132, y: -256 })
-  engine.graphics.glyph.points.set(3, TtPoint::{ x: -64, y: 100 })
+  engine.graphics.zp0 = Glyph
+  engine.graphics.zp1 = Glyph
+  engine.graphics.glyph.points.set(1, { x: 132, y: -256 })
+  engine.graphics.glyph.points.set(3, { x: -64, y: 100 })
   engine.value_stack.push(1).unwrap() |> ignore
   engine.value_stack.push(3).unwrap() |> ignore
   engine.op_md(1).unwrap() |> ignore
@@ -152,8 +152,8 @@ test "tt_hint: data MD unscaled" {
     engine.graphics.retained.ppem,
     engine.graphics.retained.target,
   )
-  engine.graphics.zp0 = TtZonePointer::Glyph
-  engine.graphics.zp1 = TtZonePointer::Glyph
+  engine.graphics.zp0 = Glyph
+  engine.graphics.zp1 = Glyph
   engine.value_stack.push(1).unwrap() |> ignore
   engine.value_stack.push(3).unwrap() |> ignore
   engine.op_md(0).unwrap() |> ignore
@@ -164,10 +164,10 @@ test "tt_hint: data MD unscaled" {
 test "tt_hint: data MD twilight (original outline)" {
   let engine = tt_make_engine_for_data_ops()
   tt_set_test_vectors(engine)
-  engine.graphics.zp0 = TtZonePointer::Twilight
-  engine.graphics.zp1 = TtZonePointer::Twilight
-  engine.graphics.twilight.original.set(1, TtPoint::{ x: 132, y: -256 })
-  engine.graphics.twilight.original.set(3, TtPoint::{ x: -64, y: 100 })
+  engine.graphics.zp0 = Twilight
+  engine.graphics.zp1 = Twilight
+  engine.graphics.twilight.original.set(1, { x: 132, y: -256 })
+  engine.graphics.twilight.original.set(3, { x: -64, y: 100 })
   engine.value_stack.push(1).unwrap() |> ignore
   engine.value_stack.push(3).unwrap() |> ignore
   engine.op_md(0).unwrap() |> ignore

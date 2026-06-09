@@ -145,59 +145,59 @@ struct ColrTestPainter {
 }
 
 ///|
-impl ColorPainter for ColrTestPainter with push_transform(_p, _t) {
+impl ColorPainter for ColrTestPainter with fn push_transform(_p, _t) {
   ()
 }
 
 ///|
-impl ColorPainter for ColrTestPainter with pop_transform(_p) {
+impl ColorPainter for ColrTestPainter with fn pop_transform(_p) {
   ()
 }
 
 ///|
-impl ColorPainter for ColrTestPainter with push_clip_glyph(_p, _gid) {
+impl ColorPainter for ColrTestPainter with fn push_clip_glyph(_p, _gid) {
   ()
 }
 
 ///|
-impl ColorPainter for ColrTestPainter with push_clip_box(_p, _bb) {
+impl ColorPainter for ColrTestPainter with fn push_clip_box(_p, _bb) {
   ()
 }
 
 ///|
-impl ColorPainter for ColrTestPainter with pop_clip(_p) {
+impl ColorPainter for ColrTestPainter with fn pop_clip(_p) {
   ()
 }
 
 ///|
-impl ColorPainter for ColrTestPainter with fill(_p, _brush) {
+impl ColorPainter for ColrTestPainter with fn fill(_p, _brush) {
   ()
 }
 
 ///|
-impl ColorPainter for ColrTestPainter with fill_glyph(p, gid, _t, brush) {
-  if brush is Brush::Solid(palette_index, _) {
+impl ColorPainter for ColrTestPainter with fn fill_glyph(p, gid, _t, brush) {
+  if brush is Solid(palette_index, _) {
     p.fills.push((gid.to_u16().to_int(), palette_index))
   }
 }
 
 ///|
-impl ColorPainter for ColrTestPainter with paint_cached_color_glyph(_p, _gid) {
-  Ok(PaintCachedColorGlyph::Unimplemented)
+impl ColorPainter for ColrTestPainter with fn paint_cached_color_glyph(_p, _gid) {
+  Ok(Unimplemented)
 }
 
 ///|
-impl ColorPainter for ColrTestPainter with push_layer(_p, _mode) {
+impl ColorPainter for ColrTestPainter with fn push_layer(_p, _mode) {
   ()
 }
 
 ///|
-impl ColorPainter for ColrTestPainter with pop_layer(_p) {
+impl ColorPainter for ColrTestPainter with fn pop_layer(_p) {
   ()
 }
 
 ///|
-impl ColorPainter for ColrTestPainter with pop_layer_with_mode(_p, _mode) {
+impl ColorPainter for ColrTestPainter with fn pop_layer_with_mode(_p, _mode) {
   ()
 }
 
@@ -207,7 +207,7 @@ test "COLR v0 layers basic" {
   let sfnt = colr_test_build_sfnt(Array::from_fixed_array([(TAG_COLR, colr)]))
   let font = FontRef::from_bytes(sfnt).unwrap()
   let cg = font.color_glyphs()
-  let layers = cg.layers(GlyphId::GlyphId((5).to_uint16())).unwrap()
+  let layers = cg.layers(GlyphId((5).to_uint16())).unwrap()
   inspect(layers.length(), content="2")
   inspect(layers.at(0).glyph_id().to_string(), content="10")
   inspect(layers.at(0).palette_index(), content="1")
@@ -223,7 +223,7 @@ test "COLR v1: header detection" {
   let cg = font.color_glyphs()
   inspect(cg.version(), content="1")
   inspect(cg.has_colr_v1(), content="true")
-  inspect(cg.layers(GlyphId::GlyphId((5).to_uint16())) is None, content="true")
+  inspect(cg.layers(GlyphId((5).to_uint16())) is None, content="true")
 }
 
 ///|
@@ -233,12 +233,9 @@ test "COLR get_with_format/get APIs" {
   let font = FontRef::from_bytes(sfnt).unwrap()
   let collection = font.color_glyphs()
   let glyph = collection
-    .get_with_format(
-      GlyphId::GlyphId((5).to_uint16()),
-      ColorGlyphFormat::ColrV0,
-    )
+    .get_with_format(GlyphId((5).to_uint16()), ColrV0)
     .unwrap()
-  inspect(glyph.format() is ColorGlyphFormat::ColrV0, content="true")
+  inspect(glyph.format() is ColrV0, content="true")
   inspect(glyph.layers().unwrap().length(), content="2")
   let painter = ColrTestPainter::{ fills: Array::new() }
   match glyph.paint(LocationRef::default(), painter) {
@@ -262,18 +259,11 @@ test "COLR v1 get_with_format/get APIs" {
   let font = FontRef::from_bytes(sfnt).unwrap()
   let collection = font.color_glyphs()
   let gid = GlyphId::GlyphId((8).to_uint16())
-  let glyph = collection.get_with_format(gid, ColorGlyphFormat::ColrV1).unwrap()
-  inspect(glyph.format() is ColorGlyphFormat::ColrV1, content="true")
+  let glyph = collection.get_with_format(gid, ColrV1).unwrap()
+  inspect(glyph.format() is ColrV1, content="true")
+  inspect(collection.get(gid).unwrap().format() is ColrV1, content="true")
   inspect(
-    collection.get(gid).unwrap().format() is ColorGlyphFormat::ColrV1,
-    content="true",
-  )
-  inspect(
-    collection.get_with_format(
-      GlyphId::GlyphId((9).to_uint16()),
-      ColorGlyphFormat::ColrV1,
-    )
-    is None,
+    collection.get_with_format(GlyphId((9).to_uint16()), ColrV1) is None,
     content="true",
   )
 }

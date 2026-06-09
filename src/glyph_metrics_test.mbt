@@ -269,16 +269,12 @@ test "GlyphMetrics basic + HVAR deltas" {
   let font = FontRef::from_bytes(sfnt).unwrap()
   let gm0 = font.glyph_metrics(Size::unscaled(), LocationRef::default())
   inspect(
-    gm0
-    .advance_width(GlyphId::GlyphId((0).to_uint16()))
-    .unwrap()
-    .to_int()
-    .to_string(),
+    gm0.advance_width(GlyphId((0).to_uint16())).unwrap().to_int().to_string(),
     content="500",
   )
   inspect(
     gm0
-    .left_side_bearing(GlyphId::GlyphId((0).to_uint16()))
+    .left_side_bearing(GlyphId((0).to_uint16()))
     .unwrap()
     .to_int()
     .to_string(),
@@ -287,19 +283,15 @@ test "GlyphMetrics basic + HVAR deltas" {
   let coords = Array::from_fixed_array([16384])
   let gm1 = font.glyph_metrics(
     Size::unscaled(),
-    LocationRef::LocationRef(coords.op_as_view()),
+    LocationRef(coords.op_as_view()),
   )
   inspect(
-    gm1
-    .advance_width(GlyphId::GlyphId((0).to_uint16()))
-    .unwrap()
-    .to_int()
-    .to_string(),
+    gm1.advance_width(GlyphId((0).to_uint16())).unwrap().to_int().to_string(),
     content="550",
   )
   inspect(
     gm1
-    .left_side_bearing(GlyphId::GlyphId((0).to_uint16()))
+    .left_side_bearing(GlyphId((0).to_uint16()))
     .unwrap()
     .to_int()
     .to_string(),
@@ -325,7 +317,7 @@ test "GlyphMetrics bounds from outline path" {
   )
   let font = FontRef::from_bytes(sfnt).unwrap()
   let gm = font.glyph_metrics(Size::unscaled(), LocationRef::default())
-  let b = gm.bounds(GlyphId::GlyphId((0).to_uint16())).unwrap()
+  let b = gm.bounds(GlyphId((0).to_uint16())).unwrap()
   inspect(b.x_min().to_int().to_string(), content="0")
   inspect(b.y_min().to_int().to_string(), content="0")
   inspect(b.x_max().to_int().to_string(), content="100")
@@ -351,16 +343,12 @@ test "GlyphMetrics gvar phantom deltas fallback" {
   let font = FontRef::from_bytes(sfnt).unwrap()
   let gm0 = font.glyph_metrics(Size::unscaled(), LocationRef::default())
   inspect(
-    gm0
-    .advance_width(GlyphId::GlyphId((0).to_uint16()))
-    .unwrap()
-    .to_int()
-    .to_string(),
+    gm0.advance_width(GlyphId((0).to_uint16())).unwrap().to_int().to_string(),
     content="500",
   )
   inspect(
     gm0
-    .left_side_bearing(GlyphId::GlyphId((0).to_uint16()))
+    .left_side_bearing(GlyphId((0).to_uint16()))
     .unwrap()
     .to_int()
     .to_string(),
@@ -369,19 +357,15 @@ test "GlyphMetrics gvar phantom deltas fallback" {
   let coords = Array::from_fixed_array([16384])
   let gm1 = font.glyph_metrics(
     Size::unscaled(),
-    LocationRef::LocationRef(coords.op_as_view()),
+    LocationRef(coords.op_as_view()),
   )
   inspect(
-    gm1
-    .advance_width(GlyphId::GlyphId((0).to_uint16()))
-    .unwrap()
-    .to_int()
-    .to_string(),
+    gm1.advance_width(GlyphId((0).to_uint16())).unwrap().to_int().to_string(),
     content="520",
   )
   inspect(
     gm1
-    .left_side_bearing(GlyphId::GlyphId((0).to_uint16()))
+    .left_side_bearing(GlyphId((0).to_uint16()))
     .unwrap()
     .to_int()
     .to_string(),

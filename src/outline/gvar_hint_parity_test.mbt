@@ -71,10 +71,7 @@ test "hint: gvar deltas applied in hinted glyf load (avar2checker gid=0)" {
   let glyph = outlines.get(gid).unwrap()
   let pen = SvgPen::with_precision(3)
   glyph
-  .draw(
-    DrawSettings::hinted(hinter, false).with_path_style(PathStyle::FreeType),
-    pen,
-  )
+  .draw(DrawSettings::hinted(hinter, false).with_path_style(FreeType), pen)
   .unwrap()
   |> ignore
   inspect(

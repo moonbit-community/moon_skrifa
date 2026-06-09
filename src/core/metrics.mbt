@@ -177,7 +177,7 @@ pub fn HmtxMetrics::from_font(font : FontRef) -> HmtxMetrics? {
   if need < 0 || hmtx.length() < need {
     return None
   }
-  Some(HmtxMetrics::{ num_glyphs, num_hmetrics, hmtx })
+  Some({ num_glyphs, num_hmetrics, hmtx })
 }
 
 ///|
@@ -367,7 +367,7 @@ pub fn Metrics::Metrics(
           scale
         let y_max = metrics_read_i16_be(head, 42).unwrap_or(0).to_double() *
           scale
-        bounds = Some(GlyphBounds::{ x_min, y_min, x_max, y_max })
+        bounds = Some({ x_min, y_min, x_max, y_max })
       }
     }
   }
@@ -411,7 +411,7 @@ pub fn Metrics::Metrics(
       let ul_pos = metrics_read_i16_be(post, 8).unwrap_or(0).to_double() * scale
       let ul_thick = metrics_read_i16_be(post, 10).unwrap_or(0).to_double() *
         scale
-      underline = Some(Decoration::{ offset: ul_pos, thickness: ul_thick })
+      underline = Some({ offset: ul_pos, thickness: ul_thick })
     }
   }
   let mut ascent = 0.0
@@ -431,7 +431,7 @@ pub fn Metrics::Metrics(
         scale
       let so_size = metrics_read_i16_be(os2_tbl, 30).unwrap_or(0).to_double() *
         scale
-      strikeout = Some(Decoration::{ offset: so_pos, thickness: so_size })
+      strikeout = Some({ offset: so_pos, thickness: so_size })
       // sxHeight and sCapHeight are present in OS/2 v2+ (offsets 86/88).
       if os2_tbl.length() >= 90 {
         let xh = metrics_read_i16_be(os2_tbl, 86).unwrap_or(0)
@@ -488,7 +488,7 @@ pub fn Metrics::Metrics(
       }
     }
   }
-  Metrics::{
+  {
     units_per_em,
     glyph_count,
     is_monospace,
@@ -663,7 +663,7 @@ pub fn GlyphMetrics::GlyphMetrics(
         }
       }
   }
-  GlyphMetrics::{
+  {
     font,
     glyph_count,
     base,
@@ -853,7 +853,7 @@ pub fn GlyphMetrics::bounds(self : GlyphMetrics, gid : GlyphId) -> GlyphBounds? 
       )
     }
   }
-  Some(GlyphBounds::{
+  Some({
     x_min: x_min.to_double() * self.scale,
     y_min: y_min.to_double() * self.scale,
     x_max: x_max.to_double() * self.scale,

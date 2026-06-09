@@ -351,7 +351,7 @@ fn glyf_emit_contour_harfbuzz(
     (first.x, first.y, start)
   } else {
     match path_style {
-      PathStyle::FreeType =>
+      FreeType =>
         if last.on {
           (last.x, last.y, end)
         } else {
@@ -359,7 +359,7 @@ fn glyf_emit_contour_harfbuzz(
           let my = (last.y + first.y) / 2.0
           (mx, my, -1)
         }
-      PathStyle::HarfBuzz =>
+      HarfBuzz =>
         if n >= 2 {
           let second = points.at(start + 1)
           if second.on {
@@ -681,7 +681,7 @@ fn glyf_simple_path(
     x = x + dxs.at(i)
     y = y + dys.at(i)
     let on = (flags.at(i) & 0x01) != 0
-    points.push(GlyfPoint::{ x, y, on })
+    points.push({ x, y, on })
   }
 
   // Apply gvar deltas (simple glyphs only) before converting to path.
@@ -696,7 +696,7 @@ fn glyf_simple_path(
   // Convert contours into path elements.
   let out : Array[PathElement] = Array::new()
   match path_style {
-    PathStyle::FreeType => {
+    FreeType => {
       // In FreeType mode, points are stored in 26.6 fixed (as Int bits).
       let scaled : Array[GlyfPointFT] = Array::new()
       for i in 0..<points.length() {
@@ -713,7 +713,7 @@ fn glyf_simple_path(
         } else {
           (y_du * 64.0).round().to_int()
         }
-        scaled.push(GlyfPointFT::{ x: x_bits, y: y_bits, on: p.on })
+        scaled.push({ x: x_bits, y: y_bits, on: p.on })
       }
       let mut contour_start = 0
       for c in 0..<number_of_contours {
@@ -731,17 +731,13 @@ fn glyf_simple_path(
       }
       Some(out)
     }
-    PathStyle::HarfBuzz => {
+    HarfBuzz => {
       // In HarfBuzz mode, points are stored as f32 in 16.16 fixed units (as Double here).
       let scale = if ctx.is_scaled { ctx.hb_scale } else { 1.0 }
       let scaled : Array[GlyfPointF] = Array::new()
       for i in 0..<points.length() {
         let p = points.at(i)
-        scaled.push(GlyfPointF::{
-          x: xs.at(i) * scale,
-          y: ys.at(i) * scale,
-          on: p.on,
-        })
+        scaled.push({ x: xs.at(i) * scale, y: ys.at(i) * scale, on: p.on })
       }
       let mut contour_start = 0
       for c in 0..<number_of_contours {
@@ -936,7 +932,7 @@ fn glyf_composite_path(
       d = cd
       have_xform = true
     }
-    comps.push(GlyfCompositeComp::{
+    comps.push({
       flags,
       gid: comp_gid,
       args_xy,
@@ -1004,12 +1000,12 @@ fn glyf_composite_path(
         (Some(dx_arr), Some(dy_arr)) =>
           if i < dx_arr.length() && i < dy_arr.length() {
             match path_style {
-              PathStyle::FreeType => {
+              FreeType => {
                 // FreeType rounds off the fractional part of component deltas.
                 dx = dx + dx_arr.at(i).to_int().to_double()
                 dy = dy + dy_arr.at(i).to_int().to_double()
               }
-              PathStyle::HarfBuzz => {
+              HarfBuzz => {
                 dx = dx + dx_arr.at(i)
                 dy = dy + dy_arr.at(i)
               }
@@ -1018,7 +1014,7 @@ fn glyf_composite_path(
         _ => ()
       }
       let (sdx, sdy) = match path_style {
-        PathStyle::FreeType => {
+        FreeType => {
           let dx_i = dx.to_int()
           let dy_i = dy.to_int()
           let dx_bits = if ctx.is_scaled {
@@ -1043,12 +1039,12 @@ fn glyf_composite_path(
             glyf_f26dot6_bits_to_double(dy_bits),
           )
         }
-        PathStyle::HarfBuzz =>
+        HarfBuzz =>
           // Matches fontations-reference HarfBuzzScaler: component offsets are
           // applied without scaling, even when points are scaled to 16.16.
           (dx, dy)
       }
-      glyf_apply_transform(comp_path, GlyfTransform::{
+      glyf_apply_transform(comp_path, {
         a: comp.a,
         b: comp.b,
         c: comp.c,
@@ -1059,7 +1055,7 @@ fn glyf_composite_path(
     } else {
       // Point matching anchors: align component point to a point in the
       // already-built composite path.
-      let without_offset = glyf_apply_transform(comp_path, GlyfTransform::{
+      let without_offset = glyf_apply_transform(comp_path, {
         a: comp.a,
         b: comp.b,
         c: comp.c,
@@ -1073,7 +1069,7 @@ fn glyf_composite_path(
         comp.base_point_ix,
         comp.component_point_ix,
       )
-      glyf_apply_transform(comp_path, GlyfTransform::{
+      glyf_apply_transform(comp_path, {
         a: comp.a,
         b: comp.b,
         c: comp.c,
@@ -1116,17 +1112,12 @@ fn glyf_outline_path_idx(
               glyf_composite_path(
                 ctx,
                 glyph,
-                @moon_skrifa.GlyphId::GlyphId(idx.to_uint16()),
+                GlyphId(idx.to_uint16()),
                 visited,
                 path_style,
               )
             } else {
-              glyf_simple_path(
-                ctx,
-                glyph,
-                @moon_skrifa.GlyphId::GlyphId(idx.to_uint16()),
-                path_style,
-              )
+              glyf_simple_path(ctx, glyph, GlyphId(idx.to_uint16()), path_style)
             }
         }
       }
@@ -1219,7 +1210,7 @@ fn glyf_outline_path(
           0.0
         } else {
           match path_style {
-            PathStyle::FreeType =>
+            FreeType =>
               if is_scaled {
                 glyf_f26dot6_bits_to_double(
                   glyf_mul_16_16_f(x_shift_du, scale_bits),
@@ -1227,7 +1218,7 @@ fn glyf_outline_path(
               } else {
                 x_shift_du
               }
-            PathStyle::HarfBuzz =>
+            HarfBuzz =>
               if is_scaled {
                 x_shift_du * hb_scale
               } else {
@@ -1488,7 +1479,7 @@ fn glyf_draw_memory_summary_default(
   font : @moon_skrifa.FontRef,
 ) -> GlyfDrawMemorySummary {
   let has_variations = font.table(GLYF_MEM_TAG_GVAR) is Some(_)
-  GlyfDrawMemorySummary::{
+  {
     points: 0,
     contours: 0,
     max_simple_points: 0,
@@ -1513,7 +1504,7 @@ fn glyf_draw_memory_summary_with_limits(
   max_twilight_points : Int,
 ) -> GlyfDrawMemorySummary {
   let base = glyf_draw_memory_summary_default(font)
-  GlyfDrawMemorySummary::{
+  {
     points: base.points,
     contours: base.contours,
     max_simple_points: base.max_simple_points,
@@ -1534,7 +1525,7 @@ fn glyf_draw_memory_required_size(
   sum : GlyfDrawMemorySummary,
   hinting : Hinting,
 ) -> Int {
-  let hinted = sum.has_hinting && hinting is Hinting::Embedded
+  let hinted = sum.has_hinting && hinting is Embedded
   let mut size = 0
   // Scaled points.
   size = size + sum.points * GLYF_MEM_SIZE_POINT

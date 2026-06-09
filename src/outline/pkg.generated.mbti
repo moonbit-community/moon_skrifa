@@ -125,6 +125,7 @@ pub(all) enum LcdLayout {
 }
 
 pub struct NullPen {
+  // private fields
 }
 pub fn NullPen::NullPen() -> Self
 pub impl OutlinePen for NullPen
@@ -215,11 +216,11 @@ pub fn Target::symmetric_rendering(Self) -> Bool
 
 // Traits
 pub(open) trait OutlinePen {
-  move_to(Self, Double, Double) -> Unit
-  line_to(Self, Double, Double) -> Unit
-  quad_to(Self, Double, Double, Double, Double) -> Unit
-  curve_to(Self, Double, Double, Double, Double, Double, Double) -> Unit
-  close(Self) -> Unit
+  fn move_to(Self, Double, Double) -> Unit
+  fn line_to(Self, Double, Double) -> Unit
+  fn quad_to(Self, Double, Double, Double, Double) -> Unit
+  fn curve_to(Self, Double, Double, Double, Double, Double, Double) -> Unit
+  fn close(Self) -> Unit
 }
 pub impl OutlinePen for Array[PathElement]
 

@@ -22,7 +22,7 @@ pub struct GlyphId {
 
 ///|
 pub fn GlyphId::GlyphId(value : UInt16) -> GlyphId {
-  GlyphId::{ value, }
+  { value, }
 }
 
 ///|
@@ -56,22 +56,22 @@ pub fn GlyphId::to_string(self : GlyphId) -> String {
 }
 
 ///|
-pub impl Show for GlyphId with output(self, logger) {
+pub impl Show for GlyphId with fn output(self, logger) {
   logger.write_string(self.value.to_string())
 }
 
 ///|
-pub impl Debug for GlyphId with to_repr(self) {
+pub impl Debug for GlyphId with fn to_repr(self) {
   Repr::integer(self.value.to_string())
 }
 
 ///|
-pub impl Eq for GlyphId with equal(self, other) {
+pub impl Eq for GlyphId with fn equal(self, other) {
   self.value == other.value
 }
 
 ///|
-pub impl Compare for GlyphId with compare(self, other) {
+pub impl Compare for GlyphId with fn compare(self, other) {
   self.value.to_int() - other.value.to_int()
 }
 
@@ -188,7 +188,7 @@ pub fn FontRef::from_index(data : Bytes, index : UInt) -> FontRef? {
               if sfnt_off < 0 || sfnt_off >= data.length() {
                 None
               } else if validate_sfnt(data, sfnt_off) {
-                Some(FontRef::{ data, index })
+                Some({ data, index })
               } else {
                 None
               }
@@ -200,7 +200,7 @@ pub fn FontRef::from_index(data : Bytes, index : UInt) -> FontRef? {
       if index != 0 {
         None
       } else if validate_sfnt(data, 0) {
-        Some(FontRef::{ data, index: 0 })
+        Some({ data, index: 0 })
       } else {
         None
       }

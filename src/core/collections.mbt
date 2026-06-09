@@ -37,17 +37,17 @@ priv struct SmallVec[T] {
 ///|
 fn[T : Default] SmallVec::SmallVec(inline_cap : Int) -> SmallVec[T] {
   let buf = FixedArray::make(inline_cap, T::default())
-  SmallVec::{ storage: Inline(buf, 0), inline_cap }
+  { storage: Inline(buf, 0), inline_cap }
 }
 
 ///|
 fn[T] SmallVec::with_len(len : Int, value : T, inline_cap : Int) -> SmallVec[T] {
   if len <= inline_cap {
     let buf = FixedArray::make(inline_cap, value)
-    SmallVec::{ storage: Inline(buf, len), inline_cap }
+    { storage: Inline(buf, len), inline_cap }
   } else {
     let vec = Array::make(len, value)
-    SmallVec::{ storage: Heap(vec), inline_cap }
+    { storage: Heap(vec), inline_cap }
   }
 }
 
@@ -93,10 +93,10 @@ fn[T] SmallVec::to_array(self : SmallVec[T]) -> Array[T] {
 fn[T] SmallVec::clear(self : SmallVec[T]) -> SmallVec[T] {
   match self.storage {
     Inline(buf, _len) =>
-      SmallVec::{ storage: Inline(buf, 0), inline_cap: self.inline_cap }
+      { storage: Inline(buf, 0), inline_cap: self.inline_cap }
     Heap(vec) => {
       vec.clear()
-      SmallVec::{ storage: Heap(vec), inline_cap: self.inline_cap }
+      { storage: Heap(vec), inline_cap: self.inline_cap }
     }
   }
 }
@@ -114,14 +114,14 @@ fn[T] SmallVec::try_reserve(
         for i in 0..<len {
           vec.push(buf.at(i))
         }
-        (SmallVec::{ storage: Heap(vec), inline_cap: self.inline_cap }, true)
+        ({ storage: Heap(vec), inline_cap: self.inline_cap }, true)
       } else {
         (self, true)
       }
     }
     Heap(vec) => {
       vec.reserve_capacity(vec.length() + additional)
-      (SmallVec::{ storage: Heap(vec), inline_cap: self.inline_cap }, true)
+      ({ storage: Heap(vec), inline_cap: self.inline_cap }, true)
     }
   }
 }
@@ -136,14 +136,14 @@ fn[T] SmallVec::push(self : SmallVec[T], value : T) -> SmallVec[T] {
           vec.push(buf.at(i))
         }
         vec.push(value)
-        SmallVec::{ storage: Heap(vec), inline_cap: self.inline_cap }
+        { storage: Heap(vec), inline_cap: self.inline_cap }
       } else {
         buf.set(len, value)
-        SmallVec::{ storage: Inline(buf, len + 1), inline_cap: self.inline_cap }
+        { storage: Inline(buf, len + 1), inline_cap: self.inline_cap }
       }
     Heap(vec) => {
       vec.push(value)
-      SmallVec::{ storage: Heap(vec), inline_cap: self.inline_cap }
+      { storage: Heap(vec), inline_cap: self.inline_cap }
     }
   }
 }
@@ -155,10 +155,7 @@ fn[T] SmallVec::pop(self : SmallVec[T]) -> (SmallVec[T], T?) {
       if len > 0 {
         let v = buf.at(len - 1)
         (
-          SmallVec::{
-            storage: Inline(buf, len - 1),
-            inline_cap: self.inline_cap,
-          },
+          { storage: Inline(buf, len - 1), inline_cap: self.inline_cap },
           Some(v),
         )
       } else {
@@ -166,7 +163,7 @@ fn[T] SmallVec::pop(self : SmallVec[T]) -> (SmallVec[T], T?) {
       }
     Heap(vec) => {
       let v = vec.pop()
-      (SmallVec::{ storage: Heap(vec), inline_cap: self.inline_cap }, v)
+      ({ storage: Heap(vec), inline_cap: self.inline_cap }, v)
     }
   }
 }
@@ -176,11 +173,11 @@ fn[T] SmallVec::truncate(self : SmallVec[T], new_len : Int) -> SmallVec[T] {
   match self.storage {
     Inline(buf, len) => {
       let next_len = if new_len < len { new_len } else { len }
-      SmallVec::{ storage: Inline(buf, next_len), inline_cap: self.inline_cap }
+      { storage: Inline(buf, next_len), inline_cap: self.inline_cap }
     }
     Heap(vec) => {
       vec.truncate(new_len)
-      SmallVec::{ storage: Heap(vec), inline_cap: self.inline_cap }
+      { storage: Heap(vec), inline_cap: self.inline_cap }
     }
   }
 }
@@ -203,7 +200,7 @@ fn[T] SmallVec::set(self : SmallVec[T], i : Int, v : T) -> SmallVec[T] {
         // Keep behavior simple: ignore out-of-range writes (only used in tests).
         i |> ignore
       }
-      SmallVec::{ storage: Inline(buf, len), inline_cap: self.inline_cap }
+      { storage: Inline(buf, len), inline_cap: self.inline_cap }
     }
     Heap(vec) => {
       if i >= 0 && i < vec.length() {
@@ -211,7 +208,7 @@ fn[T] SmallVec::set(self : SmallVec[T], i : Int, v : T) -> SmallVec[T] {
       } else {
         i |> ignore
       }
-      SmallVec::{ storage: Heap(vec), inline_cap: self.inline_cap }
+      { storage: Heap(vec), inline_cap: self.inline_cap }
     }
   }
 }
@@ -236,7 +233,7 @@ test "store_and_read_inline" {
   for i in 0..<vec.len() {
     vec = vec.set(i, i * 2)
   }
-  inspect(vec.to_array(), content="[0, 2, 4, 6, 8, 10, 12, 14]")
+  debug_inspect(vec.to_array(), content="[0, 2, 4, 6, 8, 10, 12, 14]")
 }
 
 ///|
@@ -245,7 +242,7 @@ test "store_and_read_heap" {
   for i in 0..<vec.len() {
     vec = vec.set(i, i * 2)
   }
-  inspect(vec.to_array(), content="[0, 2, 4, 6, 8, 10, 12, 14]")
+  debug_inspect(vec.to_array(), content="[0, 2, 4, 6, 8, 10, 12, 14]")
 }
 
 ///|
@@ -257,7 +254,7 @@ test "spill_to_heap" {
   inspect(vec.is_inline(), content="true")
   vec = vec.push(4)
   inspect(vec.is_inline(), content="false")
-  inspect(vec.to_array(), content="[0, 1, 2, 3, 4]")
+  debug_inspect(vec.to_array(), content="[0, 1, 2, 3, 4]")
 }
 
 ///|
@@ -315,7 +312,7 @@ test "truncate_inline" {
   let vec = SmallVec::with_len(4, 7, 4)
   let v2 = vec.truncate(2)
   inspect(v2.len(), content="2")
-  inspect(v2.to_array(), content="[7, 7]")
+  debug_inspect(v2.to_array(), content="[7, 7]")
 }
 
 ///|
@@ -333,9 +330,9 @@ test "iter" {
     vec = vec.push(i)
   }
   let expected = [0, 1, 2]
-  inspect(vec.to_array(), content="[0, 1, 2]")
-  inspect(Array::from_iter(vec.as_view().iter()), content="[0, 1, 2]")
-  inspect(expected, content="[0, 1, 2]")
+  debug_inspect(vec.to_array(), content="[0, 1, 2]")
+  debug_inspect(Array::from_iter(vec.as_view().iter()), content="[0, 1, 2]")
+  debug_inspect(expected, content="[0, 1, 2]")
 }
 
 ///|
@@ -346,5 +343,5 @@ test "into_iter" {
   }
   // MoonBit doesn't have the same IntoIterator trait shape as Rust; we just
   // validate that iteration yields the same elements.
-  inspect(Array::from_iter(vec.as_view().iter()), content="[0, 1, 2]")
+  debug_inspect(Array::from_iter(vec.as_view().iter()), content="[0, 1, 2]")
 }

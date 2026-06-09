@@ -27,11 +27,11 @@ fn TtEngine::op_svtca(
   let x = (opcode & 1) << 14
   let y = x ^ 0x4000
   if opcode < 4 {
-    self.graphics.proj_vector = TtVec14::{ x, y }
-    self.graphics.dual_proj_vector = TtVec14::{ x, y }
+    self.graphics.proj_vector = { x, y }
+    self.graphics.dual_proj_vector = { x, y }
   }
   if (opcode & 2) == 0 {
-    self.graphics.freedom_vector = TtVec14::{ x, y }
+    self.graphics.freedom_vector = { x, y }
   }
   self.graphics.update_projection_state()
   Ok(())
@@ -50,7 +50,7 @@ fn tt_line_vector(p1 : TtPoint, p2 : TtPoint, is_parallel : Bool) -> TtVec14 {
     a = -c
   }
   let (nx, ny) = tt_hint_normalize14(a, b)
-  TtVec14::{ x: nx, y: ny }
+  { x: nx, y: ny }
 }
 
 ///|
@@ -99,7 +99,7 @@ fn TtEngine::op_spvfs(self : TtEngine) -> Result[Unit, HintError] {
     self.graphics.proj_vector
   } else {
     let (nx, ny) = tt_hint_normalize14(x, y)
-    TtVec14::{ x: nx, y: ny }
+    { x: nx, y: ny }
   }
   self.graphics.proj_vector = v
   self.graphics.dual_proj_vector = v
@@ -123,7 +123,7 @@ fn TtEngine::op_sfvfs(self : TtEngine) -> Result[Unit, HintError] {
     self.graphics.freedom_vector
   } else {
     let (nx, ny) = tt_hint_normalize14(x, y)
-    TtVec14::{ x: nx, y: ny }
+    { x: nx, y: ny }
   }
   self.graphics.freedom_vector = v
   self.graphics.update_projection_state()
@@ -249,7 +249,7 @@ fn TtEngine::op_sloop(self : TtEngine) -> Result[Unit, HintError] {
     Ok(v) => v
   }
   if n < 0 {
-    return Err(HintError::NegativeLoopCounter)
+    return Err(NegativeLoopCounter)
   }
   // Limit to 16-bit like FreeType.
   self.graphics.loop_counter = n.min(0xFFFF)
@@ -258,37 +258,37 @@ fn TtEngine::op_sloop(self : TtEngine) -> Result[Unit, HintError] {
 
 ///|
 fn TtEngine::op_rtg(self : TtEngine) -> Result[Unit, HintError] {
-  self.graphics.round_state.mode = TtRoundMode::Grid
+  self.graphics.round_state.mode = Grid
   Ok(())
 }
 
 ///|
 fn TtEngine::op_rthg(self : TtEngine) -> Result[Unit, HintError] {
-  self.graphics.round_state.mode = TtRoundMode::HalfGrid
+  self.graphics.round_state.mode = HalfGrid
   Ok(())
 }
 
 ///|
 fn TtEngine::op_rtdg(self : TtEngine) -> Result[Unit, HintError] {
-  self.graphics.round_state.mode = TtRoundMode::DoubleGrid
+  self.graphics.round_state.mode = DoubleGrid
   Ok(())
 }
 
 ///|
 fn TtEngine::op_rdtg(self : TtEngine) -> Result[Unit, HintError] {
-  self.graphics.round_state.mode = TtRoundMode::DownToGrid
+  self.graphics.round_state.mode = DownToGrid
   Ok(())
 }
 
 ///|
 fn TtEngine::op_rutg(self : TtEngine) -> Result[Unit, HintError] {
-  self.graphics.round_state.mode = TtRoundMode::UpToGrid
+  self.graphics.round_state.mode = UpToGrid
   Ok(())
 }
 
 ///|
 fn TtEngine::op_roff(self : TtEngine) -> Result[Unit, HintError] {
-  self.graphics.round_state.mode = TtRoundMode::Off
+  self.graphics.round_state.mode = Off
   Ok(())
 }
 
@@ -330,7 +330,7 @@ fn TtEngine::op_sround(self : TtEngine) -> Result[Unit, HintError] {
     Ok(v) => v
   }
   tt_super_round(self.graphics, 0x4000, n)
-  self.graphics.round_state.mode = TtRoundMode::Super
+  self.graphics.round_state.mode = Super
   Ok(())
 }
 
@@ -341,7 +341,7 @@ fn TtEngine::op_s45round(self : TtEngine) -> Result[Unit, HintError] {
     Ok(v) => v
   }
   tt_super_round(self.graphics, 0x2D41, n)
-  self.graphics.round_state.mode = TtRoundMode::Super45
+  self.graphics.round_state.mode = Super45
   Ok(())
 }
 
@@ -431,13 +431,13 @@ fn TtEngine::op_instctrl(self : TtEngine) -> Result[Unit, HintError] {
     return Ok(())
   }
   match self.program.current {
-    TtProgram::ControlValue => {
+    ControlValue => {
       self.graphics.retained.instruct_control = self.graphics.retained.instruct_control &
         (selector_flag ^ -1)
       self.graphics.retained.instruct_control = self.graphics.retained.instruct_control |
         value
     }
-    TtProgram::Glyph =>
+    Glyph =>
       if selector == 3 {
         self.graphics.backward_compatibility = value != 4
       }

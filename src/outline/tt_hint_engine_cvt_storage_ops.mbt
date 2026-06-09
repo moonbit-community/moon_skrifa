@@ -32,7 +32,7 @@ fn TtEngine::op_rs(self : TtEngine) -> Result[Unit, HintError] {
   }
   if loc < 0 || loc >= self.storage.length() {
     if self.graphics.is_pedantic {
-      Err(HintError::InvalidStorageIndex(loc))
+      Err(InvalidStorageIndex(loc))
     } else {
       self.value_stack.push(0)
     }
@@ -53,7 +53,7 @@ fn TtEngine::op_ws(self : TtEngine) -> Result[Unit, HintError] {
   }
   if loc < 0 || loc >= self.storage.length() {
     if self.graphics.is_pedantic {
-      Err(HintError::InvalidStorageIndex(loc))
+      Err(InvalidStorageIndex(loc))
     } else {
       Ok(())
     }
@@ -75,7 +75,7 @@ fn TtEngine::op_wcvtp(self : TtEngine) -> Result[Unit, HintError] {
   }
   if loc < 0 || loc >= self.cvt.length() {
     if self.graphics.is_pedantic {
-      Err(HintError::InvalidCvtIndex(loc))
+      Err(InvalidCvtIndex(loc))
     } else {
       Ok(())
     }
@@ -97,7 +97,7 @@ fn TtEngine::op_wcvtf(self : TtEngine) -> Result[Unit, HintError] {
   }
   if loc < 0 || loc >= self.cvt.length() {
     if self.graphics.is_pedantic {
-      Err(HintError::InvalidCvtIndex(loc))
+      Err(InvalidCvtIndex(loc))
     } else {
       Ok(())
     }
@@ -119,7 +119,7 @@ fn TtEngine::op_rcvt(self : TtEngine) -> Result[Unit, HintError] {
   }
   if loc < 0 || loc >= self.cvt.length() {
     if self.graphics.is_pedantic {
-      Err(HintError::InvalidCvtIndex(loc))
+      Err(InvalidCvtIndex(loc))
     } else {
       self.value_stack.push(0)
     }
@@ -151,7 +151,7 @@ fn TtEngine::op_deltap(
   }
   if n0 < 0 {
     if self.graphics.is_pedantic {
-      return Err(HintError::InvalidStackValue(n0))
+      return Err(InvalidStackValue(n0))
     } else {
       return Ok(())
     }
@@ -182,8 +182,7 @@ fn TtEngine::op_deltap(
     if ppem_u == c {
       let adj = tt_delta_adjust(self.graphics, b0)
       if back_compat {
-        let touched_y = match
-          self.graphics.zp0_zone().is_touched(point_ix, TtAxis::Y) {
+        let touched_y = match self.graphics.zp0_zone().is_touched(point_ix, Y) {
           Err(e) => return Err(e)
           Ok(v) => v
         }
@@ -220,7 +219,7 @@ fn TtEngine::op_deltac(
   }
   if n0 < 0 {
     if self.graphics.is_pedantic {
-      return Err(HintError::InvalidStackValue(n0))
+      return Err(InvalidStackValue(n0))
     } else {
       return Ok(())
     }
@@ -245,7 +244,7 @@ fn TtEngine::op_deltac(
     if ppem_u == c {
       if cvt_ix < 0 || cvt_ix >= self.cvt.length() {
         if self.graphics.is_pedantic {
-          return Err(HintError::InvalidCvtIndex(cvt_ix))
+          return Err(InvalidCvtIndex(cvt_ix))
         } else {
           continue
         }
@@ -275,7 +274,7 @@ fn TtEngine::op_sds(self : TtEngine) -> Result[Unit, HintError] {
   }
   // FreeType/fontations clamp delta_shift to [0, 6].
   if s < 0 || s > 6 {
-    return Err(HintError::InvalidStackValue(s))
+    return Err(InvalidStackValue(s))
   }
   self.graphics.retained.delta_shift = s
   Ok(())

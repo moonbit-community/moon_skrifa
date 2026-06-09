@@ -80,12 +80,7 @@ priv struct AutoHintAxis {
 
 ///|
 fn AutoHintAxis::default() -> AutoHintAxis {
-  AutoHintAxis::{
-    dim: 0,
-    major_dir: AutoHintDirection::None_,
-    segments: Array::new(),
-    edges: Array::new(),
-  }
+  { dim: 0, major_dir: None_, segments: Array::new(), edges: Array::new() }
 }
 
 ///|
@@ -102,13 +97,11 @@ fn AutoHintAxis::reset(
 ) -> Unit {
   self.dim = dim
   self.major_dir = match (dim, orientation) {
-    (AUTOHINT_DIM_HORIZONTAL, Some(AutoHintOrientation::Clockwise)) =>
-      AutoHintDirection::Down
-    (AUTOHINT_DIM_VERTICAL, Some(AutoHintOrientation::Clockwise)) =>
-      AutoHintDirection::Right
-    (AUTOHINT_DIM_HORIZONTAL, _) => AutoHintDirection::Up
-    (AUTOHINT_DIM_VERTICAL, _) => AutoHintDirection::Left
-    _ => AutoHintDirection::None_
+    (AUTOHINT_DIM_HORIZONTAL, Some(Clockwise)) => Down
+    (AUTOHINT_DIM_VERTICAL, Some(Clockwise)) => Right
+    (AUTOHINT_DIM_HORIZONTAL, _) => Up
+    (AUTOHINT_DIM_VERTICAL, _) => Left
+    _ => None_
   }
   self.segments.clear()
   self.edges.clear()
@@ -135,9 +128,9 @@ priv struct AutoHintSegment {
 
 ///|
 fn AutoHintSegment::default() -> AutoHintSegment {
-  AutoHintSegment::{
+  {
     flags: 0,
-    dir: AutoHintDirection::None_,
+    dir: None_,
     pos: 0,
     delta: 0,
     min_coord: 0,
@@ -198,7 +191,7 @@ priv struct AutoHintSegmentState {
 
 ///|
 fn AutoHintSegmentState::default() -> AutoHintSegmentState {
-  AutoHintSegmentState::{
+  {
     min_pos: AUTOHINT_SEG_MAX_SCORE,
     max_pos: AUTOHINT_SEG_MIN_SCORE,
     min_coord: AUTOHINT_SEG_MAX_SCORE,
@@ -690,9 +683,9 @@ fn autohint_link_segments(
   // is in place.
   AutoHintScriptGroup::Cjk |> ignore
   match group {
-    AutoHintScriptGroup::Default =>
+    Default =>
       autohint_link_segments_default(outline, axis, max_width.unwrap_or(0))
-    AutoHintScriptGroup::Cjk => autohint_link_segments_cjk(outline, axis, scale)
+    Cjk => autohint_link_segments_cjk(outline, axis, scale)
   }
 }
 

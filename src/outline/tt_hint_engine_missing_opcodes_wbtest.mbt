@@ -50,8 +50,8 @@ test "tt_hint: missing opcodes (getvariation/getdata/odd/even/mps/debug)" {
     64,
     64,
   )
-  engine0.run_program(TtProgram::Font, false).unwrap() |> ignore
-  engine0.run_program(TtProgram::ControlValue, false).unwrap() |> ignore
+  engine0.run_program(Font, false).unwrap() |> ignore
+  engine0.run_program(ControlValue, false).unwrap() |> ignore
   inspect(engine0.value_stack.pop().unwrap(), content="123")
 
   // GETVARIATION pushes axis_count coords; pad with zeros if missing.
@@ -74,7 +74,7 @@ test "tt_hint: missing opcodes (getvariation/getdata/odd/even/mps/debug)" {
     64,
     64,
   )
-  engine1.run_program(TtProgram::ControlValue, false).unwrap() |> ignore
+  engine1.run_program(ControlValue, false).unwrap() |> ignore
   inspect(engine1.value_stack.pop().unwrap(), content="0")
   inspect(engine1.value_stack.pop().unwrap(), content="8192")
 
@@ -95,7 +95,7 @@ test "tt_hint: missing opcodes (getvariation/getdata/odd/even/mps/debug)" {
     64,
     64,
   )
-  engine2.run_program(TtProgram::ControlValue, false).unwrap() |> ignore
+  engine2.run_program(ControlValue, false).unwrap() |> ignore
   inspect(engine2.value_stack.pop().unwrap(), content="17")
 
   // ODD/EVEN.
@@ -122,7 +122,7 @@ test "tt_hint: missing opcodes (getvariation/getdata/odd/even/mps/debug)" {
     64,
     64,
   )
-  engine3.run_program(TtProgram::ControlValue, false).unwrap() |> ignore
+  engine3.run_program(ControlValue, false).unwrap() |> ignore
   inspect(engine3.value_stack.pop().unwrap(), content="1")
   inspect(engine3.value_stack.pop().unwrap(), content="1")
 
@@ -143,7 +143,7 @@ test "tt_hint: missing opcodes (getvariation/getdata/odd/even/mps/debug)" {
     64,
     64,
   )
-  engine4.run_program(TtProgram::ControlValue, false).unwrap() |> ignore
+  engine4.run_program(ControlValue, false).unwrap() |> ignore
   inspect(engine4.value_stack.pop().unwrap(), content="1280")
 
   // DEBUG: pops a value and leaves stack empty.
@@ -163,6 +163,6 @@ test "tt_hint: missing opcodes (getvariation/getdata/odd/even/mps/debug)" {
     64,
     64,
   )
-  engine5.run_program(TtProgram::ControlValue, false).unwrap() |> ignore
+  engine5.run_program(ControlValue, false).unwrap() |> ignore
   inspect(engine5.value_stack.length(), content="0")
 }

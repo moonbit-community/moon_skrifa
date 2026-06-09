@@ -185,16 +185,11 @@ test "gvar applies sparse tuple + IUP shift for single delta point" {
   let c = OutlineGlyphCollection::from_font(font)
 
   // Default coords => base outline.
-  let base = c
-    .path(
-      @moon_skrifa.GlyphId::GlyphId((1).to_uint16()),
-      DrawSettings::default(),
-    )
-    .unwrap()
+  let base = c.path(GlyphId((1).to_uint16()), DrawSettings::default()).unwrap()
   let expected_base = Array::from_fixed_array([
     PathElement::MoveTo(0.0, 0.0),
-    PathElement::QuadTo(50.0, 100.0, 100.0, 0.0),
-    PathElement::Close,
+    QuadTo(50.0, 100.0, 100.0, 0.0),
+    Close,
   ])
   inspect(glyf_outline_test_path_eq(base, expected_base), content="true")
 
@@ -204,15 +199,13 @@ test "gvar applies sparse tuple + IUP shift for single delta point" {
   ])
   let settings = DrawSettings::unhinted(
     @moon_skrifa.Size::unscaled(),
-    @moon_skrifa.LocationRef::LocationRef(coords.op_as_view()),
+    LocationRef(coords.op_as_view()),
   )
-  let varied = c
-    .path(@moon_skrifa.GlyphId::GlyphId((1).to_uint16()), settings)
-    .unwrap()
+  let varied = c.path(GlyphId((1).to_uint16()), settings).unwrap()
   let expected_varied = Array::from_fixed_array([
     PathElement::MoveTo(5.0, 0.0),
-    PathElement::QuadTo(55.0, 100.0, 105.0, 0.0),
-    PathElement::Close,
+    QuadTo(55.0, 100.0, 105.0, 0.0),
+    Close,
   ])
   inspect(glyf_outline_test_path_eq(varied, expected_varied), content="true")
 }

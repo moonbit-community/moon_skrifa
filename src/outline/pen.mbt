@@ -30,36 +30,36 @@ pub(all) enum PathStyle {
 
 ///|
 pub fn PathStyle::default() -> PathStyle {
-  PathStyle::FreeType
+  FreeType
 }
 
 ///|
 /// Interface for accepting a sequence of path commands.
 pub(open) trait OutlinePen {
-  move_to(Self, Double, Double) -> Unit
-  line_to(Self, Double, Double) -> Unit
-  quad_to(Self, Double, Double, Double, Double) -> Unit
-  curve_to(Self, Double, Double, Double, Double, Double, Double) -> Unit
-  close(Self) -> Unit
+  fn move_to(Self, Double, Double) -> Unit
+  fn line_to(Self, Double, Double) -> Unit
+  fn quad_to(Self, Double, Double, Double, Double) -> Unit
+  fn curve_to(Self, Double, Double, Double, Double, Double, Double) -> Unit
+  fn close(Self) -> Unit
 }
 
 ///|
-pub impl OutlinePen for Array[PathElement] with move_to(out, x, y) {
-  out.push(PathElement::MoveTo(x, y))
+pub impl OutlinePen for Array[PathElement] with fn move_to(out, x, y) {
+  out.push(MoveTo(x, y))
 }
 
 ///|
-pub impl OutlinePen for Array[PathElement] with line_to(out, x, y) {
-  out.push(PathElement::LineTo(x, y))
+pub impl OutlinePen for Array[PathElement] with fn line_to(out, x, y) {
+  out.push(LineTo(x, y))
 }
 
 ///|
-pub impl OutlinePen for Array[PathElement] with quad_to(out, cx0, cy0, x, y) {
-  out.push(PathElement::QuadTo(cx0, cy0, x, y))
+pub impl OutlinePen for Array[PathElement] with fn quad_to(out, cx0, cy0, x, y) {
+  out.push(QuadTo(cx0, cy0, x, y))
 }
 
 ///|
-pub impl OutlinePen for Array[PathElement] with curve_to(
+pub impl OutlinePen for Array[PathElement] with fn curve_to(
   out,
   cx0,
   cy0,
@@ -68,12 +68,12 @@ pub impl OutlinePen for Array[PathElement] with curve_to(
   x,
   y,
 ) {
-  out.push(PathElement::CurveTo(cx0, cy0, cx1, cy1, x, y))
+  out.push(CurveTo(cx0, cy0, cx1, cy1, x, y))
 }
 
 ///|
-pub impl OutlinePen for Array[PathElement] with close(out) {
-  out.push(PathElement::Close)
+pub impl OutlinePen for Array[PathElement] with fn close(out) {
+  out.push(Close)
 }
 
 ///|
@@ -85,14 +85,14 @@ pub struct SvgPen {
 
 ///|
 pub fn SvgPen::SvgPen() -> SvgPen {
-  SvgPen::{ s: "", precision: None }
+  { s: "", precision: None }
 }
 
 ///|
 /// Creates a new SVG pen that formats floating point values with the given
 /// precision (the number of digits printed after the decimal point).
 pub fn SvgPen::with_precision(precision : Int) -> SvgPen {
-  SvgPen::{ s: "", precision: Some(precision) }
+  { s: "", precision: Some(precision) }
 }
 
 ///|
@@ -171,19 +171,19 @@ fn SvgPen::fmt_num(self : SvgPen, x : Double) -> String {
 }
 
 ///|
-pub impl OutlinePen for SvgPen with move_to(pen, x, y) {
+pub impl OutlinePen for SvgPen with fn move_to(pen, x, y) {
   pen.maybe_space()
   pen.s = pen.s + ("M" + pen.fmt_num(x) + "," + pen.fmt_num(y))
 }
 
 ///|
-pub impl OutlinePen for SvgPen with line_to(pen, x, y) {
+pub impl OutlinePen for SvgPen with fn line_to(pen, x, y) {
   pen.maybe_space()
   pen.s = pen.s + ("L" + pen.fmt_num(x) + "," + pen.fmt_num(y))
 }
 
 ///|
-pub impl OutlinePen for SvgPen with quad_to(pen, cx0, cy0, x, y) {
+pub impl OutlinePen for SvgPen with fn quad_to(pen, cx0, cy0, x, y) {
   pen.maybe_space()
   pen.s = pen.s +
     (
@@ -199,7 +199,7 @@ pub impl OutlinePen for SvgPen with quad_to(pen, cx0, cy0, x, y) {
 }
 
 ///|
-pub impl OutlinePen for SvgPen with curve_to(pen, cx0, cy0, cx1, cy1, x, y) {
+pub impl OutlinePen for SvgPen with fn curve_to(pen, cx0, cy0, cx1, cy1, x, y) {
   pen.maybe_space()
   pen.s = pen.s +
     (
@@ -219,41 +219,43 @@ pub impl OutlinePen for SvgPen with curve_to(pen, cx0, cy0, cx1, cy1, x, y) {
 }
 
 ///|
-pub impl OutlinePen for SvgPen with close(pen) {
+pub impl OutlinePen for SvgPen with fn close(pen) {
   pen.maybe_space()
   pen.s = pen.s + "Z"
 }
 
 ///|
 /// Pen that drops all drawing output.
-pub struct NullPen {}
+pub struct NullPen {
+  priv _unit : Unit
+}
 
 ///|
 pub fn NullPen::NullPen() -> NullPen {
-  NullPen::{  }
+  { _unit: () }
 }
 
 ///|
-pub impl OutlinePen for NullPen with move_to(_, _, _) {
-
-}
-
-///|
-pub impl OutlinePen for NullPen with line_to(_, _, _) {
+pub impl OutlinePen for NullPen with fn move_to(_, _, _) {
 
 }
 
 ///|
-pub impl OutlinePen for NullPen with quad_to(_, _, _, _, _) {
+pub impl OutlinePen for NullPen with fn line_to(_, _, _) {
 
 }
 
 ///|
-pub impl OutlinePen for NullPen with curve_to(_, _, _, _, _, _, _) {
+pub impl OutlinePen for NullPen with fn quad_to(_, _, _, _, _) {
 
 }
 
 ///|
-pub impl OutlinePen for NullPen with close(_) {
+pub impl OutlinePen for NullPen with fn curve_to(_, _, _, _, _, _, _) {
+
+}
+
+///|
+pub impl OutlinePen for NullPen with fn close(_) {
 
 }

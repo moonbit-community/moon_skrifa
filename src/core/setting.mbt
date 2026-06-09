@@ -23,7 +23,7 @@ pub struct Setting[T] {
 
 ///|
 pub fn[T] Setting::Setting(selector : Tag, value : T) -> Setting[T] {
-  Setting::{ selector, value }
+  { selector, value }
 }
 
 ///|

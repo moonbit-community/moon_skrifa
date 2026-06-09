@@ -50,13 +50,13 @@ fn TtEngine::op_gc(self : TtEngine, opcode : Int) -> Result[Unit, HintError] {
       Err(e) => return Err(e)
       Ok(v) => v
     }
-    gs.dual_project(op, TtPoint::{ x: 0, y: 0 })
+    gs.dual_project(op, { x: 0, y: 0 })
   } else {
     let cp = match zone.point(p) {
       Err(e) => return Err(e)
       Ok(v) => v
     }
-    gs.project(cp, TtPoint::{ x: 0, y: 0 })
+    gs.project(cp, { x: 0, y: 0 })
   }
   self.value_stack.push(value)
 }
@@ -76,13 +76,13 @@ fn TtEngine::op_scfs(self : TtEngine) -> Result[Unit, HintError] {
     Err(e) => return Err(e)
     Ok(v) => v
   }
-  let projection = gs.project(cur, TtPoint::{ x: 0, y: 0 })
+  let projection = gs.project(cur, { x: 0, y: 0 })
   match gs.move_point(gs.zp2, p, value - projection) {
     Err(e) => return Err(e)
     Ok(_) => ()
   }
   // If moving a twilight point, also update its original position.
-  if gs.zp2 is TtZonePointer::Twilight {
+  if gs.zp2 is Twilight {
     let twilight = gs.twilight
     let tp = match twilight.point(p) {
       Err(e) => return Err(e)
@@ -124,8 +124,7 @@ fn TtEngine::op_md(self : TtEngine, opcode : Int) -> Result[Unit, HintError] {
       Ok(v) => v
     }
     gs.project(a, b)
-  } else if gs.zp0 is TtZonePointer::Twilight ||
-    gs.zp1 is TtZonePointer::Twilight {
+  } else if gs.zp0 is Twilight || gs.zp1 is Twilight {
     let a = match z0.original_point(p2) {
       Err(e) => return Err(e)
       Ok(v) => v

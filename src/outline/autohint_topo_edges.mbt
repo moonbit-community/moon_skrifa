@@ -53,12 +53,12 @@ priv struct AutoHintEdge {
 
 ///|
 fn AutoHintEdge::default() -> AutoHintEdge {
-  AutoHintEdge::{
+  {
     fpos: 0,
     opos: 0,
     pos: 0,
     flags: AUTOHINT_FLAG_NORMAL,
-    dir: AutoHintDirection::None_,
+    dir: None_,
     blue_edge: None,
     link_ix: None,
     serif_ix: None,
@@ -76,7 +76,7 @@ fn autohint_compute_blue_edges(
   blues : Array[AutoHintScaledBlue],
   group : AutoHintScriptGroup,
 ) -> Unit {
-  if group is AutoHintScriptGroup::Default && axis.dim != AUTOHINT_DIM_VERTICAL {
+  if group is Default && axis.dim != AUTOHINT_DIM_VERTICAL {
     return
   }
   let axis_scale = if axis.dim == AUTOHINT_DIM_HORIZONTAL {
@@ -104,7 +104,7 @@ fn autohint_compute_blue_edges(
       let is_neutral = autohint_blue_is_neutral(blue.zones)
       let is_major_dir = edge.dir == axis.major_dir
       if is_top != is_major_dir || is_neutral {
-        let (ref_pos, matching) = if group is AutoHintScriptGroup::Default {
+        let (ref_pos, matching) = if group is Default {
           (unscaled_blue.position, blue.position)
         } else {
           // CJK: pick closer of position/overshoot.
@@ -122,7 +122,7 @@ fn autohint_compute_blue_edges(
           best_blue = Some(matching)
           best_is_neutral = is_neutral
         }
-        if group is AutoHintScriptGroup::Default &&
+        if group is Default &&
           (edge.flags & AUTOHINT_FLAG_ROUND) != 0 &&
           dist != 0 &&
           !is_neutral {
@@ -339,7 +339,7 @@ fn autohint_compute_edges(
   axis.edges.clear()
   // This is always passed as 0 in functions that take hinting direction in CJK.
   let top_to_bottom_hinting = if axis.dim == AUTOHINT_DIM_HORIZONTAL ||
-    !(group is AutoHintScriptGroup::Default) {
+    !(group is Default) {
     false
   } else {
     top_to_bottom_hinting
@@ -354,7 +354,7 @@ fn autohint_compute_edges(
   let segment_width_threshold = autohint_fixed_div(32, scale)
   // Ensure that edge distance threshold is less than or equal to 0.25 pixels.
   let initial_threshold = initial_edge_distance_threshold
-  let edge_distance_threshold = if group is AutoHintScriptGroup::Default {
+  let edge_distance_threshold = if group is Default {
     autohint_fixed_div(
       autohint_fixed_mul(initial_threshold, scale).min(
         EDGE_DISTANCE_THRESHOLD_MAX,
@@ -374,11 +374,11 @@ fn autohint_compute_edges(
   // to find a matching edge, adding a new one if not found.
   for segment_ix in 0..<axis.segments.length() {
     let segment = axis.segments.at(segment_ix)
-    if group is AutoHintScriptGroup::Default {
+    if group is Default {
       // Ignore segments that are too short, too wide or direction-less.
       if segment.height < segment_length_threshold ||
         segment.delta > segment_width_threshold ||
-        segment.dir == AutoHintDirection::None_ {
+        segment.dir == None_ {
         continue
       }
       // Ignore serif edges that are smaller than 1.5 pixels.
@@ -396,7 +396,7 @@ fn autohint_compute_edges(
       if dist < edge_distance_threshold &&
         edge.dir == segment.dir &&
         dist < best_dist {
-        if group is AutoHintScriptGroup::Default {
+        if group is Default {
           best_edge_ix = Some(edge_ix)
           break
         }
@@ -453,12 +453,12 @@ fn autohint_compute_edges(
       }
     }
   }
-  if group is AutoHintScriptGroup::Default {
+  if group is Default {
     // Loop again to find single point segments without a direction and
     // associate them with an existing edge if possible.
     for segment_ix in 0..<axis.segments.length() {
       let segment = axis.segments.at(segment_ix)
-      if segment.dir != AutoHintDirection::None_ {
+      if segment.dir != None_ {
         continue
       }
       // Try to find an edge that coincides with this segment within the threshold.
@@ -488,7 +488,7 @@ test "autohint topo: edges simple" {
   axis.reset(AUTOHINT_DIM_HORIZONTAL, None)
   let s0 = AutoHintSegment::default()
   s0.flags = AUTOHINT_FLAG_ROUND
-  s0.dir = AutoHintDirection::Up
+  s0.dir = Up
   s0.pos = 100
   s0.delta = 0
   s0.height = 100
@@ -496,32 +496,25 @@ test "autohint topo: edges simple" {
   axis.segments.push(s0)
   let s1 = AutoHintSegment::default()
   s1.flags = AUTOHINT_FLAG_ROUND
-  s1.dir = AutoHintDirection::Up
+  s1.dir = Up
   s1.pos = 105
   s1.delta = 0
   s1.height = 100
   axis.segments.push(s1)
   let s2 = AutoHintSegment::default()
-  s2.dir = AutoHintDirection::Down
+  s2.dir = Down
   s2.pos = 200
   s2.delta = 0
   s2.height = 100
   s2.link_ix = Some(0)
   axis.segments.push(s2)
   let s3 = AutoHintSegment::default()
-  s3.dir = AutoHintDirection::None_
+  s3.dir = None_
   s3.pos = 103
   s3.delta = 0
   s3.height = 100
   axis.segments.push(s3)
-  autohint_compute_edges(
-    axis,
-    10,
-    false,
-    1 << 16,
-    1 << 16,
-    AutoHintScriptGroup::Default,
-  )
+  autohint_compute_edges(axis, 10, false, 1 << 16, 1 << 16, Default)
   inspect(axis.edges.length().to_string(), content="2")
   inspect(axis.edges.at(0).fpos.to_string(), content="100")
   inspect(axis.edges.at(0).opos.to_string(), content="100")

@@ -128,21 +128,12 @@ test "Metrics basic accessors and lookup" {
   let m = HmtxMetrics::from_font(font).unwrap()
   inspect(m.num_glyphs(), content="3")
   inspect(m.number_of_hmetrics(), content="2")
-  debug_inspect(
-    m.advance_width(GlyphId::GlyphId((0).to_uint16())),
-    content="Some(500)",
-  )
-  debug_inspect(m.lsb(GlyphId::GlyphId((0).to_uint16())), content="Some(-10)")
-  debug_inspect(
-    m.advance_width(GlyphId::GlyphId((1).to_uint16())),
-    content="Some(600)",
-  )
-  debug_inspect(m.lsb(GlyphId::GlyphId((1).to_uint16())), content="Some(20)")
-  debug_inspect(
-    m.advance_width(GlyphId::GlyphId((2).to_uint16())),
-    content="Some(600)",
-  )
-  debug_inspect(m.lsb(GlyphId::GlyphId((2).to_uint16())), content="Some(30)")
+  debug_inspect(m.advance_width(GlyphId((0).to_uint16())), content="Some(500)")
+  debug_inspect(m.lsb(GlyphId((0).to_uint16())), content="Some(-10)")
+  debug_inspect(m.advance_width(GlyphId((1).to_uint16())), content="Some(600)")
+  debug_inspect(m.lsb(GlyphId((1).to_uint16())), content="Some(20)")
+  debug_inspect(m.advance_width(GlyphId((2).to_uint16())), content="Some(600)")
+  debug_inspect(m.lsb(GlyphId((2).to_uint16())), content="Some(30)")
 }
 
 ///|
@@ -166,11 +157,8 @@ test "Metrics out of range glyph id" {
   )
   let font = FontRef::from_bytes(sfnt).unwrap()
   let m = HmtxMetrics::from_font(font).unwrap()
-  debug_inspect(
-    m.advance_width(GlyphId::GlyphId((1).to_uint16())),
-    content="None",
-  )
-  debug_inspect(m.lsb(GlyphId::GlyphId((1).to_uint16())), content="None")
+  debug_inspect(m.advance_width(GlyphId((1).to_uint16())), content="None")
+  debug_inspect(m.lsb(GlyphId((1).to_uint16())), content="None")
 }
 
 ///|

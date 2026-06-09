@@ -123,11 +123,11 @@ fn autohint_expected_segment(
 ///|
 fn autohint_dir_debug(dir : AutoHintDirection) -> String {
   match dir {
-    AutoHintDirection::None_ => "None"
-    AutoHintDirection::Right => "Right"
-    AutoHintDirection::Left => "Left"
-    AutoHintDirection::Up => "Up"
-    AutoHintDirection::Down => "Down"
+    None_ => "None"
+    Right => "Right"
+    Left => "Left"
+    Up => "Up"
+    Down => "Down"
   }
 }
 
@@ -181,133 +181,50 @@ test "autohint topo: segments notoserifhebrew gid=8 horizontal" {
     Ok(_) => ()
     Err(e) => {
       let kind = match e {
-        DrawError::NoSources => "NoSources"
-        DrawError::GlyphNotFound(_) => "GlyphNotFound"
-        DrawError::InsufficientMemory => "InsufficientMemory"
-        DrawError::RecursionLimitExceeded(_) => "RecursionLimitExceeded"
-        DrawError::TooManyPoints(_) => "TooManyPoints"
-        DrawError::HintingFailed(_) => "HintingFailed"
-        DrawError::InvalidAnchorPoint(_, _) => "InvalidAnchorPoint"
-        DrawError::PostScript => "PostScript"
-        DrawError::ToPath(_) => "ToPath"
-        DrawError::Read => "Read"
-        DrawError::HarfBuzzHintingUnsupported => "HarfBuzzHintingUnsupported"
+        NoSources => "NoSources"
+        GlyphNotFound(_) => "GlyphNotFound"
+        InsufficientMemory => "InsufficientMemory"
+        RecursionLimitExceeded(_) => "RecursionLimitExceeded"
+        TooManyPoints(_) => "TooManyPoints"
+        HintingFailed(_) => "HintingFailed"
+        InvalidAnchorPoint(_, _) => "InvalidAnchorPoint"
+        PostScript => "PostScript"
+        ToPath(_) => "ToPath"
+        Read => "Read"
+        HarfBuzzHintingUnsupported => "HarfBuzzHintingUnsupported"
       }
       inspect(kind, content="Ok")
     }
   }
   let axis = AutoHintAxis::default()
   axis.reset(AUTOHINT_DIM_HORIZONTAL, outline.orientation)
-  inspect(
-    autohint_compute_segments(outline, axis, AutoHintScriptGroup::Default),
-    content="true",
-  )
-  autohint_link_segments(outline, axis, 0, AutoHintScriptGroup::Default, None)
+  inspect(autohint_compute_segments(outline, axis, Default), content="true")
+  autohint_link_segments(outline, axis, 0, Default, None)
   let got = autohint_segments_test_view(axis.segments)
   let expected : Array[AutoHintSegment] = Array::new()
   expected.push(
-    autohint_expected_segment(
-      0,
-      AutoHintDirection::Up,
-      55,
-      0,
-      26,
-      360,
-      372,
-      Some(3),
-      None,
-    ),
+    autohint_expected_segment(0, Up, 55, 0, 26, 360, 372, Some(3), None),
   )
   expected.push(
-    autohint_expected_segment(
-      0,
-      AutoHintDirection::Up,
-      112,
-      0,
-      481,
-      504,
-      34,
-      Some(2),
-      None,
-    ),
+    autohint_expected_segment(0, Up, 112, 0, 481, 504, 34, Some(2), None),
   )
   expected.push(
-    autohint_expected_segment(
-      0,
-      AutoHintDirection::Down,
-      168,
-      0,
-      483,
-      504,
-      26,
-      Some(1),
-      None,
-    ),
+    autohint_expected_segment(0, Down, 168, 0, 483, 504, 26, Some(1), None),
   )
   expected.push(
-    autohint_expected_segment(
-      0,
-      AutoHintDirection::Down,
-      109,
-      0,
-      109,
-      366,
-      288,
-      Some(0),
-      None,
-    ),
+    autohint_expected_segment(0, Down, 109, 0, 109, 366, 288, Some(0), None),
   )
   expected.push(
-    autohint_expected_segment(
-      0,
-      AutoHintDirection::Up,
-      453,
-      0,
-      169,
-      432,
-      304,
-      Some(7),
-      None,
-    ),
+    autohint_expected_segment(0, Up, 453, 0, 169, 432, 304, Some(7), None),
   )
   expected.push(
-    autohint_expected_segment(
-      1,
-      AutoHintDirection::Up,
-      62,
-      0,
-      517,
-      566,
-      76,
-      None,
-      None,
-    ),
+    autohint_expected_segment(1, Up, 62, 0, 517, 566, 76, None, None),
   )
   expected.push(
-    autohint_expected_segment(
-      1,
-      AutoHintDirection::Down,
-      103,
-      0,
-      619,
-      647,
-      41,
-      None,
-      None,
-    ),
+    autohint_expected_segment(1, Down, 103, 0, 619, 647, 41, None, None),
   )
   expected.push(
-    autohint_expected_segment(
-      0,
-      AutoHintDirection::Down,
-      507,
-      0,
-      40,
-      485,
-      498,
-      Some(4),
-      None,
-    ),
+    autohint_expected_segment(0, Down, 507, 0, 40, 485, 498, Some(4), None),
   )
   inspect(
     autohint_segments_debug(got),
@@ -324,107 +241,44 @@ test "autohint topo: segments notoserifhebrew gid=8 vertical" {
     Ok(_) => ()
     Err(e) => {
       let kind = match e {
-        DrawError::NoSources => "NoSources"
-        DrawError::GlyphNotFound(_) => "GlyphNotFound"
-        DrawError::InsufficientMemory => "InsufficientMemory"
-        DrawError::RecursionLimitExceeded(_) => "RecursionLimitExceeded"
-        DrawError::TooManyPoints(_) => "TooManyPoints"
-        DrawError::HintingFailed(_) => "HintingFailed"
-        DrawError::InvalidAnchorPoint(_, _) => "InvalidAnchorPoint"
-        DrawError::PostScript => "PostScript"
-        DrawError::ToPath(_) => "ToPath"
-        DrawError::Read => "Read"
-        DrawError::HarfBuzzHintingUnsupported => "HarfBuzzHintingUnsupported"
+        NoSources => "NoSources"
+        GlyphNotFound(_) => "GlyphNotFound"
+        InsufficientMemory => "InsufficientMemory"
+        RecursionLimitExceeded(_) => "RecursionLimitExceeded"
+        TooManyPoints(_) => "TooManyPoints"
+        HintingFailed(_) => "HintingFailed"
+        InvalidAnchorPoint(_, _) => "InvalidAnchorPoint"
+        PostScript => "PostScript"
+        ToPath(_) => "ToPath"
+        Read => "Read"
+        HarfBuzzHintingUnsupported => "HarfBuzzHintingUnsupported"
       }
       inspect(kind, content="Ok")
     }
   }
   let axis = AutoHintAxis::default()
   axis.reset(AUTOHINT_DIM_VERTICAL, outline.orientation)
-  inspect(
-    autohint_compute_segments(outline, axis, AutoHintScriptGroup::Default),
-    content="true",
-  )
-  autohint_link_segments(outline, axis, 0, AutoHintScriptGroup::Default, None)
+  inspect(autohint_compute_segments(outline, axis, Default), content="true")
+  autohint_link_segments(outline, axis, 0, Default, None)
   let got = autohint_segments_test_view(axis.segments)
   let expected : Array[AutoHintSegment] = Array::new()
   expected.push(
-    autohint_expected_segment(
-      0,
-      AutoHintDirection::Left,
-      0,
-      0,
-      85,
-      470,
-      418,
-      Some(2),
-      None,
-    ),
+    autohint_expected_segment(0, Left, 0, 0, 85, 470, 418, Some(2), None),
   )
   expected.push(
-    autohint_expected_segment(
-      0,
-      AutoHintDirection::Right,
-      504,
-      0,
-      112,
-      168,
-      56,
-      Some(3),
-      None,
-    ),
+    autohint_expected_segment(0, Right, 504, 0, 112, 168, 56, Some(3), None),
   )
   expected.push(
-    autohint_expected_segment(
-      0,
-      AutoHintDirection::Right,
-      109,
-      0,
-      109,
-      427,
-      327,
-      Some(0),
-      None,
-    ),
+    autohint_expected_segment(0, Right, 109, 0, 109, 427, 327, Some(0), None),
   )
   expected.push(
-    autohint_expected_segment(
-      0,
-      AutoHintDirection::Left,
-      483,
-      0,
-      86,
-      400,
-      352,
-      Some(1),
-      None,
-    ),
+    autohint_expected_segment(0, Left, 483, 0, 86, 400, 352, Some(1), None),
   )
   expected.push(
-    autohint_expected_segment(
-      0,
-      AutoHintDirection::Right,
-      647,
-      0,
-      76,
-      103,
-      29,
-      None,
-      Some(1),
-    ),
+    autohint_expected_segment(0, Right, 647, 0, 76, 103, 29, None, Some(1)),
   )
   expected.push(
-    autohint_expected_segment(
-      0,
-      AutoHintDirection::Right,
-      592,
-      0,
-      131,
-      437,
-      346,
-      None,
-      Some(1),
-    ),
+    autohint_expected_segment(0, Right, 592, 0, 131, 437, 346, None, Some(1)),
   )
   inspect(
     autohint_segments_debug(got),

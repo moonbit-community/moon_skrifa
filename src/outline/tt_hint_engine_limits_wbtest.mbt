@@ -57,7 +57,7 @@ test "tt_hint: loop budget backward jumps" {
       }
     } else {
       match r {
-        Err(HintError::ExceededExecutionBudget) => ()
+        Err(ExceededExecutionBudget) => ()
         Ok(_) => fail("expected ExceededExecutionBudget")
         Err(_) => fail("expected ExceededExecutionBudget")
       }
@@ -106,9 +106,9 @@ test "tt_hint: loop budget loopcall" {
     64,
     64,
   )
-  engine.run_program(TtProgram::Font, false).unwrap() |> ignore
-  match engine.run_program(TtProgram::ControlValue, false) {
-    Err(HintError::ExceededExecutionBudget) => ()
+  engine.run_program(Font, false).unwrap() |> ignore
+  match engine.run_program(ControlValue, false) {
+    Err(ExceededExecutionBudget) => ()
     Ok(_) => fail("expected ExceededExecutionBudget")
     Err(_) => fail("expected ExceededExecutionBudget")
   }
@@ -171,8 +171,8 @@ test "tt_hint: DefinitionTooLarge in pedantic mode" {
     64,
     64,
   )
-  match engine.run_program(TtProgram::Font, true) {
-    Err(HintError::DefinitionTooLarge) => ()
+  match engine.run_program(Font, true) {
+    Err(DefinitionTooLarge) => ()
     Ok(_) => fail("expected DefinitionTooLarge")
     Err(_) => fail("expected DefinitionTooLarge")
   }

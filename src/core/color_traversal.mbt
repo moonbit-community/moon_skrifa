@@ -197,20 +197,20 @@ pub(all) enum Brush {
 
 ///|
 pub(open) trait ColorPainter {
-  push_transform(Self, Transform) -> Unit
-  pop_transform(Self) -> Unit
-  push_clip_glyph(Self, GlyphId) -> Unit
-  push_clip_box(Self, (Double, Double, Double, Double)) -> Unit
-  pop_clip(Self) -> Unit
-  fill(Self, Brush) -> Unit
-  fill_glyph(Self, GlyphId, Transform?, Brush) -> Unit
-  paint_cached_color_glyph(Self, GlyphId) -> Result[
+  fn push_transform(Self, Transform) -> Unit
+  fn pop_transform(Self) -> Unit
+  fn push_clip_glyph(Self, GlyphId) -> Unit
+  fn push_clip_box(Self, (Double, Double, Double, Double)) -> Unit
+  fn pop_clip(Self) -> Unit
+  fn fill(Self, Brush) -> Unit
+  fn fill_glyph(Self, GlyphId, Transform?, Brush) -> Unit
+  fn paint_cached_color_glyph(Self, GlyphId) -> Result[
     PaintCachedColorGlyph,
     PaintError,
   ]
-  push_layer(Self, CompositeMode) -> Unit
-  pop_layer(Self) -> Unit
-  pop_layer_with_mode(Self, CompositeMode) -> Unit
+  fn push_layer(Self, CompositeMode) -> Unit
+  fn pop_layer(Self) -> Unit
+  fn pop_layer_with_mode(Self, CompositeMode) -> Unit
 }
 
 ///|
@@ -821,17 +821,13 @@ fn color_trav_read_color_line(
         color_trav_var_index_add(var_base_u, 1),
         coords,
       )
-      out.push(ColorStop::{
+      out.push({
         offset: color_trav_apply_f2dot14_delta(stop_offset0, d0),
         palette_index: pi,
         alpha: color_trav_apply_f2dot14_delta(alpha0, d1),
       })
     } else {
-      out.push(ColorStop::{
-        offset: stop_offset0,
-        palette_index: pi,
-        alpha: alpha0,
-      })
+      out.push({ offset: stop_offset0, palette_index: pi, alpha: alpha0 })
     }
   }
   color_trav_sort_color_stops(out)
@@ -900,7 +896,7 @@ fn color_trav_rescale_stops(
 ) -> Unit {
   for i in 0..<stops.length() {
     let s0 = stops.at(i)
-    stops.set(i, ColorStop::{
+    stops.set(i, {
       offset: (s0.offset - start_offset) * scale_factor,
       palette_index: s0.palette_index,
       alpha: s0.alpha,
@@ -946,7 +942,7 @@ fn color_trav_make_linear_brush(
     return None
   }
   if range == 0.0 && extend_is_pad(extend) {
-    stops.push(ColorStop::{
+    stops.push({
       offset: last.offset + 1.0,
       palette_index: last.palette_index,
       alpha: last.alpha,
@@ -990,7 +986,7 @@ fn color_trav_make_radial_brush(
     return None
   }
   if range == 0.0 && extend_is_pad(extend) {
-    stops.push(ColorStop::{
+    stops.push({
       offset: last.offset + 1.0,
       palette_index: last.palette_index,
       alpha: last.alpha,
@@ -1048,7 +1044,7 @@ fn color_trav_make_sweep_brush(
     return None
   }
   if range == 0.0 && extend_is_pad(extend) {
-    stops.push(ColorStop::{
+    stops.push({
       offset: last.offset + 1.0,
       palette_index: last.palette_index,
       alpha: last.alpha,
@@ -1081,7 +1077,7 @@ fn color_trav_make_sweep_brush(
     }
     for i in 0..<n {
       let s0 = stops.at(i)
-      stops.set(i, ColorStop::{
+      stops.set(i, {
         offset: 1.0 - s0.offset,
         palette_index: s0.palette_index,
         alpha: s0.alpha,
@@ -1097,12 +1093,12 @@ fn color_trav_make_sweep_brush(
 ///|
 fn color_trav_transform_translate(dx : Double, dy : Double) -> Transform {
   let base = Transform::default()
-  Transform::{ xx: base.xx, yx: base.yx, xy: base.xy, yy: base.yy, dx, dy }
+  { xx: base.xx, yx: base.yx, xy: base.xy, yy: base.yy, dx, dy }
 }
 
 ///|
 fn color_trav_transform_scale(sx : Double, sy : Double) -> Transform {
-  Transform::{ xx: sx, yx: 0.0, xy: 0.0, yy: sy, dx: 0.0, dy: 0.0 }
+  { xx: sx, yx: 0.0, xy: 0.0, yy: sy, dx: 0.0, dy: 0.0 }
 }
 
 ///|
@@ -1111,14 +1107,14 @@ fn color_trav_transform_rotate(angle : Double) -> Transform {
   let theta = angle * COLOR_TRAV_PI
   let c = @math.cos(theta)
   let s = @math.sin(theta)
-  Transform::{ xx: c, yx: s, xy: -s, yy: c, dx: 0.0, dy: 0.0 }
+  { xx: c, yx: s, xy: -s, yy: c, dx: 0.0, dy: 0.0 }
 }
 
 ///|
 fn color_trav_transform_skew(x_angle : Double, y_angle : Double) -> Transform {
   let tx = @math.tan(x_angle * COLOR_TRAV_PI)
   let ty = @math.tan(y_angle * COLOR_TRAV_PI)
-  Transform::{ xx: 1.0, yx: ty, xy: tx, yy: 1.0, dx: 0.0, dy: 0.0 }
+  { xx: 1.0, yx: ty, xy: tx, yy: 1.0, dx: 0.0, dy: 0.0 }
 }
 
 ///|
@@ -1692,8 +1688,8 @@ fn[P : ColorPainter] color_trav_traverse_paint(
         let target = GlyphId(gid_i.to_uint16())
         match ColorPainter::paint_cached_color_glyph(painter, target) {
           Err(e) => Err(e)
-          Ok(PaintCachedColorGlyph::Ok) => Ok(())
-          Ok(PaintCachedColorGlyph::Unimplemented) =>
+          Ok(Ok) => Ok(())
+          Ok(Unimplemented) =>
             match
               color_trav_base_paint_offset(
                 ctx.colr,

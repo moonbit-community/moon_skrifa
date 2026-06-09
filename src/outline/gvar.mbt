@@ -96,7 +96,7 @@ fn gvar_ctx(font : @moon_skrifa.FontRef) -> GvarCtx? {
   if shared_tuples_off > gvar.length() || data_array_off > gvar.length() {
     return None
   }
-  Some(GvarCtx::{
+  Some({
     gvar,
     axis_count,
     shared_tuple_count,

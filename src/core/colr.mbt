@@ -87,8 +87,8 @@ pub fn ColorGlyph::format(self : ColorGlyph) -> ColorGlyphFormat {
 ///|
 pub fn ColorGlyph::layers(self : ColorGlyph) -> Array[ColorLayer]? {
   match self.format {
-    ColorGlyphFormat::ColrV0 => self.collection.layers(self.glyph_id)
-    ColorGlyphFormat::ColrV1 => None
+    ColrV0 => self.collection.layers(self.glyph_id)
+    ColrV1 => None
   }
 }
 
@@ -99,20 +99,20 @@ pub fn[P : ColorPainter] ColorGlyph::paint(
   painter : P,
 ) -> Result[Unit, PaintError] {
   match self.format {
-    ColorGlyphFormat::ColrV1 =>
+    ColrV1 =>
       match self.collection.font {
         Some(font) => font.paint_colr_v1_at(self.glyph_id, location, painter)
-        None => Err(PaintError::ParseError)
+        None => Err(ParseError)
       }
-    ColorGlyphFormat::ColrV0 =>
+    ColrV0 =>
       match self.collection.layers(self.glyph_id) {
-        None => Err(PaintError::GlyphNotFound(self.glyph_id))
+        None => Err(GlyphNotFound(self.glyph_id))
         Some(layers) => {
           for layer in layers {
             painter.fill_glyph(
               layer.glyph_id(),
               None,
-              Brush::Solid(layer.palette_index(), 1.0),
+              Solid(layer.palette_index(), 1.0),
             )
           }
           Ok(())
@@ -198,7 +198,7 @@ pub fn ColorGlyphCollection::ColorGlyphCollection(
       _v1_item_variation_store_off = Some(ivs)
     }
   }
-  ColorGlyphCollection::{
+  {
     font: Some(font),
     colr: Some(colr),
     version,
@@ -216,7 +216,7 @@ pub fn ColorGlyphCollection::ColorGlyphCollection(
 
 ///|
 fn ColorGlyphCollection::empty(font : FontRef?) -> ColorGlyphCollection {
-  ColorGlyphCollection::{
+  {
     font,
     colr: None,
     version: 0,
@@ -306,15 +306,15 @@ pub fn ColorGlyphCollection::get_with_format(
   glyph_format : ColorGlyphFormat,
 ) -> ColorGlyph? {
   match glyph_format {
-    ColorGlyphFormat::ColrV0 =>
+    ColrV0 =>
       if self.layers(glyph_id) is Some(_) {
-        Some(ColorGlyph::{ collection: self, glyph_id, format: glyph_format })
+        Some({ collection: self, glyph_id, format: glyph_format })
       } else {
         None
       }
-    ColorGlyphFormat::ColrV1 =>
+    ColrV1 =>
       if self.v1_has_glyph(glyph_id) {
-        Some(ColorGlyph::{ collection: self, glyph_id, format: glyph_format })
+        Some({ collection: self, glyph_id, format: glyph_format })
       } else {
         None
       }
@@ -326,8 +326,8 @@ pub fn ColorGlyphCollection::get(
   self : ColorGlyphCollection,
   glyph_id : GlyphId,
 ) -> ColorGlyph? {
-  match self.get_with_format(glyph_id, ColorGlyphFormat::ColrV1) {
-    None => self.get_with_format(glyph_id, ColorGlyphFormat::ColrV0)
+  match self.get_with_format(glyph_id, ColrV1) {
+    None => self.get_with_format(glyph_id, ColrV0)
     Some(v) => Some(v)
   }
 }
@@ -382,7 +382,7 @@ pub fn ColorGlyphCollection::layers(
     if layer_gid < 0 || palette_idx < 0 {
       continue
     }
-    out.push(ColorLayer::{
+    out.push({
       glyph_id: GlyphId(layer_gid.to_uint16()),
       palette_index: palette_idx,
     })

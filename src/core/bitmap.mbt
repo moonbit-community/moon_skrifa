@@ -179,7 +179,7 @@ pub fn BitmapStrike::ppem_y(self : BitmapStrike) -> Int {
 /// Currently supports `sbix` and a minimal subset of `CBDT/CBLC` and `EBDT/EBLC`.
 pub fn BitmapStrike::get(self : BitmapStrike, gid : GlyphId) -> BitmapGlyph? {
   match self.format {
-    BitmapFormat::Sbix =>
+    Sbix =>
       match self.sbix {
         None => None
         Some(sbix) =>
@@ -220,12 +220,12 @@ fn bitmap_num_glyphs(font : FontRef) -> Int {
 ///|
 pub fn BitmapStrikes::BitmapStrikes(font : FontRef) -> BitmapStrikes {
   let num_glyphs = bitmap_num_glyphs(font)
-  match BitmapStrikes::with_format(font, BitmapFormat::Sbix) {
+  match BitmapStrikes::with_format(font, Sbix) {
     None =>
-      match BitmapStrikes::with_format(font, BitmapFormat::Cbdt) {
+      match BitmapStrikes::with_format(font, Cbdt) {
         None =>
-          match BitmapStrikes::with_format(font, BitmapFormat::Ebdt) {
-            None => BitmapStrikes::{ kind: NoStrikes, num_glyphs }
+          match BitmapStrikes::with_format(font, Ebdt) {
+            None => { kind: NoStrikes, num_glyphs }
             Some(v) => v
           }
         Some(v) => v
@@ -241,21 +241,19 @@ pub fn BitmapStrikes::with_format(
 ) -> BitmapStrikes? {
   let num_glyphs = bitmap_num_glyphs(font)
   match format {
-    BitmapFormat::Sbix =>
+    Sbix =>
       match font.table(TAG_SBIX) {
         None => None
-        Some(sbix) => Some(BitmapStrikes::{ kind: Sbix(sbix), num_glyphs })
+        Some(sbix) => Some({ kind: Sbix(sbix), num_glyphs })
       }
-    BitmapFormat::Cbdt =>
+    Cbdt =>
       match (font.table(TAG_CBLC), font.table(TAG_CBDT)) {
-        (Some(cblc), Some(cbdt)) =>
-          Some(BitmapStrikes::{ kind: Cbdt(cblc, cbdt), num_glyphs })
+        (Some(cblc), Some(cbdt)) => Some({ kind: Cbdt(cblc, cbdt), num_glyphs })
         _ => None
       }
-    BitmapFormat::Ebdt =>
+    Ebdt =>
       match (font.table(TAG_EBLC), font.table(TAG_EBDT)) {
-        (Some(eblc), Some(ebdt)) =>
-          Some(BitmapStrikes::{ kind: Ebdt(eblc, ebdt), num_glyphs })
+        (Some(eblc), Some(ebdt)) => Some({ kind: Ebdt(eblc, ebdt), num_glyphs })
         _ => None
       }
   }
@@ -265,9 +263,9 @@ pub fn BitmapStrikes::with_format(
 pub fn BitmapStrikes::format(self : BitmapStrikes) -> BitmapFormat? {
   match self.kind {
     NoStrikes => None
-    Sbix(_) => Some(BitmapFormat::Sbix)
-    Cbdt(_, _) => Some(BitmapFormat::Cbdt)
-    Ebdt(_, _) => Some(BitmapFormat::Ebdt)
+    Sbix(_) => Some(Sbix)
+    Cbdt(_, _) => Some(Cbdt)
+    Ebdt(_, _) => Some(Ebdt)
   }
 }
 
@@ -340,8 +338,8 @@ pub fn BitmapStrikes::get(self : BitmapStrikes, index : Int) -> BitmapStrike? {
       if ppem < 0 {
         None
       } else {
-        Some(BitmapStrike::{
-          format: BitmapFormat::Sbix,
+        Some({
+          format: Sbix,
           ppem_x: ppem,
           ppem_y: ppem,
           sbix: Some(sbix),
@@ -358,10 +356,8 @@ pub fn BitmapStrikes::get(self : BitmapStrikes, index : Int) -> BitmapStrike? {
         })
       }
     }
-    Cbdt(loc, data) =>
-      bitmap_loc_get_size(loc, data, true, index, BitmapFormat::Cbdt)
-    Ebdt(loc, data) =>
-      bitmap_loc_get_size(loc, data, false, index, BitmapFormat::Ebdt)
+    Cbdt(loc, data) => bitmap_loc_get_size(loc, data, true, index, Cbdt)
+    Ebdt(loc, data) => bitmap_loc_get_size(loc, data, false, index, Ebdt)
   }
 }
 
@@ -386,7 +382,7 @@ fn bitmap_loc_get_size(
   let bit_depth = loc.at(base + 46).to_int()
   let ppem_x = loc.at(base + 44).to_int()
   let ppem_y = loc.at(base + 45).to_int()
-  Some(BitmapStrike::{
+  Some({
     format,
     ppem_x,
     ppem_y,
@@ -538,8 +534,8 @@ fn bitmap_bdt_glyph(strike : BitmapStrike, gid : GlyphId) -> BitmapGlyph? {
             let start = 9
             let end = start + png_len
             let png = record[start:end]
-            Some(BitmapGlyph::{
-              format: BitmapImageFormat::Png,
+            Some({
+              format: Png,
               data: png,
               ppem_x: strike.ppem_x,
               ppem_y: strike.ppem_y,
@@ -571,10 +567,8 @@ fn bitmap_bdt_glyph(strike : BitmapStrike, gid : GlyphId) -> BitmapGlyph? {
             let start = 5
             let end = start + data_len
             let bits = record[start:end]
-            Some(BitmapGlyph::{
-              format: BitmapImageFormat::Unknown(
-                image_format.reinterpret_as_uint(),
-              ),
+            Some({
+              format: Unknown(image_format.reinterpret_as_uint()),
               data: bits,
               ppem_x: strike.ppem_x,
               ppem_y: strike.ppem_y,
@@ -639,13 +633,13 @@ fn bitmap_sbix_strike_glyph(
   let format = if graphic_type == 0x706E6720 { // "png "
     BitmapImageFormat::Png
   } else if graphic_type == 0x6A706720 { // "jpg "
-    BitmapImageFormat::Jpeg
+    Jpeg
   } else {
-    BitmapImageFormat::Unknown(graphic_type)
+    Unknown(graphic_type)
   }
   let mut width : Int? = None
   let mut height : Int? = None
-  if format is BitmapImageFormat::Png {
+  if format is Png {
     if data.length() >= 24 {
       let w = bitmap_read_u32_be_int(data, 16).unwrap_or(-1)
       let h = bitmap_read_u32_be_int(data, 20).unwrap_or(-1)
@@ -655,7 +649,7 @@ fn bitmap_sbix_strike_glyph(
       }
     }
   }
-  Some(BitmapGlyph::{
+  Some({
     format,
     data,
     ppem_x: ppem,

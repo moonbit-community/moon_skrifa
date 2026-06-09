@@ -94,7 +94,7 @@ test "autohint style tables: script/style metadata" {
   guard autohint_style_script_ix(89) == 59 else {
     fail("CJKV ideographs style uses Hani script class")
   }
-  guard autohint_style_script_group(89) is AutoHintScriptGroup::Cjk else {
+  guard autohint_style_script_group(89) is Cjk else {
     fail("CJKV ideographs should be CJK group")
   }
 }

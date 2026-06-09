@@ -184,7 +184,7 @@ test "tt_hint: misc GETINFO" {
   let retained_mono = TtRetainedGraphicsState::new_with_flags(
     0x10000,
     20,
-    Target::Mono,
+    Mono,
     false,
     false,
   )
@@ -220,7 +220,7 @@ test "tt_hint: misc GETINFO" {
   let retained_vlcd = TtRetainedGraphicsState::new_with_flags(
     0x10000,
     20,
-    Target::Smooth(SmoothMode::VerticalLcd, false, true),
+    Smooth(VerticalLcd, false, true),
     false,
     false,
   )
@@ -262,12 +262,12 @@ test "tt_hint: misc GETVARIATION pads/truncates and GETDATA returns 17" {
   )
   let engine0 = tt_make_engine_for_misc(retained0, 0, empty_coords)
   match engine0.op_getvariation(0) {
-    Err(HintError::UnhandledOpcode(0x91, 0)) => ()
+    Err(UnhandledOpcode(0x91, 0)) => ()
     Ok(_) => fail("expected UnhandledOpcode(GETVARIATION)")
     Err(_) => fail("expected UnhandledOpcode(GETVARIATION)")
   }
   match engine0.op_getdata(0) {
-    Err(HintError::UnhandledOpcode(0x92, 0)) => ()
+    Err(UnhandledOpcode(0x92, 0)) => ()
     Ok(_) => fail("expected UnhandledOpcode(GETDATA)")
     Err(_) => fail("expected UnhandledOpcode(GETDATA)")
   }

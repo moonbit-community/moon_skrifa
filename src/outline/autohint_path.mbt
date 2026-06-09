@@ -46,7 +46,7 @@ fn autohint_emit_contour(
     (first.x, first.y, start)
   } else {
     match path_style {
-      PathStyle::FreeType =>
+      FreeType =>
         if last.is_on_curve() {
           (last.x, last.y, end)
         } else {
@@ -56,7 +56,7 @@ fn autohint_emit_contour(
             -1,
           )
         }
-      PathStyle::HarfBuzz =>
+      HarfBuzz =>
         if n >= 2 {
           let second = outline.points.at(start + 1)
           if second.is_on_curve() {

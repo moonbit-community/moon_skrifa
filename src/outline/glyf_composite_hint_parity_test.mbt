@@ -49,10 +49,7 @@ test "hint: composite glyf nonuniform scale (glyf_components gid=3 size=16)" {
   let glyph = outlines.get(gid).unwrap()
   let pen = SvgPen::SvgPen()
   glyph
-  .draw(
-    DrawSettings::hinted(hinter, false).with_path_style(PathStyle::FreeType),
-    pen,
-  )
+  .draw(DrawSettings::hinted(hinter, false).with_path_style(FreeType), pen)
   .unwrap()
   |> ignore
   inspect(
@@ -74,10 +71,7 @@ test "hint: composite glyf scaled component offset (glyf_components gid=7 size=1
   let glyph = outlines.get(gid).unwrap()
   let pen = SvgPen::SvgPen()
   glyph
-  .draw(
-    DrawSettings::hinted(hinter, false).with_path_style(PathStyle::FreeType),
-    pen,
-  )
+  .draw(DrawSettings::hinted(hinter, false).with_path_style(FreeType), pen)
   .unwrap()
   |> ignore
   inspect(
@@ -99,10 +93,7 @@ test "hint: composite glyf unscaled component offset (glyf_components gid=8 size
   let glyph = outlines.get(gid).unwrap()
   let pen = SvgPen::SvgPen()
   glyph
-  .draw(
-    DrawSettings::hinted(hinter, false).with_path_style(PathStyle::FreeType),
-    pen,
-  )
+  .draw(DrawSettings::hinted(hinter, false).with_path_style(FreeType), pen)
   .unwrap()
   |> ignore
   inspect(

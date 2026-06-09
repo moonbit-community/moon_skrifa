@@ -148,7 +148,7 @@ pub fn Stretch::ultra_expanded() -> Stretch {
 
 ///|
 pub fn Stretch::Stretch(ratio : Double) -> Stretch {
-  Stretch::{ ratio, }
+  { ratio, }
 }
 
 ///|
@@ -250,7 +250,7 @@ pub fn Weight::extra_black() -> Weight {
 
 ///|
 pub fn Weight::Weight(value : Double) -> Weight {
-  Weight::{ value, }
+  { value, }
 }
 
 ///|
@@ -288,7 +288,7 @@ pub fn FontRef::attributes(self : FontRef) -> Attributes {
       } else {
         Normal
       }
-      Attributes::{ stretch, style, weight: Weight(weight_class.to_double()) }
+      { stretch, style, weight: Weight(weight_class.to_double()) }
     }
     None =>
       match self.table(TAG_HEAD) {
@@ -304,10 +304,10 @@ pub fn FontRef::attributes(self : FontRef) -> Attributes {
           } else {
             Weight::default()
           }
-          Attributes::{ stretch: Stretch::default(), style, weight }
+          { stretch: Stretch::default(), style, weight }
         }
         None =>
-          Attributes::{
+          {
             stretch: Stretch::default(),
             style: Normal,
             weight: Weight::default(),

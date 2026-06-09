@@ -819,33 +819,33 @@ pub fn FontRef::localized_strings(
   id : StringId,
 ) -> LocalizedStrings {
   let name = match self.table(TAG_NAME) {
-    None => return LocalizedStrings::{ id, strings: Array::new() }
+    None => return { id, strings: Array::new() }
     Some(v) => v
   }
   let format = string_read_u16_be(name, 0).unwrap_or(-1)
   let count = string_read_u16_be(name, 2).unwrap_or(-1)
   let string_offset = string_read_u16_be(name, 4).unwrap_or(-1)
   if format < 0 || count < 0 || string_offset < 0 {
-    return LocalizedStrings::{ id, strings: Array::new() }
+    return { id, strings: Array::new() }
   }
   let records_base = 6
   let records_end = records_base + count * 12
   if records_end < records_base || records_end > name.length() {
-    return LocalizedStrings::{ id, strings: Array::new() }
+    return { id, strings: Array::new() }
   }
   let lang_tags : Array[(Int, Int)] = Array::new()
   if format == 1 {
     if records_end + 2 > name.length() {
-      return LocalizedStrings::{ id, strings: Array::new() }
+      return { id, strings: Array::new() }
     }
     let tag_count = string_read_u16_be(name, records_end).unwrap_or(-1)
     if tag_count < 0 {
-      return LocalizedStrings::{ id, strings: Array::new() }
+      return { id, strings: Array::new() }
     }
     let tags_base = records_end + 2
     let tags_end = tags_base + tag_count * 4
     if tags_end < tags_base || tags_end > name.length() {
-      return LocalizedStrings::{ id, strings: Array::new() }
+      return { id, strings: Array::new() }
     }
     for i in 0..<tag_count {
       let pos = tags_base + i * 4
@@ -857,10 +857,10 @@ pub fn FontRef::localized_strings(
       lang_tags.push((len, off))
     }
   } else if format != 0 {
-    return LocalizedStrings::{ id, strings: Array::new() }
+    return { id, strings: Array::new() }
   }
   if string_offset > name.length() {
-    return LocalizedStrings::{ id, strings: Array::new() }
+    return { id, strings: Array::new() }
   }
   let strings : Array[LocalizedString] = Array::new()
   for i in 0..<count {
@@ -916,7 +916,7 @@ pub fn FontRef::localized_strings(
         _ => None
       }
     }
-    strings.push(LocalizedString::{ language, value })
+    strings.push({ language, value })
   }
-  LocalizedStrings::{ id, strings }
+  { id, strings }
 }

@@ -54,7 +54,7 @@ fn TtLoopBudget::TtLoopBudget(
       // 300 + 22 * cvt_len
       300 + 22 * cvt_len
   }
-  TtLoopBudget::{ limit, backward_jumps: 0, loop_calls: 0 }
+  { limit, backward_jumps: 0, loop_calls: 0 }
 }
 
 ///|
@@ -69,7 +69,7 @@ fn TtLoopBudget::doing_backward_jump(
 ) -> Result[Unit, HintError] {
   self.backward_jumps = self.backward_jumps + 1
   if self.backward_jumps > self.limit {
-    Err(HintError::ExceededExecutionBudget)
+    Err(ExceededExecutionBudget)
   } else {
     Ok(())
   }
@@ -82,7 +82,7 @@ fn TtLoopBudget::doing_loop_call(
 ) -> Result[Unit, HintError] {
   self.loop_calls = self.loop_calls + count
   if self.loop_calls > self.limit {
-    Err(HintError::ExceededExecutionBudget)
+    Err(ExceededExecutionBudget)
   } else {
     Ok(())
   }
@@ -123,12 +123,12 @@ fn TtEngine::TtEngine(
   graphics.retained = retained
   graphics.update_projection_state()
   let loop_budget = TtLoopBudget(cvt.length(), point_count)
-  TtEngine::{
+  {
     program: TtProgramState(
       font_code,
       prep_code,
       glyph_code,
-      TtProgram::Font,
+      Font,
       max_call_depth,
     ),
     value_stack: TtValueStack(stack_buf, true),
@@ -157,12 +157,12 @@ fn TtEngine::reset(
   self.graphics.is_pedantic = is_pedantic
   self.loop_budget.reset()
   match program {
-    TtProgram::Font => {
+    Font => {
       self.functions.reset()
       self.instructions.reset()
     }
-    TtProgram::ControlValue => self.graphics.backward_compatibility = false
-    TtProgram::Glyph => {
+    ControlValue => self.graphics.backward_compatibility = false
+    Glyph => {
       // Instruct control bit 1 says we reset retained graphics state to default.
       if (self.graphics.retained.instruct_control & 2) != 0 {
         self.graphics.reset_retained()
@@ -214,11 +214,11 @@ fn TtEngine::run(self : TtEngine) -> Result[Unit, HintError] {
     match self.dispatch(ins0) {
       Ok(_) => ()
       Err(e) => {
-        if e is HintError::ValueStackUnderflow {
+        if e is ValueStackUnderflow {
           let tag = match self.program.current {
-            TtProgram::Font => "fpgm"
-            TtProgram::ControlValue => "prep"
-            TtProgram::Glyph => "glyf"
+            Font => "fpgm"
+            ControlValue => "prep"
+            Glyph => "glyf"
           }
           println(
             "tt_hint underflow tag=" +
@@ -236,7 +236,7 @@ fn TtEngine::run(self : TtEngine) -> Result[Unit, HintError] {
     }
     count = count + 1
     if count > TT_MAX_RUN_INSTRUCTIONS {
-      return Err(HintError::ExceededExecutionBudget)
+      return Err(ExceededExecutionBudget)
     }
   }
   Ok(())
@@ -249,10 +249,10 @@ fn TtEngine::op_unknown(
   pc : Int,
 ) -> Result[Unit, HintError] {
   match self.instructions.get(op) {
-    None => Err(HintError::UnhandledOpcode(op, pc))
+    None => Err(UnhandledOpcode(op, pc))
     Some(d) =>
       match d.slice() {
-        None => Err(HintError::InvalidDefinition(op))
+        None => Err(InvalidDefinition(op))
         Some(code) => {
           let return_pc = self.program.decoder.pc
           self.program.push_frame(code, 0, return_pc)
@@ -607,9 +607,9 @@ fn TtEngine::op_cmp_neq(self : TtEngine) -> Result[Unit, HintError] {
 fn TtEngine::op_dup(self : TtEngine) -> Result[Unit, HintError] {
   match self.value_stack.peek(0) {
     Ok(v) => self.value_stack.push(v)
-    Err(HintError::ValueStackUnderflow) =>
+    Err(ValueStackUnderflow) =>
       if self.value_stack.check {
-        Err(HintError::ValueStackUnderflow)
+        Err(ValueStackUnderflow)
       } else {
         self.value_stack.push(0)
       }
@@ -640,16 +640,16 @@ fn TtEngine::op_cindex(self : TtEngine) -> Result[Unit, HintError] {
   // Index 0 is valid and is a no-op.
   let top = self.value_stack.length()
   if top <= 0 {
-    return Err(HintError::ValueStackUnderflow)
+    return Err(ValueStackUnderflow)
   }
   let top_ix = top - 1
   let idx = self.value_stack.buf.at(top_ix)
   if idx < 0 {
-    return Err(HintError::ValueStackUnderflow)
+    return Err(ValueStackUnderflow)
   }
   let element_ix = top_ix - idx
   if element_ix < 0 {
-    return Err(HintError::ValueStackUnderflow)
+    return Err(ValueStackUnderflow)
   }
   self.value_stack.buf.set(top_ix, self.value_stack.buf.at(element_ix))
   Ok(())
@@ -661,20 +661,20 @@ fn TtEngine::op_mindex(self : TtEngine) -> Result[Unit, HintError] {
   // Index 0 moves the top element to the new top, effectively dropping one slot.
   let top = self.value_stack.length()
   if top <= 0 {
-    return Err(HintError::ValueStackUnderflow)
+    return Err(ValueStackUnderflow)
   }
   let top_ix = top - 1
   let idx = self.value_stack.buf.at(top_ix)
   if idx < 0 {
-    return Err(HintError::ValueStackUnderflow)
+    return Err(ValueStackUnderflow)
   }
   let element_ix = top_ix - idx
   if element_ix < 0 {
-    return Err(HintError::ValueStackUnderflow)
+    return Err(ValueStackUnderflow)
   }
   let new_top_ix = top_ix - 1
   if new_top_ix < 0 {
-    return Err(HintError::ValueStackUnderflow)
+    return Err(ValueStackUnderflow)
   }
   let v = self.value_stack.buf.at(element_ix)
   // Remove the element by shifting values above it down (including the index slot).
@@ -762,7 +762,7 @@ fn TtEngine::op_div(self : TtEngine) -> Result[Unit, HintError] {
     Ok(v) => v
   }
   if b == 0 {
-    return Err(HintError::DivideByZero)
+    return Err(DivideByZero)
   }
   // 26.6 / 26.6 => 26.6 (truncates rather than rounds).
   self.value_stack.push(tt_hint_mul_div_no_round(a, 64, b))
@@ -803,7 +803,7 @@ fn TtEngine::op_if(self : TtEngine) -> Result[Unit, HintError] {
   while !done {
     let ins = match self.program.decoder.decode() {
       Err(e) => return Err(e)
-      Ok(None) => return Err(HintError::UnexpectedEndOfBytecode)
+      Ok(None) => return Err(UnexpectedEndOfBytecode)
       Ok(Some(i)) => i
     }
     match ins.opcode {
@@ -826,7 +826,7 @@ fn TtEngine::op_else(self : TtEngine, _pc : Int) -> Result[Unit, HintError] {
   while nest_depth != 0 {
     let ins = match self.program.decoder.decode() {
       Err(e) => return Err(e)
-      Ok(None) => return Err(HintError::UnexpectedEndOfBytecode)
+      Ok(None) => return Err(UnexpectedEndOfBytecode)
       Ok(Some(i)) => i
     }
     match ins.opcode {
@@ -856,7 +856,7 @@ fn TtEngine::op_jmpr(self : TtEngine, _pc : Int) -> Result[Unit, HintError] {
   if jump < 0 {
     if jump == -1 {
       // If the offset is -1, we'll loop in place forever.
-      return Err(HintError::InvalidJump)
+      return Err(InvalidJump)
     }
     match self.loop_budget.doing_backward_jump() {
       Err(e) => return Err(e)
@@ -883,7 +883,7 @@ fn TtEngine::op_jrot(self : TtEngine, pc : Int) -> Result[Unit, HintError] {
     let jump = off - 1
     if jump < 0 {
       if jump == -1 {
-        return Err(HintError::InvalidJump)
+        return Err(InvalidJump)
       }
       match self.loop_budget.doing_backward_jump() {
         Err(e) => return Err(e)
@@ -912,7 +912,7 @@ fn TtEngine::op_jrof(self : TtEngine, pc : Int) -> Result[Unit, HintError] {
     let jump = off - 1
     if jump < 0 {
       if jump == -1 {
-        return Err(HintError::InvalidJump)
+        return Err(InvalidJump)
       }
       match self.loop_budget.doing_backward_jump() {
         Err(e) => return Err(e)
@@ -934,23 +934,23 @@ fn tt_engine_find_endf(code : BytesView, start : Int) -> Result[Int, HintError] 
   while true {
     let ins = match dec.decode() {
       Err(e) => return Err(e)
-      Ok(None) => return Err(HintError::UnexpectedEndOfBytecode)
+      Ok(None) => return Err(UnexpectedEndOfBytecode)
       Ok(Some(i)) => i
     }
     if ins.opcode == 0x2C || ins.opcode == 0x89 {
-      return Err(HintError::NestedDefinition)
+      return Err(NestedDefinition)
     } else if ins.opcode == 0x2D {
       // Return the end offset (pc after ENDF).
       return Ok(dec.pc)
     }
   }
-  Err(HintError::UnexpectedEndOfBytecode)
+  Err(UnexpectedEndOfBytecode)
 }
 
 ///|
 fn TtEngine::op_fdef(self : TtEngine, pc : Int) -> Result[Unit, HintError] {
-  if self.program.current is TtProgram::Glyph {
-    return Err(HintError::DefinitionInGlyphProgram)
+  if self.program.current is Glyph {
+    return Err(DefinitionInGlyphProgram)
   }
   let fn_id = match self.value_stack.pop() {
     Err(e) => return Err(e)
@@ -962,7 +962,7 @@ fn TtEngine::op_fdef(self : TtEngine, pc : Int) -> Result[Unit, HintError] {
     Ok(v) => v
   }
   if self.graphics.is_pedantic && end_pc - start > TT_MAX_DEFINITION_SIZE {
-    return Err(HintError::DefinitionTooLarge)
+    return Err(DefinitionTooLarge)
   }
   // end_pc is pc after ENDF.
   match
@@ -983,8 +983,8 @@ fn TtEngine::op_fdef(self : TtEngine, pc : Int) -> Result[Unit, HintError] {
 
 ///|
 fn TtEngine::op_idef(self : TtEngine, pc : Int) -> Result[Unit, HintError] {
-  if self.program.current is TtProgram::Glyph {
-    return Err(HintError::DefinitionInGlyphProgram)
+  if self.program.current is Glyph {
+    return Err(DefinitionInGlyphProgram)
   }
   let opcode = match self.value_stack.pop() {
     Err(e) => return Err(e)
@@ -996,7 +996,7 @@ fn TtEngine::op_idef(self : TtEngine, pc : Int) -> Result[Unit, HintError] {
     Ok(v) => v
   }
   if self.graphics.is_pedantic && end_pc - start > TT_MAX_DEFINITION_SIZE {
-    return Err(HintError::DefinitionTooLarge)
+    return Err(DefinitionTooLarge)
   }
   match
     self.instructions.set_definition(
@@ -1027,10 +1027,10 @@ fn TtEngine::op_call(self : TtEngine, _pc : Int) -> Result[Unit, HintError] {
     Ok(v) => v
   }
   match self.functions.get(fn_id) {
-    None => Err(HintError::InvalidDefinition(fn_id))
+    None => Err(InvalidDefinition(fn_id))
     Some(d) =>
       match d.slice() {
-        None => Err(HintError::InvalidDefinition(fn_id))
+        None => Err(InvalidDefinition(fn_id))
         Some(code) => {
           let return_pc = self.program.decoder.pc
           self.program.push_frame(code, 0, return_pc)
@@ -1058,10 +1058,10 @@ fn TtEngine::op_loopcall(self : TtEngine, _pc : Int) -> Result[Unit, HintError] 
     Ok(_) => ()
   }
   match self.functions.get(fn_id) {
-    None => Err(HintError::InvalidDefinition(fn_id))
+    None => Err(InvalidDefinition(fn_id))
     Some(d) =>
       match d.slice() {
-        None => Err(HintError::InvalidDefinition(fn_id))
+        None => Err(InvalidDefinition(fn_id))
         Some(code) => {
           let return_pc = self.program.decoder.pc
           // Execute the function `count` times; subsequent iterations are

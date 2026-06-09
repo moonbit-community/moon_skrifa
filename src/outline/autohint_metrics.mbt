@@ -65,11 +65,7 @@ priv struct AutoHintWidthMetrics {
 
 ///|
 fn AutoHintWidthMetrics::default() -> AutoHintWidthMetrics {
-  AutoHintWidthMetrics::{
-    edge_distance_threshold: 0,
-    standard_width: 0,
-    is_extra_light: false,
-  }
+  { edge_distance_threshold: 0, standard_width: 0, is_extra_light: false }
 }
 
 ///|
@@ -80,7 +76,7 @@ priv struct AutoHintScaledWidth {
 
 ///|
 fn AutoHintScaledWidth::default() -> AutoHintScaledWidth {
-  AutoHintScaledWidth::{ scaled: 0, fitted: 0 }
+  { scaled: 0, fitted: 0 }
 }
 
 ///|
@@ -112,7 +108,7 @@ priv struct AutoHintUnscaledAxisMetrics {
 fn AutoHintUnscaledAxisMetrics::default(
   dim : Int,
 ) -> AutoHintUnscaledAxisMetrics {
-  AutoHintUnscaledAxisMetrics::{
+  {
     dim,
     widths: Array::new(),
     width_metrics: AutoHintWidthMetrics::default(),
@@ -143,7 +139,7 @@ priv struct AutoHintScaledAxisMetrics {
 
 ///|
 fn AutoHintScaledAxisMetrics::default(dim : Int) -> AutoHintScaledAxisMetrics {
-  AutoHintScaledAxisMetrics::{
+  {
     dim,
     scale: 0,
     delta: 0,
@@ -293,8 +289,8 @@ fn AutoHintScale::AutoHintScale(
   } else {
     0
   }
-  let is_italic = !(font_style is @moon_skrifa.Style::Normal)
-  let is_mono = target is Target::Mono
+  let is_italic = !(font_style is Normal)
+  let is_mono = target is Mono
   let is_light = target.is_light() || target.preserve_linear_metrics()
   let mut flags = 0
   // Snap vertical stems for monochrome and horizontal LCD rendering.
@@ -312,7 +308,7 @@ fn AutoHintScale::AutoHintScale(
   if is_mono {
     flags = flags | AUTOHINT_SCALE_MONO
   }
-  if group is AutoHintScriptGroup::Default {
+  if group is Default {
     // Disable horizontal hinting completely for LCD, light hinting and italic fonts.
     if target.is_lcd() || is_light || is_italic {
       flags = flags | AUTOHINT_SCALE_NO_HORIZONTAL
@@ -321,10 +317,10 @@ fn AutoHintScale::AutoHintScale(
     // CJK doesn't hint advances.
     flags = flags | AUTOHINT_SCALE_NO_ADVANCE
   }
-  if !(group is AutoHintScriptGroup::Default) {
+  if !(group is Default) {
     flags = flags | AUTOHINT_SCALE_NO_ADVANCE
   }
-  AutoHintScale::{
+  {
     x_scale: scale_bits,
     y_scale: scale_bits,
     x_delta: 0,
@@ -380,7 +376,7 @@ fn autohint_load_outline_for_metrics(
       let settings = DrawSettings::unhinted(
         @moon_skrifa.Size::unscaled(),
         @moon_skrifa.LocationRef::default(),
-      ).with_path_style(PathStyle::FreeType)
+      ).with_path_style(FreeType)
       let path = match glyph.path(settings) {
         Err(_) => return None
         Ok(p) => p
@@ -453,15 +449,11 @@ fn autohint_compute_unscaled_widths(
   let axis = AutoHintAxis::default()
   for dim in 0..<2 {
     axis.reset(dim, outline.orientation)
-    let ok = autohint_compute_segments(
-      outline,
-      axis,
-      AutoHintScriptGroup::Default,
-    )
+    let ok = autohint_compute_segments(outline, axis, Default)
     if !ok {
       continue
     }
-    autohint_link_segments(outline, axis, 0, AutoHintScriptGroup::Default, None)
+    autohint_link_segments(outline, axis, 0, Default, None)
     let widths = axes.at(dim).widths
     let segments = axis.segments
     for seg_ix in 0..<segments.length() {
@@ -495,7 +487,7 @@ fn autohint_compute_unscaled_widths(
     if stdw <= 0 {
       stdw = autohint_derived_constant(units_per_em, 50).max(1)
     }
-    axis_metrics.width_metrics = AutoHintWidthMetrics::{
+    axis_metrics.width_metrics = {
       edge_distance_threshold: (stdw / 5).max(1),
       standard_width: stdw,
       is_extra_light: false,
@@ -657,13 +649,7 @@ fn autohint_compute_default_blues(
     if autohint_blue_is_x_height(blue_zones) {
       zones = zones | AUTOHINT_BLUE_ADJUSTMENT
     }
-    blues.push(AutoHintUnscaledBlue::{
-      position: val,
-      overshoot: val,
-      ascender,
-      descender,
-      zones,
-    })
+    blues.push({ position: val, overshoot: val, ascender, descender, zones })
   }
   if blues.is_empty() {
     return blues
@@ -804,7 +790,7 @@ fn autohint_compute_cjk_blues(
     } else {
       flats.at(flats.length() / 2)
     }
-    blues.push(AutoHintUnscaledBlue::{
+    blues.push({
       position: blue_ref,
       overshoot: blue_shoot,
       ascender: blue_ref,
@@ -824,7 +810,7 @@ fn autohint_compute_unscaled_blues(
 ) -> Array[Array[AutoHintUnscaledBlue]] {
   let out : Array[Array[AutoHintUnscaledBlue]] = Array::new()
   match group {
-    AutoHintScriptGroup::Default => {
+    Default => {
       out.push(Array::new())
       out.push(
         autohint_compute_default_blues(
@@ -834,7 +820,7 @@ fn autohint_compute_unscaled_blues(
         ),
       )
     }
-    AutoHintScriptGroup::Cjk => {
+    Cjk => {
       // CJK blues are computed in both directions upstream, but horizontal
       // zones are disabled. Keep structure identical: [h, v].
       out.push(Array::new())
@@ -866,7 +852,7 @@ fn autohint_compute_unscaled_style_metrics(
   for dim in 0..<2 {
     axes.at(dim).blues = blues.at(dim)
   }
-  AutoHintUnscaledStyleMetrics::{ group, hint_top_to_bottom, axes }
+  { group, hint_top_to_bottom, axes }
 }
 
 ///|
@@ -918,9 +904,9 @@ fn autohint_scale_default_axis_metrics(
   scaled.width_metrics = axis.width_metrics
   for w in axis.widths.iter() {
     let s = autohint_fixed_mul(scaled.scale, w)
-    scaled.widths.push(AutoHintScaledWidth::{ scaled: s, fitted: s })
+    scaled.widths.push({ scaled: s, fitted: s })
   }
-  scaled.width_metrics = AutoHintWidthMetrics::{
+  scaled.width_metrics = {
     edge_distance_threshold: axis.width_metrics.edge_distance_threshold,
     standard_width: axis.width_metrics.standard_width,
     is_extra_light: autohint_fixed_mul(
@@ -936,8 +922,8 @@ fn autohint_scale_default_axis_metrics(
       let shoot = autohint_fixed_mul(scaled.scale, blue.overshoot) +
         scaled.delta
       let out_blue = AutoHintScaledBlue::{
-        position: AutoHintScaledWidth::{ scaled: pos, fitted: pos },
-        overshoot: AutoHintScaledWidth::{ scaled: shoot, fitted: shoot },
+        position: { scaled: pos, fitted: pos },
+        overshoot: { scaled: shoot, fitted: shoot },
         zones: blue.zones,
         is_active: false,
       }
@@ -1005,8 +991,8 @@ fn autohint_scale_cjk_axis_metrics(
     let pos = autohint_fixed_mul(blue.position, scaled.scale) + scaled.delta
     let shoot = autohint_fixed_mul(blue.overshoot, scaled.scale) + scaled.delta
     let out_blue = AutoHintScaledBlue::{
-      position: AutoHintScaledWidth::{ scaled: pos, fitted: pos },
-      overshoot: AutoHintScaledWidth::{ scaled: shoot, fitted: shoot },
+      position: { scaled: pos, fitted: pos },
+      overshoot: { scaled: shoot, fitted: shoot },
       zones: blue.zones,
       is_active: false,
     }
@@ -1048,14 +1034,13 @@ fn autohint_scale_style_metrics(
   for dim in 0..<2 {
     let axis = unscaled.axes.at(dim)
     let (s, scaled_axis) = match unscaled.group {
-      AutoHintScriptGroup::Default =>
-        autohint_scale_default_axis_metrics(axis, scale)
-      AutoHintScriptGroup::Cjk => autohint_scale_cjk_axis_metrics(axis, scale)
+      Default => autohint_scale_default_axis_metrics(axis, scale)
+      Cjk => autohint_scale_cjk_axis_metrics(axis, scale)
     }
     scale = s
     axes.push(scaled_axis)
   }
-  AutoHintScaledStyleMetrics::{ scale, axes }
+  { scale, axes }
 }
 
 ///|
@@ -1141,13 +1126,7 @@ test "autohint metrics: scale flags" {
   AUTOHINT_BLUE_LONG |> ignore
   AUTOHINT_MAX_WIDTHS |> ignore
   autohint_pix_floor(0) |> ignore
-  let scale = AutoHintScale(
-    16.0,
-    2048,
-    @moon_skrifa.Style::Normal,
-    Target::Mono,
-    AutoHintScriptGroup::Default,
-  )
+  let scale = AutoHintScale(16.0, 2048, Normal, Mono, Default)
   // Basic smoke checks (also marks fields as used for warnings).
   inspect((scale.x_scale != 0).to_string(), content="true")
   inspect(

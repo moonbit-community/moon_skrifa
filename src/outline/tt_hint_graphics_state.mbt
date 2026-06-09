@@ -35,7 +35,7 @@ priv struct TtVec14 {
 ///|
 fn TtVec14::default() -> TtVec14 {
   // (1, 0) in 2.14 (x-axis), matches fontations/FreeType defaults.
-  TtVec14::{ x: 0x4000, y: 0 }
+  { x: 0x4000, y: 0 }
 }
 
 ///|
@@ -60,7 +60,7 @@ priv struct TtRetainedGraphicsState {
 
 ///|
 fn TtRetainedGraphicsState::default() -> TtRetainedGraphicsState {
-  TtRetainedGraphicsState::{
+  {
     auto_flip: true,
     // 17/16 pixels in 26.6: (17 * 64 / 16) = 68
     control_value_cutin: 68,
@@ -99,7 +99,7 @@ fn TtRetainedGraphicsState::new_with_flags(
   is_stretched : Bool,
 ) -> TtRetainedGraphicsState {
   let d = TtRetainedGraphicsState::default()
-  TtRetainedGraphicsState::{
+  {
     auto_flip: d.auto_flip,
     control_value_cutin: d.control_value_cutin,
     delta_base: d.delta_base,
@@ -160,11 +160,11 @@ fn TtGraphicsState::default() -> TtGraphicsState {
   let s = TtGraphicsState::{
     retained: TtRetainedGraphicsState::default(),
     proj_vector: v,
-    proj_axis: TtCoordAxis::Y,
+    proj_axis: Y,
     dual_proj_vector: v,
-    dual_proj_axis: TtCoordAxis::Y,
+    dual_proj_axis: Y,
     freedom_vector: v,
-    freedom_axis: TtCoordAxis::Y,
+    freedom_axis: Y,
     fdotp: 0x4000,
     round_state: TtRoundState::default(),
     rp0: 0,
@@ -221,24 +221,24 @@ fn TtGraphicsState::reset_retained(self : TtGraphicsState) -> Unit {
 ///|
 fn TtGraphicsState::zp0_zone(self : TtGraphicsState) -> TtZone {
   match self.zp0 {
-    TtZonePointer::Twilight => self.twilight
-    TtZonePointer::Glyph => self.glyph
+    Twilight => self.twilight
+    Glyph => self.glyph
   }
 }
 
 ///|
 fn TtGraphicsState::zp1_zone(self : TtGraphicsState) -> TtZone {
   match self.zp1 {
-    TtZonePointer::Twilight => self.twilight
-    TtZonePointer::Glyph => self.glyph
+    Twilight => self.twilight
+    Glyph => self.glyph
   }
 }
 
 ///|
 fn TtGraphicsState::zp2_zone(self : TtGraphicsState) -> TtZone {
   match self.zp2 {
-    TtZonePointer::Twilight => self.twilight
-    TtZonePointer::Glyph => self.glyph
+    Twilight => self.twilight
+    Glyph => self.glyph
   }
 }
 
@@ -267,24 +267,24 @@ fn TtGraphicsState::update_projection_state(self : TtGraphicsState) -> Unit {
     let fy = self.freedom_vector.y
     self.fdotp = (px * fx + py * fy) >> 14
   }
-  self.proj_axis = TtCoordAxis::Both
+  self.proj_axis = Both
   if self.proj_vector.x == one {
-    self.proj_axis = TtCoordAxis::X
+    self.proj_axis = X
   } else if self.proj_vector.y == one {
-    self.proj_axis = TtCoordAxis::Y
+    self.proj_axis = Y
   }
-  self.dual_proj_axis = TtCoordAxis::Both
+  self.dual_proj_axis = Both
   if self.dual_proj_vector.x == one {
-    self.dual_proj_axis = TtCoordAxis::X
+    self.dual_proj_axis = X
   } else if self.dual_proj_vector.y == one {
-    self.dual_proj_axis = TtCoordAxis::Y
+    self.dual_proj_axis = Y
   }
-  self.freedom_axis = TtCoordAxis::Both
+  self.freedom_axis = Both
   if self.fdotp == one {
     if self.freedom_vector.x == one {
-      self.freedom_axis = TtCoordAxis::X
+      self.freedom_axis = X
     } else if self.freedom_vector.y == one {
-      self.freedom_axis = TtCoordAxis::Y
+      self.freedom_axis = Y
     }
   }
   // Avoid tiny fdotp that can lead to overflows.
@@ -301,9 +301,9 @@ fn TtGraphicsState::project(
   p2 : TtPoint,
 ) -> Int {
   match self.proj_axis {
-    TtCoordAxis::X => p1.x - p2.x
-    TtCoordAxis::Y => p1.y - p2.y
-    TtCoordAxis::Both => {
+    X => p1.x - p2.x
+    Y => p1.y - p2.y
+    Both => {
       let dx = p1.x - p2.x
       let dy = p1.y - p2.y
       tt_dot14(dx, dy, self.proj_vector.x, self.proj_vector.y)
@@ -319,9 +319,9 @@ fn TtGraphicsState::dual_project(
   p2 : TtPoint,
 ) -> Int {
   match self.dual_proj_axis {
-    TtCoordAxis::X => p1.x - p2.x
-    TtCoordAxis::Y => p1.y - p2.y
-    TtCoordAxis::Both => {
+    X => p1.x - p2.x
+    Y => p1.y - p2.y
+    Both => {
       let dx = p1.x - p2.x
       let dy = p1.y - p2.y
       tt_dot14(dx, dy, self.dual_proj_vector.x, self.dual_proj_vector.y)
@@ -337,9 +337,9 @@ fn TtGraphicsState::dual_project_unscaled(
   p2 : TtPoint,
 ) -> Int {
   match self.dual_proj_axis {
-    TtCoordAxis::X => p1.x - p2.x
-    TtCoordAxis::Y => p1.y - p2.y
-    TtCoordAxis::Both => {
+    X => p1.x - p2.x
+    Y => p1.y - p2.y
+    Both => {
       let dx = p1.x - p2.x
       let dy = p1.y - p2.y
       tt_dot14(dx, dy, self.dual_proj_vector.x, self.dual_proj_vector.y)
@@ -405,8 +405,8 @@ fn TtGraphicsState::point_displacement(
     (self.zp1, self.rp2)
   }
   let zone = match zone_ptr {
-    TtZonePointer::Twilight => self.twilight
-    TtZonePointer::Glyph => self.glyph
+    Twilight => self.twilight
+    Glyph => self.glyph
   }
   let point = match zone.point(point_ix) {
     Err(e) => return Err(e)
@@ -420,7 +420,7 @@ fn TtGraphicsState::point_displacement(
   let fv = self.freedom_vector
   let dx = tt_mul_div_round(dist, fv.x, self.fdotp)
   let dy = tt_mul_div_round(dist, fv.y, self.fdotp)
-  Ok(TtPointDisplacement::{ zone: zone_ptr, point_ix, dx, dy })
+  Ok({ zone: zone_ptr, point_ix, dx, dy })
 }
 
 ///|
@@ -446,13 +446,13 @@ fn TtGraphicsState::move_zp2_point(
         Err(e) => return Err(e)
         Ok(v) => v
       }
-      match zone.set_point(index, TtPoint::{ x: p.x + dx, y: p.y }) {
+      match zone.set_point(index, { x: p.x + dx, y: p.y }) {
         Err(e) => return Err(e)
         Ok(_) => ()
       }
     }
     if touch {
-      match zone.touch(index, TtAxis::X) {
+      match zone.touch(index, X) {
         Err(e) => return Err(e)
         Ok(_) => ()
       }
@@ -464,13 +464,13 @@ fn TtGraphicsState::move_zp2_point(
         Err(e) => return Err(e)
         Ok(v) => v
       }
-      match zone.set_point(index, TtPoint::{ x: p.x, y: p.y + dy }) {
+      match zone.set_point(index, { x: p.x, y: p.y + dy }) {
         Err(e) => return Err(e)
         Ok(_) => ()
       }
     }
     if touch {
-      match zone.touch(index, TtAxis::Y) {
+      match zone.touch(index, Y) {
         Err(e) => return Err(e)
         Ok(_) => ()
       }
@@ -492,45 +492,43 @@ fn TtGraphicsState::move_point(
   let fv = self.freedom_vector
   let fdotp = self.fdotp
   let zone = match zone_ptr {
-    TtZonePointer::Twilight => self.twilight
-    TtZonePointer::Glyph => self.glyph
+    Twilight => self.twilight
+    Glyph => self.glyph
   }
   match self.freedom_axis {
-    TtCoordAxis::X => {
+    X => {
       if !back_compat {
         let p = match zone.point(index) {
           Err(e) => return Err(e)
           Ok(v) => v
         }
-        match
-          zone.set_point(index, TtPoint::{ x: p.x + distance_bits, y: p.y }) {
+        match zone.set_point(index, { x: p.x + distance_bits, y: p.y }) {
           Err(e) => return Err(e)
           Ok(_) => ()
         }
       }
-      match zone.touch(index, TtAxis::X) {
+      match zone.touch(index, X) {
         Err(e) => return Err(e)
         Ok(_) => ()
       }
     }
-    TtCoordAxis::Y => {
+    Y => {
       if !back_compat_and_did_iup {
         let p = match zone.point(index) {
           Err(e) => return Err(e)
           Ok(v) => v
         }
-        match
-          zone.set_point(index, TtPoint::{ x: p.x, y: p.y + distance_bits }) {
+        match zone.set_point(index, { x: p.x, y: p.y + distance_bits }) {
           Err(e) => return Err(e)
           Ok(_) => ()
         }
       }
-      match zone.touch(index, TtAxis::Y) {
+      match zone.touch(index, Y) {
         Err(e) => return Err(e)
         Ok(_) => ()
       }
     }
-    TtCoordAxis::Both => {
+    Both => {
       if fv.x != 0 {
         if !back_compat {
           let dx = tt_mul_div_round(distance_bits, fv.x, fdotp)
@@ -538,12 +536,12 @@ fn TtGraphicsState::move_point(
             Err(e) => return Err(e)
             Ok(v) => v
           }
-          match zone.set_point(index, TtPoint::{ x: p.x + dx, y: p.y }) {
+          match zone.set_point(index, { x: p.x + dx, y: p.y }) {
             Err(e) => return Err(e)
             Ok(_) => ()
           }
         }
-        match zone.touch(index, TtAxis::X) {
+        match zone.touch(index, X) {
           Err(e) => return Err(e)
           Ok(_) => ()
         }
@@ -555,12 +553,12 @@ fn TtGraphicsState::move_point(
             Err(e) => return Err(e)
             Ok(v) => v
           }
-          match zone.set_point(index, TtPoint::{ x: p.x, y: p.y + dy }) {
+          match zone.set_point(index, { x: p.x, y: p.y + dy }) {
             Err(e) => return Err(e)
             Ok(_) => ()
           }
         }
-        match zone.touch(index, TtAxis::Y) {
+        match zone.touch(index, Y) {
           Err(e) => return Err(e)
           Ok(_) => ()
         }

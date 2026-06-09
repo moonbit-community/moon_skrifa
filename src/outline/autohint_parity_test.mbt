@@ -34,17 +34,13 @@ test "autohint: notoserif_autohint_shaping gid=1 size=16 ft" {
   let outlines0 = OutlineGlyphCollection::from_font(font)
   let h = HintingInstance::create(
     outlines0,
-    @moon_skrifa.Size::Size(16.0),
+    Size(16.0),
     @moon_skrifa.LocationRef::default(),
-    HintingOptions::HintingOptions(Engine::Auto(None), Target::default()),
+    HintingOptions(Auto(None), Target::default()),
   ).unwrap()
   let outlines = OutlineGlyphCollection::from_font(font)
-  let glyph = outlines
-    .get(@moon_skrifa.GlyphId::GlyphId((1).to_uint16()))
-    .unwrap()
-  let settings = DrawSettings::hinted(h, false).with_path_style(
-    PathStyle::FreeType,
-  )
+  let glyph = outlines.get(GlyphId((1).to_uint16())).unwrap()
+  let settings = DrawSettings::hinted(h, false).with_path_style(FreeType)
   let pen = SvgPen::with_precision(3)
   glyph.draw(settings, pen).unwrap() |> ignore
   inspect(
@@ -61,17 +57,13 @@ test "autohint: notoserifhebrew_autohint_metrics gid=1 size=16 ft" {
   let outlines0 = OutlineGlyphCollection::from_font(font)
   let h = HintingInstance::create(
     outlines0,
-    @moon_skrifa.Size::Size(16.0),
+    Size(16.0),
     @moon_skrifa.LocationRef::default(),
-    HintingOptions::HintingOptions(Engine::Auto(None), Target::default()),
+    HintingOptions(Auto(None), Target::default()),
   ).unwrap()
   let outlines = OutlineGlyphCollection::from_font(font)
-  let glyph = outlines
-    .get(@moon_skrifa.GlyphId::GlyphId((1).to_uint16()))
-    .unwrap()
-  let settings = DrawSettings::hinted(h, false).with_path_style(
-    PathStyle::FreeType,
-  )
+  let glyph = outlines.get(GlyphId((1).to_uint16())).unwrap()
+  let settings = DrawSettings::hinted(h, false).with_path_style(FreeType)
   let pen = SvgPen::with_precision(3)
   glyph.draw(settings, pen).unwrap() |> ignore
   inspect(

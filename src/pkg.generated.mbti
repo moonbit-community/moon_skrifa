@@ -184,18 +184,18 @@ pub using @core {trait TableProvider}
 
 // Traits
 pub(open) trait MetadataProvider {
-  attributes(Self) -> @core.Attributes
-  axes(Self) -> @core.AxisCollection
-  named_instances(Self) -> @core.NamedInstanceCollection
-  localized_strings(Self, UInt16) -> @core.LocalizedStrings
-  glyph_names(Self) -> @core.GlyphNames
-  metrics(Self, @core.Size, @core.LocationRef) -> @core.Metrics
-  glyph_metrics(Self, @core.Size, @core.LocationRef) -> @core.GlyphMetrics
-  charmap(Self) -> @core.Charmap
-  outline_glyphs(Self) -> @outline.OutlineGlyphCollection
-  bitmap_strikes(Self) -> @core.BitmapStrikes
-  color_glyphs(Self) -> @core.ColorGlyphCollection
-  color_palettes(Self) -> @core.ColorPalettes
+  fn attributes(Self) -> @core.Attributes
+  fn axes(Self) -> @core.AxisCollection
+  fn named_instances(Self) -> @core.NamedInstanceCollection
+  fn localized_strings(Self, UInt16) -> @core.LocalizedStrings
+  fn glyph_names(Self) -> @core.GlyphNames
+  fn metrics(Self, @core.Size, @core.LocationRef) -> @core.Metrics
+  fn glyph_metrics(Self, @core.Size, @core.LocationRef) -> @core.GlyphMetrics
+  fn charmap(Self) -> @core.Charmap
+  fn outline_glyphs(Self) -> @outline.OutlineGlyphCollection
+  fn bitmap_strikes(Self) -> @core.BitmapStrikes
+  fn color_glyphs(Self) -> @core.ColorGlyphCollection
+  fn color_palettes(Self) -> @core.ColorPalettes
 }
 pub impl MetadataProvider for @core.FontRef
 

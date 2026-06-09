@@ -112,7 +112,7 @@ test "tt_hint: arith f26dot6 binops (mul/div)" {
         )
       } else {
         match engine.op_div() {
-          Err(HintError::DivideByZero) => ()
+          Err(DivideByZero) => ()
           Ok(_) => fail("expected DivideByZero")
           Err(_) => fail("expected DivideByZero")
         }

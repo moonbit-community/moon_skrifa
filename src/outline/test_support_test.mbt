@@ -14,5 +14,5 @@
 
 ///|
 fn outline_test_gid(n : Int) -> @moon_skrifa.GlyphId {
-  @moon_skrifa.GlyphId::GlyphId(n.to_uint16())
+  GlyphId(n.to_uint16())
 }

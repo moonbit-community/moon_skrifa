@@ -102,16 +102,10 @@ test "tt_hint: graphics set vectors to line (SPVTL/SFVTL/SDPVTL)" {
   let y_axis = TtVec14::{ x: 0, y: one }
 
   // Set up a glyph zone with 2 points and 2 original points (26.6 bits).
-  engine.graphics.glyph = TtZone::{
+  engine.graphics.glyph = {
     unscaled: Array::new(),
-    points: Array::from_fixed_array([
-      TtPoint::{ x: 0, y: 0 },
-      TtPoint::{ x: 64, y: 0 },
-    ]),
-    original: Array::from_fixed_array([
-      TtPoint::{ x: 0, y: 64 },
-      TtPoint::{ x: 0, y: -64 },
-    ]),
+    points: Array::from_fixed_array([{ x: 0, y: 0 }, { x: 64, y: 0 }]),
+    original: Array::from_fixed_array([{ x: 0, y: 64 }, { x: 0, y: -64 }]),
     flags: Array::make(2, 0),
     contours: Array::new(),
   }
@@ -170,57 +164,42 @@ test "tt_hint: graphics simple state setting + INSTCTRL + SCANCTRL" {
   // ZP*
   engine.value_stack.push(1).unwrap() |> ignore
   engine.op_szp0().unwrap() |> ignore
-  inspect(engine.graphics.zp0 is TtZonePointer::Glyph, content="true")
+  inspect(engine.graphics.zp0 is Glyph, content="true")
   engine.value_stack.push(0).unwrap() |> ignore
   engine.op_szp1().unwrap() |> ignore
-  inspect(engine.graphics.zp1 is TtZonePointer::Twilight, content="true")
+  inspect(engine.graphics.zp1 is Twilight, content="true")
   engine.value_stack.push(1).unwrap() |> ignore
   engine.op_szp2().unwrap() |> ignore
-  inspect(engine.graphics.zp2 is TtZonePointer::Glyph, content="true")
+  inspect(engine.graphics.zp2 is Glyph, content="true")
   engine.value_stack.push(0).unwrap() |> ignore
   engine.op_szps().unwrap() |> ignore
-  inspect(engine.graphics.zp0 is TtZonePointer::Twilight, content="true")
-  inspect(engine.graphics.zp1 is TtZonePointer::Twilight, content="true")
-  inspect(engine.graphics.zp2 is TtZonePointer::Twilight, content="true")
+  inspect(engine.graphics.zp0 is Twilight, content="true")
+  inspect(engine.graphics.zp1 is Twilight, content="true")
+  inspect(engine.graphics.zp2 is Twilight, content="true")
   engine.value_stack.push(2).unwrap() |> ignore
   match engine.op_szps() {
-    Err(HintError::InvalidZoneIndex(2)) => ()
+    Err(InvalidZoneIndex(2)) => ()
     Ok(_) => fail("expected InvalidZoneIndex(2)")
     Err(_) => fail("expected InvalidZoneIndex(2)")
   }
 
   // Round state mode setters.
   engine.op_rtg().unwrap() |> ignore
-  inspect(engine.graphics.round_state.mode is TtRoundMode::Grid, content="true")
+  inspect(engine.graphics.round_state.mode is Grid, content="true")
   engine.op_rtdg().unwrap() |> ignore
-  inspect(
-    engine.graphics.round_state.mode is TtRoundMode::DoubleGrid,
-    content="true",
-  )
+  inspect(engine.graphics.round_state.mode is DoubleGrid, content="true")
   engine.op_rdtg().unwrap() |> ignore
-  inspect(
-    engine.graphics.round_state.mode is TtRoundMode::DownToGrid,
-    content="true",
-  )
+  inspect(engine.graphics.round_state.mode is DownToGrid, content="true")
   engine.op_rutg().unwrap() |> ignore
-  inspect(
-    engine.graphics.round_state.mode is TtRoundMode::UpToGrid,
-    content="true",
-  )
+  inspect(engine.graphics.round_state.mode is UpToGrid, content="true")
   engine.op_roff().unwrap() |> ignore
-  inspect(engine.graphics.round_state.mode is TtRoundMode::Off, content="true")
+  inspect(engine.graphics.round_state.mode is Off, content="true")
   engine.value_stack.push(0).unwrap() |> ignore
   engine.op_sround().unwrap() |> ignore
-  inspect(
-    engine.graphics.round_state.mode is TtRoundMode::Super,
-    content="true",
-  )
+  inspect(engine.graphics.round_state.mode is Super, content="true")
   engine.value_stack.push(0).unwrap() |> ignore
   engine.op_s45round().unwrap() |> ignore
-  inspect(
-    engine.graphics.round_state.mode is TtRoundMode::Super45,
-    content="true",
-  )
+  inspect(engine.graphics.round_state.mode is Super45, content="true")
 
   // SLOOP
   engine.value_stack.push(10).unwrap() |> ignore
@@ -228,7 +207,7 @@ test "tt_hint: graphics simple state setting + INSTCTRL + SCANCTRL" {
   inspect(engine.graphics.loop_counter == 10, content="true")
   engine.value_stack.push(-10).unwrap() |> ignore
   match engine.op_sloop() {
-    Err(HintError::NegativeLoopCounter) => ()
+    Err(NegativeLoopCounter) => ()
     Ok(_) => fail("expected NegativeLoopCounter")
     Err(_) => fail("expected NegativeLoopCounter")
   }
@@ -270,13 +249,13 @@ test "tt_hint: graphics simple state setting + INSTCTRL + SCANCTRL" {
   inspect(engine.graphics.retained.delta_shift == 4, content="true")
   engine.value_stack.push(7).unwrap() |> ignore
   match engine.op_sds() {
-    Err(HintError::InvalidStackValue(7)) => ()
+    Err(InvalidStackValue(7)) => ()
     Ok(_) => fail("expected InvalidStackValue(7)")
     Err(_) => fail("expected InvalidStackValue(7)")
   }
 
   // INSTCTRL (control value program): toggle instruct_control bits.
-  engine.program.current = TtProgram::ControlValue
+  engine.program.current = ControlValue
   for selector in 1..<4 {
     let enable_mask = 1 << (selector - 1)
     engine.value_stack.push(enable_mask).unwrap() |> ignore
@@ -301,7 +280,7 @@ test "tt_hint: graphics simple state setting + INSTCTRL + SCANCTRL" {
   engine.op_instctrl().unwrap() |> ignore
 
   // INSTCTRL (glyph program): selector 3 toggles backward_compatibility.
-  engine.program.current = TtProgram::Glyph
+  engine.program.current = Glyph
   engine.value_stack.push(4).unwrap() |> ignore
   engine.value_stack.push(3).unwrap() |> ignore
   engine.op_instctrl().unwrap() |> ignore
@@ -338,16 +317,10 @@ test "tt_hint: graphics set vectors to line handles equal points (x-axis default
   let engine = tt_make_engine_for_graphics(0x10000, 20)
   let one = 0x4000
   let x_axis = TtVec14::{ x: one, y: 0 }
-  engine.graphics.glyph = TtZone::{
+  engine.graphics.glyph = {
     unscaled: Array::new(),
-    points: Array::from_fixed_array([
-      TtPoint::{ x: 0, y: 0 },
-      TtPoint::{ x: 0, y: 0 },
-    ]),
-    original: Array::from_fixed_array([
-      TtPoint::{ x: 0, y: 0 },
-      TtPoint::{ x: 0, y: 0 },
-    ]),
+    points: Array::from_fixed_array([{ x: 0, y: 0 }, { x: 0, y: 0 }]),
+    original: Array::from_fixed_array([{ x: 0, y: 0 }, { x: 0, y: 0 }]),
     flags: Array::make(2, 0),
     contours: Array::new(),
   }

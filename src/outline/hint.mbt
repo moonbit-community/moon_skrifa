@@ -53,7 +53,7 @@ pub struct HintingOptions {
 
 ///|
 pub fn HintingOptions::default() -> HintingOptions {
-  HintingOptions::{ engine: Engine::AutoFallback, target: Target::default() }
+  { engine: AutoFallback, target: Target::default() }
 }
 
 ///|
@@ -62,7 +62,7 @@ pub fn HintingOptions::HintingOptions(
   engine : Engine,
   target : Target,
 ) -> HintingOptions {
-  HintingOptions::{ engine, target }
+  { engine, target }
 }
 
 ///|
@@ -83,11 +83,11 @@ pub fn Engine::resolve_auto_fallback(
   outlines : OutlineGlyphCollection,
 ) -> Engine {
   match self {
-    Engine::AutoFallback =>
+    AutoFallback =>
       if outlines.prefer_interpreter() {
-        Engine::Interpreter
+        Interpreter
       } else {
-        Engine::Auto(None)
+        Auto(None)
       }
     _ => self
   }
@@ -120,7 +120,7 @@ pub(all) enum SmoothMode {
 
 ///|
 pub fn SmoothMode::into(self : SmoothMode) -> Target {
-  Target::Smooth(self, true, false)
+  Smooth(self, true, false)
 }
 
 ///|
@@ -143,23 +143,23 @@ pub(all) enum LcdLayout {
 ///|
 pub fn HintingMode::into(self : HintingMode) -> HintingOptions {
   let target = match self {
-    HintingMode::Strong => Target::Mono
-    HintingMode::Smooth(lcd_subpixel, preserve_linear_metrics) => {
+    Strong => Target::Mono
+    Smooth(lcd_subpixel, preserve_linear_metrics) => {
       let mode = match lcd_subpixel {
         None => SmoothMode::Normal
-        Some(LcdLayout::Horizontal) => SmoothMode::Lcd
-        Some(LcdLayout::Vertical) => SmoothMode::VerticalLcd
+        Some(Horizontal) => Lcd
+        Some(Vertical) => VerticalLcd
       }
-      Target::Smooth(mode, true, preserve_linear_metrics)
+      Smooth(mode, true, preserve_linear_metrics)
     }
   }
-  HintingOptions::{ engine: Engine::AutoFallback, target }
+  { engine: AutoFallback, target }
 }
 
 ///|
 pub fn Target::mode(self : Target) -> SmoothMode? {
   match self {
-    Target::Smooth(mode, _, _) => Some(mode)
+    Smooth(mode, _, _) => Some(mode)
     _ => None
   }
 }
@@ -167,7 +167,7 @@ pub fn Target::mode(self : Target) -> SmoothMode? {
 ///|
 pub fn Target::symmetric_rendering(self : Target) -> Bool {
   match self {
-    Target::Smooth(_, symmetric, _) => symmetric
+    Smooth(_, symmetric, _) => symmetric
     _ => false
   }
 }
@@ -175,7 +175,7 @@ pub fn Target::symmetric_rendering(self : Target) -> Bool {
 ///|
 pub fn Target::preserve_linear_metrics(self : Target) -> Bool {
   match self {
-    Target::Smooth(_, _, preserve) => preserve
+    Smooth(_, _, preserve) => preserve
     _ => false
   }
 }
@@ -183,7 +183,7 @@ pub fn Target::preserve_linear_metrics(self : Target) -> Bool {
 ///|
 pub fn Target::is_smooth(self : Target) -> Bool {
   match self {
-    Target::Smooth(_, _, _) => true
+    Smooth(_, _, _) => true
     _ => false
   }
 }
@@ -191,8 +191,8 @@ pub fn Target::is_smooth(self : Target) -> Bool {
 ///|
 pub fn Target::is_grayscale_cleartype(self : Target) -> Bool {
   match self {
-    Target::Smooth(SmoothMode::Normal, _, _) => true
-    Target::Smooth(SmoothMode::Light, _, _) => true
+    Smooth(Normal, _, _) => true
+    Smooth(Light, _, _) => true
     _ => false
   }
 }
@@ -200,7 +200,7 @@ pub fn Target::is_grayscale_cleartype(self : Target) -> Bool {
 ///|
 pub fn Target::is_light(self : Target) -> Bool {
   match self {
-    Target::Smooth(SmoothMode::Light, _, _) => true
+    Smooth(Light, _, _) => true
     _ => false
   }
 }
@@ -208,7 +208,7 @@ pub fn Target::is_light(self : Target) -> Bool {
 ///|
 pub fn Target::is_lcd(self : Target) -> Bool {
   match self {
-    Target::Smooth(SmoothMode::Lcd, _, _) => true
+    Smooth(Lcd, _, _) => true
     _ => false
   }
 }
@@ -216,7 +216,7 @@ pub fn Target::is_lcd(self : Target) -> Bool {
 ///|
 pub fn Target::is_vertical_lcd(self : Target) -> Bool {
   match self {
-    Target::Smooth(SmoothMode::VerticalLcd, _, _) => true
+    Smooth(VerticalLcd, _, _) => true
     _ => false
   }
 }
@@ -292,7 +292,7 @@ fn AutoHintInstance::AutoHintInstance(
     None => GlyphStyles(outlines)
   }
   let attrs = outlines.font.attributes()
-  AutoHintInstance::{
+  {
     styles: resolved,
     is_fixed_width: autohint_is_fixed_width(outlines.font),
     font_style: attrs.style(),
@@ -325,7 +325,7 @@ pub fn HintingInstance::create(
     size: @moon_skrifa.Size::unscaled(),
     coords: Array::new(),
     target: options.target,
-    kind: HinterKind::None_,
+    kind: None_,
   }
   match h.reconfigure(outlines, size, location, options) {
     Err(e) => Err(e)
@@ -342,7 +342,7 @@ pub fn HintingInstance::size(self : HintingInstance) -> @moon_skrifa.Size {
 pub fn HintingInstance::location(
   self : HintingInstance,
 ) -> @moon_skrifa.LocationRef {
-  @moon_skrifa.LocationRef::LocationRef(self.coords.op_as_view())
+  LocationRef(self.coords.op_as_view())
 }
 
 ///|
@@ -353,10 +353,10 @@ pub fn HintingInstance::target(self : HintingInstance) -> Target {
 ///|
 pub fn HintingInstance::is_enabled(self : HintingInstance) -> Bool {
   match self.kind {
-    HinterKind::None_ => false
-    HinterKind::Glyf(tt) => tt.is_enabled()
-    HinterKind::Cff(_) => true
-    HinterKind::Auto(_) => true
+    None_ => false
+    Glyf(tt) => tt.is_enabled()
+    Cff(_) => true
+    Auto(_) => true
   }
 }
 
@@ -375,22 +375,22 @@ pub fn HintingInstance::reconfigure(
   }
   self.target = options.target
   let engine = match options.engine {
-    Engine::AutoFallback =>
+    AutoFallback =>
       if outlines.prefer_interpreter() {
         Engine::Interpreter
       } else {
-        Engine::Auto(None)
+        Auto(None)
       }
     _ => options.engine
   }
   let prev = self.kind
-  self.kind = HinterKind::None_
+  self.kind = None_
   match engine {
-    Engine::Interpreter =>
+    Interpreter =>
       match outlines.format() {
-        Some(OutlineGlyphFormat::Glyf) => {
+        Some(Glyf) => {
           let tt = match prev {
-            HinterKind::Glyf(inst) => inst
+            Glyf(inst) => inst
             _ => TtHintInstance::default()
           }
           let upem = outline_units_per_em(outlines.font).to_int()
@@ -400,7 +400,7 @@ pub fn HintingInstance::reconfigure(
               if outlines.fractional_size_hinting() {
                 size
               } else {
-                @moon_skrifa.Size::Size(ppem.round())
+                Size(ppem.round())
               }
           }
           let (_, scale_bits) = glyf_compute_scale_bits(
@@ -416,20 +416,19 @@ pub fn HintingInstance::reconfigure(
               self.target,
               self.coords.op_as_view(),
             ) {
-            Err(e) => return Err(DrawError::HintingFailed(e))
+            Err(e) => return Err(HintingFailed(e))
             Ok(_) => ()
           }
-          self.kind = HinterKind::Glyf(tt)
+          self.kind = Glyf(tt)
         }
-        Some(OutlineGlyphFormat::Cff) => self.kind = HinterKind::Cff(false)
-        Some(OutlineGlyphFormat::Cff2) => self.kind = HinterKind::Cff(true)
+        Some(Cff) => self.kind = Cff(false)
+        Some(Cff2) => self.kind = Cff(true)
         _ => ()
       }
-    Engine::Auto(_styles) =>
+    Auto(_styles) =>
       match outlines.format() {
         None => ()
-        Some(_) =>
-          self.kind = HinterKind::Auto(AutoHintInstance(outlines, _styles))
+        Some(_) => self.kind = Auto(AutoHintInstance(outlines, _styles))
       }
     _ => ()
   }
@@ -677,23 +676,23 @@ fn HintingInstance::hinted_path(
   path_style : PathStyle,
 ) -> Result[(AdjustedMetrics, Array[PathElement]), DrawError] {
   match self.kind {
-    HinterKind::None_ => Err(DrawError::NoSources)
-    HinterKind::Auto(a) =>
+    None_ => Err(NoSources)
+    Auto(a) =>
       a.hinted_path(
         glyph,
         self.size,
-        @moon_skrifa.LocationRef::LocationRef(self.coords.op_as_view()),
+        LocationRef(self.coords.op_as_view()),
         path_style,
         self.target,
       )
-    HinterKind::Glyf(tt) => {
-      if path_style is PathStyle::HarfBuzz {
-        return Err(DrawError::HarfBuzzHintingUnsupported)
+    Glyf(tt) => {
+      if path_style is HarfBuzz {
+        return Err(HarfBuzzHintingUnsupported)
       }
       if !tt.is_enabled() {
         let settings = DrawSettings::unhinted(
           self.size,
-          @moon_skrifa.LocationRef::LocationRef(self.coords.op_as_view()),
+          LocationRef(self.coords.op_as_view()),
         ).with_path_style(path_style)
         let metrics0 = match glyph.draw(settings, NullPen()) {
           Err(e) => return Err(e)
@@ -715,9 +714,9 @@ fn HintingInstance::hinted_path(
       }
       self.hinted_glyf_path(glyph, is_pedantic)
     }
-    HinterKind::Cff(is_cff2) => {
-      if path_style is PathStyle::HarfBuzz {
-        return Err(DrawError::HarfBuzzHintingUnsupported)
+    Cff(is_cff2) => {
+      if path_style is HarfBuzz {
+        return Err(HarfBuzzHintingUnsupported)
       }
       let location = @moon_skrifa.LocationRef::LocationRef(
         self.coords.op_as_view(),
@@ -733,7 +732,7 @@ fn HintingInstance::hinted_path(
         cff_outline_path_hinted(glyph.font, glyph.glyph_id, self.size)
       }
       match path {
-        None => Err(DrawError::GlyphNotFound(glyph.glyph_id))
+        None => Err(GlyphNotFound(glyph.glyph_id))
         Some(p) => Ok((AdjustedMetrics::default(), p))
       }
     }
@@ -756,13 +755,13 @@ fn AutoHintInstance::hinted_path(
   let unscaled_settings = DrawSettings::unhinted(
     @moon_skrifa.Size::unscaled(),
     location,
-  ).with_path_style(PathStyle::FreeType)
+  ).with_path_style(FreeType)
   let unscaled_path = match glyph.path(unscaled_settings) {
     Err(e) => return Err(e)
     Ok(p) => p
   }
   let outline = match glyph.kind {
-    OutlineGlyphFormat::Glyf => {
+    Glyf => {
       let o = AutoHintOutline::from_path(Array::new())
       match o.fill_glyf(glyph.font, glyph.glyph_id) {
         Ok(_) => o
@@ -794,7 +793,7 @@ fn AutoHintInstance::hinted_path(
   let y_axis_scale = scaled_metrics.axes.at(AUTOHINT_DIM_VERTICAL).scale
   let mut hinted_x_scale = scale.x_scale
   let mut edge_metrics : AutoHintEdgeMetrics? = None
-  let missing_blues = unscaled_metrics.group is AutoHintScriptGroup::Default &&
+  let missing_blues = unscaled_metrics.group is Default &&
     scaled_metrics.axes.at(AUTOHINT_DIM_VERTICAL).blues.is_empty()
   if !missing_blues {
     for dim in 0..<2 {
@@ -829,7 +828,7 @@ fn AutoHintInstance::hinted_path(
         unscaled_metrics.group,
       )
       if dim == AUTOHINT_DIM_VERTICAL {
-        if !(unscaled_metrics.group is AutoHintScriptGroup::Default) ||
+        if !(unscaled_metrics.group is Default) ||
           !self.styles._is_non_base(glyph.glyph_id) {
           autohint_compute_blue_edges(
             axis,
@@ -851,7 +850,7 @@ fn AutoHintInstance::hinted_path(
         hinted_x_scale = axis_metrics.scale
         let left = axis.edges.at(0)
         let right = axis.edges.at(axis.edges.length() - 1)
-        edge_metrics = Some(AutoHintEdgeMetrics::{
+        edge_metrics = Some({
           left_opos: left.opos,
           left_pos: left.pos,
           right_opos: right.opos,
@@ -959,8 +958,8 @@ fn HintingInstance::hinted_glyf_path(
   is_pedantic : Bool,
 ) -> Result[(AdjustedMetrics, Array[PathElement]), DrawError] {
   let tt = match self.kind {
-    HinterKind::Glyf(tt) => tt
-    _ => return Err(DrawError::NoSources)
+    Glyf(tt) => tt
+    _ => return Err(NoSources)
   }
   let font = glyph.font
   let gid = glyph.glyph_id
@@ -1001,7 +1000,7 @@ fn HintingInstance::hinted_glyf_path(
   let last_end = zone.contours.at(zone.contours.length() - 1)
   let num_points = last_end + 1
   if num_points < 0 || zone.points.length() < num_points + 4 {
-    return Err(DrawError::GlyphNotFound(gid))
+    return Err(GlyphNotFound(gid))
   }
   let phantom0 = zone.points.at(num_points)
   let phantom1 = zone.points.at(num_points + 1)

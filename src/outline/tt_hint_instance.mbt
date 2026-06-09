@@ -76,7 +76,7 @@ priv struct TtHintInstance {
 
 ///|
 fn TtHintInstance::default() -> TtHintInstance {
-  TtHintInstance::{
+  {
     functions: TtDefinitionSet(0),
     instructions: TtDefinitionSet(0),
     cvt: Array::new(),
@@ -160,22 +160,16 @@ fn tt_fvar_axis_count(font : @moon_skrifa.FontRef) -> Int {
 
 ///|
 fn tt_make_twilight_zone(point_count : Int) -> TtZone {
-  let pts : Array[TtPoint] = Array::make(point_count, TtPoint::{ x: 0, y: 0 })
-  let orig : Array[TtPoint] = Array::make(point_count, TtPoint::{ x: 0, y: 0 })
+  let pts : Array[TtPoint] = Array::make(point_count, { x: 0, y: 0 })
+  let orig : Array[TtPoint] = Array::make(point_count, { x: 0, y: 0 })
   let flags : Array[Int] = Array::make(point_count, 0)
   let contours : Array[Int] = Array::from_fixed_array([point_count])
-  TtZone::{
-    unscaled: Array::new(),
-    original: orig,
-    points: pts,
-    flags,
-    contours,
-  }
+  { unscaled: Array::new(), original: orig, points: pts, flags, contours }
 }
 
 ///|
 fn tt_make_empty_glyph_zone() -> TtZone {
-  TtZone::{
+  {
     unscaled: Array::new(),
     original: Array::new(),
     points: Array::new(),
@@ -194,7 +188,7 @@ fn TtHintInstance::reconfigure(
   coords : ArrayView[@moon_skrifa.NormalizedCoord],
 ) -> Result[Unit, HintError] {
   let maxp = match font.table(TAG_MAXP_TT) {
-    None => return Err(HintError::Unsupported)
+    None => return Err(Unsupported)
     Some(v) => v
   }
   let (
@@ -226,14 +220,8 @@ fn TtHintInstance::reconfigure(
   }
   self.cvt = tt_scale_cvt_for_size(cvt, scale_bits)
   // Twilight buffers.
-  self.twilight_points = Array::make(max_twilight_points, TtPoint::{
-    x: 0,
-    y: 0,
-  })
-  self.twilight_original = Array::make(max_twilight_points, TtPoint::{
-    x: 0,
-    y: 0,
-  })
+  self.twilight_points = Array::make(max_twilight_points, { x: 0, y: 0 })
+  self.twilight_original = Array::make(max_twilight_points, { x: 0, y: 0 })
   self.twilight_flags = Array::make(max_twilight_points, 0)
   // Create engine to run fpgm+prep.
   let fpgm = font.table(TAG_FPGM_TT).unwrap_or(tt_empty_bytes_view())
@@ -257,11 +245,11 @@ fn TtHintInstance::reconfigure(
   engine.graphics.twilight = tt_make_twilight_zone(max_twilight_points)
   engine.graphics.glyph = tt_make_empty_glyph_zone()
   // Run fpgm + prep.
-  match engine.run_program(TtProgram::Font, false) {
+  match engine.run_program(Font, false) {
     Err(e) => return Err(e)
     Ok(_) => ()
   }
-  match engine.run_program(TtProgram::ControlValue, false) {
+  match engine.run_program(ControlValue, false) {
     Err(e) => return Err(e)
     Ok(_) => ()
   }
@@ -329,7 +317,7 @@ fn TtHintInstance::hint_glyph(
   engine.graphics.glyph = glyph_zone
   engine.graphics.is_composite = is_composite
   engine.program.set_glyph_code(glyph_code)
-  match engine.run_program(TtProgram::Glyph, is_pedantic) {
+  match engine.run_program(Glyph, is_pedantic) {
     Err(e) =>
       if is_pedantic {
         return Err(e)
@@ -355,8 +343,131 @@ test "hint: scaled cvar cvt" {
   .reconfigure(font, scale_bits, ppem, Target::default(), coords.op_as_view())
   .unwrap()
   |> ignore
-  inspect(
+  debug_inspect(
     inst.cvt,
-    content="[778, 10, 731, 0, 731, 10, 549, 10, 0, 0, 0, -10, 0, -10, -256, -10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 95, 137, 99, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 60, 0, 81, 0, 0, 0, 0, 0, 51, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]",
+    content=(
+      #|[
+      #|  778,
+      #|  10,
+      #|  731,
+      #|  0,
+      #|  731,
+      #|  10,
+      #|  549,
+      #|  10,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  -10,
+      #|  0,
+      #|  -10,
+      #|  -256,
+      #|  -10,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  95,
+      #|  137,
+      #|  99,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  60,
+      #|  0,
+      #|  81,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  51,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|  0,
+      #|]
+    ),
   )
 }

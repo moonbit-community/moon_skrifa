@@ -68,15 +68,13 @@ test "tt_hint: storage pedantry (OOB read/write)" {
   engine.value_stack.push(oob_index).unwrap() |> ignore
   engine.value_stack.push(0).unwrap() |> ignore
   match engine.op_ws() {
-    Err(HintError::InvalidStorageIndex(i)) =>
-      inspect(i == oob_index, content="true")
+    Err(InvalidStorageIndex(i)) => inspect(i == oob_index, content="true")
     Ok(_) => fail("expected InvalidStorageIndex")
     Err(_) => fail("expected InvalidStorageIndex")
   }
   engine.value_stack.push(oob_index).unwrap() |> ignore
   match engine.op_rs() {
-    Err(HintError::InvalidStorageIndex(i)) =>
-      inspect(i == oob_index, content="true")
+    Err(InvalidStorageIndex(i)) => inspect(i == oob_index, content="true")
     Ok(_) => fail("expected InvalidStorageIndex")
     Err(_) => fail("expected InvalidStorageIndex")
   }
@@ -141,23 +139,20 @@ test "tt_hint: CVT pedantry (OOB read/write)" {
   engine.value_stack.push(oob_index).unwrap() |> ignore
   engine.value_stack.push(0).unwrap() |> ignore
   match engine.op_wcvtp() {
-    Err(HintError::InvalidCvtIndex(i)) =>
-      inspect(i == oob_index, content="true")
+    Err(InvalidCvtIndex(i)) => inspect(i == oob_index, content="true")
     Ok(_) => fail("expected InvalidCvtIndex")
     Err(_) => fail("expected InvalidCvtIndex")
   }
   engine.value_stack.push(oob_index).unwrap() |> ignore
   engine.value_stack.push(0).unwrap() |> ignore
   match engine.op_wcvtf() {
-    Err(HintError::InvalidCvtIndex(i)) =>
-      inspect(i == oob_index, content="true")
+    Err(InvalidCvtIndex(i)) => inspect(i == oob_index, content="true")
     Ok(_) => fail("expected InvalidCvtIndex")
     Err(_) => fail("expected InvalidCvtIndex")
   }
   engine.value_stack.push(oob_index).unwrap() |> ignore
   match engine.op_rcvt() {
-    Err(HintError::InvalidCvtIndex(i)) =>
-      inspect(i == oob_index, content="true")
+    Err(InvalidCvtIndex(i)) => inspect(i == oob_index, content="true")
     Ok(_) => fail("expected InvalidCvtIndex")
     Err(_) => fail("expected InvalidCvtIndex")
   }

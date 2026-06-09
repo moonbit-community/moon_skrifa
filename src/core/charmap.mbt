@@ -132,12 +132,12 @@ fn CmapIterLimits::default_for_font(font : FontRef) -> CmapIterLimits {
   // real-world cmaps while preventing pathological tables from producing
   // huge allocations.
   let cap = if num_glyphs <= 0 { 65536 } else { num_glyphs * 256 }
-  CmapIterLimits::{ max_mappings: cap }
+  { max_mappings: cap }
 }
 
 ///|
 fn CmapIterLimits::default() -> CmapIterLimits {
-  CmapIterLimits::{ max_mappings: 65536 }
+  { max_mappings: 65536 }
 }
 
 ///|
@@ -198,7 +198,7 @@ pub struct Charmap {
 
 ///|
 pub fn Charmap::default() -> Charmap {
-  Charmap::{
+  {
     cmap: None,
     codepoint_subtable: None,
     variant_off: None,
@@ -211,7 +211,7 @@ pub fn Charmap::Charmap(font : FontRef) -> Charmap {
   let limits = CmapIterLimits::default_for_font(font)
   match font.table(TAG_CMAP) {
     None =>
-      Charmap::{
+      {
         cmap: None,
         codepoint_subtable: None,
         variant_off: None,
@@ -219,7 +219,7 @@ pub fn Charmap::Charmap(font : FontRef) -> Charmap {
       }
     Some(cmap) => {
       let (codepoint_subtable, variant_off) = cmap_select_mappings(font, cmap)
-      Charmap::{
+      {
         cmap: Some(cmap),
         codepoint_subtable,
         variant_off,
@@ -312,7 +312,7 @@ pub struct MappingIndex {
 
 ///|
 pub fn MappingIndex::default() -> MappingIndex {
-  MappingIndex::{
+  {
     codepoint_index: None,
     codepoint_is_symbol: false,
     variant_index: None,
@@ -325,7 +325,7 @@ pub fn MappingIndex::MappingIndex(font : FontRef) -> MappingIndex {
   let limits = CmapIterLimits::default_for_font(font)
   match font.table(TAG_CMAP) {
     None =>
-      MappingIndex::{
+      {
         codepoint_index: None,
         codepoint_is_symbol: false,
         variant_index: None,
@@ -335,7 +335,7 @@ pub fn MappingIndex::MappingIndex(font : FontRef) -> MappingIndex {
       let (cp_index, cp_is_symbol, var_index) = cmap_select_mapping_indices(
         font, cmap,
       )
-      MappingIndex::{
+      {
         codepoint_index: cp_index,
         codepoint_is_symbol: cp_is_symbol,
         variant_index: var_index,
@@ -349,7 +349,7 @@ pub fn MappingIndex::MappingIndex(font : FontRef) -> MappingIndex {
 pub fn MappingIndex::charmap(self : MappingIndex, font : FontRef) -> Charmap {
   match font.table(TAG_CMAP) {
     None =>
-      Charmap::{
+      {
         cmap: None,
         codepoint_subtable: None,
         variant_off: None,
@@ -388,7 +388,7 @@ pub fn MappingIndex::charmap(self : MappingIndex, font : FontRef) -> Charmap {
               }
           }
       }
-      Charmap::{
+      {
         cmap: Some(cmap),
         codepoint_subtable,
         variant_off,

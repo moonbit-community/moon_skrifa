@@ -49,12 +49,12 @@ pub(all) enum Hinting {
 
 ///|
 pub fn Hinting::default() -> Hinting {
-  Hinting::None_
+  None_
 }
 
 ///|
 pub fn Hinting::none() -> Hinting {
-  Hinting::None_
+  None_
 }
 
 ///|
@@ -67,7 +67,7 @@ pub struct AdjustedMetrics {
 
 ///|
 pub fn AdjustedMetrics::default() -> AdjustedMetrics {
-  AdjustedMetrics::{ has_overlaps: false, lsb: None, advance_width: None }
+  { has_overlaps: false, lsb: None, advance_width: None }
 }
 
 ///|
@@ -84,13 +84,13 @@ pub fn OutlineGlyphCollection::OutlineGlyphCollection(
   let kind = if font.table(TAG_GLYF) is Some(_) {
     Some(OutlineGlyphFormat::Glyf)
   } else if font.table(TAG_CFF2) is Some(_) {
-    Some(OutlineGlyphFormat::Cff2)
+    Some(Cff2)
   } else if font.table(TAG_CFF) is Some(_) {
-    Some(OutlineGlyphFormat::Cff)
+    Some(Cff)
   } else {
     None
   }
-  OutlineGlyphCollection::{ font, kind }
+  { font, kind }
 }
 
 ///|
@@ -110,21 +110,21 @@ pub fn OutlineGlyphCollection::with_format(
   format : OutlineGlyphFormat,
 ) -> OutlineGlyphCollection? {
   match format {
-    OutlineGlyphFormat::Glyf =>
+    Glyf =>
       if font.table(TAG_GLYF) is Some(_) {
-        Some(OutlineGlyphCollection::{ font, kind: Some(format) })
+        Some({ font, kind: Some(format) })
       } else {
         None
       }
-    OutlineGlyphFormat::Cff =>
+    Cff =>
       if font.table(TAG_CFF) is Some(_) {
-        Some(OutlineGlyphCollection::{ font, kind: Some(format) })
+        Some({ font, kind: Some(format) })
       } else {
         None
       }
-    OutlineGlyphFormat::Cff2 =>
+    Cff2 =>
       if font.table(TAG_CFF2) is Some(_) {
-        Some(OutlineGlyphCollection::{ font, kind: Some(format) })
+        Some({ font, kind: Some(format) })
       } else {
         None
       }
@@ -158,8 +158,8 @@ pub fn DrawSettings::unhinted(
   size : @moon_skrifa.Size,
   location : @moon_skrifa.LocationRef,
 ) -> DrawSettings {
-  DrawSettings::{
-    instance: DrawInstance::Unhinted(size, location),
+  {
+    instance: Unhinted(size, location),
     memory: None,
     path_style: PathStyle::default(),
   }
@@ -170,8 +170,8 @@ pub fn DrawSettings::hinted(
   instance : HintingInstance,
   is_pedantic : Bool,
 ) -> DrawSettings {
-  DrawSettings::{
-    instance: DrawInstance::Hinted(instance, is_pedantic),
+  {
+    instance: Hinted(instance, is_pedantic),
     memory: None,
     path_style: PathStyle::default(),
   }
@@ -182,7 +182,7 @@ pub fn DrawSettings::with_memory(
   self : DrawSettings,
   memory : Array[Byte]?,
 ) -> DrawSettings {
-  DrawSettings::{ instance: self.instance, memory, path_style: self.path_style }
+  { instance: self.instance, memory, path_style: self.path_style }
 }
 
 ///|
@@ -190,7 +190,7 @@ pub fn DrawSettings::with_path_style(
   self : DrawSettings,
   path_style : PathStyle,
 ) -> DrawSettings {
-  DrawSettings::{ instance: self.instance, memory: self.memory, path_style }
+  { instance: self.instance, memory: self.memory, path_style }
 }
 
 ///|
@@ -201,23 +201,23 @@ pub fn DrawSettings::path_style(self : DrawSettings) -> PathStyle {
 ///|
 pub fn DrawSettings::size(self : DrawSettings) -> @moon_skrifa.Size {
   match self.instance {
-    DrawInstance::Unhinted(size, _) => size
-    DrawInstance::Hinted(h, _) => h.size()
+    Unhinted(size, _) => size
+    Hinted(h, _) => h.size()
   }
 }
 
 ///|
 pub fn DrawSettings::location(self : DrawSettings) -> @moon_skrifa.LocationRef {
   match self.instance {
-    DrawInstance::Unhinted(_, loc) => loc
-    DrawInstance::Hinted(h, _) => h.location()
+    Unhinted(_, loc) => loc
+    Hinted(h, _) => h.location()
   }
 }
 
 ///|
 pub fn DrawSettings::hinting_instance(self : DrawSettings) -> HintingInstance? {
   match self.instance {
-    DrawInstance::Hinted(h, _) => Some(h)
+    Hinted(h, _) => Some(h)
     _ => None
   }
 }
@@ -225,7 +225,7 @@ pub fn DrawSettings::hinting_instance(self : DrawSettings) -> HintingInstance? {
 ///|
 pub fn DrawSettings::is_pedantic(self : DrawSettings) -> Bool {
   match self.instance {
-    DrawInstance::Hinted(_, p) => p
+    Hinted(_, p) => p
     _ => false
   }
 }
@@ -257,8 +257,7 @@ pub fn OutlineGlyph::glyph_id(self : OutlineGlyph) -> @moon_skrifa.GlyphId {
 /// For CFF outlines, returns `None` since this information is unavailable.
 pub fn OutlineGlyph::has_overlaps(self : OutlineGlyph) -> Bool? {
   match self.kind {
-    OutlineGlyphFormat::Glyf =>
-      Some(glyf_has_overlaps(self.font, self.glyph_id).unwrap_or(false))
+    Glyf => Some(glyf_has_overlaps(self.font, self.glyph_id).unwrap_or(false))
     _ => None
   }
 }
@@ -270,8 +269,7 @@ pub fn OutlineGlyph::has_overlaps(self : OutlineGlyph) -> Bool? {
 /// outline.
 pub fn OutlineGlyph::has_hinting(self : OutlineGlyph) -> Bool? {
   match self.kind {
-    OutlineGlyphFormat::Glyf =>
-      Some(glyf_has_hinting(self.font, self.glyph_id).unwrap_or(false))
+    Glyf => Some(glyf_has_hinting(self.font, self.glyph_id).unwrap_or(false))
     _ => None
   }
 }
@@ -284,7 +282,7 @@ pub fn OutlineGlyph::draw_memory_size(
   hinting : Hinting,
 ) -> Int {
   match self.kind {
-    OutlineGlyphFormat::Glyf =>
+    Glyf =>
       glyf_draw_memory_size(self.font, self.glyph_id, hinting).unwrap_or(0)
     _ => 0
   }
@@ -306,19 +304,18 @@ pub fn[P : OutlinePen] OutlineGlyph::draw(
     }
     for e in path.iter() {
       match e {
-        PathElement::MoveTo(x, y) => OutlinePen::move_to(pen, x, y)
-        PathElement::LineTo(x, y) => OutlinePen::line_to(pen, x, y)
-        PathElement::QuadTo(cx0, cy0, x, y) =>
-          OutlinePen::quad_to(pen, cx0, cy0, x, y)
-        PathElement::CurveTo(cx0, cy0, cx1, cy1, x, y) =>
+        MoveTo(x, y) => OutlinePen::move_to(pen, x, y)
+        LineTo(x, y) => OutlinePen::line_to(pen, x, y)
+        QuadTo(cx0, cy0, x, y) => OutlinePen::quad_to(pen, cx0, cy0, x, y)
+        CurveTo(cx0, cy0, cx1, cy1, x, y) =>
           OutlinePen::curve_to(pen, cx0, cy0, cx1, cy1, x, y)
-        PathElement::Close => OutlinePen::close(pen)
+        Close => OutlinePen::close(pen)
       }
     }
     return Ok(metrics)
   }
   let metrics0 = match self.kind {
-    OutlineGlyphFormat::Glyf => {
+    Glyf => {
       let has_overlaps = self.has_overlaps().unwrap_or(false)
       let gm = @moon_skrifa.FontRef::glyph_metrics(
         self.font,
@@ -327,7 +324,7 @@ pub fn[P : OutlinePen] OutlineGlyph::draw(
       )
       let lsb0 = gm.left_side_bearing(self.glyph_id)
       let advance_width0 = gm.advance_width(self.glyph_id)
-      let (lsb, advance_width) = if settings.path_style() is PathStyle::FreeType {
+      let (lsb, advance_width) = if settings.path_style() is FreeType {
         (
           match lsb0 {
             None => None
@@ -352,13 +349,12 @@ pub fn[P : OutlinePen] OutlineGlyph::draw(
   }
   for e in path.iter() {
     match e {
-      PathElement::MoveTo(x, y) => OutlinePen::move_to(pen, x, y)
-      PathElement::LineTo(x, y) => OutlinePen::line_to(pen, x, y)
-      PathElement::QuadTo(cx0, cy0, x, y) =>
-        OutlinePen::quad_to(pen, cx0, cy0, x, y)
-      PathElement::CurveTo(cx0, cy0, cx1, cy1, x, y) =>
+      MoveTo(x, y) => OutlinePen::move_to(pen, x, y)
+      LineTo(x, y) => OutlinePen::line_to(pen, x, y)
+      QuadTo(cx0, cy0, x, y) => OutlinePen::quad_to(pen, cx0, cy0, x, y)
+      CurveTo(cx0, cy0, cx1, cy1, x, y) =>
         OutlinePen::curve_to(pen, cx0, cy0, cx1, cy1, x, y)
-      PathElement::Close => OutlinePen::close(pen)
+      Close => OutlinePen::close(pen)
     }
   }
   Ok(metrics)
@@ -383,7 +379,7 @@ pub fn OutlineGlyph::path(
     let path_style = settings.path_style()
     let coords = settings.location().effective_coords()
     match self.kind {
-      OutlineGlyphFormat::Glyf =>
+      Glyf =>
         match
           glyf_outline_path(
             self.font,
@@ -393,18 +389,18 @@ pub fn OutlineGlyph::path(
             settings.size(),
             false,
           ) {
-          None => Err(DrawError::GlyphNotFound(self.glyph_id))
+          None => Err(GlyphNotFound(self.glyph_id))
           Some(p) => Ok(p)
         }
-      OutlineGlyphFormat::Cff =>
+      Cff =>
         match cff_outline_path(self.font, self.glyph_id) {
-          None => Err(DrawError::GlyphNotFound(self.glyph_id))
+          None => Err(GlyphNotFound(self.glyph_id))
           // Upstream uses fixed-point rounding when scaling PostScript outlines.
           Some(p) => Ok(outline_scale_path(p, scale))
         }
-      OutlineGlyphFormat::Cff2 =>
+      Cff2 =>
         match cff2_outline_path(self.font, self.glyph_id, coords) {
-          None => Err(DrawError::GlyphNotFound(self.glyph_id))
+          None => Err(GlyphNotFound(self.glyph_id))
           Some(p) => Ok(outline_scale_path(p, scale))
         }
     }
@@ -432,7 +428,7 @@ pub fn OutlineGlyphCollection::get(
       if idx < 0 || idx >= n {
         None
       } else {
-        Some(OutlineGlyph::{ font: self.font, glyph_id: gid, kind })
+        Some({ font: self.font, glyph_id: gid, kind })
       }
     }
   }
@@ -446,9 +442,7 @@ pub fn OutlineGlyphCollection::iter(
   let out : Array[(@moon_skrifa.GlyphId, OutlineGlyph)] = Array::new()
   let n = self.glyph_count()
   for i in 0..<n {
-    let gid : @moon_skrifa.GlyphId = @moon_skrifa.GlyphId::GlyphId(
-      i.to_uint16(),
-    )
+    let gid : @moon_skrifa.GlyphId = GlyphId(i.to_uint16())
     match self.get(gid) {
       None => ()
       Some(g) => out.push((gid, g))
@@ -464,9 +458,9 @@ pub fn OutlineGlyphCollection::glyph_count(
 ) -> Int {
   match self.kind {
     None => 0
-    Some(OutlineGlyphFormat::Glyf) => glyf_glyph_count(self.font).unwrap_or(0)
-    Some(OutlineGlyphFormat::Cff) => cff_glyph_count(self.font).unwrap_or(0)
-    Some(OutlineGlyphFormat::Cff2) => cff2_glyph_count(self.font).unwrap_or(0)
+    Some(Glyf) => glyf_glyph_count(self.font).unwrap_or(0)
+    Some(Cff) => cff_glyph_count(self.font).unwrap_or(0)
+    Some(Cff2) => cff2_glyph_count(self.font).unwrap_or(0)
   }
 }
 
@@ -488,7 +482,7 @@ pub fn OutlineGlyphCollection::fractional_size_hinting(
   self : OutlineGlyphCollection,
 ) -> Bool {
   match self.kind {
-    Some(OutlineGlyphFormat::Glyf) =>
+    Some(Glyf) =>
       // head.flags bit 3 (0x0008) == FORCE_INTEGER_PPEM
       match self.font.table(TAG_HEAD) {
         None => true
@@ -539,7 +533,7 @@ pub fn OutlineGlyphCollection::prefer_interpreter(
   self : OutlineGlyphCollection,
 ) -> Bool {
   match self.format() {
-    Some(OutlineGlyphFormat::Glyf) => glyf_prefer_interpreter(self.font)
+    Some(Glyf) => glyf_prefer_interpreter(self.font)
     // Upstream prefers the interpreter for all non-glyf outline formats.
     _ => true
   }
@@ -622,32 +616,32 @@ fn outline_scale_path(
   let out : Array[PathElement] = Array::new()
   for e in path.iter() {
     match e {
-      PathElement::MoveTo(x, y) =>
+      MoveTo(x, y) =>
         out.push(
-          PathElement::MoveTo(
+          MoveTo(
             outline_quantize_freetype(x * scale),
             outline_quantize_freetype(y * scale),
           ),
         )
-      PathElement::LineTo(x, y) =>
+      LineTo(x, y) =>
         out.push(
-          PathElement::LineTo(
+          LineTo(
             outline_quantize_freetype(x * scale),
             outline_quantize_freetype(y * scale),
           ),
         )
-      PathElement::QuadTo(cx0, cy0, x, y) =>
+      QuadTo(cx0, cy0, x, y) =>
         out.push(
-          PathElement::QuadTo(
+          QuadTo(
             outline_quantize_freetype(cx0 * scale),
             outline_quantize_freetype(cy0 * scale),
             outline_quantize_freetype(x * scale),
             outline_quantize_freetype(y * scale),
           ),
         )
-      PathElement::CurveTo(cx0, cy0, cx1, cy1, x, y) =>
+      CurveTo(cx0, cy0, cx1, cy1, x, y) =>
         out.push(
-          PathElement::CurveTo(
+          CurveTo(
             outline_quantize_freetype(cx0 * scale),
             outline_quantize_freetype(cy0 * scale),
             outline_quantize_freetype(cx1 * scale),
@@ -656,7 +650,7 @@ fn outline_scale_path(
             outline_quantize_freetype(y * scale),
           ),
         )
-      PathElement::Close => out.push(PathElement::Close)
+      Close => out.push(Close)
     }
   }
   out

@@ -22,10 +22,10 @@
 fn autohint_store_point(point : AutoHintPoint, dim : Int, u : Int) -> Unit {
   if dim == AUTOHINT_DIM_HORIZONTAL {
     point.x = u
-    point.flags.set_marker(AutoHintPointMarker::TouchedX)
+    point.flags.set_marker(TouchedX)
   } else {
     point.y = u
-    point.flags.set_marker(AutoHintPointMarker::TouchedY)
+    point.flags.set_marker(TouchedY)
   }
 }
 
@@ -38,7 +38,7 @@ fn autohint_align_edge_points(
   scale_flags : Int,
 ) -> Unit {
   // Snapping is configurable for CJK.
-  let snap = group is AutoHintScriptGroup::Default ||
+  let snap = group is Default ||
     (
       axis.dim == AUTOHINT_DIM_HORIZONTAL &&
       (scale_flags & AUTOHINT_SCALE_HORIZONTAL_SNAP) != 0
@@ -56,7 +56,7 @@ fn autohint_align_edge_points(
         let touch_marker = if axis.dim == AUTOHINT_DIM_HORIZONTAL {
           AutoHintPointMarker::TouchedX
         } else {
-          AutoHintPointMarker::TouchedY
+          TouchedY
         }
         let mut point_ix = segment.first_ix
         let last_ix = segment.last_ix
@@ -100,7 +100,7 @@ fn autohint_align_strong_points(
   let touch_mask = (if dim == AUTOHINT_DIM_HORIZONTAL {
     AutoHintPointMarker::TouchedX
   } else {
-    AutoHintPointMarker::TouchedY
+    TouchedY
   }).bit()
   let weak_mask = AutoHintPointMarker::WeakInterpolation.bit()
   for i in 0..<outline.points.length() {
@@ -274,7 +274,7 @@ fn autohint_align_weak_points(outline : AutoHintOutline, dim : Int) -> Unit {
       p.u = p.y
       p.v = p.oy
     }
-    AutoHintPointMarker::TouchedY
+    TouchedY
   }).bit()
   for contour in outline.contours.iter() {
     let first = contour.first_ix

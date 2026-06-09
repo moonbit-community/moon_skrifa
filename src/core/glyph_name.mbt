@@ -76,10 +76,7 @@ fn glyph_name_latin1_string(bytes : BytesView) -> String {
 
 ///|
 fn glyph_name_synthesize(gid : GlyphId) -> GlyphName {
-  GlyphName::{
-    name: glyph_name_truncate("gid" + gid.to_string()),
-    synthesized: true,
-  }
+  { name: glyph_name_truncate("gid" + gid.to_string()), synthesized: true }
 }
 
 ///|
@@ -188,13 +185,7 @@ fn cff_index1_read(data : BytesView) -> CffIndex1? {
     return None
   }
   if count == 0 {
-    Some(CffIndex1::{
-      data,
-      count: 0,
-      off_size: 0,
-      offsets_base: 2,
-      objects_base: 2,
-    })
+    Some({ data, count: 0, off_size: 0, offsets_base: 2, objects_base: 2 })
   } else {
     if data.length() < 3 {
       return None
@@ -208,7 +199,7 @@ fn cff_index1_read(data : BytesView) -> CffIndex1? {
     if objects_base > data.length() {
       return None
     }
-    Some(CffIndex1::{ data, count, off_size, offsets_base, objects_base })
+    Some({ data, count, off_size, offsets_base, objects_base })
   }
 }
 
@@ -407,7 +398,7 @@ fn glyph_name_cff_get(cff : BytesView, gid : Int) -> String? {
   if hdr_size < 4 || hdr_size > cff.length() {
     return None
   }
-  let name_ix = cff_index1_read(cff[hdr_size:cff.length()]).unwrap_or(CffIndex1::{
+  let name_ix = cff_index1_read(cff[hdr_size:cff.length()]).unwrap_or({
     data: cff,
     count: 0,
     off_size: 0,
@@ -419,7 +410,7 @@ fn glyph_name_cff_get(cff : BytesView, gid : Int) -> String? {
     return None
   }
   let top_base = hdr_size + name_size
-  let top_ix = cff_index1_read(cff[top_base:cff.length()]).unwrap_or(CffIndex1::{
+  let top_ix = cff_index1_read(cff[top_base:cff.length()]).unwrap_or({
     data: cff,
     count: 0,
     off_size: 0,
@@ -503,25 +494,25 @@ pub fn GlyphNames::GlyphNames(font : FontRef) -> GlyphNames {
     Some(post) =>
       // Prefer `post` if it resolves at least one glyph name.
       if glyph_name_post_v2_get(post, 0) is Some(_) {
-        return GlyphNames::{ inner: Post(post, num_glyphs) }
+        return { inner: Post(post, num_glyphs) }
       }
   }
   match font.table(GLYPH_TAG_CFF) {
     None => ()
     Some(cff) =>
       if glyph_name_cff_get(cff, 0) is Some(_) {
-        return GlyphNames::{ inner: Cff(cff, num_glyphs) }
+        return { inner: Cff(cff, num_glyphs) }
       }
   }
-  GlyphNames::{ inner: Synthesized(num_glyphs) }
+  { inner: Synthesized(num_glyphs) }
 }
 
 ///|
 pub fn GlyphNames::source(self : GlyphNames) -> GlyphNameSource {
   match self.inner {
-    Post(_, _) => GlyphNameSource::Post
-    Cff(_, _) => GlyphNameSource::Cff
-    Synthesized(_) => GlyphNameSource::Synthesized
+    Post(_, _) => Post
+    Cff(_, _) => Cff
+    Synthesized(_) => Synthesized
   }
 }
 
@@ -549,7 +540,7 @@ pub fn GlyphNames::get(self : GlyphNames, glyph_id : GlyphId) -> GlyphName? {
       if s.is_empty() {
         Some(glyph_name_synthesize(glyph_id))
       } else {
-        Some(GlyphName::{ name: s, synthesized: false })
+        Some({ name: s, synthesized: false })
       }
   }
 }

@@ -131,10 +131,10 @@ test "hvar truncated adv: hinter kind + empty advance" {
     HintingOptions::default(),
   ).unwrap()
   let kind_tag = match hinting.kind {
-    HinterKind::None_ => "None"
-    HinterKind::Glyf(_) => "Glyf"
-    HinterKind::Cff(_) => "Cff"
-    HinterKind::Auto(_) => "Auto"
+    None_ => "None"
+    Glyf(_) => "Glyf"
+    Cff(_) => "Cff"
+    Auto(_) => "Auto"
   }
   inspect(kind_tag, content="Auto")
   let outlines = OutlineGlyphCollection::from_font(font)

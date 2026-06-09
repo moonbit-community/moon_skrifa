@@ -280,11 +280,7 @@ test "bitmap strikes sbix" {
   inspect(strikes.len(), content="1")
   let strike = strikes.get(0).unwrap()
   inspect(strike.ppem_y(), content="16")
-  let ok = if strikes.format() is Some(BitmapFormat::Sbix) {
-    true
-  } else {
-    false
-  }
+  let ok = if strikes.format() is Some(Sbix) { true } else { false }
   inspect(ok, content="true")
 }
 
@@ -297,11 +293,7 @@ test "bitmap strikes cblc/cbdt" {
   )
   let font = FontRef::from_bytes(sfnt).unwrap()
   let strikes = font.bitmap_strikes()
-  let ok = if strikes.format() is Some(BitmapFormat::Cbdt) {
-    true
-  } else {
-    false
-  }
+  let ok = if strikes.format() is Some(Cbdt) { true } else { false }
   inspect(ok, content="true")
   inspect(strikes.get(0).unwrap().ppem_x(), content="10")
   inspect(strikes.get(0).unwrap().ppem_y(), content="12")
@@ -316,11 +308,7 @@ test "bitmap strikes eblc/ebdt" {
   )
   let font = FontRef::from_bytes(sfnt).unwrap()
   let strikes = font.bitmap_strikes()
-  let ok = if strikes.format() is Some(BitmapFormat::Ebdt) {
-    true
-  } else {
-    false
-  }
+  let ok = if strikes.format() is Some(Ebdt) { true } else { false }
   inspect(ok, content="true")
   inspect(strikes.get(0).unwrap().ppem_x(), content="11")
   inspect(strikes.get(0).unwrap().ppem_y(), content="13")
@@ -370,8 +358,8 @@ test "bitmap sbix glyph png" {
   let font = FontRef::from_bytes(sfnt).unwrap()
   let strikes = font.bitmap_strikes()
   let strike = strikes.get(0).unwrap()
-  let glyph = strike.get(GlyphId::GlyphId((0).to_uint16())).unwrap()
-  let ok = if glyph.format() is BitmapImageFormat::Png { true } else { false }
+  let glyph = strike.get(GlyphId((0).to_uint16())).unwrap()
+  let ok = if glyph.format() is Png { true } else { false }
   inspect(ok, content="true")
   inspect(glyph.ppem_y(), content="16")
   inspect(glyph.origin_x(), content="1")
@@ -403,8 +391,8 @@ test "bitmap sbix glyph jpg" {
   )
   let font = FontRef::from_bytes(sfnt).unwrap()
   let strike = font.bitmap_strikes().get(0).unwrap()
-  let glyph = strike.get(GlyphId::GlyphId((0).to_uint16())).unwrap()
-  let ok = if glyph.format() is BitmapImageFormat::Jpeg { true } else { false }
+  let glyph = strike.get(GlyphId((0).to_uint16())).unwrap()
+  let ok = if glyph.format() is Jpeg { true } else { false }
   inspect(ok, content="true")
   debug_inspect(glyph.width(), content="None")
   debug_inspect(glyph.height(), content="None")
@@ -455,15 +443,11 @@ test "bitmap cbdt/cblc glyph png (format 17 + indexSubTable1)" {
   )
   let font = FontRef::from_bytes(sfnt).unwrap()
   let strikes = font.bitmap_strikes()
-  let ok = if strikes.format() is Some(BitmapFormat::Cbdt) {
-    true
-  } else {
-    false
-  }
+  let ok = if strikes.format() is Some(Cbdt) { true } else { false }
   inspect(ok, content="true")
   let strike = strikes.get(0).unwrap()
-  let glyph = strike.get(GlyphId::GlyphId((0).to_uint16())).unwrap()
-  let ok2 = if glyph.format() is BitmapImageFormat::Png { true } else { false }
+  let glyph = strike.get(GlyphId((0).to_uint16())).unwrap()
+  let ok2 = if glyph.format() is Png { true } else { false }
   inspect(ok2, content="true")
   inspect(glyph.ppem_y(), content="16")
   inspect(glyph.origin_x(), content="1")
@@ -499,17 +483,9 @@ test "bitmap ebdt/eblc glyph (format 1 + indexSubTable1)" {
   )
   let font = FontRef::from_bytes(sfnt).unwrap()
   let strikes = font.bitmap_strikes()
-  let ok = if strikes.format() is Some(BitmapFormat::Ebdt) {
-    true
-  } else {
-    false
-  }
+  let ok = if strikes.format() is Some(Ebdt) { true } else { false }
   inspect(ok, content="true")
-  let glyph = strikes
-    .get(0)
-    .unwrap()
-    .get(GlyphId::GlyphId((0).to_uint16()))
-    .unwrap()
+  let glyph = strikes.get(0).unwrap().get(GlyphId((0).to_uint16())).unwrap()
   debug_inspect(glyph.width(), content="Some(8)")
   debug_inspect(glyph.height(), content="Some(1)")
   inspect(glyph.origin_x(), content="-1")
@@ -548,15 +524,15 @@ test "bitmap strikes iter and glyph_for_size" {
   inspect(iter.at(1).ppem_y(), content="20")
   let gid = GlyphId::GlyphId((0).to_uint16())
   inspect(
-    strikes.glyph_for_size(Size::Size(12.0), gid).unwrap().ppem_y(),
+    strikes.glyph_for_size(Size(12.0), gid).unwrap().ppem_y(),
     content="12",
   )
   inspect(
-    strikes.glyph_for_size(Size::Size(15.0), gid).unwrap().ppem_y(),
+    strikes.glyph_for_size(Size(15.0), gid).unwrap().ppem_y(),
     content="20",
   )
   inspect(
-    strikes.glyph_for_size(Size::Size(25.0), gid).unwrap().ppem_y(),
+    strikes.glyph_for_size(Size(25.0), gid).unwrap().ppem_y(),
     content="20",
   )
   inspect(

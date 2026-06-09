@@ -33,11 +33,7 @@ priv struct Decycler[T] {
 
 ///|
 fn[T : Default] Decycler::Decycler(max_depth : Int) -> Decycler[T] {
-  Decycler::{
-    node_ids: FixedArray::make(max_depth, T::default()),
-    depth: 0,
-    max_depth,
-  }
+  { node_ids: FixedArray::make(max_depth, T::default()), depth: 0, max_depth }
 }
 
 ///|
@@ -48,7 +44,7 @@ fn[T : Eq] Decycler::enter(
   if self.depth < self.max_depth {
     if self.depth == 0 || self.node_ids.at(self.depth / 2) != node_id {
       self.node_ids.set(self.depth, node_id)
-      Ok(Decycler::{
+      Ok({
         node_ids: self.node_ids,
         depth: self.depth + 1,
         max_depth: self.max_depth,
@@ -64,11 +60,7 @@ fn[T : Eq] Decycler::enter(
 ///|
 fn[T] Decycler::leave(self : Decycler[T]) -> Decycler[T] {
   // Safe for intended usage (paired with a successful `enter`).
-  Decycler::{
-    node_ids: self.node_ids,
-    depth: self.depth - 1,
-    max_depth: self.max_depth,
-  }
+  { node_ids: self.node_ids, depth: self.depth - 1, max_depth: self.max_depth }
 }
 
 ///|
@@ -129,7 +121,7 @@ priv struct Node {
 
 ///|
 fn Node::Node(child_ids : Array[Int]) -> Node {
-  Node::{ child_ids, }
+  { child_ids, }
 }
 
 ///|

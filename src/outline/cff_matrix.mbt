@@ -66,7 +66,7 @@ fn cff_matrix_mul_scaled(
   // `a` (matches FreeType concatenation semantics).
   let dx = b.dx.mul_div(a.xx, val).add(b.dy.mul_div(a.xy, val))
   let dy = b.dx.mul_div(a.yx, val).add(b.dy.mul_div(a.yy, val))
-  CffMatrix::{ xx, yx, xy, yy, dx, dy }
+  { xx, yx, xy, yy, dx, dy }
 }
 
 ///|

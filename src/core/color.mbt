@@ -133,7 +133,7 @@ pub struct ColorPalette {
 
 ///|
 fn ColorPalettes::empty() -> ColorPalettes {
-  ColorPalettes::{
+  {
     cpal: None,
     version: 0,
     num_entries: 0,
@@ -210,7 +210,7 @@ pub fn ColorPalettes::ColorPalettes(font : FontRef) -> ColorPalettes {
           }
         }
       }
-      ColorPalettes::{
+      {
         cpal: Some(cpal),
         version,
         num_entries,
@@ -290,7 +290,7 @@ pub fn ColorPalettes::color(
   let g = cpal.at(pos + 1)
   let r = cpal.at(pos + 2)
   let a = cpal.at(pos + 3)
-  Some(Color::{ r, g, b, a })
+  Some({ r, g, b, a })
 }
 
 ///|
@@ -302,7 +302,7 @@ pub fn ColorPalettes::get(self : ColorPalettes, index : Int) -> ColorPalette? {
   if start_index < 0 || start_index + self.num_entries > self.num_records {
     return None
   }
-  Some(ColorPalette::{ palettes: self, index })
+  Some({ palettes: self, index })
 }
 
 ///|
@@ -364,7 +364,7 @@ pub fn ColorPalette::palette_type(self : ColorPalette) -> ColorPaletteType? {
     Some(v) => v
   }
   let raw = color_read_u32_be(cpal, off + self.index * 4).unwrap_or(0)
-  Some(ColorPaletteType::{ bits: raw })
+  Some({ bits: raw })
 }
 
 ///|

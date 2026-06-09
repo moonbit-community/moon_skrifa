@@ -87,7 +87,7 @@ test "OutlineGlyphCollection::format glyf" {
   let font = make_font(Array::from_fixed_array([TAG_GLYF]))
   let c = OutlineGlyphCollection::OutlineGlyphCollection(font)
   let ok = match c.format() {
-    Some(OutlineGlyphFormat::Glyf) => true
+    Some(Glyf) => true
     _ => false
   }
   inspect(ok, content="true")
@@ -98,7 +98,7 @@ test "OutlineGlyphCollection::format CFF" {
   let font = make_font(Array::from_fixed_array([TAG_CFF]))
   let c = OutlineGlyphCollection::OutlineGlyphCollection(font)
   let ok = match c.format() {
-    Some(OutlineGlyphFormat::Cff) => true
+    Some(Cff) => true
     _ => false
   }
   inspect(ok, content="true")
@@ -109,7 +109,7 @@ test "OutlineGlyphCollection::format CFF2" {
   let font = make_font(Array::from_fixed_array([TAG_CFF2]))
   let c = OutlineGlyphCollection::OutlineGlyphCollection(font)
   let ok = match c.format() {
-    Some(OutlineGlyphFormat::Cff2) => true
+    Some(Cff2) => true
     _ => false
   }
   inspect(ok, content="true")
@@ -120,7 +120,7 @@ test "OutlineGlyphCollection::format prefers glyf" {
   let font = make_font(Array::from_fixed_array([TAG_CFF, TAG_GLYF, TAG_CFF2]))
   let c = OutlineGlyphCollection::OutlineGlyphCollection(font)
   let ok = match c.format() {
-    Some(OutlineGlyphFormat::Glyf) => true
+    Some(Glyf) => true
     _ => false
   }
   inspect(ok, content="true")

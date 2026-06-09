@@ -261,12 +261,9 @@ test "glyph_names from post v2 custom string" {
   )
   let font = FontRef::from_bytes(sfnt).unwrap()
   let names = font.glyph_names()
-  let ok = if names.source() is GlyphNameSource::Post { true } else { false }
+  let ok = if names.source() is Post { true } else { false }
   inspect(ok, content="true")
-  inspect(
-    names.get(GlyphId::GlyphId((0).to_uint16())).unwrap().as_str(),
-    content="Test",
-  )
+  inspect(names.get(GlyphId((0).to_uint16())).unwrap().as_str(), content="Test")
 }
 
 ///|
@@ -281,12 +278,9 @@ test "glyph_names from CFF custom charset + string index" {
   )
   let font = FontRef::from_bytes(sfnt).unwrap()
   let names = font.glyph_names()
-  let ok = if names.source() is GlyphNameSource::Cff { true } else { false }
+  let ok = if names.source() is Cff { true } else { false }
   inspect(ok, content="true")
-  inspect(
-    names.get(GlyphId::GlyphId((1).to_uint16())).unwrap().as_str(),
-    content="A",
-  )
+  inspect(names.get(GlyphId((1).to_uint16())).unwrap().as_str(), content="A")
 }
 
 ///|
@@ -302,7 +296,7 @@ test "glyph_names from post v2 standard name index" {
   let font = FontRef::from_bytes(sfnt).unwrap()
   let names = font.glyph_names()
   inspect(
-    names.get(GlyphId::GlyphId((0).to_uint16())).unwrap().as_str(),
+    names.get(GlyphId((0).to_uint16())).unwrap().as_str(),
     content="space",
   )
 }
@@ -320,7 +314,7 @@ test "glyph_names from post v1 default names" {
   let font = FontRef::from_bytes(sfnt).unwrap()
   let names = font.glyph_names()
   inspect(
-    names.get(GlyphId::GlyphId((0).to_uint16())).unwrap().as_str(),
+    names.get(GlyphId((0).to_uint16())).unwrap().as_str(),
     content=".notdef",
   )
 }
@@ -337,10 +331,7 @@ test "glyph_names from CFF charset format 1" {
   )
   let font = FontRef::from_bytes(sfnt).unwrap()
   let names = font.glyph_names()
-  inspect(
-    names.get(GlyphId::GlyphId((1).to_uint16())).unwrap().as_str(),
-    content="A",
-  )
+  inspect(names.get(GlyphId((1).to_uint16())).unwrap().as_str(), content="A")
 }
 
 ///|
@@ -355,10 +346,7 @@ test "glyph_names from CFF charset format 2" {
   )
   let font = FontRef::from_bytes(sfnt).unwrap()
   let names = font.glyph_names()
-  inspect(
-    names.get(GlyphId::GlyphId((1).to_uint16())).unwrap().as_str(),
-    content="A",
-  )
+  inspect(names.get(GlyphId((1).to_uint16())).unwrap().as_str(), content="A")
 }
 
 ///|
@@ -374,7 +362,7 @@ test "glyph_names from CFF standard SID" {
   let font = FontRef::from_bytes(sfnt).unwrap()
   let names = font.glyph_names()
   inspect(
-    names.get(GlyphId::GlyphId((1).to_uint16())).unwrap().as_str(),
+    names.get(GlyphId((1).to_uint16())).unwrap().as_str(),
     content="space",
   )
 }

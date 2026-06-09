@@ -39,7 +39,7 @@ priv struct TtDecoder {
 
 ///|
 fn TtDecoder::TtDecoder(code : BytesView) -> TtDecoder {
-  TtDecoder::{ code, pc: 0 }
+  { code, pc: 0 }
 }
 
 ///|
@@ -59,69 +59,61 @@ fn TtDecoder::decode(self : TtDecoder) -> Result[TtInstruction?, HintError] {
   if op >= 0xB0 && op <= 0xB7 {
     let n = op - 0xB0 + 1
     if self.pc + n > self.code.length() {
-      return Err(HintError::UnexpectedEndOfBytecode)
+      return Err(UnexpectedEndOfBytecode)
     }
     for _ in 0..<n {
       operands.push(self.code.at(self.pc).to_int())
       self.pc = self.pc + 1
     }
-    return Ok(
-      Some(TtInstruction::{ pc: start, opcode: op, inline_operands: operands }),
-    )
+    return Ok(Some({ pc: start, opcode: op, inline_operands: operands }))
   }
   // PUSHW[1..8] 0xB8..0xBF
   if op >= 0xB8 && op <= 0xBF {
     let n = op - 0xB8 + 1
     let bytes = n * 2
     if self.pc + bytes > self.code.length() {
-      return Err(HintError::UnexpectedEndOfBytecode)
+      return Err(UnexpectedEndOfBytecode)
     }
     for i in 0..<n {
       let off = self.pc + i * 2
       operands.push(tt_read_i16_be(self.code, off).unwrap_or(0))
     }
     self.pc = self.pc + bytes
-    return Ok(
-      Some(TtInstruction::{ pc: start, opcode: op, inline_operands: operands }),
-    )
+    return Ok(Some({ pc: start, opcode: op, inline_operands: operands }))
   }
   // NPUSHB 0x40
   if op == 0x40 {
     if self.pc + 1 > self.code.length() {
-      return Err(HintError::UnexpectedEndOfBytecode)
+      return Err(UnexpectedEndOfBytecode)
     }
     let n = self.code.at(self.pc).to_int()
     self.pc = self.pc + 1
     if n < 0 || self.pc + n > self.code.length() {
-      return Err(HintError::UnexpectedEndOfBytecode)
+      return Err(UnexpectedEndOfBytecode)
     }
     for _ in 0..<n {
       operands.push(self.code.at(self.pc).to_int())
       self.pc = self.pc + 1
     }
-    return Ok(
-      Some(TtInstruction::{ pc: start, opcode: op, inline_operands: operands }),
-    )
+    return Ok(Some({ pc: start, opcode: op, inline_operands: operands }))
   }
   // NPUSHW 0x41
   if op == 0x41 {
     if self.pc + 1 > self.code.length() {
-      return Err(HintError::UnexpectedEndOfBytecode)
+      return Err(UnexpectedEndOfBytecode)
     }
     let n = self.code.at(self.pc).to_int()
     self.pc = self.pc + 1
     let bytes = n * 2
     if n < 0 || self.pc + bytes > self.code.length() {
-      return Err(HintError::UnexpectedEndOfBytecode)
+      return Err(UnexpectedEndOfBytecode)
     }
     for i in 0..<n {
       let off = self.pc + i * 2
       operands.push(tt_read_i16_be(self.code, off).unwrap_or(0))
     }
     self.pc = self.pc + bytes
-    return Ok(
-      Some(TtInstruction::{ pc: start, opcode: op, inline_operands: operands }),
-    )
+    return Ok(Some({ pc: start, opcode: op, inline_operands: operands }))
   }
-  Ok(Some(TtInstruction::{ pc: start, opcode: op, inline_operands: operands }))
+  Ok(Some({ pc: start, opcode: op, inline_operands: operands }))
 }

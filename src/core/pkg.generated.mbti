@@ -575,20 +575,20 @@ pub type VariationSetting = Setting[Double]
 
 // Traits
 pub(open) trait ColorPainter {
-  push_transform(Self, Transform) -> Unit
-  pop_transform(Self) -> Unit
-  push_clip_glyph(Self, GlyphId) -> Unit
-  push_clip_box(Self, (Double, Double, Double, Double)) -> Unit
-  pop_clip(Self) -> Unit
-  fill(Self, Brush) -> Unit
-  fill_glyph(Self, GlyphId, Transform?, Brush) -> Unit
-  paint_cached_color_glyph(Self, GlyphId) -> Result[PaintCachedColorGlyph, PaintError]
-  push_layer(Self, CompositeMode) -> Unit
-  pop_layer(Self) -> Unit
-  pop_layer_with_mode(Self, CompositeMode) -> Unit
+  fn push_transform(Self, Transform) -> Unit
+  fn pop_transform(Self) -> Unit
+  fn push_clip_glyph(Self, GlyphId) -> Unit
+  fn push_clip_box(Self, (Double, Double, Double, Double)) -> Unit
+  fn pop_clip(Self) -> Unit
+  fn fill(Self, Brush) -> Unit
+  fn fill_glyph(Self, GlyphId, Transform?, Brush) -> Unit
+  fn paint_cached_color_glyph(Self, GlyphId) -> Result[PaintCachedColorGlyph, PaintError]
+  fn push_layer(Self, CompositeMode) -> Unit
+  fn pop_layer(Self) -> Unit
+  fn pop_layer_with_mode(Self, CompositeMode) -> Unit
 }
 
 pub(open) trait TableProvider {
-  table(Self, Tag) -> BytesView?
+  fn table(Self, Tag) -> BytesView?
 }
 

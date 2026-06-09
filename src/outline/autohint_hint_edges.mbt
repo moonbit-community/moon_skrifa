@@ -54,10 +54,7 @@ fn autohint_stem_width(
   stem_flags : Int,
 ) -> Int {
   if (scale.flags & AUTOHINT_SCALE_STEM_ADJUST) == 0 ||
-    (
-      group is AutoHintScriptGroup::Default &&
-      metrics.width_metrics.is_extra_light
-    ) {
+    (group is Default && metrics.width_metrics.is_extra_light) {
     return width
   }
   let is_vertical = metrics.dim == AUTOHINT_DIM_VERTICAL
@@ -68,7 +65,7 @@ fn autohint_stem_width(
     ) ||
     (!is_vertical && (scale.flags & AUTOHINT_SCALE_HORIZONTAL_SNAP) == 0)
   if do_smooth {
-    if group is AutoHintScriptGroup::Default {
+    if group is Default {
       if (stem_flags & AUTOHINT_FLAG_SERIF) != 0 && is_vertical && dist < 3 * 64 {
         return dist * sign
       } else if (base_flags & AUTOHINT_FLAG_ROUND) != 0 {
@@ -86,7 +83,7 @@ fn autohint_stem_width(
         dist = min_width.max(48)
         return dist * sign
       }
-      if group is AutoHintScriptGroup::Default {
+      if group is Default {
         if dist < 3 * 64 {
           let delta = dist & 63
           dist = dist & -64
@@ -147,7 +144,7 @@ fn autohint_stem_width(
       dist = (dist + 64) >> 1
     } else if dist < 128 {
       dist = (dist + 22) & -64
-      if group is AutoHintScriptGroup::Default {
+      if group is Default {
         let delta = (dist - original_dist).abs()
         if delta >= 16 {
           dist = original_dist
@@ -395,7 +392,7 @@ fn autohint_adjust_link(
   top_to_bottom_hinting : Bool,
 ) -> Unit {
   let edge = edges.at(edge_ix)
-  let (edge2, prev_edge) = if link_dir is AutoHintLinkDir::Next {
+  let (edge2, prev_edge) = if link_dir is Next {
     if edge_ix + 1 >= edges.length() {
       return
     }
@@ -417,10 +414,10 @@ fn autohint_adjust_link(
   let pos1 = edge.pos
   let pos2 = edge2.pos
   let order_check = match (link_dir, top_to_bottom_hinting) {
-    (AutoHintLinkDir::Prev, true) => pos1 > pos2
-    (AutoHintLinkDir::Next, false) => pos1 > pos2
-    (AutoHintLinkDir::Prev, false) => pos1 < pos2
-    (AutoHintLinkDir::Next, true) => pos1 < pos2
+    (Prev, true) => pos1 > pos2
+    (Next, false) => pos1 > pos2
+    (Prev, false) => pos1 < pos2
+    (Next, true) => pos1 < pos2
   }
   if !order_check {
     return
@@ -463,7 +460,7 @@ fn autohint_align_stem_edges(
       serif_count = serif_count + 1
       continue
     }
-    if !(group is AutoHintScriptGroup::Default) {
+    if !(group is Default) {
       match last_stem_pos {
         Some(last_pos) =>
           if edge.pos < last_pos + 64 ||
@@ -480,7 +477,7 @@ fn autohint_align_stem_edges(
       autohint_align_linked_edge(axis, metrics, group, scale, edge2_ix, edge_ix)
       continue
     }
-    if group is AutoHintScriptGroup::Default {
+    if group is Default {
       match anchor_ix {
         Some(anchor_ix0) => {
           let anchor = axis.edges.at(anchor_ix0)
@@ -529,7 +526,7 @@ fn autohint_align_stem_edges(
             autohint_adjust_link(
               axis.edges,
               edge_ix,
-              AutoHintLinkDir::Prev,
+              Prev,
               top_to_bottom_hinting,
             )
           }
@@ -620,7 +617,7 @@ fn autohint_hint_lowercase_m(
   let dist1 = edge2.opos - edge1.opos
   let dist2 = edge3.opos - edge2.opos
   let span = (dist1 - dist2).abs()
-  if !(group is AutoHintScriptGroup::Default) {
+  if !(group is Default) {
     let ok1 = match edge1.link_ix {
       Some(ix) => ix == edge1_ix + 1
       _ => false
@@ -665,7 +662,7 @@ fn autohint_align_remaining_edges(
   serif_count : Int,
   anchor_ix : Int?,
 ) -> Unit {
-  if group is AutoHintScriptGroup::Default {
+  if group is Default {
     let mut anchor_ix = anchor_ix
     for edge_ix in 0..<axis.edges.length() {
       let edge = axis.edges.at(edge_ix)
@@ -725,18 +722,8 @@ fn autohint_align_remaining_edges(
       }
       axis.edges.at(edge_ix).flags = axis.edges.at(edge_ix).flags |
         AUTOHINT_FLAG_DONE
-      autohint_adjust_link(
-        axis.edges,
-        edge_ix,
-        AutoHintLinkDir::Prev,
-        top_to_bottom_hinting,
-      )
-      autohint_adjust_link(
-        axis.edges,
-        edge_ix,
-        AutoHintLinkDir::Next,
-        top_to_bottom_hinting,
-      )
+      autohint_adjust_link(axis.edges, edge_ix, Prev, top_to_bottom_hinting)
+      autohint_adjust_link(axis.edges, edge_ix, Next, top_to_bottom_hinting)
     }
   } else {
     let mut serif_count = serif_count
@@ -805,7 +792,7 @@ fn autohint_align_edges_to_blues(
   scale : AutoHintScale,
 ) -> Int? {
   let mut anchor_ix : Int? = None
-  if group is AutoHintScriptGroup::Default && axis.dim != AUTOHINT_DIM_VERTICAL {
+  if group is Default && axis.dim != AUTOHINT_DIM_VERTICAL {
     return anchor_ix
   }
   for edge_ix in 0..<axis.edges.length() {

@@ -34,15 +34,11 @@ test "tt_hint: non-pedantic stack underflow uses 0 (dup/pop)" {
   )
 
   // Reset in non-pedantic mode.
-  engine.run_program(TtProgram::Font, false).unwrap() |> ignore
+  engine.run_program(Font, false).unwrap() |> ignore
 
   // DUP[] on empty stack should push 0.
   engine
-  .dispatch(TtInstruction::{
-    pc: 0,
-    opcode: 0x20,
-    inline_operands: Array::new(),
-  })
+  .dispatch({ pc: 0, opcode: 0x20, inline_operands: Array::new() })
   .unwrap()
   |> ignore
   inspect(engine.value_stack.length() == 1, content="true")
@@ -50,11 +46,7 @@ test "tt_hint: non-pedantic stack underflow uses 0 (dup/pop)" {
 
   // POP[] on empty stack should be Ok (consumes 0).
   engine
-  .dispatch(TtInstruction::{
-    pc: 0,
-    opcode: 0x21,
-    inline_operands: Array::new(),
-  })
+  .dispatch({ pc: 0, opcode: 0x21, inline_operands: Array::new() })
   .unwrap()
   |> ignore
   inspect(engine.value_stack.length() == 0, content="true")
@@ -82,14 +74,10 @@ test "tt_hint: pedantic stack underflow errors (dup)" {
   )
 
   // Reset in pedantic mode.
-  engine.run_program(TtProgram::Font, true).unwrap() |> ignore
+  engine.run_program(Font, true).unwrap() |> ignore
   match
-    engine.dispatch(TtInstruction::{
-      pc: 0,
-      opcode: 0x20,
-      inline_operands: Array::new(),
-    }) {
-    Err(HintError::ValueStackUnderflow) => ()
+    engine.dispatch({ pc: 0, opcode: 0x20, inline_operands: Array::new() }) {
+    Err(ValueStackUnderflow) => ()
     Ok(_) => fail("expected ValueStackUnderflow")
     Err(_) => fail("expected ValueStackUnderflow")
   }

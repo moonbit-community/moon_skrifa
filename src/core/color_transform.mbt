@@ -27,7 +27,7 @@ pub(all) struct Transform {
 
 ///|
 pub fn Transform::default() -> Transform {
-  Transform::{ xx: 1.0, yx: 0.0, xy: 0.0, yy: 1.0, dx: 0.0, dy: 0.0 }
+  { xx: 1.0, yx: 0.0, xy: 0.0, yy: 1.0, dx: 0.0, dy: 0.0 }
 }
 
 ///|
@@ -36,7 +36,7 @@ pub fn Transform::mul(self : Transform, rhs : Transform) -> Transform {
     a * b + c * d
   }
 
-  Transform::{
+  {
     xx: muladdmul(self.xx, rhs.xx, self.xy, rhs.yx),
     xy: muladdmul(self.xx, rhs.xy, self.xy, rhs.yy),
     dx: muladdmul(self.xx, rhs.dx, self.xy, rhs.dy) + self.dx,

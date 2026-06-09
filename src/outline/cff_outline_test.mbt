@@ -216,25 +216,18 @@ fn cff_test_elem_eq(a : PathElement, b : PathElement) -> Bool {
   }
 
   match (a, b) {
-    (PathElement::MoveTo(ax, ay), PathElement::MoveTo(bx, by)) =>
-      feq(ax, bx) && feq(ay, by)
-    (PathElement::LineTo(ax, ay), PathElement::LineTo(bx, by)) =>
-      feq(ax, bx) && feq(ay, by)
-    (
-      PathElement::QuadTo(ax0, ay0, ax, ay),
-      PathElement::QuadTo(bx0, by0, bx, by),
-    ) => feq(ax0, bx0) && feq(ay0, by0) && feq(ax, bx) && feq(ay, by)
-    (
-      PathElement::CurveTo(ax0, ay0, ax1, ay1, ax, ay),
-      PathElement::CurveTo(bx0, by0, bx1, by1, bx, by),
-    ) =>
+    (MoveTo(ax, ay), MoveTo(bx, by)) => feq(ax, bx) && feq(ay, by)
+    (LineTo(ax, ay), LineTo(bx, by)) => feq(ax, bx) && feq(ay, by)
+    (QuadTo(ax0, ay0, ax, ay), QuadTo(bx0, by0, bx, by)) =>
+      feq(ax0, bx0) && feq(ay0, by0) && feq(ax, bx) && feq(ay, by)
+    (CurveTo(ax0, ay0, ax1, ay1, ax, ay), CurveTo(bx0, by0, bx1, by1, bx, by)) =>
       feq(ax0, bx0) &&
       feq(ay0, by0) &&
       feq(ax1, bx1) &&
       feq(ay1, by1) &&
       feq(ax, bx) &&
       feq(ay, by)
-    (PathElement::Close, PathElement::Close) => true
+    (Close, Close) => true
     _ => false
   }
 }
@@ -264,8 +257,8 @@ test "CFF outline path uses callsubr (local subrs)" {
   let path = c.path(outline_test_gid(1), DrawSettings::default()).unwrap()
   let expected = Array::from_fixed_array([
     PathElement::MoveTo(0.0, 0.0),
-    PathElement::LineTo(100.0, 0.0),
-    PathElement::Close,
+    LineTo(100.0, 0.0),
+    Close,
   ])
   inspect(cff_test_path_eq(path, expected), content="true")
 }

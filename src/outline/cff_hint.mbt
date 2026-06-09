@@ -36,7 +36,7 @@ priv struct CffFixed {
 
 ///|
 fn CffFixed::from_bits(bits : Int) -> CffFixed {
-  CffFixed::{ bits, }
+  { bits, }
 }
 
 ///|
@@ -281,7 +281,7 @@ priv struct CffBlues {
 
 ///|
 fn CffBlues::default() -> CffBlues {
-  CffBlues::{ pairs: Array::new() }
+  { pairs: Array::new() }
 }
 
 ///|
@@ -293,7 +293,7 @@ fn CffBlues::CffBlues(values : ArrayView[CffFixed]) -> CffBlues {
     pairs.push((values.at(i), values.at(i + 1)))
     i = i + 2
   }
-  CffBlues::{ pairs, }
+  { pairs, }
 }
 
 ///|
@@ -315,7 +315,7 @@ priv struct HintParams {
 
 ///|
 fn HintParams::default() -> HintParams {
-  HintParams::{
+  {
     blues: CffBlues::default(),
     other_blues: CffBlues::default(),
     family_blues: CffBlues::default(),
@@ -338,7 +338,7 @@ priv struct BlueZone {
 
 ///|
 fn BlueZone::default() -> BlueZone {
-  BlueZone::{
+  {
     is_bottom: false,
     cs_bottom_edge: CffFixed::zero(),
     cs_top_edge: CffFixed::zero(),
@@ -368,7 +368,7 @@ fn HintState::default() -> HintState {
   for _ in 0..<CFF_HINT_MAX_BLUE_ZONES {
     zones.push(BlueZone::default())
   }
-  HintState::{
+  {
     scale: CffFixed::zero(),
     blue_scale: CffFixed::zero(),
     blue_shift: CffFixed::zero(),
@@ -580,7 +580,7 @@ priv struct StemHint {
 
 ///|
 fn StemHint::default() -> StemHint {
-  StemHint::{
+  {
     is_used: false,
     min: CffFixed::zero(),
     max: CffFixed::zero(),
@@ -600,7 +600,7 @@ priv struct Hint {
 
 ///|
 fn Hint::default() -> Hint {
-  Hint::{
+  {
     flags: 0,
     index: 0,
     cs_coord: CffFixed::zero(),
@@ -780,7 +780,7 @@ fn HintMap::HintMap(scale : CffFixed) -> HintMap {
   for _ in 0..<CFF_HINT_MAX_HINTS {
     edges.push(Hint::default())
   }
-  HintMap::{ edges, len: 0, is_valid: false, scale }
+  { edges, len: 0, is_valid: false, scale }
 }
 
 ///|
@@ -1020,7 +1020,7 @@ fn HintMask::default() -> HintMask {
   for _ in 0..<CFF_HINT_MASK_SIZE {
     mask.push((0).to_byte())
   }
-  HintMask::{ mask, is_valid: false }
+  { mask, is_valid: false }
 }
 
 ///|
@@ -1029,7 +1029,7 @@ fn HintMask::all() -> HintMask {
   for _ in 0..<CFF_HINT_MASK_SIZE {
     mask.push((0xFF).to_byte())
   }
-  HintMask::{ mask, is_valid: true }
+  { mask, is_valid: true }
 }
 
 ///|
@@ -1243,7 +1243,7 @@ fn CffHintingSink::CffHintingSink(
   for _ in 0..<CFF_HINT_MAX_HINTS {
     stem_hints.push(StemHint::default())
   }
-  CffHintingSink::{
+  {
     state,
     out,
     stem_hints,

@@ -168,15 +168,10 @@ test "cff hinting: Cantarell VF (gid=1 size=16) matches fontations hinted SVG" {
   let opts = Engine::Interpreter.into()
   let hinter = HintingInstance::create(outlines0, size, loc, opts).unwrap()
   let outlines = OutlineGlyphCollection::from_font(font)
-  let glyph = outlines
-    .get(@moon_skrifa.GlyphId::GlyphId((1).to_uint16()))
-    .unwrap()
+  let glyph = outlines.get(GlyphId((1).to_uint16())).unwrap()
   let pen = SvgPen::with_precision(6)
   glyph
-  .draw(
-    DrawSettings::hinted(hinter, false).with_path_style(PathStyle::FreeType),
-    pen,
-  )
+  .draw(DrawSettings::hinted(hinter, false).with_path_style(FreeType), pen)
   .unwrap()
   |> ignore
   inspect(
@@ -196,15 +191,10 @@ test "cff hinting: NotoSansJP-Regular subset (gid=0 size=16) matches fontations 
   let opts = Engine::Interpreter.into()
   let hinter = HintingInstance::create(outlines0, size, loc, opts).unwrap()
   let outlines = OutlineGlyphCollection::from_font(font)
-  let glyph = outlines
-    .get(@moon_skrifa.GlyphId::GlyphId((0).to_uint16()))
-    .unwrap()
+  let glyph = outlines.get(GlyphId((0).to_uint16())).unwrap()
   let pen = SvgPen::with_precision(6)
   glyph
-  .draw(
-    DrawSettings::hinted(hinter, false).with_path_style(PathStyle::FreeType),
-    pen,
-  )
+  .draw(DrawSettings::hinted(hinter, false).with_path_style(FreeType), pen)
   .unwrap()
   |> ignore
   inspect(

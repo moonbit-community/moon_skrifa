@@ -49,11 +49,11 @@ fn TtProgramState::TtProgramState(
   max_call_depth : Int,
 ) -> TtProgramState {
   let code = match current {
-    TtProgram::Font => font
-    TtProgram::ControlValue => prep
-    TtProgram::Glyph => glyph
+    Font => font
+    ControlValue => prep
+    Glyph => glyph
   }
-  TtProgramState::{
+  {
     font,
     prep,
     glyph,
@@ -68,9 +68,9 @@ fn TtProgramState::TtProgramState(
 fn TtProgramState::reset(self : TtProgramState, program : TtProgram) -> Unit {
   self.current = program
   let code = match program {
-    TtProgram::Font => self.font
-    TtProgram::ControlValue => self.prep
-    TtProgram::Glyph => self.glyph
+    Font => self.font
+    ControlValue => self.prep
+    Glyph => self.glyph
   }
   self.decoder = TtDecoder(code)
   self.call_stack.clear()
@@ -92,16 +92,12 @@ fn TtProgramState::push_frame(
   return_pc : Int,
 ) -> Result[Unit, HintError] {
   if self.call_stack.length() >= self.max_call_depth {
-    return Err(HintError::CallStackOverflow)
+    return Err(CallStackOverflow)
   }
   // Save the caller decoder so we can resume there.
-  self.call_stack.push(TtCallFrame::{
-    decoder: self.decoder,
-    return_pc,
-    kind: TtCallFrameKind::ReturnOnly,
-  })
+  self.call_stack.push({ decoder: self.decoder, return_pc, kind: ReturnOnly })
   // Switch current decoder to callee.
-  self.decoder = TtDecoder::{ code: callee, pc: start_pc }
+  self.decoder = { code: callee, pc: start_pc }
   Ok(())
 }
 
@@ -114,39 +110,39 @@ fn TtProgramState::push_loopcall_frame(
   return_pc : Int,
 ) -> Result[Unit, HintError] {
   if self.call_stack.length() >= self.max_call_depth {
-    return Err(HintError::CallStackOverflow)
+    return Err(CallStackOverflow)
   }
-  self.call_stack.push(TtCallFrame::{
+  self.call_stack.push({
     decoder: self.decoder,
     return_pc,
-    kind: TtCallFrameKind::LoopCall(callee, remaining),
+    kind: LoopCall(callee, remaining),
   })
-  self.decoder = TtDecoder::{ code: callee, pc: start_pc }
+  self.decoder = { code: callee, pc: start_pc }
   Ok(())
 }
 
 ///|
 fn TtProgramState::pop_frame(self : TtProgramState) -> Result[Unit, HintError] {
   if self.call_stack.is_empty() {
-    return Err(HintError::CallStackUnderflow)
+    return Err(CallStackUnderflow)
   }
   let frame = self.call_stack.pop().unwrap()
   match frame.kind {
-    TtCallFrameKind::ReturnOnly => {
+    ReturnOnly => {
       // Restore previous decoder and continue after return_pc.
       self.decoder = frame.decoder
       self.decoder.pc = frame.return_pc
       Ok(())
     }
-    TtCallFrameKind::LoopCall(code, remaining) =>
+    LoopCall(code, remaining) =>
       if remaining > 0 {
         // Re-run the callee and keep the loopcall frame, decrementing the counter.
-        self.call_stack.push(TtCallFrame::{
+        self.call_stack.push({
           decoder: frame.decoder,
           return_pc: frame.return_pc,
-          kind: TtCallFrameKind::LoopCall(code, remaining - 1),
+          kind: LoopCall(code, remaining - 1),
         })
-        self.decoder = TtDecoder::{ code, pc: 0 }
+        self.decoder = { code, pc: 0 }
         Ok(())
       } else {
         self.decoder = frame.decoder

@@ -254,9 +254,9 @@ fn avar_parse(table : BytesView, axis_count : Int) -> AvarData? {
       from_coords.push(from)
       to_coords.push(to)
     }
-    axes.push(AvarAxisMap::{ from_coords, to_coords })
+    axes.push({ from_coords, to_coords })
   }
-  Some(AvarData::{ axes, })
+  Some({ axes, })
 }
 
 ///|
@@ -276,29 +276,16 @@ pub struct AxisCollection {
 ///|
 pub fn AxisCollection::AxisCollection(font : FontRef) -> AxisCollection {
   let fvar = match font.table(TAG_FVAR) {
-    None =>
-      return AxisCollection::{
-        axes: Array::new(),
-        instances: Array::new(),
-        avar: None,
-      }
+    None => return { axes: Array::new(), instances: Array::new(), avar: None }
     Some(v) => v
   }
   if fvar.length() < 16 {
-    return AxisCollection::{
-      axes: Array::new(),
-      instances: Array::new(),
-      avar: None,
-    }
+    return { axes: Array::new(), instances: Array::new(), avar: None }
   }
   let major = variation_read_u16_be(fvar, 0).unwrap_or(-1)
   let minor = variation_read_u16_be(fvar, 2).unwrap_or(-1)
   if major != 1 || minor != 0 {
-    return AxisCollection::{
-      axes: Array::new(),
-      instances: Array::new(),
-      avar: None,
-    }
+    return { axes: Array::new(), instances: Array::new(), avar: None }
   }
   let axes_offset = variation_read_u16_be(fvar, 4).unwrap_or(-1)
   let axis_count = variation_read_u16_be(fvar, 8).unwrap_or(-1)
@@ -310,22 +297,14 @@ pub fn AxisCollection::AxisCollection(font : FontRef) -> AxisCollection {
     axis_size < 20 ||
     instance_count < 0 ||
     instance_size < 4 {
-    return AxisCollection::{
-      axes: Array::new(),
-      instances: Array::new(),
-      avar: None,
-    }
+    return { axes: Array::new(), instances: Array::new(), avar: None }
   }
   let axes : Array[AxisRecord] = Array::new()
   let axis_count_i = axis_count
   let axis_size_i = axis_size
   let axes_end = axes_offset + axis_count_i * axis_size_i
   if axes_end < axes_offset || axes_end > fvar.length() {
-    return AxisCollection::{
-      axes: Array::new(),
-      instances: Array::new(),
-      avar: None,
-    }
+    return { axes: Array::new(), instances: Array::new(), avar: None }
   }
   for i in 0..<axis_count_i {
     let base = axes_offset + i * axis_size_i
@@ -338,7 +317,7 @@ pub fn AxisCollection::AxisCollection(font : FontRef) -> AxisCollection {
     let max_value = variation_read_fixed_16_16(fvar, base + 12).unwrap_or(0.0)
     let flags = variation_read_u16_be(fvar, base + 16).unwrap_or(0)
     let name_id = variation_read_u16_be(fvar, base + 18).unwrap_or(0)
-    axes.push(AxisRecord::{
+    axes.push({
       tag,
       min_value,
       default_value,
@@ -352,7 +331,7 @@ pub fn AxisCollection::AxisCollection(font : FontRef) -> AxisCollection {
   let instances_base = axes_end
   let instances_end = instances_base + instance_count * instance_size
   if instances_end < instances_base || instances_end > fvar.length() {
-    return AxisCollection::{ axes, instances: Array::new(), avar: None }
+    return { axes, instances: Array::new(), avar: None }
   }
   let instances : Array[InstanceRecord] = Array::new()
   for i in 0..<instance_count {
@@ -382,7 +361,7 @@ pub fn AxisCollection::AxisCollection(font : FontRef) -> AxisCollection {
     } else {
       None
     }
-    instances.push(InstanceRecord::{
+    instances.push({
       subfamily_name_id: subfamily_name_id.to_uint16(),
       postscript_name_id,
       user_coords,
@@ -392,7 +371,7 @@ pub fn AxisCollection::AxisCollection(font : FontRef) -> AxisCollection {
     None => None
     Some(avar_tbl) => avar_parse(avar_tbl, axis_count_i)
   }
-  AxisCollection::{ axes, instances, avar }
+  { axes, instances, avar }
 }
 
 ///|
@@ -409,7 +388,7 @@ pub fn AxisCollection::is_empty(self : AxisCollection) -> Bool {
 pub fn AxisCollection::get(self : AxisCollection, index : Int) -> Axis? {
   match self.axes.get(index) {
     None => None
-    Some(r) => Some(Axis::{ index, record: r })
+    Some(r) => Some({ index, record: r })
   }
 }
 
@@ -419,7 +398,7 @@ pub fn AxisCollection::get_by_tag(self : AxisCollection, tag : Tag) -> Axis? {
   for i in 0..<n {
     let r = self.axes.at(i)
     if r.tag.to_uint() == tag.to_uint() {
-      return Some(Axis::{ index: i, record: r })
+      return Some({ index: i, record: r })
     }
   }
   None
@@ -486,9 +465,9 @@ pub fn NamedInstance::location(self : NamedInstance) -> Location {
   for i in 0..<n {
     let axis = self.axes
       .get(i)
-      .unwrap_or(Axis::{
+      .unwrap_or({
         index: i,
-        record: AxisRecord::{
+        record: {
           tag: Tag::from_uint(0),
           min_value: 0.0,
           default_value: 0.0,
@@ -522,7 +501,7 @@ pub struct NamedInstanceCollection {
 pub fn NamedInstanceCollection::NamedInstanceCollection(
   font : FontRef,
 ) -> NamedInstanceCollection {
-  NamedInstanceCollection::{ axes: AxisCollection(font) }
+  { axes: AxisCollection(font) }
 }
 
 ///|
@@ -544,7 +523,7 @@ pub fn NamedInstanceCollection::get(
 ) -> NamedInstance? {
   match self.axes.instances.get(index) {
     None => None
-    Some(r) => Some(NamedInstance::{ axes: self.axes, record: r })
+    Some(r) => Some({ axes: self.axes, record: r })
   }
 }
 

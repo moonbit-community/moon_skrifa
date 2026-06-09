@@ -27,7 +27,7 @@ priv struct TtDefinition {
 
 ///|
 fn TtDefinition::default() -> TtDefinition {
-  TtDefinition::{ code: None, start: -1, end_: -1, key: 0, active: false }
+  { code: None, start: -1, end_: -1, key: 0, active: false }
 }
 
 ///|
@@ -79,7 +79,7 @@ fn TtDefinitionSet::TtDefinitionSet(cap : Int) -> TtDefinitionSet {
   for _ in 0..<cap {
     defs.push(TtDefinition::default())
   }
-  TtDefinitionSet::{ defs, }
+  { defs, }
 }
 
 ///|
@@ -118,11 +118,11 @@ fn TtDefinitionSet::set_definition(
   end_ : Int,
 ) -> Result[Unit, HintError] {
   if start < 0 || end_ < start || end_ > code.length() {
-    return Err(HintError::InvalidDefinition(index))
+    return Err(InvalidDefinition(index))
   }
   let n = self.defs.length()
   if n == 0 {
-    return Err(HintError::TooManyDefinitions)
+    return Err(TooManyDefinitions)
   }
   let mut chosen : Int? = None
   if index >= 0 && index < n {
@@ -148,7 +148,7 @@ fn TtDefinitionSet::set_definition(
     chosen = last_inactive
   }
   match chosen {
-    None => return Err(HintError::TooManyDefinitions)
+    None => return Err(TooManyDefinitions)
     Some(ix) => {
       let d = self.defs.at(ix)
       d.set(code, start, end_, index)

@@ -76,7 +76,7 @@ fn cff_dict_parse(data : BytesView) -> CffDictInfo {
       match cff_dict_parse_number_scaled(data, pos, b0) {
         None => break
         Some((v, scaling, p)) => {
-          stack.push(CffDictNum::{ value: v, scaling })
+          stack.push({ value: v, scaling })
           pos = p
         }
       }
@@ -153,7 +153,7 @@ fn cff_dict_parse(data : BytesView) -> CffDictInfo {
             let yy = CffFixed::from_f64(stack.at(3).value * scale)
             let dx = CffFixed::from_f64(stack.at(4).value * scale)
             let dy = CffFixed::from_f64(stack.at(5).value * scale)
-            info.font_matrix = Some(CffMatrix::{ xx, yx, xy, yy, dx, dy })
+            info.font_matrix = Some({ xx, yx, xy, yy, dx, dy })
             info.font_matrix_upem = Some(upem)
           }
         }
@@ -385,11 +385,7 @@ priv struct CffPrivateDictHintInfo {
 
 ///|
 fn CffPrivateDictHintInfo::default() -> CffPrivateDictHintInfo {
-  CffPrivateDictHintInfo::{
-    hint_params: HintParams::default(),
-    subrs_offset: None,
-    store_index: 0,
-  }
+  { hint_params: HintParams::default(), subrs_offset: None, store_index: 0 }
 }
 
 ///|

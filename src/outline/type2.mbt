@@ -116,7 +116,7 @@ fn type2_index1_read(data : BytesView) -> Type2Index? {
     Some(v) => v
   }
   if count == 0 {
-    Some(Type2Index::{
+    Some({
       data,
       count: 0,
       off_size: 0,
@@ -137,7 +137,7 @@ fn type2_index1_read(data : BytesView) -> Type2Index? {
     if objects_base > data.length() {
       return None
     }
-    Some(Type2Index::{
+    Some({
       data,
       count,
       off_size,
@@ -163,7 +163,7 @@ fn type2_index2_read(data : BytesView) -> Type2Index? {
   }
   let count = count_u
   if count == 0 {
-    Some(Type2Index::{
+    Some({
       data,
       count: 0,
       off_size: 0,
@@ -184,7 +184,7 @@ fn type2_index2_read(data : BytesView) -> Type2Index? {
     if objects_base > data.length() {
       return None
     }
-    Some(Type2Index::{
+    Some({
       data,
       count,
       off_size,
@@ -311,7 +311,7 @@ fn type2_ivs_ctx(store : BytesView, store_off : Int) -> Type2IvsCtx? {
   if need_offsets < data_offsets_off || need_offsets > store.length() {
     return None
   }
-  Some(Type2IvsCtx::{
+  Some({
     store,
     store_off,
     axis_count,
@@ -502,7 +502,7 @@ fn Type2Eval::Type2Eval(
   local_subrs : Type2Index?,
   blend_state : Type2BlendState?,
 ) -> Type2Eval {
-  Type2Eval::{
+  {
     global_subrs,
     local_subrs,
     blend_state,

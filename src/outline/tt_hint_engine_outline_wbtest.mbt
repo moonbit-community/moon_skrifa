@@ -34,22 +34,22 @@ fn tt_make_engine_for_outline() -> TtEngine {
   )
 
   // Mirror fontations MockEngine zone shape + unscaled point pattern.
-  let unscaled : Array[TtPoint] = Array::make(32, TtPoint::{ x: 0, y: 0 })
+  let unscaled : Array[TtPoint] = Array::make(32, { x: 0, y: 0 })
   for i in 0..<32 {
     let x = 57 + i * 2
-    unscaled.set(i, TtPoint::{ x, y: -x * 3 })
+    unscaled.set(i, { x, y: -x * 3 })
   }
-  engine.graphics.glyph = TtZone::{
+  engine.graphics.glyph = {
     unscaled,
-    original: Array::make(32, TtPoint::{ x: 0, y: 0 }),
-    points: Array::make(32, TtPoint::{ x: 0, y: 0 }),
+    original: Array::make(32, { x: 0, y: 0 }),
+    points: Array::make(32, { x: 0, y: 0 }),
     flags: Array::make(32, 0),
     contours: Array::from_fixed_array([31]),
   }
-  engine.graphics.twilight = TtZone::{
+  engine.graphics.twilight = {
     unscaled: Array::new(),
-    original: Array::make(16, TtPoint::{ x: 0, y: 0 }),
-    points: Array::make(16, TtPoint::{ x: 0, y: 0 }),
+    original: Array::make(16, { x: 0, y: 0 }),
+    points: Array::make(16, { x: 0, y: 0 }),
     flags: Array::make(16, 0),
     contours: Array::new(),
   }
@@ -77,7 +77,7 @@ fn tt_set_point_for_outline(
   x : Int,
   y : Int,
 ) -> Unit {
-  engine.graphics.glyph.points.set(point_ix, TtPoint::{ x, y })
+  engine.graphics.glyph.points.set(point_ix, { x, y })
 }
 
 ///|
@@ -176,56 +176,32 @@ test "tt_hint: outline UTP untouch uses freedom vector axes" {
   let engine = tt_make_engine_for_outline()
   let count = engine.graphics.glyph.points.length()
   for i in 0..<count {
-    engine.graphics.glyph.touch(i, TtAxis::X).unwrap() |> ignore
-    engine.graphics.glyph.touch(i, TtAxis::Y).unwrap() |> ignore
+    engine.graphics.glyph.touch(i, X).unwrap() |> ignore
+    engine.graphics.glyph.touch(i, Y).unwrap() |> ignore
   }
 
   // Untouch x
-  inspect(
-    engine.graphics.glyph.is_touched(0, TtAxis::X).unwrap(),
-    content="true",
-  )
-  engine.graphics.freedom_vector = TtVec14::{ x: 1, y: 0 }
+  inspect(engine.graphics.glyph.is_touched(0, X).unwrap(), content="true")
+  engine.graphics.freedom_vector = { x: 1, y: 0 }
   engine.value_stack.push(0).unwrap() |> ignore
   engine.op_utp().unwrap() |> ignore
-  inspect(
-    !engine.graphics.glyph.is_touched(0, TtAxis::X).unwrap(),
-    content="true",
-  )
-  inspect(
-    engine.graphics.glyph.is_touched(0, TtAxis::Y).unwrap(),
-    content="true",
-  )
+  inspect(!engine.graphics.glyph.is_touched(0, X).unwrap(), content="true")
+  inspect(engine.graphics.glyph.is_touched(0, Y).unwrap(), content="true")
 
   // Untouch y
-  inspect(
-    engine.graphics.glyph.is_touched(1, TtAxis::Y).unwrap(),
-    content="true",
-  )
-  engine.graphics.freedom_vector = TtVec14::{ x: 0, y: 1 }
+  inspect(engine.graphics.glyph.is_touched(1, Y).unwrap(), content="true")
+  engine.graphics.freedom_vector = { x: 0, y: 1 }
   engine.value_stack.push(1).unwrap() |> ignore
   engine.op_utp().unwrap() |> ignore
-  inspect(
-    engine.graphics.glyph.is_touched(1, TtAxis::X).unwrap(),
-    content="true",
-  )
-  inspect(
-    !engine.graphics.glyph.is_touched(1, TtAxis::Y).unwrap(),
-    content="true",
-  )
+  inspect(engine.graphics.glyph.is_touched(1, X).unwrap(), content="true")
+  inspect(!engine.graphics.glyph.is_touched(1, Y).unwrap(), content="true")
 
   // Untouch both
-  engine.graphics.freedom_vector = TtVec14::{ x: 1, y: 1 }
+  engine.graphics.freedom_vector = { x: 1, y: 1 }
   engine.value_stack.push(2).unwrap() |> ignore
   engine.op_utp().unwrap() |> ignore
-  inspect(
-    !engine.graphics.glyph.is_touched(2, TtAxis::X).unwrap(),
-    content="true",
-  )
-  inspect(
-    !engine.graphics.glyph.is_touched(2, TtAxis::Y).unwrap(),
-    content="true",
-  )
+  inspect(!engine.graphics.glyph.is_touched(2, X).unwrap(), content="true")
+  inspect(!engine.graphics.glyph.is_touched(2, Y).unwrap(), content="true")
 }
 
 ///|
@@ -233,8 +209,8 @@ test "tt_hint: outline SHP" {
   let engine = tt_make_engine_for_outline()
   tt_set_test_vectors_for_outline(engine)
   engine.graphics.backward_compatibility = false
-  engine.graphics.zp0 = TtZonePointer::Glyph
-  engine.graphics.zp2 = TtZonePointer::Glyph
+  engine.graphics.zp0 = Glyph
+  engine.graphics.zp2 = Glyph
   engine.graphics.rp2 = 1
   tt_set_point_for_outline(engine, 1, 132, -256)
   engine.value_stack.push(1).unwrap() |> ignore
@@ -248,8 +224,8 @@ test "tt_hint: outline SHC" {
   let engine = tt_make_engine_for_outline()
   tt_set_test_vectors_for_outline(engine)
   engine.graphics.backward_compatibility = false
-  engine.graphics.zp0 = TtZonePointer::Glyph
-  engine.graphics.zp2 = TtZonePointer::Glyph
+  engine.graphics.zp0 = Glyph
+  engine.graphics.zp2 = Glyph
   engine.graphics.rp2 = 1
   tt_set_point_for_outline(engine, 1, 132, -256)
   engine.value_stack.push(0).unwrap() |> ignore
@@ -267,8 +243,8 @@ test "tt_hint: outline SHZ" {
   let engine = tt_make_engine_for_outline()
   tt_set_test_vectors_for_outline(engine)
   engine.graphics.backward_compatibility = false
-  engine.graphics.zp0 = TtZonePointer::Glyph
-  engine.graphics.zp2 = TtZonePointer::Glyph
+  engine.graphics.zp0 = Glyph
+  engine.graphics.zp2 = Glyph
   engine.graphics.rp2 = 1
   tt_set_point_for_outline(engine, 1, 132, -256)
   engine.value_stack.push(0).unwrap() |> ignore
@@ -286,7 +262,7 @@ test "tt_hint: outline SHPIX" {
   let engine = tt_make_engine_for_outline()
   tt_set_test_vectors_for_outline(engine)
   engine.graphics.backward_compatibility = false
-  engine.graphics.zp2 = TtZonePointer::Glyph
+  engine.graphics.zp2 = Glyph
   tt_set_point_for_outline(engine, 1, 132, -256)
   engine.value_stack.push(1).unwrap() |> ignore
   engine.value_stack.push(42).unwrap() |> ignore
@@ -300,8 +276,8 @@ test "tt_hint: outline MSIRP" {
   let engine = tt_make_engine_for_outline()
   tt_set_test_vectors_for_outline(engine)
   engine.graphics.backward_compatibility = false
-  engine.graphics.zp0 = TtZonePointer::Glyph
-  engine.graphics.zp1 = TtZonePointer::Glyph
+  engine.graphics.zp0 = Glyph
+  engine.graphics.zp1 = Glyph
   tt_set_point_for_outline(engine, 1, 132, -256)
   engine.value_stack.push(1).unwrap() |> ignore
   engine.value_stack.push(-42).unwrap() |> ignore
@@ -320,7 +296,7 @@ test "tt_hint: outline MDAP" {
   let engine = tt_make_engine_for_outline()
   tt_set_test_vectors_for_outline(engine)
   engine.graphics.backward_compatibility = false
-  engine.graphics.zp0 = TtZonePointer::Glyph
+  engine.graphics.zp0 = Glyph
 
   // with rounding
   tt_set_point_for_outline(engine, 1, 132, -256)
@@ -342,7 +318,7 @@ test "tt_hint: outline MIAP" {
   let engine = tt_make_engine_for_outline()
   tt_set_test_vectors_for_outline(engine)
   engine.graphics.backward_compatibility = false
-  engine.graphics.zp0 = TtZonePointer::Glyph
+  engine.graphics.zp0 = Glyph
 
   // set CVT[1] = 0.75px = 48 in 26.6.
   engine.cvt.set(1, 48)
@@ -385,7 +361,7 @@ test "tt_hint: outline MDRP mindist bit" {
   let engine = tt_make_engine_for_outline()
   tt_set_test_vectors_for_outline(engine)
   engine.graphics.backward_compatibility = false
-  engine.graphics.zp0 = TtZonePointer::Glyph
+  engine.graphics.zp0 = Glyph
 
   // without min distance check
   tt_set_point_for_outline(engine, 1, 132, -256)
@@ -407,7 +383,7 @@ test "tt_hint: outline MDRP round bit" {
   let engine = tt_make_engine_for_outline()
   tt_set_test_vectors_for_outline(engine)
   engine.graphics.backward_compatibility = false
-  engine.graphics.zp0 = TtZonePointer::Glyph
+  engine.graphics.zp0 = Glyph
   engine.op_rthg().unwrap() |> ignore
 
   // without rounding
@@ -448,7 +424,7 @@ test "tt_hint: outline MIRP mindist bit" {
   let engine = tt_make_engine_for_outline()
   tt_set_test_vectors_for_outline(engine)
   engine.graphics.backward_compatibility = false
-  engine.graphics.zp0 = TtZonePointer::Glyph
+  engine.graphics.zp0 = Glyph
   // set CVT[1] = 0.75px
   engine.cvt.set(1, 48)
 
@@ -474,7 +450,7 @@ test "tt_hint: outline MIRP round bit" {
   let engine = tt_make_engine_for_outline()
   tt_set_test_vectors_for_outline(engine)
   engine.graphics.backward_compatibility = false
-  engine.graphics.zp0 = TtZonePointer::Glyph
+  engine.graphics.zp0 = Glyph
   // set CVT[1] = 0.75px
   engine.cvt.set(1, 48)
   engine.op_rthg().unwrap() |> ignore
@@ -501,8 +477,8 @@ test "tt_hint: outline ALIGNRP" {
   let engine = tt_make_engine_for_outline()
   tt_set_test_vectors_for_outline(engine)
   engine.graphics.backward_compatibility = false
-  engine.graphics.zp0 = TtZonePointer::Glyph
-  engine.graphics.zp1 = TtZonePointer::Glyph
+  engine.graphics.zp0 = Glyph
+  engine.graphics.zp1 = Glyph
   engine.graphics.rp0 = 0
   tt_set_point_for_outline(engine, 0, 132, -231)
   tt_set_point_for_outline(engine, 1, -72, 109)
@@ -515,8 +491,8 @@ test "tt_hint: outline ALIGNRP" {
 ///|
 test "tt_hint: outline ISECT" {
   let engine = tt_make_engine_for_outline()
-  engine.graphics.zp0 = TtZonePointer::Glyph
-  engine.graphics.zp1 = TtZonePointer::Glyph
+  engine.graphics.zp0 = Glyph
+  engine.graphics.zp1 = Glyph
   engine.graphics.rp0 = 0
 
   // Two points for line 1
@@ -539,8 +515,8 @@ test "tt_hint: outline ALIGNPTS" {
   let engine = tt_make_engine_for_outline()
   tt_set_test_vectors_for_outline(engine)
   engine.graphics.backward_compatibility = false
-  engine.graphics.zp0 = TtZonePointer::Glyph
-  engine.graphics.zp1 = TtZonePointer::Glyph
+  engine.graphics.zp0 = Glyph
+  engine.graphics.zp1 = Glyph
   tt_set_point_for_outline(engine, 0, 132, -231)
   tt_set_point_for_outline(engine, 1, -72, 109)
   engine.value_stack.push(0).unwrap() |> ignore
@@ -557,9 +533,9 @@ test "tt_hint: outline IP" {
   let engine = tt_make_engine_for_outline()
   tt_set_test_vectors_for_outline(engine)
   engine.graphics.backward_compatibility = false
-  engine.graphics.zp0 = TtZonePointer::Glyph
-  engine.graphics.zp1 = TtZonePointer::Glyph
-  engine.graphics.zp2 = TtZonePointer::Glyph
+  engine.graphics.zp0 = Glyph
+  engine.graphics.zp1 = Glyph
+  engine.graphics.zp2 = Glyph
   engine.graphics.rp1 = 2
   engine.graphics.rp2 = 3
   tt_set_point_for_outline(engine, 2, 72, -109)

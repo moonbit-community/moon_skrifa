@@ -28,12 +28,12 @@ test "tt_hint: definition set too many + invalid range" {
     inspect(defs.set_definition(i, code, 0, 0) is Ok(_), content="true")
   }
   inspect(
-    defs.set_definition(33, code, 0, 0) is Err(HintError::TooManyDefinitions),
+    defs.set_definition(33, code, 0, 0) is Err(TooManyDefinitions),
     content="true",
   )
   // Invalid byte range => InvalidDefinition
   inspect(
-    defs.set_definition(0, code, 0, 2) is Err(HintError::InvalidDefinition(0)),
+    defs.set_definition(0, code, 0, 2) is Err(InvalidDefinition(0)),
     content="true",
   )
   // Missing definition returns None.

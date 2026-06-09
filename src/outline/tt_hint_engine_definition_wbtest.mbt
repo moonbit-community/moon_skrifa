@@ -57,7 +57,7 @@ test "tt_hint: fdef/call/loopcall basic flow" {
     64,
     64,
   )
-  engine.run_program(TtProgram::Font, false).unwrap() |> ignore
+  engine.run_program(Font, false).unwrap() |> ignore
   engine.value_stack.push(10).unwrap() |> ignore
   engine.value_stack.push(1).unwrap() |> ignore
   engine.op_call(0).unwrap() |> ignore
@@ -93,8 +93,8 @@ test "tt_hint: fdef in glyph program errors" {
     64,
     64,
   )
-  match engine.run_program(TtProgram::Glyph, false) {
-    Err(HintError::DefinitionInGlyphProgram) => ()
+  match engine.run_program(Glyph, false) {
+    Err(DefinitionInGlyphProgram) => ()
     Ok(_) => fail("expected DefinitionInGlyphProgram")
     Err(_) => fail("expected DefinitionInGlyphProgram")
   }
@@ -133,8 +133,8 @@ test "tt_hint: nested definitions error" {
     64,
     64,
   )
-  match engine.run_program(TtProgram::Font, false) {
-    Err(HintError::NestedDefinition) => ()
+  match engine.run_program(Font, false) {
+    Err(NestedDefinition) => ()
     Ok(_) => fail("expected NestedDefinition")
     Err(_) => fail("expected NestedDefinition")
   }
@@ -168,8 +168,8 @@ test "tt_hint: TooManyDefinitions when max_function_defs=0" {
     0,
     64,
   )
-  match engine.run_program(TtProgram::Font, false) {
-    Err(HintError::TooManyDefinitions) => ()
+  match engine.run_program(Font, false) {
+    Err(TooManyDefinitions) => ()
     Ok(_) => fail("expected TooManyDefinitions")
     Err(_) => fail("expected TooManyDefinitions")
   }

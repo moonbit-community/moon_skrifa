@@ -25,7 +25,7 @@ priv struct TtValueStack {
 
 ///|
 fn TtValueStack::TtValueStack(buf : Array[Int], check : Bool) -> TtValueStack {
-  TtValueStack::{ buf, len: 0, check }
+  { buf, len: 0, check }
 }
 
 ///|
@@ -45,7 +45,7 @@ fn TtValueStack::push(
 ) -> Result[Unit, HintError] {
   if self.len >= self.buf.length() {
     if self.check {
-      Err(HintError::ValueStackOverflow)
+      Err(ValueStackOverflow)
     } else {
       Ok(())
     }
@@ -60,7 +60,7 @@ fn TtValueStack::push(
 fn TtValueStack::pop(self : TtValueStack) -> Result[Int, HintError] {
   if self.len <= 0 {
     if self.check {
-      Err(HintError::ValueStackUnderflow)
+      Err(ValueStackUnderflow)
     } else {
       Ok(0)
     }
@@ -78,7 +78,7 @@ fn TtValueStack::pop_usize(self : TtValueStack) -> Result[Int, HintError] {
     Ok(v) => v
   }
   if v < 0 {
-    Err(HintError::InvalidStackValue(v))
+    Err(InvalidStackValue(v))
   } else {
     Ok(v)
   }
@@ -91,11 +91,11 @@ fn TtValueStack::peek(
 ) -> Result[Int, HintError] {
   // depth_from_top: 0 == top
   if depth_from_top < 0 {
-    return Err(HintError::InvalidStackValue(depth_from_top))
+    return Err(InvalidStackValue(depth_from_top))
   }
   let idx = self.len - 1 - depth_from_top
   if idx < 0 || idx >= self.len {
-    Err(HintError::ValueStackUnderflow)
+    Err(ValueStackUnderflow)
   } else {
     Ok(self.buf.at(idx))
   }

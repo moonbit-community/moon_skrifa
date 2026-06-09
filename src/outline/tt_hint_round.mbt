@@ -37,43 +37,43 @@ priv struct TtRoundState {
 
 ///|
 fn TtRoundState::default() -> TtRoundState {
-  TtRoundState::{ mode: TtRoundMode::Grid, threshold: 0, phase: 0, period: 64 }
+  { mode: Grid, threshold: 0, phase: 0, period: 64 }
 }
 
 ///|
 fn TtRoundState::round(self : TtRoundState, distance_bits : Int) -> Int {
   match self.mode {
-    TtRoundMode::HalfGrid =>
+    HalfGrid =>
       if distance_bits >= 0 {
         (tt_hint_floor_26(distance_bits) + 32).max(0)
       } else {
         (-(tt_hint_floor_26(-distance_bits) + 32)).min(0)
       }
-    TtRoundMode::Grid =>
+    Grid =>
       if distance_bits >= 0 {
         tt_hint_round_26(distance_bits).max(0)
       } else {
         (-tt_hint_round_26(-distance_bits)).min(0)
       }
-    TtRoundMode::DoubleGrid =>
+    DoubleGrid =>
       if distance_bits >= 0 {
         tt_hint_round_pad(distance_bits, 32).max(0)
       } else {
         (-tt_hint_round_pad(-distance_bits, 32)).min(0)
       }
-    TtRoundMode::DownToGrid =>
+    DownToGrid =>
       if distance_bits >= 0 {
         tt_hint_floor_26(distance_bits).max(0)
       } else {
         (-tt_hint_floor_26(-distance_bits)).min(0)
       }
-    TtRoundMode::UpToGrid =>
+    UpToGrid =>
       if distance_bits >= 0 {
         tt_hint_ceil_26(distance_bits).max(0)
       } else {
         (-tt_hint_ceil_26(-distance_bits)).min(0)
       }
-    TtRoundMode::Super =>
+    Super =>
       if distance_bits >= 0 {
         let val = (
             (distance_bits + (self.threshold - self.phase)) & -self.period
@@ -93,7 +93,7 @@ fn TtRoundState::round(self : TtRoundState, distance_bits : Int) -> Int {
           val
         }
       }
-    TtRoundMode::Super45 =>
+    Super45 =>
       if distance_bits >= 0 {
         let val = (distance_bits + (self.threshold - self.phase)) /
           self.period *
@@ -115,6 +115,6 @@ fn TtRoundState::round(self : TtRoundState, distance_bits : Int) -> Int {
           val
         }
       }
-    TtRoundMode::Off => distance_bits
+    Off => distance_bits
   }
 }
