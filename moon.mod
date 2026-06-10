@@ -1,6 +1,6 @@
 name = "Milky2018/moon_skrifa"
 
-version = "0.1.7"
+version = "0.1.8"
 
 readme = "README.mbt.md"
 
