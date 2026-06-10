@@ -17,76 +17,80 @@
 ///
 /// Ported from `fontations/skrifa/src/provider.rs` (Apache-2.0 OR MIT).
 pub(open) trait MetadataProvider {
-  attributes(Self) -> Attributes
-  axes(Self) -> AxisCollection
-  named_instances(Self) -> NamedInstanceCollection
-  localized_strings(Self, StringId) -> LocalizedStrings
-  glyph_names(Self) -> GlyphNames
-  metrics(Self, Size, LocationRef) -> Metrics
-  glyph_metrics(Self, Size, LocationRef) -> GlyphMetrics
-  charmap(Self) -> Charmap
-  outline_glyphs(Self) -> @skrifa_outline.OutlineGlyphCollection
-  bitmap_strikes(Self) -> BitmapStrikes
-  color_glyphs(Self) -> ColorGlyphCollection
-  color_palettes(Self) -> ColorPalettes
+  fn attributes(Self) -> Attributes
+  fn axes(Self) -> AxisCollection
+  fn named_instances(Self) -> NamedInstanceCollection
+  fn localized_strings(Self, StringId) -> LocalizedStrings
+  fn glyph_names(Self) -> GlyphNames
+  fn metrics(Self, Size, LocationRef) -> Metrics
+  fn glyph_metrics(Self, Size, LocationRef) -> GlyphMetrics
+  fn charmap(Self) -> Charmap
+  fn outline_glyphs(Self) -> @skrifa_outline.OutlineGlyphCollection
+  fn bitmap_strikes(Self) -> BitmapStrikes
+  fn color_glyphs(Self) -> ColorGlyphCollection
+  fn color_palettes(Self) -> ColorPalettes
 }
 
 ///|
-pub impl MetadataProvider for FontRef with attributes(font) {
+pub impl MetadataProvider for FontRef with fn attributes(font) {
   FontRef::attributes(font)
 }
 
 ///|
-pub impl MetadataProvider for FontRef with axes(font) {
+pub impl MetadataProvider for FontRef with fn axes(font) {
   AxisCollection(font)
 }
 
 ///|
-pub impl MetadataProvider for FontRef with named_instances(font) {
+pub impl MetadataProvider for FontRef with fn named_instances(font) {
   NamedInstanceCollection(font)
 }
 
 ///|
-pub impl MetadataProvider for FontRef with localized_strings(font, id) {
+pub impl MetadataProvider for FontRef with fn localized_strings(font, id) {
   FontRef::localized_strings(font, id)
 }
 
 ///|
-pub impl MetadataProvider for FontRef with glyph_names(font) {
+pub impl MetadataProvider for FontRef with fn glyph_names(font) {
   GlyphNames(font)
 }
 
 ///|
-pub impl MetadataProvider for FontRef with metrics(font, size, location) {
+pub impl MetadataProvider for FontRef with fn metrics(font, size, location) {
   FontRef::metrics(font, size, location)
 }
 
 ///|
-pub impl MetadataProvider for FontRef with glyph_metrics(font, size, location) {
+pub impl MetadataProvider for FontRef with fn glyph_metrics(
+  font,
+  size,
+  location,
+) {
   FontRef::glyph_metrics(font, size, location)
 }
 
 ///|
-pub impl MetadataProvider for FontRef with charmap(font) {
+pub impl MetadataProvider for FontRef with fn charmap(font) {
   Charmap(font)
 }
 
 ///|
-pub impl MetadataProvider for FontRef with outline_glyphs(font) {
+pub impl MetadataProvider for FontRef with fn outline_glyphs(font) {
   @skrifa_outline.OutlineGlyphCollection::from_font(font)
 }
 
 ///|
-pub impl MetadataProvider for FontRef with bitmap_strikes(font) {
+pub impl MetadataProvider for FontRef with fn bitmap_strikes(font) {
   BitmapStrikes(font)
 }
 
 ///|
-pub impl MetadataProvider for FontRef with color_palettes(font) {
+pub impl MetadataProvider for FontRef with fn color_palettes(font) {
   ColorPalettes(font)
 }
 
 ///|
-pub impl MetadataProvider for FontRef with color_glyphs(font) {
+pub impl MetadataProvider for FontRef with fn color_glyphs(font) {
   ColorGlyphCollection(font)
 }

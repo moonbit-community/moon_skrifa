@@ -20,10 +20,10 @@
 /// as the low-level primitive (`UInt` tag), and provide this trait adapter for
 /// Tag-based APIs.
 pub(open) trait TableProvider {
-  table(Self, Tag) -> BytesView?
+  fn table(Self, Tag) -> BytesView?
 }
 
 ///|
-pub impl TableProvider for FontRef with table(font, tag) {
+pub impl TableProvider for FontRef with fn table(font, tag) {
   font.table(tag.to_uint())
 }
