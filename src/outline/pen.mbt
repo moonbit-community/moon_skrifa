@@ -225,6 +225,9 @@ pub impl OutlinePen for SvgPen with fn close(pen) {
 }
 
 ///|
+pub extend SvgPen with OutlinePen::{close, curve_to, line_to, quad_to, move_to}
+
+///|
 /// Pen that drops all drawing output.
 pub struct NullPen {
   priv _unit : Unit
@@ -259,3 +262,6 @@ pub impl OutlinePen for NullPen with fn curve_to(_, _, _, _, _, _, _) {
 pub impl OutlinePen for NullPen with fn close(_) {
 
 }
+
+///|
+pub extend NullPen with OutlinePen::{close, curve_to, line_to, quad_to, move_to}

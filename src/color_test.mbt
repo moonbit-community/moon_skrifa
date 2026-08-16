@@ -59,7 +59,7 @@ fn color_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
       out.push(b)
     }
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -90,7 +90,7 @@ fn color_test_build_cpal() -> Bytes {
   out.push(255 |> Int::to_byte)
   out.push(0 |> Int::to_byte)
   out.push(255 |> Int::to_byte)
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -143,7 +143,7 @@ fn color_test_build_cpal_v1() -> Bytes {
   // palette entry label array
   color_test_push_u16_be(out, 400)
   color_test_push_u16_be(out, 401)
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|

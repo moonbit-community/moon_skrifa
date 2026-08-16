@@ -53,7 +53,7 @@ fn provider_test_make_min_sfnt() -> Bytes {
   out.push(0x62 |> Int::to_byte)
   out.push(0x63 |> Int::to_byte)
   out.push(0x64 |> Int::to_byte)
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|

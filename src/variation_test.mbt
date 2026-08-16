@@ -72,7 +72,7 @@ fn variation_test_build_fvar_table() -> Bytes {
   variation_test_push_u16_be(out, 0)
   variation_test_push_u32_be(out, variation_test_fixed_16_16(100.0))
   variation_test_push_u16_be(out, 0)
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -100,7 +100,7 @@ fn variation_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
       out.push(b)
     }
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|

@@ -1009,7 +1009,7 @@ fn Type2Eval::eval_operator(
       }
       while Type2Eval::coords_remaining(self) >= 4 {
         let modes = Array::from_fixed_array([DxY, DxDy, DxY])
-        if !Type2Eval::emit_curves(self, modes.op_as_view()) {
+        if !Type2Eval::emit_curves(self, modes[:]) {
           return None
         }
       }
@@ -1030,7 +1030,7 @@ fn Type2Eval::eval_operator(
             DxDy,
             MaybeDxDy(do_last_delta),
           ])
-          if !Type2Eval::emit_curves(self, modes.op_as_view()) {
+          if !Type2Eval::emit_curves(self, modes[:]) {
             return None
           }
         } else {
@@ -1039,7 +1039,7 @@ fn Type2Eval::eval_operator(
             DxDy,
             DxMaybeDy(do_last_delta),
           ])
-          if !Type2Eval::emit_curves(self, modes.op_as_view()) {
+          if !Type2Eval::emit_curves(self, modes[:]) {
             return None
           }
         }
@@ -1052,7 +1052,7 @@ fn Type2Eval::eval_operator(
     8 | 24 => {
       while Type2Eval::coords_remaining(self) >= 6 {
         let modes = Array::from_fixed_array([DxDy, DxDy, DxDy])
-        if !Type2Eval::emit_curves(self, modes.op_as_view()) {
+        if !Type2Eval::emit_curves(self, modes[:]) {
           return None
         }
       }
@@ -1077,7 +1077,7 @@ fn Type2Eval::eval_operator(
         self.stack_ix = self.stack_ix + 2
       }
       let modes = Array::from_fixed_array([DxDy, DxDy, DxDy])
-      if !Type2Eval::emit_curves(self, modes.op_as_view()) {
+      if !Type2Eval::emit_curves(self, modes[:]) {
         return None
       }
       self.reset_stack()
@@ -1091,7 +1091,7 @@ fn Type2Eval::eval_operator(
       }
       while Type2Eval::coords_remaining(self) > 0 {
         let modes = Array::from_fixed_array([XDy, DxDy, XDy])
-        if !Type2Eval::emit_curves(self, modes.op_as_view()) {
+        if !Type2Eval::emit_curves(self, modes[:]) {
           return None
         }
       }
@@ -1115,7 +1115,7 @@ fn Type2Eval::eval_operator(
             DLargerCoordDist,
           ])
       }
-      if !Type2Eval::emit_curves(self, modes.op_as_view()) {
+      if !Type2Eval::emit_curves(self, modes[:]) {
         return None
       }
       self.reset_stack()

@@ -455,7 +455,7 @@ pub fn NamedInstance::postscript_name_id(self : NamedInstance) -> StringId? {
 
 ///|
 pub fn NamedInstance::user_coords(self : NamedInstance) -> ArrayView[Double] {
-  self.record.user_coords.op_as_view()
+  self.record.user_coords[:]
 }
 
 ///|

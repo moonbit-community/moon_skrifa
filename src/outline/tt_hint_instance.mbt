@@ -32,11 +32,11 @@ const TAG_CVT_TT : UInt = 0x63767420 // "cvt "
 const TAG_FVAR_TT : UInt = 0x66766172 // "fvar"
 
 ///|
-let tt_empty_bytes : Bytes = Bytes::from_array(Array::new().op_as_view())
+let tt_empty_bytes : Bytes = Bytes::from_array(Array::new()[:])
 
 ///|
 fn tt_empty_bytes_view() -> BytesView {
-  tt_empty_bytes.op_as_view()
+  tt_empty_bytes[:]
 }
 
 ///|
@@ -340,7 +340,7 @@ test "hint: scaled cvar cvt" {
   let scale_bits = 67109
   let ppem = 16
   inst
-  .reconfigure(font, scale_bits, ppem, Target::default(), coords.op_as_view())
+  .reconfigure(font, scale_bits, ppem, Target::default(), coords[:])
   .unwrap()
   |> ignore
   debug_inspect(

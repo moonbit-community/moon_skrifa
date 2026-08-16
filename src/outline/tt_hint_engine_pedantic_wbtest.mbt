@@ -14,7 +14,7 @@
 
 ///|
 test "tt_hint: non-pedantic stack underflow uses 0 (dup/pop)" {
-  let empty = Bytes::from_array(Array::new().op_as_view())
+  let empty = Bytes::from_array(Array::new()[:])
   let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
   let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array::new()
   let engine = TtEngine(
@@ -26,7 +26,7 @@ test "tt_hint: non-pedantic stack underflow uses 0 (dup/pop)" {
     Array::new(),
     None,
     0,
-    coords0.op_as_view(),
+    coords0[:],
     64,
     32,
     64,
@@ -54,7 +54,7 @@ test "tt_hint: non-pedantic stack underflow uses 0 (dup/pop)" {
 
 ///|
 test "tt_hint: pedantic stack underflow errors (dup)" {
-  let empty = Bytes::from_array(Array::new().op_as_view())
+  let empty = Bytes::from_array(Array::new()[:])
   let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
   let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array::new()
   let engine = TtEngine(
@@ -66,7 +66,7 @@ test "tt_hint: pedantic stack underflow errors (dup)" {
     Array::new(),
     None,
     0,
-    coords0.op_as_view(),
+    coords0[:],
     64,
     32,
     64,

@@ -269,7 +269,7 @@ fn cvar_test_b64_decode(s : String) -> Bytes {
       vals.clear()
     }
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -293,12 +293,7 @@ test "cvar: scaled deltas (coords=0.5,-0.5)" {
   let coords : Array[@moon_skrifa.NormalizedCoord] = Array::from_fixed_array([
     8192, -8192,
   ])
-  let deltas = cvar_deltas_fixed16_16(
-    font,
-    axis_count,
-    coords.op_as_view(),
-    cvt_len,
-  ).unwrap()
+  let deltas = cvar_deltas_fixed16_16(font, axis_count, coords[:], cvt_len).unwrap()
   inspect(deltas.at(65).to_string(), content="1900544")
   inspect(deltas.at(66).to_string(), content="2621440")
   inspect(deltas.at(67).to_string(), content="2129920")

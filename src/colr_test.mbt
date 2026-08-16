@@ -59,7 +59,7 @@ fn colr_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
       out.push(b)
     }
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -86,7 +86,7 @@ fn colr_test_build_colr() -> Bytes {
   colr_test_push_u16_be(out, 1)
   colr_test_push_u16_be(out, 11)
   colr_test_push_u16_be(out, 2)
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -106,7 +106,7 @@ fn colr_test_build_colr_v1_empty() -> Bytes {
   colr_test_push_u32_be(out, colr_test_u32(0)) // clipListOffset
   colr_test_push_u32_be(out, colr_test_u32(0)) // varIndexMapOffset
   colr_test_push_u32_be(out, colr_test_u32(0)) // itemVariationStoreOffset
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -136,7 +136,7 @@ fn colr_test_build_colr_v1_with_base_glyph(gid : Int) -> Bytes {
   out.push(2 |> Int::to_byte)
   colr_test_push_u16_be(out, 3)
   colr_test_push_u16_be(out, 0x4000)
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|

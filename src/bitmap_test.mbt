@@ -59,7 +59,7 @@ fn bitmap_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
       out.push(b)
     }
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -89,7 +89,7 @@ fn bitmap_test_build_sbix(ppem : Int) -> Bytes {
   bitmap_test_push_u32_be(out, bitmap_test_u32(12)) // strikeOffsets[0]
   bitmap_test_push_u16_be(out, ppem) // strike.ppem
   bitmap_test_push_u16_be(out, 72) // strike.resolution
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -98,7 +98,7 @@ fn bitmap_test_build_maxp(num_glyphs : Int) -> Bytes {
   // version 1.0
   bitmap_test_push_u32_be(out, bitmap_test_u32(0x00010000))
   bitmap_test_push_u16_be(out, num_glyphs)
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -132,7 +132,7 @@ fn bitmap_test_build_sbix_with_glyph(
   for b in payload.iter() {
     out.push(b)
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -169,7 +169,7 @@ fn bitmap_test_build_sbix_multi_with_glyph(
       out.push(b)
     }
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -223,7 +223,7 @@ fn bitmap_test_build_cblc_index1(
   // offsets[0..1]
   bitmap_test_push_u32_be(out, bitmap_test_u32(0))
   bitmap_test_push_u32_be(out, bitmap_test_u32(glyph_data_len))
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -251,7 +251,7 @@ fn bitmap_test_build_cbdt_format17(
   for b in png.iter() {
     out.push(b)
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -268,7 +268,7 @@ fn bitmap_test_build_loc(ppem_x : Int, ppem_y : Int) -> Bytes {
   out.push(ppem_y |> Int::to_byte)
   out.push(0 |> Int::to_byte)
   out.push(0 |> Int::to_byte)
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -287,7 +287,7 @@ test "bitmap strikes sbix" {
 ///|
 test "bitmap strikes cblc/cbdt" {
   let cblc = bitmap_test_build_loc(10, 12)
-  let cbdt = Bytes::from_array(Array::new().op_as_view())
+  let cbdt = Bytes::from_array(Array::new()[:])
   let sfnt = bitmap_test_build_sfnt(
     Array::from_fixed_array([(TAG_CBLC, cblc), (TAG_CBDT, cbdt)]),
   )
@@ -302,7 +302,7 @@ test "bitmap strikes cblc/cbdt" {
 ///|
 test "bitmap strikes eblc/ebdt" {
   let eblc = bitmap_test_build_loc(11, 13)
-  let ebdt = Bytes::from_array(Array::new().op_as_view())
+  let ebdt = Bytes::from_array(Array::new()[:])
   let sfnt = bitmap_test_build_sfnt(
     Array::from_fixed_array([(TAG_EBLC, eblc), (TAG_EBDT, ebdt)]),
   )
@@ -343,7 +343,7 @@ test "bitmap sbix glyph png" {
       0x00 |> Int::to_byte,
       0x00 |> Int::to_byte,
       0x03 |> Int::to_byte,
-    ]).op_as_view(),
+    ])[:],
   )
   let sbix = bitmap_test_build_sbix_with_glyph(
     16, 1, 2, 0x706E6720, // "png "
@@ -377,7 +377,7 @@ test "bitmap sbix glyph jpg" {
       0xD8 |> Int::to_byte,
       0xFF |> Int::to_byte,
       0xD9 |> Int::to_byte,
-    ]).op_as_view(),
+    ])[:],
   )
   let sbix = bitmap_test_build_sbix_with_glyph(
     20, 0, 0, 0x6A706720, // "jpg "
@@ -428,7 +428,7 @@ test "bitmap cbdt/cblc glyph png (format 17 + indexSubTable1)" {
       0x00 |> Int::to_byte,
       0x00 |> Int::to_byte,
       0x03 |> Int::to_byte,
-    ]).op_as_view(),
+    ])[:],
   )
   let cbdt = bitmap_test_build_cbdt_format17(2, 3, 1, 2, 0, png, 3)
   // glyph record starts after CBDT header (4 bytes)
@@ -471,7 +471,7 @@ test "bitmap ebdt/eblc glyph (format 1 + indexSubTable1)" {
   ebdt_out.push(2 |> Int::to_byte)
   ebdt_out.push(0 |> Int::to_byte)
   ebdt_out.push(0xAA |> Int::to_byte)
-  let ebdt = Bytes::from_array(ebdt_out.op_as_view())
+  let ebdt = Bytes::from_array(ebdt_out[:])
   let glyph_len = 5 + 1
   let eblc = bitmap_test_build_cblc_index1(12, 12, 0, 1, 4, glyph_len, 1, 2)
   let sfnt = bitmap_test_build_sfnt(
@@ -501,7 +501,7 @@ test "bitmap strikes iter and glyph_for_size" {
       0xD8 |> Int::to_byte,
       0xFF |> Int::to_byte,
       0xD9 |> Int::to_byte,
-    ]).op_as_view(),
+    ])[:],
   )
   let sbix = bitmap_test_build_sbix_multi_with_glyph(
     Array::from_fixed_array([12, 20]),

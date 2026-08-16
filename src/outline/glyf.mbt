@@ -721,12 +721,7 @@ fn glyf_simple_path(
         if contour_end < contour_start || contour_end >= scaled.length() {
           return None
         }
-        glyf_emit_contour_freetype(
-          out,
-          scaled.op_as_view(),
-          contour_start,
-          contour_end,
-        )
+        glyf_emit_contour_freetype(out, scaled[:], contour_start, contour_end)
         contour_start = contour_end + 1
       }
       Some(out)
@@ -747,7 +742,7 @@ fn glyf_simple_path(
         }
         glyf_emit_contour_harfbuzz(
           out,
-          scaled.op_as_view(),
+          scaled[:],
           contour_start,
           contour_end,
           path_style,
@@ -1395,7 +1390,7 @@ fn glyf_outline_info(
     loca,
     num_glyphs,
     index_to_loc_format,
-    coords: empty.op_as_view(),
+    coords: empty[:],
     is_scaled: false,
     is_hinted: false,
     scale_bits: 0x10000,
@@ -1794,7 +1789,7 @@ fn glyf_draw_memory_size(
     loca,
     num_glyphs,
     index_to_loc_format,
-    coords: empty.op_as_view(),
+    coords: empty[:],
     is_scaled: false,
     is_hinted: false,
     scale_bits: 0x10000,

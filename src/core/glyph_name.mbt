@@ -62,7 +62,7 @@ fn glyph_name_truncate(s : String) -> String {
     out.push(c)
     n = n + 1
   }
-  String::from_array(out.op_as_view())
+  String::from_array(out[:])
 }
 
 ///|
@@ -71,7 +71,7 @@ fn glyph_name_latin1_string(bytes : BytesView) -> String {
   for b in bytes.iter() {
     chars.push(b.to_int().unsafe_to_char())
   }
-  String::from_array(chars.op_as_view())
+  String::from_array(chars[:])
 }
 
 ///|

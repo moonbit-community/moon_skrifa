@@ -328,9 +328,18 @@ pub struct GlyphId {
   // private fields
 }
 pub fn GlyphId::GlyphId(UInt16) -> Self
+pub fn GlyphId::compare(Self, Self) -> Int
 pub fn GlyphId::default() -> Self
+pub fn GlyphId::equal(Self, Self) -> Bool
+pub fn GlyphId::not_equal(Self, Self) -> Bool
 pub fn GlyphId::notdef() -> Self
+pub fn GlyphId::op_ge(Self, Self) -> Bool
+pub fn GlyphId::op_gt(Self, Self) -> Bool
+pub fn GlyphId::op_le(Self, Self) -> Bool
+pub fn GlyphId::op_lt(Self, Self) -> Bool
+pub fn GlyphId::output(Self, &Logger) -> Unit
 pub fn GlyphId::to_int(Self) -> Int
+pub fn GlyphId::to_repr(Self) -> @debug.Repr
 pub fn GlyphId::to_string(Self) -> String
 pub fn GlyphId::to_u16(Self) -> UInt16
 pub fn GlyphId::to_uint64(Self) -> UInt64
@@ -591,4 +600,3 @@ pub(open) trait ColorPainter {
 pub(open) trait TableProvider {
   fn table(Self, Tag) -> BytesView?
 }
-

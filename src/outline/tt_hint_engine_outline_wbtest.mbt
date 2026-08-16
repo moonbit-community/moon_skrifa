@@ -14,7 +14,7 @@
 
 ///|
 fn tt_make_engine_for_outline() -> TtEngine {
-  let empty = Bytes::from_array(Array::new().op_as_view())
+  let empty = Bytes::from_array(Array::new()[:])
   let retained = TtRetainedGraphicsState::default()
   let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array::new()
   let engine = TtEngine(
@@ -26,7 +26,7 @@ fn tt_make_engine_for_outline() -> TtEngine {
     Array::make(16, 0),
     Some(32),
     0,
-    coords0.op_as_view(),
+    coords0[:],
     64,
     32,
     64,

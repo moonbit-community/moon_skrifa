@@ -71,7 +71,7 @@ fn[T] SmallVec::is_inline(self : SmallVec[T]) -> Bool {
 fn[T] SmallVec::as_view(self : SmallVec[T]) -> ArrayView[T] {
   match self.storage {
     Inline(buf, len) => buf[0:len]
-    Heap(vec) => vec.op_as_view()
+    Heap(vec) => vec[:]
   }
 }
 

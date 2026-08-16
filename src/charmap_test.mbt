@@ -68,7 +68,7 @@ fn make_sfnt_with_table(tag : UInt, table : Bytes) -> Bytes {
   for b in table.iter() {
     out.push(b)
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -93,7 +93,7 @@ fn make_cmap_table(records : Array[(Int, Int, Bytes)]) -> Bytes {
       out.push(b)
     }
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -132,7 +132,7 @@ fn make_cmap_subtable_format4_delta(
   // idRangeOffset[2] = [0, 0]
   cmap_test_push_u16_be(out, 0)
   cmap_test_push_u16_be(out, 0)
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -152,7 +152,7 @@ fn make_cmap_subtable_format12_single(
   cmap_test_push_u32_be(out, cmap_test_u32(start_cp))
   cmap_test_push_u32_be(out, cmap_test_u32(end_cp))
   cmap_test_push_u32_be(out, cmap_test_u32(start_gid))
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -204,7 +204,7 @@ fn make_cmap_subtable_format14(
     cmap_test_push_u24_be(out, cp)
     cmap_test_push_u16_be(out, gid)
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|

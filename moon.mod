@@ -12,6 +12,4 @@ keywords = [ "font", "opentype", "truetype" ]
 
 description = "MoonBit port of Fontations skrifa (font parsing, metrics, color/bitmap glyph helpers)."
 
-options(
-  source: "src",
-)
+source = "src"

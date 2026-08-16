@@ -298,7 +298,7 @@ fn CffBlues::CffBlues(values : ArrayView[CffFixed]) -> CffBlues {
 
 ///|
 fn CffBlues::values(self : CffBlues) -> ArrayView[(CffFixed, CffFixed)] {
-  self.pairs.op_as_view()
+  self.pairs[:]
 }
 
 ///|
@@ -402,7 +402,7 @@ fn HintState::HintState(params : HintParams, scale : CffFixed) -> HintState {
 
 ///|
 fn HintState::zones(self : HintState) -> ArrayView[BlueZone] {
-  self.zones[0:self.zone_count].op_as_view()
+  self.zones[0:self.zone_count][:]
 }
 
 ///|
@@ -1370,7 +1370,7 @@ fn HintMask::from_bytes_view(bytes : BytesView) -> HintMask? {
   for b in bytes.iter() {
     a.push(b)
   }
-  HintMask::from_bytes(a.op_as_view())
+  HintMask::from_bytes(a[:])
 }
 
 ///|

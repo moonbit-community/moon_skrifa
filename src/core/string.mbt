@@ -208,7 +208,7 @@ fn string_decode_utf16be(view : BytesView) -> String? {
       i = i + 2
     }
   }
-  Some(String::from_array(chars.op_as_view()))
+  Some(String::from_array(chars[:]))
 }
 
 ///|
@@ -357,7 +357,7 @@ fn string_decode_bytes_mac_roman(view : BytesView) -> String {
     let cp = string_mac_roman_code_point(b.to_int())
     chars.push(cp.unsafe_to_char())
   }
-  String::from_array(chars.op_as_view())
+  String::from_array(chars[:])
 }
 
 ///|
@@ -772,7 +772,7 @@ pub fn LocalizedStrings::id(self : LocalizedStrings) -> StringId {
 pub fn LocalizedStrings::strings(
   self : LocalizedStrings,
 ) -> ArrayView[LocalizedString] {
-  self.strings.op_as_view()
+  self.strings[:]
 }
 
 ///|

@@ -18,7 +18,7 @@ fn tt_make_engine_for_misc(
   axis_count : Int,
   coords : Array[@moon_skrifa.NormalizedCoord],
 ) -> TtEngine {
-  let empty = Bytes::from_array(Array::new().op_as_view())
+  let empty = Bytes::from_array(Array::new()[:])
   TtEngine(
     empty[:],
     empty[:],
@@ -28,7 +28,7 @@ fn tt_make_engine_for_misc(
     Array::new(),
     None,
     axis_count,
-    coords.op_as_view(),
+    coords[:],
     64,
     32,
     64,

@@ -92,7 +92,7 @@ fn glyph_test_build_post_v2() -> Bytes {
   out.push(101 |> Int::to_byte)
   out.push(115 |> Int::to_byte)
   out.push(116 |> Int::to_byte)
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -104,7 +104,7 @@ fn glyph_test_build_post_v2_standard_name(name_index : Int) -> Bytes {
   }
   glyph_test_push_u16_be(out, 1)
   glyph_test_push_u16_be(out, name_index)
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -115,7 +115,7 @@ fn glyph_test_build_post_v1() -> Bytes {
   for _ in 0..<28 {
     out.push(0 |> Int::to_byte)
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -160,7 +160,7 @@ fn glyph_test_build_cff_custom_charset(format : Int, sid : Int) -> Bytes {
     _ => 0
   }
   if charset_len == 0 {
-    return Bytes::from_array(Array::new().op_as_view())
+    return Bytes::from_array(Array::new()[:])
   }
   // Top DICT bytes: charset(i32+op) + charstrings(i32+op) => 6+6=12
   let top_dict_len = 12
@@ -200,7 +200,7 @@ fn glyph_test_build_cff_custom_charset(format : Int, sid : Int) -> Bytes {
   for b in char_ix.iter() {
     out.push(b)
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -228,7 +228,7 @@ fn glyph_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
       out.push(b)
     }
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -246,7 +246,7 @@ fn glyph_test_build_maxp(num_glyphs : Int) -> Bytes {
   let out : Array[Byte] = Array::new()
   glyph_test_push_u32_be(out, glyph_test_u32(0x00010000))
   glyph_test_push_u16_be(out, num_glyphs)
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
