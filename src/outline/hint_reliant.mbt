@@ -91,7 +91,7 @@ fn skip_pdf_random_tag(name : String) -> String {
     }
     idx = idx + 1
   }
-  String::from_array(out.op_as_view())
+  String::from_array(out[:])
 }
 
 ///|

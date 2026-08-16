@@ -61,7 +61,7 @@ fn make_min_sfnt_with_table_offset(table_offset : Int) -> Bytes {
   out.push(0x62 |> Int::to_byte)
   out.push(0x63 |> Int::to_byte)
   out.push(0x64 |> Int::to_byte)
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -83,7 +83,7 @@ fn make_min_ttc() -> Bytes {
   for b in sfnt.iter() {
     out.push(b)
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|

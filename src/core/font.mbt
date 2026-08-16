@@ -61,9 +61,15 @@ pub impl Show for GlyphId with fn output(self, logger) {
 }
 
 ///|
+pub extend GlyphId with Show::{output}
+
+///|
 pub impl Debug for GlyphId with fn to_repr(self) {
   Repr::integer(self.value.to_string())
 }
+
+///|
+pub extend GlyphId with Debug::{to_repr}
 
 ///|
 pub impl Eq for GlyphId with fn equal(self, other) {
@@ -71,9 +77,15 @@ pub impl Eq for GlyphId with fn equal(self, other) {
 }
 
 ///|
+pub extend GlyphId with Eq::{not_equal, equal}
+
+///|
 pub impl Compare for GlyphId with fn compare(self, other) {
   self.value.to_int() - other.value.to_int()
 }
+
+///|
+pub extend GlyphId with Compare::{op_lt, op_le, op_ge, compare, op_gt}
 
 ///|
 const TAG_TTCF : UInt = 0x74746366

@@ -14,12 +14,12 @@
 
 ///|
 fn tt_bytes(xs : FixedArray[Byte]) -> Bytes {
-  Bytes::from_array(Array::from_fixed_array(xs).op_as_view())
+  Bytes::from_array(Array::from_fixed_array(xs)[:])
 }
 
 ///|
 test "tt_hint: missing opcodes (getvariation/getdata/odd/even/mps/debug)" {
-  let empty = Bytes::from_array(Array::new().op_as_view())
+  let empty = Bytes::from_array(Array::new()[:])
   let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
   let cvt : Array[Int] = Array::new()
   let storage : Array[Int] = Array::new()
@@ -44,7 +44,7 @@ test "tt_hint: missing opcodes (getvariation/getdata/odd/even/mps/debug)" {
     storage,
     None,
     0,
-    coords0.op_as_view(),
+    coords0[:],
     64,
     32,
     64,
@@ -68,7 +68,7 @@ test "tt_hint: missing opcodes (getvariation/getdata/odd/even/mps/debug)" {
     Array::new(),
     None,
     2,
-    coords1.op_as_view(),
+    coords1[:],
     64,
     32,
     64,
@@ -89,7 +89,7 @@ test "tt_hint: missing opcodes (getvariation/getdata/odd/even/mps/debug)" {
     Array::new(),
     None,
     1,
-    coords1.op_as_view(),
+    coords1[:],
     64,
     32,
     64,
@@ -116,7 +116,7 @@ test "tt_hint: missing opcodes (getvariation/getdata/odd/even/mps/debug)" {
     Array::new(),
     None,
     0,
-    coords0.op_as_view(),
+    coords0[:],
     64,
     32,
     64,
@@ -137,7 +137,7 @@ test "tt_hint: missing opcodes (getvariation/getdata/odd/even/mps/debug)" {
     Array::new(),
     None,
     0,
-    coords0.op_as_view(),
+    coords0[:],
     64,
     32,
     64,
@@ -157,7 +157,7 @@ test "tt_hint: missing opcodes (getvariation/getdata/odd/even/mps/debug)" {
     Array::new(),
     None,
     0,
-    coords0.op_as_view(),
+    coords0[:],
     64,
     32,
     64,

@@ -51,7 +51,7 @@ fn make_sfnt_with_tags(tags : Array[UInt]) -> Bytes {
     push_u32_be(out, u32(dir_end))
     push_u32_be(out, u32(0))
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|

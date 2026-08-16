@@ -342,7 +342,7 @@ pub fn HintingInstance::size(self : HintingInstance) -> @moon_skrifa.Size {
 pub fn HintingInstance::location(
   self : HintingInstance,
 ) -> @moon_skrifa.LocationRef {
-  LocationRef(self.coords.op_as_view())
+  LocationRef(self.coords[:])
 }
 
 ///|
@@ -414,7 +414,7 @@ pub fn HintingInstance::reconfigure(
               scale_bits,
               rounded_ppem,
               self.target,
-              self.coords.op_as_view(),
+              self.coords[:],
             ) {
             Err(e) => return Err(HintingFailed(e))
             Ok(_) => ()
@@ -681,7 +681,7 @@ fn HintingInstance::hinted_path(
       a.hinted_path(
         glyph,
         self.size,
-        LocationRef(self.coords.op_as_view()),
+        LocationRef(self.coords[:]),
         path_style,
         self.target,
       )
@@ -692,7 +692,7 @@ fn HintingInstance::hinted_path(
       if !tt.is_enabled() {
         let settings = DrawSettings::unhinted(
           self.size,
-          LocationRef(self.coords.op_as_view()),
+          LocationRef(self.coords[:]),
         ).with_path_style(path_style)
         let metrics0 = match glyph.draw(settings, NullPen()) {
           Err(e) => return Err(e)
@@ -718,9 +718,7 @@ fn HintingInstance::hinted_path(
       if path_style is HarfBuzz {
         return Err(HarfBuzzHintingUnsupported)
       }
-      let location = @moon_skrifa.LocationRef::LocationRef(
-        self.coords.op_as_view(),
-      )
+      let location = @moon_skrifa.LocationRef::LocationRef(self.coords[:])
       let path = if is_cff2 {
         cff2_outline_path_hinted(
           glyph.font,
@@ -970,7 +968,7 @@ fn HintingInstance::hinted_glyf_path(
     tt_load_glyph_zone_for_hinting(
       font,
       gid,
-      self.coords.op_as_view(),
+      self.coords[:],
       scale_bits,
       tt,
       fpgm,

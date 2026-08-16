@@ -15,7 +15,7 @@
 ///|
 fn tt_def_code() -> Bytes {
   // Non-empty code so we can use a non-zero end bound when needed.
-  Bytes::from_array(Array::from_fixed_array([(0).to_byte()]).op_as_view())
+  Bytes::from_array(Array::from_fixed_array([(0).to_byte()])[:])
 }
 
 ///|

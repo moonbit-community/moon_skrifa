@@ -128,6 +128,11 @@ pub struct NullPen {
   // private fields
 }
 pub fn NullPen::NullPen() -> Self
+pub fn NullPen::close(Self) -> Unit
+pub fn NullPen::curve_to(Self, Double, Double, Double, Double, Double, Double) -> Unit
+pub fn NullPen::line_to(Self, Double, Double) -> Unit
+pub fn NullPen::move_to(Self, Double, Double) -> Unit
+pub fn NullPen::quad_to(Self, Double, Double, Double, Double) -> Unit
 pub impl OutlinePen for NullPen
 
 pub struct OutlineGlyph {
@@ -194,6 +199,11 @@ pub struct SvgPen {
 }
 pub fn SvgPen::SvgPen() -> Self
 pub fn SvgPen::clear(Self) -> Unit
+pub fn SvgPen::close(Self) -> Unit
+pub fn SvgPen::curve_to(Self, Double, Double, Double, Double, Double, Double) -> Unit
+pub fn SvgPen::line_to(Self, Double, Double) -> Unit
+pub fn SvgPen::move_to(Self, Double, Double) -> Unit
+pub fn SvgPen::quad_to(Self, Double, Double, Double, Double) -> Unit
 pub fn SvgPen::to_string(Self) -> String
 pub fn SvgPen::with_precision(Int) -> Self
 pub impl OutlinePen for SvgPen
@@ -223,4 +233,3 @@ pub(open) trait OutlinePen {
   fn close(Self) -> Unit
 }
 pub impl OutlinePen for Array[PathElement]
-

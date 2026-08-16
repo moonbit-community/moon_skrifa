@@ -14,7 +14,7 @@
 
 ///|
 fn tt_prog_bytes(xs : FixedArray[Byte]) -> Bytes {
-  Bytes::from_array(Array::from_fixed_array(xs).op_as_view())
+  Bytes::from_array(Array::from_fixed_array(xs)[:])
 }
 
 ///|

@@ -107,7 +107,7 @@ pub fn LocationRef::LocationRef(
 ///|
 pub fn LocationRef::default() -> LocationRef {
   let empty : Array[NormalizedCoord] = Array::new()
-  LocationRef(empty.op_as_view())
+  LocationRef(empty[:])
 }
 
 ///|
@@ -129,7 +129,7 @@ pub fn LocationRef::effective_coords(
 ) -> ArrayView[NormalizedCoord] {
   if self.is_default() {
     let empty : Array[NormalizedCoord] = Array::new()
-    empty.op_as_view()
+    empty[:]
   } else {
     self.coords
   }

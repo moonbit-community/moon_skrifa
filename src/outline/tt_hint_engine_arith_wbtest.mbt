@@ -14,7 +14,7 @@
 
 ///|
 fn tt_make_engine_for_arith() -> TtEngine {
-  let empty = Bytes::from_array(Array::new().op_as_view())
+  let empty = Bytes::from_array(Array::new()[:])
   let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
   let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array::new()
   TtEngine(
@@ -26,7 +26,7 @@ fn tt_make_engine_for_arith() -> TtEngine {
     Array::new(),
     None,
     0,
-    coords0.op_as_view(),
+    coords0[:],
     64,
     32,
     64,

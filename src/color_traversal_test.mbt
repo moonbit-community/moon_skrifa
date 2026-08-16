@@ -89,7 +89,7 @@ fn color_trav_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
       out.push(b)
     }
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -145,7 +145,7 @@ fn color_trav_test_build_colr_v1_layers() -> Bytes {
   color_trav_test_push_u8(out, 2)
   color_trav_test_push_u16_be(out, 2)
   color_trav_test_push_f2dot14(out, 1.0)
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -190,7 +190,7 @@ fn color_trav_test_build_colr_v1_transform() -> Bytes {
   // LayerList: minimal valid table (numLayers=1, offset points to self but unused)
   color_trav_test_push_u32_be(out, 1)
   color_trav_test_push_u32_be(out, 4)
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -231,7 +231,7 @@ fn color_trav_test_build_colr_v1_composite() -> Bytes {
   // LayerList: minimal valid table
   color_trav_test_push_u32_be(out, 1)
   color_trav_test_push_u32_be(out, 4)
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -261,7 +261,7 @@ fn color_trav_test_build_colr_v1_cycle() -> Bytes {
   // LayerList: minimal valid table
   color_trav_test_push_u32_be(out, 1)
   color_trav_test_push_u32_be(out, 4)
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -333,7 +333,7 @@ fn color_trav_test_build_colr_v1_linear_gradient_with_clip() -> Bytes {
   color_trav_test_push_i16_be(out, 0)
   color_trav_test_push_i16_be(out, 50)
   color_trav_test_push_i16_be(out, 60)
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -395,7 +395,7 @@ fn color_trav_test_build_colr_v1_var_solid_alpha() -> Bytes {
   color_trav_test_push_u16_be(out, 1)
   color_trav_test_push_u16_be(out, 0)
   color_trav_test_push_i16_be(out, 8192)
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -450,26 +450,26 @@ impl ColorPainter for ColorTravTestPainter with fn fill(p, brush) {
         " a=" +
         (alpha * 16384.0).round().to_int().to_string(),
       )
-    LinearGradient(_, _, stops, extend) =>
+    LinearGradient(_, _, stops, extend_mode) =>
       p.ops.push(
         "fill_linear n=" +
         stops.length().to_string() +
         " e=" +
-        extend.raw().to_string(),
+        extend_mode.raw().to_string(),
       )
-    RadialGradient(_, _, _, _, stops, extend) =>
+    RadialGradient(_, _, _, _, stops, extend_mode) =>
       p.ops.push(
         "fill_radial n=" +
         stops.length().to_string() +
         " e=" +
-        extend.raw().to_string(),
+        extend_mode.raw().to_string(),
       )
-    SweepGradient(_, _, _, stops, extend) =>
+    SweepGradient(_, _, _, stops, extend_mode) =>
       p.ops.push(
         "fill_sweep n=" +
         stops.length().to_string() +
         " e=" +
-        extend.raw().to_string(),
+        extend_mode.raw().to_string(),
       )
   }
 }
@@ -608,7 +608,7 @@ test "COLRv1 traversal: var solid alpha delta" {
   match
     font.paint_colr_v1_at(
       GlyphId((2).to_uint16()),
-      LocationRef(coords.op_as_view()),
+      LocationRef(coords[:]),
       painter1,
     ) {
     Err(_) => inspect("err", content="ok")

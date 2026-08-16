@@ -60,7 +60,7 @@ fn glyph_metrics_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
       out.push(b)
     }
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -68,7 +68,7 @@ fn glyph_metrics_test_make_maxp(num_glyphs : Int) -> Bytes {
   let out : Array[Byte] = Array::new()
   glyph_metrics_test_push_u32_be(out, 0x00010000)
   glyph_metrics_test_push_u16_be(out, num_glyphs)
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -76,7 +76,7 @@ fn glyph_metrics_test_make_hhea(num_hmetrics : Int) -> Bytes {
   let out : Array[Byte] = Array::make(36, 0 |> Int::to_byte)
   out.set(34, ((num_hmetrics >> 8) & 0xFF).to_byte())
   out.set(35, (num_hmetrics & 0xFF).to_byte())
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -84,7 +84,7 @@ fn glyph_metrics_test_make_hmtx(advance : Int, lsb : Int) -> Bytes {
   let out : Array[Byte] = Array::new()
   glyph_metrics_test_push_u16_be(out, advance)
   glyph_metrics_test_push_i16_be(out, lsb)
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -92,7 +92,7 @@ fn glyph_metrics_test_make_head(units_per_em : Int) -> Bytes {
   let out : Array[Byte] = Array::make(20, 0 |> Int::to_byte)
   out.set(18, ((units_per_em >> 8) & 0xFF).to_byte())
   out.set(19, (units_per_em & 0xFF).to_byte())
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -103,7 +103,7 @@ fn glyph_metrics_test_make_head_long_loca(units_per_em : Int) -> Bytes {
   // head.indexToLocFormat at offset 50: 1 => long offsets.
   out.set(50, 0 |> Int::to_byte)
   out.set(51, 1 |> Int::to_byte)
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -112,7 +112,7 @@ fn glyph_metrics_test_make_loca_long(offsets : Array[Int]) -> Bytes {
   for off in offsets {
     glyph_metrics_test_push_u32_be(out, off)
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -136,7 +136,7 @@ fn glyph_metrics_test_glyf_simple_quad() -> Bytes {
   // y bytes: 100, 100 (second is negative)
   out.push(100 |> Int::to_byte)
   out.push(100 |> Int::to_byte)
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -173,7 +173,7 @@ fn glyph_metrics_test_make_gvar_phantom_deltas(dx0 : Int, dx1 : Int) -> Bytes {
   glyph_metrics_test_push_i16_be(out, 0)
   // yDeltas: 4 zeros (zero run)
   out.push(0x43 |> Int::to_byte)
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 // Build a minimal HVAR table that adds +50 to advance width and lsb when
@@ -228,7 +228,7 @@ fn glyph_metrics_test_make_hvar() -> Bytes {
   out.push(0x17 |> Int::to_byte)
   glyph_metrics_test_push_u16_be(out, 1)
   glyph_metrics_test_push_u16_be(out, 0)
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -281,10 +281,7 @@ test "GlyphMetrics basic + HVAR deltas" {
     content="10",
   )
   let coords = Array::from_fixed_array([16384])
-  let gm1 = font.glyph_metrics(
-    Size::unscaled(),
-    LocationRef(coords.op_as_view()),
-  )
+  let gm1 = font.glyph_metrics(Size::unscaled(), LocationRef(coords[:]))
   inspect(
     gm1.advance_width(GlyphId((0).to_uint16())).unwrap().to_int().to_string(),
     content="550",
@@ -336,7 +333,7 @@ test "GlyphMetrics gvar phantom deltas fallback" {
       (GM_TAG_HMTX, glyph_metrics_test_make_hmtx(500, 10)),
       (GM_TAG_HEAD, glyph_metrics_test_make_head_long_loca(1000)),
       (GM_TAG_LOCA, loca),
-      (GM_TAG_GLYF, Bytes::from_array(Array::new().op_as_view())),
+      (GM_TAG_GLYF, Bytes::from_array(Array::new()[:])),
       (GM_TAG_GVAR, gvar),
     ]),
   )
@@ -355,10 +352,7 @@ test "GlyphMetrics gvar phantom deltas fallback" {
     content="10",
   )
   let coords = Array::from_fixed_array([16384])
-  let gm1 = font.glyph_metrics(
-    Size::unscaled(),
-    LocationRef(coords.op_as_view()),
-  )
+  let gm1 = font.glyph_metrics(Size::unscaled(), LocationRef(coords[:]))
   inspect(
     gm1.advance_width(GlyphId((0).to_uint16())).unwrap().to_int().to_string(),
     content="520",

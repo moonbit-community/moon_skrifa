@@ -485,26 +485,24 @@ fn cff_private_dict_hint_info(
     match op {
       6 => {
         cff_dict_stack_apply_delta_prefix_sum(stack)
-        info.hint_params.blues = CffBlues(
-          cff_dict_stack_to_fixed(stack).op_as_view(),
-        )
+        info.hint_params.blues = CffBlues(cff_dict_stack_to_fixed(stack)[:])
       }
       7 => {
         cff_dict_stack_apply_delta_prefix_sum(stack)
         info.hint_params.other_blues = CffBlues(
-          cff_dict_stack_to_fixed(stack).op_as_view(),
+          cff_dict_stack_to_fixed(stack)[:],
         )
       }
       8 => {
         cff_dict_stack_apply_delta_prefix_sum(stack)
         info.hint_params.family_blues = CffBlues(
-          cff_dict_stack_to_fixed(stack).op_as_view(),
+          cff_dict_stack_to_fixed(stack)[:],
         )
       }
       9 => {
         cff_dict_stack_apply_delta_prefix_sum(stack)
         info.hint_params.family_other_blues = CffBlues(
-          cff_dict_stack_to_fixed(stack).op_as_view(),
+          cff_dict_stack_to_fixed(stack)[:],
         )
       }
       // BlueScale/Shift/Fuzz/LanguageGroup (escaped opcodes 12 9.. etc).

@@ -103,5 +103,5 @@ pub fn Tag::to_string(self : Tag) -> String {
     b2.unsafe_to_char(),
     b3.unsafe_to_char(),
   ])
-  String::from_array(chars.op_as_view())
+  String::from_array(chars[:])
 }

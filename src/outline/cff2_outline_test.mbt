@@ -154,7 +154,7 @@ fn cff2_test_build_cff2_table() -> Bytes {
   for b in charstrings.iter() {
     out.push(b)
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -210,7 +210,7 @@ fn cff2_test_build_cff2_table_blend() -> Bytes {
   for b in charstrings.iter() {
     out.push(b)
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -238,7 +238,7 @@ fn cff2_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
       out.push(b)
     }
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -319,7 +319,7 @@ test "CFF2 blend applies var store region scalar" {
   ])
   let settings = DrawSettings::unhinted(
     @moon_skrifa.Size::unscaled(),
-    LocationRef(coords.op_as_view()),
+    LocationRef(coords[:]),
   )
   let varied = c.path(outline_test_gid(1), settings).unwrap()
   let expected_varied = Array::from_fixed_array([

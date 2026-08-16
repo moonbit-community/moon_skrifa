@@ -198,4 +198,3 @@ pub(open) trait MetadataProvider {
   fn color_palettes(Self) -> @core.ColorPalettes
 }
 pub impl MetadataProvider for @core.FontRef
-

@@ -65,7 +65,7 @@ fn cff_hint_b64_decode(s : String) -> Bytes {
       vals.clear()
     }
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
