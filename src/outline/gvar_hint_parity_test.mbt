@@ -63,7 +63,7 @@ test "hint: gvar deltas applied in hinted glyf load (avar2checker gid=0)" {
   let coords : Array[@moon_skrifa.NormalizedCoord] = Array::from_fixed_array([
     16384, 0,
   ])
-  let loc = @moon_skrifa.LocationRef::LocationRef(coords.op_as_view())
+  let loc = @moon_skrifa.LocationRef::LocationRef(coords[:])
   let opts = Engine::Interpreter.into()
   let outlines0 = OutlineGlyphCollection::from_font(font)
   let hinter = HintingInstance::create(outlines0, size, loc, opts).unwrap()

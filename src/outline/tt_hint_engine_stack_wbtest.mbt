@@ -14,7 +14,7 @@
 
 ///|
 fn tt_stack_snapshot(engine : TtEngine) -> Array[Int] {
-  let out : Array[Int] = Array::new()
+  let out : Array[Int] = Array()
   let n = engine.value_stack.length()
   for i in 0..<n {
     out.push(engine.value_stack.buf.at(i))
@@ -38,19 +38,19 @@ fn tt_stack_eq(engine : TtEngine, expected : FixedArray[Int]) -> Bool {
 
 ///|
 test "tt_hint: engine stack ops (push/depth/pop/swap/roll/cindex/mindex)" {
-  let empty = Bytes::from_array(Array::new().op_as_view())
+  let empty = Bytes::from_array(Array()[:])
   let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
-  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array::new()
+  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array()
   let engine = TtEngine(
     empty[:],
     empty[:],
     empty[:],
     retained,
-    Array::new(),
-    Array::new(),
+    Array(),
+    Array(),
     None,
     0,
-    coords0.op_as_view(),
+    coords0[:],
     64,
     32,
     64,
@@ -60,9 +60,9 @@ test "tt_hint: engine stack ops (push/depth/pop/swap/roll/cindex/mindex)" {
   // Push instructions (PUSHB[4], PUSHW[4]).
   let byte_args = Array::from_fixed_array([2, 4, 6, 8])
   let word_args = Array::from_fixed_array([-2000, 4000, -6000, 8000])
-  engine.dispatch({ pc: 0, opcode: 0xB3, inline_operands: byte_args }).unwrap()
+  engine.dispatch({ pc: 0, opcode: 0xB3, inline_operands: byte_args, }).unwrap()
   |> ignore
-  engine.dispatch({ pc: 0, opcode: 0xBB, inline_operands: word_args }).unwrap()
+  engine.dispatch({ pc: 0, opcode: 0xBB, inline_operands: word_args, }).unwrap()
   |> ignore
   inspect(
     tt_stack_eq(engine, [2, 4, 6, 8, -2000, 4000, -6000, 8000]),
@@ -70,69 +70,55 @@ test "tt_hint: engine stack ops (push/depth/pop/swap/roll/cindex/mindex)" {
   )
 
   // DEPTH[]
-  engine
-  .dispatch({ pc: 0, opcode: 0x24, inline_operands: Array::new() })
-  .unwrap()
+  engine.dispatch({ pc: 0, opcode: 0x24, inline_operands: Array(), }).unwrap()
   |> ignore
   inspect(engine.value_stack.pop().unwrap() == 8, content="true")
 
   // POP[] x2
-  engine
-  .dispatch({ pc: 0, opcode: 0x21, inline_operands: Array::new() })
-  .unwrap()
+  engine.dispatch({ pc: 0, opcode: 0x21, inline_operands: Array(), }).unwrap()
   |> ignore
-  engine
-  .dispatch({ pc: 0, opcode: 0x21, inline_operands: Array::new() })
-  .unwrap()
+  engine.dispatch({ pc: 0, opcode: 0x21, inline_operands: Array(), }).unwrap()
   |> ignore
   inspect(tt_stack_eq(engine, [2, 4, 6, 8, -2000, 4000]), content="true")
 
   // SWAP[]
-  engine
-  .dispatch({ pc: 0, opcode: 0x23, inline_operands: Array::new() })
-  .unwrap()
+  engine.dispatch({ pc: 0, opcode: 0x23, inline_operands: Array(), }).unwrap()
   |> ignore
   inspect(tt_stack_eq(engine, [2, 4, 6, 8, 4000, -2000]), content="true")
 
   // ROLL[]
-  engine
-  .dispatch({ pc: 0, opcode: 0x8A, inline_operands: Array::new() })
-  .unwrap()
+  engine.dispatch({ pc: 0, opcode: 0x8A, inline_operands: Array(), }).unwrap()
   |> ignore
   inspect(tt_stack_eq(engine, [2, 4, 6, 4000, -2000, 8]), content="true")
 
   // CINDEX[] (push index=4, then CINDEX: top element becomes 6).
   engine.value_stack.push(4).unwrap() |> ignore
-  engine
-  .dispatch({ pc: 0, opcode: 0x25, inline_operands: Array::new() })
-  .unwrap()
+  engine.dispatch({ pc: 0, opcode: 0x25, inline_operands: Array(), }).unwrap()
   |> ignore
   inspect(engine.value_stack.peek(0).unwrap() == 6, content="true")
 
   // MINDEX[] (push index=3, then MINDEX: top element becomes -2000).
   engine.value_stack.push(3).unwrap() |> ignore
-  engine
-  .dispatch({ pc: 0, opcode: 0x26, inline_operands: Array::new() })
-  .unwrap()
+  engine.dispatch({ pc: 0, opcode: 0x26, inline_operands: Array(), }).unwrap()
   |> ignore
   inspect(engine.value_stack.peek(0).unwrap() == -2000, content="true")
 }
 
 ///|
 test "tt_hint: engine cindex/mindex accept zero index (FreeType style)" {
-  let empty = Bytes::from_array(Array::new().op_as_view())
+  let empty = Bytes::from_array(Array()[:])
   let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
-  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array::new()
+  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array()
   let engine = TtEngine(
     empty[:],
     empty[:],
     empty[:],
     retained,
-    Array::new(),
-    Array::new(),
+    Array(),
+    Array(),
     None,
     0,
-    coords0.op_as_view(),
+    coords0[:],
     64,
     32,
     64,
@@ -143,16 +129,12 @@ test "tt_hint: engine cindex/mindex accept zero index (FreeType style)" {
   engine.value_stack.push(0).unwrap() |> ignore
 
   // CINDEX with index=0 is a no-op in upstream (copies top element onto itself).
-  engine
-  .dispatch({ pc: 0, opcode: 0x25, inline_operands: Array::new() })
-  .unwrap()
+  engine.dispatch({ pc: 0, opcode: 0x25, inline_operands: Array(), }).unwrap()
   |> ignore
   inspect(tt_stack_eq(engine, [1, 2, 0]), content="true")
 
   // MINDEX with index=0 moves the top element to the new top, effectively popping one slot.
-  engine
-  .dispatch({ pc: 0, opcode: 0x26, inline_operands: Array::new() })
-  .unwrap()
+  engine.dispatch({ pc: 0, opcode: 0x26, inline_operands: Array(), }).unwrap()
   |> ignore
   inspect(tt_stack_eq(engine, [1, 0]), content="true")
 }

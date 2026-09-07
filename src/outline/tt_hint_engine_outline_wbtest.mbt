@@ -14,9 +14,9 @@
 
 ///|
 fn tt_make_engine_for_outline() -> TtEngine {
-  let empty = Bytes::from_array(Array::new().op_as_view())
+  let empty = Bytes::from_array(Array()[:])
   let retained = TtRetainedGraphicsState::default()
-  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array::new()
+  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array()
   let engine = TtEngine(
     empty[:],
     empty[:],
@@ -26,7 +26,7 @@ fn tt_make_engine_for_outline() -> TtEngine {
     Array::make(16, 0),
     Some(32),
     0,
-    coords0.op_as_view(),
+    coords0[:],
     64,
     32,
     64,
@@ -34,24 +34,24 @@ fn tt_make_engine_for_outline() -> TtEngine {
   )
 
   // Mirror fontations MockEngine zone shape + unscaled point pattern.
-  let unscaled : Array[TtPoint] = Array::make(32, { x: 0, y: 0 })
+  let unscaled : Array[TtPoint] = Array::make(32, { x: 0, y: 0, })
   for i in 0..<32 {
     let x = 57 + i * 2
-    unscaled.set(i, { x, y: -x * 3 })
+    unscaled.set(i, { x, y: -x * 3, })
   }
   engine.graphics.glyph = {
     unscaled,
-    original: Array::make(32, { x: 0, y: 0 }),
-    points: Array::make(32, { x: 0, y: 0 }),
+    original: Array::make(32, { x: 0, y: 0, }),
+    points: Array::make(32, { x: 0, y: 0, }),
     flags: Array::make(32, 0),
     contours: Array::from_fixed_array([31]),
   }
   engine.graphics.twilight = {
-    unscaled: Array::new(),
-    original: Array::make(16, { x: 0, y: 0 }),
-    points: Array::make(16, { x: 0, y: 0 }),
+    unscaled: Array(),
+    original: Array::make(16, { x: 0, y: 0, }),
+    points: Array::make(16, { x: 0, y: 0, }),
     flags: Array::make(16, 0),
-    contours: Array::new(),
+    contours: Array(),
   }
   // Outline engine tests mirror fontations non-pedantic defaults.
   engine.graphics.is_pedantic = false
@@ -63,7 +63,7 @@ fn tt_make_engine_for_outline() -> TtEngine {
 ///|
 fn tt_set_test_vectors_for_outline(engine : TtEngine) -> Unit {
   let (x, y) = tt_hint_normalize14(100, 50)
-  let v = TtVec14::{ x, y }
+  let v = TtVec14::{ x, y, }
   engine.graphics.proj_vector = v
   engine.graphics.dual_proj_vector = v
   engine.graphics.freedom_vector = v
@@ -77,7 +77,7 @@ fn tt_set_point_for_outline(
   x : Int,
   y : Int,
 ) -> Unit {
-  engine.graphics.glyph.points.set(point_ix, { x, y })
+  engine.graphics.glyph.points.set(point_ix, { x, y, })
 }
 
 ///|
@@ -182,7 +182,7 @@ test "tt_hint: outline UTP untouch uses freedom vector axes" {
 
   // Untouch x
   inspect(engine.graphics.glyph.is_touched(0, X).unwrap(), content="true")
-  engine.graphics.freedom_vector = { x: 1, y: 0 }
+  engine.graphics.freedom_vector = { x: 1, y: 0, }
   engine.value_stack.push(0).unwrap() |> ignore
   engine.op_utp().unwrap() |> ignore
   inspect(!engine.graphics.glyph.is_touched(0, X).unwrap(), content="true")
@@ -190,14 +190,14 @@ test "tt_hint: outline UTP untouch uses freedom vector axes" {
 
   // Untouch y
   inspect(engine.graphics.glyph.is_touched(1, Y).unwrap(), content="true")
-  engine.graphics.freedom_vector = { x: 0, y: 1 }
+  engine.graphics.freedom_vector = { x: 0, y: 1, }
   engine.value_stack.push(1).unwrap() |> ignore
   engine.op_utp().unwrap() |> ignore
   inspect(engine.graphics.glyph.is_touched(1, X).unwrap(), content="true")
   inspect(!engine.graphics.glyph.is_touched(1, Y).unwrap(), content="true")
 
   // Untouch both
-  engine.graphics.freedom_vector = { x: 1, y: 1 }
+  engine.graphics.freedom_vector = { x: 1, y: 1, }
   engine.value_stack.push(2).unwrap() |> ignore
   engine.op_utp().unwrap() |> ignore
   inspect(!engine.graphics.glyph.is_touched(2, X).unwrap(), content="true")

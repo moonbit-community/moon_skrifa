@@ -63,7 +63,7 @@ const AUTOHINT_MAX_STYLES : Int = 90
 
 ///|
 fn GlyphStyle::default() -> GlyphStyle {
-  { bits: AUTOHINT_STYLE_UNASSIGNED }
+  { bits: AUTOHINT_STYLE_UNASSIGNED, }
 }
 
 ///|
@@ -93,12 +93,12 @@ fn GlyphStyle::style_index(self : GlyphStyle) -> Int? {
 
 ///|
 fn GlyphStyle::with_style_index(style_index : Int) -> GlyphStyle {
-  { bits: style_index & AUTOHINT_STYLE_INDEX_MASK }
+  { bits: style_index & AUTOHINT_STYLE_INDEX_MASK, }
 }
 
 ///|
 fn GlyphStyle::with_style_index_non_base(style_index : Int) -> GlyphStyle {
-  { bits: (style_index & AUTOHINT_STYLE_INDEX_MASK) | AUTOHINT_STYLE_NON_BASE }
+  { bits: (style_index & AUTOHINT_STYLE_INDEX_MASK) | AUTOHINT_STYLE_NON_BASE, }
 }
 
 ///|
@@ -121,17 +121,17 @@ fn GlyphStyle::maybe_assign(
 
 ///|
 fn GlyphStyle::set_digit(self : GlyphStyle) -> GlyphStyle {
-  { bits: self.bits | AUTOHINT_STYLE_DIGIT }
+  { bits: self.bits | AUTOHINT_STYLE_DIGIT, }
 }
 
 ///|
 fn GlyphStyleMap::default() -> GlyphStyleMap {
-  let styles : Array[GlyphStyle] = Array::new()
-  let metrics_map : Array[Byte] = Array::new()
+  let styles : Array[GlyphStyle] = Array()
+  let metrics_map : Array[Byte] = Array()
   for _ in 0..<AUTOHINT_MAX_STYLES {
     metrics_map.push((0xFF).to_byte())
   }
-  { styles, metrics_map, metrics_count: 0 }
+  { styles, metrics_map, metrics_count: 0, }
 }
 
 ///|

@@ -50,13 +50,13 @@ fn TtEngine::op_gc(self : TtEngine, opcode : Int) -> Result[Unit, HintError] {
       Err(e) => return Err(e)
       Ok(v) => v
     }
-    gs.dual_project(op, { x: 0, y: 0 })
+    gs.dual_project(op, { x: 0, y: 0, })
   } else {
     let cp = match zone.point(p) {
       Err(e) => return Err(e)
       Ok(v) => v
     }
-    gs.project(cp, { x: 0, y: 0 })
+    gs.project(cp, { x: 0, y: 0, })
   }
   self.value_stack.push(value)
 }
@@ -76,7 +76,7 @@ fn TtEngine::op_scfs(self : TtEngine) -> Result[Unit, HintError] {
     Err(e) => return Err(e)
     Ok(v) => v
   }
-  let projection = gs.project(cur, { x: 0, y: 0 })
+  let projection = gs.project(cur, { x: 0, y: 0, })
   match gs.move_point(gs.zp2, p, value - projection) {
     Err(e) => return Err(e)
     Ok(_) => ()

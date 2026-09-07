@@ -93,11 +93,11 @@ priv struct TtZone {
 ///|
 fn TtZone::default() -> TtZone {
   {
-    unscaled: Array::new(),
-    original: Array::new(),
-    points: Array::new(),
-    flags: Array::new(),
-    contours: Array::new(),
+    unscaled: Array(),
+    original: Array(),
+    points: Array(),
+    flags: Array(),
+    contours: Array(),
   }
 }
 
@@ -154,7 +154,7 @@ fn TtZone::set_original_point(
 fn TtZone::unscaled_point(self : TtZone, index : Int) -> TtPoint {
   if index < 0 || index >= self.unscaled.length() {
     // Twilight unscaled points default to (0,0).
-    { x: 0, y: 0 }
+    { x: 0, y: 0, }
   } else {
     self.unscaled.at(index)
   }
@@ -351,8 +351,8 @@ fn TtZone::iup_shift(
         Ok(v) => v
       }
       match axis {
-        X => pt = { x: pt.x + delta, y: pt.y }
-        Y => pt = { x: pt.x, y: pt.y + delta }
+        X => pt = { x: pt.x + delta, y: pt.y, }
+        Y => pt = { x: pt.x, y: pt.y + delta, }
       }
       match self.set_point(i, pt) {
         Err(e) => return Err(e)
@@ -374,8 +374,8 @@ fn tt_zone_axis_coord(p : TtPoint, axis : TtAxis) -> Int {
 ///|
 fn tt_zone_set_axis_coord(p : TtPoint, axis : TtAxis, v : Int) -> TtPoint {
   match axis {
-    X => { x: v, y: p.y }
-    Y => { x: p.x, y: v }
+    X => { x: v, y: p.y, }
+    Y => { x: p.x, y: v, }
   }
 }
 

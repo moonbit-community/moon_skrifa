@@ -83,7 +83,7 @@ fn skip_pdf_random_tag(name : String) -> String {
     }
   }
   // Strip the `ABCDEF+` prefix.
-  let out : Array[Char] = Array::new()
+  let out : Array[Char] = Array()
   let mut idx = 0
   for c in name {
     if idx >= 7 {
@@ -91,7 +91,7 @@ fn skip_pdf_random_tag(name : String) -> String {
     }
     idx = idx + 1
   }
-  String::from_array(out.op_as_view())
+  String::from_array(out[:])
 }
 
 ///|
@@ -110,7 +110,7 @@ priv struct TableId {
 
 ///|
 fn TableId::default() -> TableId {
-  { checksum: 0, len: 0 }
+  { checksum: 0, len: 0, }
 }
 
 ///|
@@ -186,188 +186,188 @@ fn matches_hint_reliant_id_list(font : @moon_skrifa.FontRef) -> Bool {
 let hint_reliant_ids : Array[FontId] = Array::from_fixed_array([
   // MingLiU 1995
   {
-    cvt: { checksum: 0x05BCF058, len: 0x000002E4 },
-    fpgm: { checksum: 0x28233BF1, len: 0x000087C4 },
-    prep: { checksum: 0xA344A1EA, len: 0x000001E1 },
+    cvt: { checksum: 0x05BCF058, len: 0x000002E4, },
+    fpgm: { checksum: 0x28233BF1, len: 0x000087C4, },
+    prep: { checksum: 0xA344A1EA, len: 0x000001E1, },
   },
   // MingLiU 1996-
   {
-    cvt: { checksum: 0x05BCF058, len: 0x000002E4 },
-    fpgm: { checksum: 0x28233BF1, len: 0x000087C4 },
-    prep: { checksum: 0xA344A1EB, len: 0x000001E1 },
+    cvt: { checksum: 0x05BCF058, len: 0x000002E4, },
+    fpgm: { checksum: 0x28233BF1, len: 0x000087C4, },
+    prep: { checksum: 0xA344A1EB, len: 0x000001E1, },
   },
   // DFGothic-EB
   {
-    cvt: { checksum: 0x12C3EBB2, len: 0x00000350 },
-    fpgm: { checksum: 0xB680EE64, len: 0x000087A7 },
-    prep: { checksum: 0xCE939563, len: 0x00000758 },
+    cvt: { checksum: 0x12C3EBB2, len: 0x00000350, },
+    fpgm: { checksum: 0xB680EE64, len: 0x000087A7, },
+    prep: { checksum: 0xCE939563, len: 0x00000758, },
   },
   // DFGyoSho-Lt
   {
-    cvt: { checksum: 0x11E5EAD4, len: 0x00000350 },
-    fpgm: { checksum: 0xCE5956E9, len: 0x0000BC85 },
-    prep: { checksum: 0x8272F416, len: 0x00000045 },
+    cvt: { checksum: 0x11E5EAD4, len: 0x00000350, },
+    fpgm: { checksum: 0xCE5956E9, len: 0x0000BC85, },
+    prep: { checksum: 0x8272F416, len: 0x00000045, },
   },
   // DFHei-Md-HK-BF
   {
-    cvt: { checksum: 0x1257EB46, len: 0x00000350 },
-    fpgm: { checksum: 0xF699D160, len: 0x0000715F },
-    prep: { checksum: 0xD222F568, len: 0x000003BC },
+    cvt: { checksum: 0x1257EB46, len: 0x00000350, },
+    fpgm: { checksum: 0xF699D160, len: 0x0000715F, },
+    prep: { checksum: 0xD222F568, len: 0x000003BC, },
   },
   // DFHSGothic-W5
   {
-    cvt: { checksum: 0x1262EB4E, len: 0x00000350 },
-    fpgm: { checksum: 0xE86A5D64, len: 0x00007940 },
-    prep: { checksum: 0x7850F729, len: 0x000005FF },
+    cvt: { checksum: 0x1262EB4E, len: 0x00000350, },
+    fpgm: { checksum: 0xE86A5D64, len: 0x00007940, },
+    prep: { checksum: 0x7850F729, len: 0x000005FF, },
   },
   // DFHSMincho-W3
   {
-    cvt: { checksum: 0x122DEB0A, len: 0x00000350 },
-    fpgm: { checksum: 0x3D16328A, len: 0x0000859B },
-    prep: { checksum: 0xA93FC33B, len: 0x000002CB },
+    cvt: { checksum: 0x122DEB0A, len: 0x00000350, },
+    fpgm: { checksum: 0x3D16328A, len: 0x0000859B, },
+    prep: { checksum: 0xA93FC33B, len: 0x000002CB, },
   },
   // DFHSMincho-W7
   {
-    cvt: { checksum: 0x125FEB26, len: 0x00000350 },
-    fpgm: { checksum: 0xA5ACC982, len: 0x00007EE1 },
-    prep: { checksum: 0x90999196, len: 0x0000041F },
+    cvt: { checksum: 0x125FEB26, len: 0x00000350, },
+    fpgm: { checksum: 0xA5ACC982, len: 0x00007EE1, },
+    prep: { checksum: 0x90999196, len: 0x0000041F, },
   },
   // DFKaiShu
   {
-    cvt: { checksum: 0x11E5EAD4, len: 0x00000350 },
-    fpgm: { checksum: 0x5A30CA3B, len: 0x00009063 },
-    prep: { checksum: 0x13A42602, len: 0x0000007E },
+    cvt: { checksum: 0x11E5EAD4, len: 0x00000350, },
+    fpgm: { checksum: 0x5A30CA3B, len: 0x00009063, },
+    prep: { checksum: 0x13A42602, len: 0x0000007E, },
   },
   // DFKaiShu, variant
   {
-    cvt: { checksum: 0x11E5EAD4, len: 0x00000350 },
-    fpgm: { checksum: 0xA6E78C01, len: 0x00008998 },
-    prep: { checksum: 0x13A42602, len: 0x0000007E },
+    cvt: { checksum: 0x11E5EAD4, len: 0x00000350, },
+    fpgm: { checksum: 0xA6E78C01, len: 0x00008998, },
+    prep: { checksum: 0x13A42602, len: 0x0000007E, },
   },
   // DFKaiShu-Md-HK-BF
   {
-    cvt: { checksum: 0x11E5EAD4, len: 0x00000360 },
-    fpgm: { checksum: 0x9DB282B2, len: 0x0000C06E },
-    prep: { checksum: 0x53E6D7CA, len: 0x00000082 },
+    cvt: { checksum: 0x11E5EAD4, len: 0x00000360, },
+    fpgm: { checksum: 0x9DB282B2, len: 0x0000C06E, },
+    prep: { checksum: 0x53E6D7CA, len: 0x00000082, },
   },
   // DFMing-Bd-HK-BF
   {
-    cvt: { checksum: 0x1243EB18, len: 0x00000350 },
-    fpgm: { checksum: 0xBA0A8C30, len: 0x000074AD },
-    prep: { checksum: 0xF3D83409, len: 0x0000037B },
+    cvt: { checksum: 0x1243EB18, len: 0x00000350, },
+    fpgm: { checksum: 0xBA0A8C30, len: 0x000074AD, },
+    prep: { checksum: 0xF3D83409, len: 0x0000037B, },
   },
   // DLCLiShu
   {
-    cvt: { checksum: 0x07DCF546, len: 0x00000308 },
-    fpgm: { checksum: 0x40FE7C90, len: 0x00008E2A },
-    prep: { checksum: 0x608174B5, len: 0x0000007A },
+    cvt: { checksum: 0x07DCF546, len: 0x00000308, },
+    fpgm: { checksum: 0x40FE7C90, len: 0x00008E2A, },
+    prep: { checksum: 0x608174B5, len: 0x0000007A, },
   },
   // DLCHayBold
   {
-    cvt: { checksum: 0xEB891238, len: 0x00000308 },
-    fpgm: { checksum: 0xD2E4DCD4, len: 0x0000676F },
-    prep: { checksum: 0x8EA5F293, len: 0x000003B8 },
+    cvt: { checksum: 0xEB891238, len: 0x00000308, },
+    fpgm: { checksum: 0xD2E4DCD4, len: 0x0000676F, },
+    prep: { checksum: 0x8EA5F293, len: 0x000003B8, },
   },
   // HuaTianKaiTi
   {
-    cvt: { checksum: 0xFFFBFFFC, len: 0x00000008 },
-    fpgm: { checksum: 0x9C9E48B8, len: 0x0000BEA2 },
-    prep: { checksum: 0x70020112, len: 0x00000008 },
+    cvt: { checksum: 0xFFFBFFFC, len: 0x00000008, },
+    fpgm: { checksum: 0x9C9E48B8, len: 0x0000BEA2, },
+    prep: { checksum: 0x70020112, len: 0x00000008, },
   },
   // HuaTianSongTi
   {
-    cvt: { checksum: 0xFFFBFFFC, len: 0x00000008 },
-    fpgm: { checksum: 0x0A5A0483, len: 0x00017C39 },
-    prep: { checksum: 0x70020112, len: 0x00000008 },
+    cvt: { checksum: 0xFFFBFFFC, len: 0x00000008, },
+    fpgm: { checksum: 0x0A5A0483, len: 0x00017C39, },
+    prep: { checksum: 0x70020112, len: 0x00000008, },
   },
   // NEC fadpop7.ttf
   {
-    cvt: { checksum: 0x00000000, len: 0x00000000 },
-    fpgm: { checksum: 0x40C92555, len: 0x000000E5 },
-    prep: { checksum: 0xA39B58E3, len: 0x0000117C },
+    cvt: { checksum: 0x00000000, len: 0x00000000, },
+    fpgm: { checksum: 0x40C92555, len: 0x000000E5, },
+    prep: { checksum: 0xA39B58E3, len: 0x0000117C, },
   },
   // NEC fadrei5.ttf
   {
-    cvt: { checksum: 0x00000000, len: 0x00000000 },
-    fpgm: { checksum: 0x33C41652, len: 0x000000E5 },
-    prep: { checksum: 0x26D6C52A, len: 0x00000F6A },
+    cvt: { checksum: 0x00000000, len: 0x00000000, },
+    fpgm: { checksum: 0x33C41652, len: 0x000000E5, },
+    prep: { checksum: 0x26D6C52A, len: 0x00000F6A, },
   },
   // NEC fangot7.ttf
   {
-    cvt: { checksum: 0x00000000, len: 0x00000000 },
-    fpgm: { checksum: 0x6DB1651D, len: 0x0000019D },
-    prep: { checksum: 0x6C6E4B03, len: 0x00002492 },
+    cvt: { checksum: 0x00000000, len: 0x00000000, },
+    fpgm: { checksum: 0x6DB1651D, len: 0x0000019D, },
+    prep: { checksum: 0x6C6E4B03, len: 0x00002492, },
   },
   // NEC fangyo5.ttf
   {
-    cvt: { checksum: 0x00000000, len: 0x00000000 },
-    fpgm: { checksum: 0x40C92555, len: 0x000000E5 },
-    prep: { checksum: 0xDE51FAD0, len: 0x0000117C },
+    cvt: { checksum: 0x00000000, len: 0x00000000, },
+    fpgm: { checksum: 0x40C92555, len: 0x000000E5, },
+    prep: { checksum: 0xDE51FAD0, len: 0x0000117C, },
   },
   // NEC fankyo5.ttf
   {
-    cvt: { checksum: 0x00000000, len: 0x00000000 },
-    fpgm: { checksum: 0x85E47664, len: 0x000000E5 },
-    prep: { checksum: 0xA6C62831, len: 0x00001CAA },
+    cvt: { checksum: 0x00000000, len: 0x00000000, },
+    fpgm: { checksum: 0x85E47664, len: 0x000000E5, },
+    prep: { checksum: 0xA6C62831, len: 0x00001CAA, },
   },
   // NEC fanrgo5.ttf
   {
-    cvt: { checksum: 0x00000000, len: 0x00000000 },
-    fpgm: { checksum: 0x2D891CFD, len: 0x0000019D },
-    prep: { checksum: 0xA0604633, len: 0x00001DE8 },
+    cvt: { checksum: 0x00000000, len: 0x00000000, },
+    fpgm: { checksum: 0x2D891CFD, len: 0x0000019D, },
+    prep: { checksum: 0xA0604633, len: 0x00001DE8, },
   },
   // NEC fangot5.ttc
   {
-    cvt: { checksum: 0x00000000, len: 0x00000000 },
-    fpgm: { checksum: 0x40AA774C, len: 0x000001CB },
-    prep: { checksum: 0x9B5CAA96, len: 0x00001F9A },
+    cvt: { checksum: 0x00000000, len: 0x00000000, },
+    fpgm: { checksum: 0x40AA774C, len: 0x000001CB, },
+    prep: { checksum: 0x9B5CAA96, len: 0x00001F9A, },
   },
   // NEC fanmin3.ttc
   {
-    cvt: { checksum: 0x00000000, len: 0x00000000 },
-    fpgm: { checksum: 0x0D3DE9CB, len: 0x00000141 },
-    prep: { checksum: 0xD4127766, len: 0x00002280 },
+    cvt: { checksum: 0x00000000, len: 0x00000000, },
+    fpgm: { checksum: 0x0D3DE9CB, len: 0x00000141, },
+    prep: { checksum: 0xD4127766, len: 0x00002280, },
   },
   // NEC FA-Gothic, 1996
   {
-    cvt: { checksum: 0x00000000, len: 0x00000000 },
-    fpgm: { checksum: 0x4A692698, len: 0x000001F0 },
-    prep: { checksum: 0x340D4346, len: 0x00001FCA },
+    cvt: { checksum: 0x00000000, len: 0x00000000, },
+    fpgm: { checksum: 0x4A692698, len: 0x000001F0, },
+    prep: { checksum: 0x340D4346, len: 0x00001FCA, },
   },
   // NEC FA-Minchou, 1996
   {
-    cvt: { checksum: 0x00000000, len: 0x00000000 },
-    fpgm: { checksum: 0xCD34C604, len: 0x00000166 },
-    prep: { checksum: 0x6CF31046, len: 0x000022B0 },
+    cvt: { checksum: 0x00000000, len: 0x00000000, },
+    fpgm: { checksum: 0xCD34C604, len: 0x00000166, },
+    prep: { checksum: 0x6CF31046, len: 0x000022B0, },
   },
   // NEC FA-RoundGothicB, 1996
   {
-    cvt: { checksum: 0x00000000, len: 0x00000000 },
-    fpgm: { checksum: 0x5DA75315, len: 0x0000019D },
-    prep: { checksum: 0x40745A5F, len: 0x000022E0 },
+    cvt: { checksum: 0x00000000, len: 0x00000000, },
+    fpgm: { checksum: 0x5DA75315, len: 0x0000019D, },
+    prep: { checksum: 0x40745A5F, len: 0x000022E0, },
   },
   // NEC FA-RoundGothicM, 1996
   {
-    cvt: { checksum: 0x00000000, len: 0x00000000 },
-    fpgm: { checksum: 0xF055FC48, len: 0x000001C2 },
-    prep: { checksum: 0x3900DED3, len: 0x00001E18 },
+    cvt: { checksum: 0x00000000, len: 0x00000000, },
+    fpgm: { checksum: 0xF055FC48, len: 0x000001C2, },
+    prep: { checksum: 0x3900DED3, len: 0x00001E18, },
   },
   // MINGLI.TTF, 1992
   {
-    cvt: { checksum: 0x00170003, len: 0x00000060 },
-    fpgm: { checksum: 0xDBB4306E, len: 0x000058AA },
-    prep: { checksum: 0xD643482A, len: 0x00000035 },
+    cvt: { checksum: 0x00170003, len: 0x00000060, },
+    fpgm: { checksum: 0xDBB4306E, len: 0x000058AA, },
+    prep: { checksum: 0xD643482A, len: 0x00000035, },
   },
   // DFHei-Bd-WIN-HK-BF, issue #1087
   {
-    cvt: { checksum: 0x1269EB58, len: 0x00000350 },
-    fpgm: { checksum: 0x5CD5957A, len: 0x00006A4E },
-    prep: { checksum: 0xF758323A, len: 0x00000380 },
+    cvt: { checksum: 0x1269EB58, len: 0x00000350, },
+    fpgm: { checksum: 0x5CD5957A, len: 0x00006A4E, },
+    prep: { checksum: 0xF758323A, len: 0x00000380, },
   },
   // DFMing-Md-WIN-HK-BF, issue #1087
   {
-    cvt: { checksum: 0x122FEB0B, len: 0x00000350 },
-    fpgm: { checksum: 0x7F10919A, len: 0x000070A9 },
-    prep: { checksum: 0x7CD7E7B7, len: 0x0000025C },
+    cvt: { checksum: 0x122FEB0B, len: 0x00000350, },
+    fpgm: { checksum: 0x7F10919A, len: 0x000070A9, },
+    prep: { checksum: 0x7CD7E7B7, len: 0x0000025C, },
   },
 ])

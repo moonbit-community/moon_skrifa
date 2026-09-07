@@ -14,9 +14,9 @@
 
 ///|
 fn tt_make_engine_for_delta() -> TtEngine {
-  let empty = Bytes::from_array(Array::new().op_as_view())
+  let empty = Bytes::from_array(Array()[:])
   let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
-  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array::new()
+  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array()
   let engine = TtEngine(
     empty[:],
     empty[:],
@@ -26,7 +26,7 @@ fn tt_make_engine_for_delta() -> TtEngine {
     Array::make(16, 0), // storage
     Some(32),
     0,
-    coords0.op_as_view(),
+    coords0[:],
     64,
     32,
     64,
@@ -34,24 +34,24 @@ fn tt_make_engine_for_delta() -> TtEngine {
   )
 
   // Match fontations MockEngine zone layout enough for delta ops.
-  let unscaled : Array[TtPoint] = Array::make(32, { x: 0, y: 0 })
+  let unscaled : Array[TtPoint] = Array::make(32, { x: 0, y: 0, })
   for i in 0..<32 {
     let x = 57 + i * 2
-    unscaled.set(i, { x, y: -x * 3 })
+    unscaled.set(i, { x, y: -x * 3, })
   }
   let glyph = TtZone::{
     unscaled,
-    original: Array::make(32, { x: 0, y: 0 }),
-    points: Array::make(32, { x: 0, y: 0 }),
+    original: Array::make(32, { x: 0, y: 0, }),
+    points: Array::make(32, { x: 0, y: 0, }),
     flags: Array::make(32, 0),
     contours: Array::from_fixed_array([31]),
   }
   let twilight = TtZone::{
-    unscaled: Array::new(),
-    original: Array::make(16, { x: 0, y: 0 }),
-    points: Array::make(16, { x: 0, y: 0 }),
+    unscaled: Array(),
+    original: Array::make(16, { x: 0, y: 0, }),
+    points: Array::make(16, { x: 0, y: 0, }),
     flags: Array::make(16, 0),
-    contours: Array::new(),
+    contours: Array(),
   }
   engine.graphics.glyph = glyph
   engine.graphics.twilight = twilight

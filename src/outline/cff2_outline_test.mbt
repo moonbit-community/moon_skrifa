@@ -47,13 +47,13 @@ fn cff2_test_u32(x : Int) -> UInt {
 ///|
 fn cff2_test_index2(objects : Array[Array[Byte]]) -> Array[Byte] {
   let count = objects.length()
-  let out : Array[Byte] = Array::new()
+  let out : Array[Byte] = Array()
   cff2_test_push_u32_be(out, cff2_test_u32(count))
   if count == 0 {
     return out
   }
   out.push(1 |> Int::to_byte) // offSize=1
-  let offsets : Array[Int] = Array::new()
+  let offsets : Array[Int] = Array()
   let mut off = 1
   offsets.push(off)
   for obj in objects {
@@ -93,7 +93,7 @@ fn cff2_test_make_vstore_one_region() -> Array[Byte] {
   // Minimal ItemVariationStore with:
   // - 1 axis, 1 region: start=0, peak=1, end=1
   // - 1 ItemVariationData at index 0 referencing region 0
-  let out : Array[Byte] = Array::new()
+  let out : Array[Byte] = Array()
   cff2_test_push_u16_be(out, 1) // format
   cff2_test_push_u32_be(out, cff2_test_u32(12)) // regionListOffset
   cff2_test_push_u16_be(out, 1) // dataCount
@@ -128,18 +128,18 @@ fn cff2_test_build_cff2_table() -> Bytes {
   ])
   let charstrings = cff2_test_index2(Array::from_fixed_array([g0, g1]))
   let header_size = 5
-  let global_subrs = cff2_test_index2(Array::new()) // empty Index2 => 4 bytes
+  let global_subrs = cff2_test_index2(Array()) // empty Index2 => 4 bytes
 
   // Top DICT: CharStrings offset only.
-  let top_dict_template : Array[Byte] = Array::new()
+  let top_dict_template : Array[Byte] = Array()
   cff2_test_dict_i32(top_dict_template, 0)
   top_dict_template.push(17 |> Int::to_byte)
   let top_len = top_dict_template.length()
   let charstrings_off = header_size + top_len + global_subrs.length()
-  let top_dict : Array[Byte] = Array::new()
+  let top_dict : Array[Byte] = Array()
   cff2_test_dict_i32(top_dict, charstrings_off)
   top_dict.push(17 |> Int::to_byte)
-  let out : Array[Byte] = Array::new()
+  let out : Array[Byte] = Array()
   // Header: major=2 minor=0 headerSize=5 topDictLength=7
   out.push(2 |> Int::to_byte)
   out.push(0 |> Int::to_byte)
@@ -154,7 +154,7 @@ fn cff2_test_build_cff2_table() -> Bytes {
   for b in charstrings.iter() {
     out.push(b)
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -178,11 +178,11 @@ fn cff2_test_build_cff2_table_blend() -> Bytes {
   ])
   let charstrings = cff2_test_index2(Array::from_fixed_array([g0, g1]))
   let header_size = 5
-  let global_subrs = cff2_test_index2(Array::new()) // empty Index2 => 4 bytes
+  let global_subrs = cff2_test_index2(Array()) // empty Index2 => 4 bytes
   let vstore = cff2_test_make_vstore_one_region()
 
   // Top DICT: VarStore + CharStrings offsets.
-  let top_dict : Array[Byte] = Array::new()
+  let top_dict : Array[Byte] = Array()
   // Each i32 entry is encoded as `29 <i32>` + op byte.
   // vstore (op=24), charstrings (op=17)
   let top_len = 12
@@ -192,7 +192,7 @@ fn cff2_test_build_cff2_table_blend() -> Bytes {
   top_dict.push(24 |> Int::to_byte)
   cff2_test_dict_i32(top_dict, charstrings_off)
   top_dict.push(17 |> Int::to_byte)
-  let out : Array[Byte] = Array::new()
+  let out : Array[Byte] = Array()
   // Header: major=2 minor=0 headerSize=5 topDictLength=12
   out.push(2 |> Int::to_byte)
   out.push(0 |> Int::to_byte)
@@ -210,14 +210,14 @@ fn cff2_test_build_cff2_table_blend() -> Bytes {
   for b in charstrings.iter() {
     out.push(b)
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
 fn cff2_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
   let num_tables = tables.length()
   let header_len = 12 + num_tables * 16
-  let out : Array[Byte] = Array::new()
+  let out : Array[Byte] = Array()
   cff2_test_push_u32_be(out, cff2_test_u32(0x00010000))
   cff2_test_push_u16_be(out, num_tables)
   cff2_test_push_u16_be(out, 0)
@@ -238,7 +238,7 @@ fn cff2_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
       out.push(b)
     }
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -319,7 +319,7 @@ test "CFF2 blend applies var store region scalar" {
   ])
   let settings = DrawSettings::unhinted(
     @moon_skrifa.Size::unscaled(),
-    LocationRef(coords.op_as_view()),
+    LocationRef(coords[:]),
   )
   let varied = c.path(outline_test_gid(1), settings).unwrap()
   let expected_varied = Array::from_fixed_array([

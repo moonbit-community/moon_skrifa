@@ -44,7 +44,7 @@ fn metrics_test_u32(x : Int) -> UInt {
 fn metrics_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
   let num_tables = tables.length()
   let header_len = 12 + num_tables * 16
-  let out : Array[Byte] = Array::new()
+  let out : Array[Byte] = Array()
 
   // sfnt version
   metrics_test_push_u32_be(out, metrics_test_u32(0x00010000))
@@ -68,16 +68,16 @@ fn metrics_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
       out.push(b)
     }
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
 fn metrics_test_make_maxp(num_glyphs : Int) -> Bytes {
-  let out : Array[Byte] = Array::new()
+  let out : Array[Byte] = Array()
   // version 1.0
   metrics_test_push_u32_be(out, metrics_test_u32(0x00010000))
   metrics_test_push_u16_be(out, num_glyphs)
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -88,7 +88,7 @@ fn metrics_test_make_hhea(num_hmetrics : Int) -> Bytes {
   let lo = (num_hmetrics & 0xFF) |> Int::to_byte
   out.set(34, hi)
   out.set(35, lo)
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -97,13 +97,13 @@ fn metrics_test_make_hmtx() -> Bytes {
   // gid0: adv=500, lsb=-10
   // gid1: adv=600, lsb=20
   // gid2: adv=600 (repeat last), lsb=30 (extra)
-  let out : Array[Byte] = Array::new()
+  let out : Array[Byte] = Array()
   metrics_test_push_u16_be(out, 500)
   metrics_test_push_i16_be(out, -10)
   metrics_test_push_u16_be(out, 600)
   metrics_test_push_i16_be(out, 20)
   metrics_test_push_i16_be(out, 30)
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -150,7 +150,7 @@ test "Metrics out of range glyph id" {
             10 |> Int::to_byte,
             0 |> Int::to_byte,
             0 |> Int::to_byte,
-          ]).op_as_view(),
+          ])[:],
         ),
       ),
     ]),

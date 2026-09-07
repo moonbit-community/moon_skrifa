@@ -52,7 +52,7 @@ fn cmap_test_push_u24_be(out : Array[Byte], v : Int) -> Unit {
 
 ///|
 fn make_sfnt_with_table(tag : UInt, table : Bytes) -> Bytes {
-  let out : Array[Byte] = Array::new()
+  let out : Array[Byte] = Array()
   // sfnt version
   cmap_test_push_u32_be(out, cmap_test_u32(0x00010000))
   // numTables=1, searchRange/entrySelector/rangeShift=0
@@ -68,13 +68,13 @@ fn make_sfnt_with_table(tag : UInt, table : Bytes) -> Bytes {
   for b in table.iter() {
     out.push(b)
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
 fn make_cmap_table(records : Array[(Int, Int, Bytes)]) -> Bytes {
   // cmap header + encoding records + subtables
-  let out : Array[Byte] = Array::new()
+  let out : Array[Byte] = Array()
   let num_tables = records.length()
   cmap_test_push_u16_be(out, 0)
   cmap_test_push_u16_be(out, num_tables)
@@ -93,7 +93,7 @@ fn make_cmap_table(records : Array[(Int, Int, Bytes)]) -> Bytes {
       out.push(b)
     }
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -106,7 +106,7 @@ fn make_cmap_subtable_format4_delta(
   // 0xFFFF sentinel segment.
   let seg_count = 2
   let fmt4_len = 32
-  let out : Array[Byte] = Array::new()
+  let out : Array[Byte] = Array()
   cmap_test_push_u16_be(out, 4)
   cmap_test_push_u16_be(out, fmt4_len)
   cmap_test_push_u16_be(out, 0) // language
@@ -132,7 +132,7 @@ fn make_cmap_subtable_format4_delta(
   // idRangeOffset[2] = [0, 0]
   cmap_test_push_u16_be(out, 0)
   cmap_test_push_u16_be(out, 0)
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -142,7 +142,7 @@ fn make_cmap_subtable_format12_single(
   start_gid : Int,
 ) -> Bytes {
   let fmt12_len = 28
-  let out : Array[Byte] = Array::new()
+  let out : Array[Byte] = Array()
   cmap_test_push_u16_be(out, 12)
   cmap_test_push_u16_be(out, 0) // reserved
   cmap_test_push_u32_be(out, cmap_test_u32(fmt12_len))
@@ -152,7 +152,7 @@ fn make_cmap_subtable_format12_single(
   cmap_test_push_u32_be(out, cmap_test_u32(start_cp))
   cmap_test_push_u32_be(out, cmap_test_u32(end_cp))
   cmap_test_push_u32_be(out, cmap_test_u32(start_gid))
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -162,7 +162,7 @@ fn make_cmap_subtable_format14(
   non_default : Array[(Int, Int)], // (codepoint, glyph_id)
 ) -> Bytes {
   // Format 14: one selector record with optional default + non-default tables.
-  let out : Array[Byte] = Array::new()
+  let out : Array[Byte] = Array()
   let num_records = 1
   let header_len = 10
   let records_len = 11 * num_records
@@ -204,7 +204,7 @@ fn make_cmap_subtable_format14(
     cmap_test_push_u24_be(out, cp)
     cmap_test_push_u16_be(out, gid)
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|

@@ -188,7 +188,7 @@ pub fn FontRef::from_index(data : Bytes, index : UInt) -> FontRef? {
               if sfnt_off < 0 || sfnt_off >= data.length() {
                 None
               } else if validate_sfnt(data, sfnt_off) {
-                Some({ data, index })
+                Some({ data, index, })
               } else {
                 None
               }
@@ -200,7 +200,7 @@ pub fn FontRef::from_index(data : Bytes, index : UInt) -> FontRef? {
       if index != 0 {
         None
       } else if validate_sfnt(data, 0) {
-        Some({ data, index: 0 })
+        Some({ data, index: 0, })
       } else {
         None
       }
@@ -289,3 +289,15 @@ pub fn FontRef::table(self : FontRef, tag : UInt) -> BytesView? {
 pub fn FontRef::table_tag(self : FontRef, tag : Tag) -> BytesView? {
   self.table(tag.to_uint())
 }
+
+///|
+pub extend GlyphId with Compare::{op_lt, op_le, op_ge, compare, op_gt}
+
+///|
+pub extend GlyphId with Debug::{to_repr}
+
+///|
+pub extend GlyphId with Eq::{not_equal, equal}
+
+///|
+pub extend GlyphId with Show::{output}

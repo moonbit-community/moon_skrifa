@@ -33,15 +33,13 @@ test "OutlineGlyphCollection basic" {
     x.reinterpret_as_uint()
   }
   // Minimal SFNT with no tables (valid enough for FontRef table lookups).
-  let out : Array[Byte] = Array::new()
+  let out : Array[Byte] = Array()
   push_u32_be(out, u32(0x00010000))
   push_u16_be(out, 0)
   push_u16_be(out, 0)
   push_u16_be(out, 0)
   push_u16_be(out, 0)
-  let font = @moon_skrifa.FontRef::from_bytes(
-    Bytes::from_array(out.op_as_view()),
-  ).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(Bytes::from_array(out[:])).unwrap()
   let c = OutlineGlyphCollection::OutlineGlyphCollection(font)
   inspect(c.format() is None, content="true")
 }

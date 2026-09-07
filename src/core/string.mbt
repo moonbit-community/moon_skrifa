@@ -151,7 +151,7 @@ pub fn string_id_checked_add(id : StringId, rhs : UInt16) -> StringId? {
 /// This matches `fontations/font-types::NameId::predefined()`: IDs `0..15` and
 /// `16..=25` (note: ID 15 is not assigned).
 pub fn string_id_predefined() -> Array[StringId] {
-  let out : Array[StringId] = Array::new()
+  let out : Array[StringId] = Array()
   for i in 0..<15 {
     out.push(i.to_uint16())
   }
@@ -178,7 +178,7 @@ fn string_decode_utf16be(view : BytesView) -> String? {
   if len < 0 || (len & 1) != 0 {
     return None
   }
-  let chars : Array[Char] = Array::new()
+  let chars : Array[Char] = Array()
   let mut i = 0
   while i + 1 < len {
     let u = string_read_u16_be(view, i).unwrap_or(-1)
@@ -208,7 +208,7 @@ fn string_decode_utf16be(view : BytesView) -> String? {
       i = i + 2
     }
   }
-  Some(String::from_array(chars.op_as_view()))
+  Some(String::from_array(chars[:]))
 }
 
 ///|
@@ -352,12 +352,12 @@ fn string_mac_roman_code_point(b : Int) -> Int {
 
 ///|
 fn string_decode_bytes_mac_roman(view : BytesView) -> String {
-  let chars : Array[Char] = Array::new()
+  let chars : Array[Char] = Array()
   for b in view.iter() {
     let cp = string_mac_roman_code_point(b.to_int())
     chars.push(cp.unsafe_to_char())
   }
-  String::from_array(chars.op_as_view())
+  String::from_array(chars[:])
 }
 
 ///|
@@ -745,7 +745,7 @@ pub fn LocalizedString::language(self : LocalizedString) -> String? {
 
 ///|
 pub fn LocalizedString::chars(self : LocalizedString) -> Array[Char] {
-  let out : Array[Char] = Array::new()
+  let out : Array[Char] = Array()
   for ch in self.value {
     out.push(ch)
   }
@@ -772,7 +772,7 @@ pub fn LocalizedStrings::id(self : LocalizedStrings) -> StringId {
 pub fn LocalizedStrings::strings(
   self : LocalizedStrings,
 ) -> ArrayView[LocalizedString] {
-  self.strings.op_as_view()
+  self.strings[:]
 }
 
 ///|
@@ -819,33 +819,33 @@ pub fn FontRef::localized_strings(
   id : StringId,
 ) -> LocalizedStrings {
   let name = match self.table(TAG_NAME) {
-    None => return { id, strings: Array::new() }
+    None => return { id, strings: Array(), }
     Some(v) => v
   }
   let format = string_read_u16_be(name, 0).unwrap_or(-1)
   let count = string_read_u16_be(name, 2).unwrap_or(-1)
   let string_offset = string_read_u16_be(name, 4).unwrap_or(-1)
   if format < 0 || count < 0 || string_offset < 0 {
-    return { id, strings: Array::new() }
+    return { id, strings: Array(), }
   }
   let records_base = 6
   let records_end = records_base + count * 12
   if records_end < records_base || records_end > name.length() {
-    return { id, strings: Array::new() }
+    return { id, strings: Array(), }
   }
-  let lang_tags : Array[(Int, Int)] = Array::new()
+  let lang_tags : Array[(Int, Int)] = Array()
   if format == 1 {
     if records_end + 2 > name.length() {
-      return { id, strings: Array::new() }
+      return { id, strings: Array(), }
     }
     let tag_count = string_read_u16_be(name, records_end).unwrap_or(-1)
     if tag_count < 0 {
-      return { id, strings: Array::new() }
+      return { id, strings: Array(), }
     }
     let tags_base = records_end + 2
     let tags_end = tags_base + tag_count * 4
     if tags_end < tags_base || tags_end > name.length() {
-      return { id, strings: Array::new() }
+      return { id, strings: Array(), }
     }
     for i in 0..<tag_count {
       let pos = tags_base + i * 4
@@ -857,12 +857,12 @@ pub fn FontRef::localized_strings(
       lang_tags.push((len, off))
     }
   } else if format != 0 {
-    return { id, strings: Array::new() }
+    return { id, strings: Array(), }
   }
   if string_offset > name.length() {
-    return { id, strings: Array::new() }
+    return { id, strings: Array(), }
   }
-  let strings : Array[LocalizedString] = Array::new()
+  let strings : Array[LocalizedString] = Array()
   for i in 0..<count {
     let pos = records_base + i * 12
     let platform_id = string_read_u16_be(name, pos).unwrap_or(-1)
@@ -916,7 +916,7 @@ pub fn FontRef::localized_strings(
         _ => None
       }
     }
-    strings.push({ language, value })
+    strings.push({ language, value, })
   }
-  { id, strings }
+  { id, strings, }
 }

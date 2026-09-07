@@ -14,9 +14,9 @@
 
 ///|
 fn tt_make_engine_for_data_ops() -> TtEngine {
-  let empty = Bytes::from_array(Array::new().op_as_view())
+  let empty = Bytes::from_array(Array()[:])
   let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
-  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array::new()
+  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array()
   let engine = TtEngine(
     empty[:],
     empty[:],
@@ -26,7 +26,7 @@ fn tt_make_engine_for_data_ops() -> TtEngine {
     Array::make(16, 0), // storage
     Some(32),
     0,
-    coords0.op_as_view(),
+    coords0[:],
     64,
     32,
     64,
@@ -34,24 +34,24 @@ fn tt_make_engine_for_data_ops() -> TtEngine {
   )
 
   // Mirror fontations MockEngine setup (shape + unscaled point pattern).
-  let unscaled : Array[TtPoint] = Array::make(32, { x: 0, y: 0 })
+  let unscaled : Array[TtPoint] = Array::make(32, { x: 0, y: 0, })
   for i in 0..<32 {
     let x = 57 + i * 2
-    unscaled.set(i, { x, y: -x * 3 })
+    unscaled.set(i, { x, y: -x * 3, })
   }
   engine.graphics.glyph = {
     unscaled,
-    original: Array::make(32, { x: 0, y: 0 }),
-    points: Array::make(32, { x: 0, y: 0 }),
+    original: Array::make(32, { x: 0, y: 0, }),
+    points: Array::make(32, { x: 0, y: 0, }),
     flags: Array::make(32, 0),
     contours: Array::from_fixed_array([31]),
   }
   engine.graphics.twilight = {
-    unscaled: Array::new(),
-    original: Array::make(16, { x: 0, y: 0 }),
-    points: Array::make(16, { x: 0, y: 0 }),
+    unscaled: Array(),
+    original: Array::make(16, { x: 0, y: 0, }),
+    points: Array::make(16, { x: 0, y: 0, }),
     flags: Array::make(16, 0),
-    contours: Array::new(),
+    contours: Array(),
   }
   // Match fontations: default tests run in non-pedantic mode.
   engine.graphics.is_pedantic = false
@@ -63,7 +63,7 @@ fn tt_make_engine_for_data_ops() -> TtEngine {
 ///|
 fn tt_set_test_vectors(engine : TtEngine) -> Unit {
   let (x, y) = tt_hint_normalize14(100, 50)
-  let v = TtVec14::{ x, y }
+  let v = TtVec14::{ x, y, }
   engine.graphics.proj_vector = v
   engine.graphics.dual_proj_vector = v
   engine.graphics.freedom_vector = v
@@ -92,13 +92,13 @@ test "tt_hint: data GC" {
   engine.graphics.zp2 = Glyph
 
   // current point projected coord
-  engine.graphics.glyph.points.set(1, { x: 132, y: -256 })
+  engine.graphics.glyph.points.set(1, { x: 132, y: -256, })
   engine.value_stack.push(1).unwrap() |> ignore
   engine.op_gc(0).unwrap() |> ignore
   inspect(engine.value_stack.pop().unwrap() == 4, content="true")
 
   // original point projected coord
-  engine.graphics.glyph.original.set(1, { x: -64, y: 521 })
+  engine.graphics.glyph.original.set(1, { x: -64, y: 521, })
   engine.value_stack.push(1).unwrap() |> ignore
   engine.op_gc(1).unwrap() |> ignore
   inspect(engine.value_stack.pop().unwrap() == 176, content="true")
@@ -114,7 +114,7 @@ test "tt_hint: data SCFS updates twilight original" {
   engine.graphics.did_iup_x = true
   engine.graphics.did_iup_y = true
   engine.graphics.zp2 = Twilight
-  engine.graphics.twilight.points.set(1, { x: 132, y: -256 })
+  engine.graphics.twilight.points.set(1, { x: 132, y: -256, })
   let p0 = engine.graphics.twilight.point(1).unwrap()
   let o0 = engine.graphics.twilight.original_point(1).unwrap()
   inspect(!(p0.x == o0.x && p0.y == o0.y), content="true")
@@ -135,8 +135,8 @@ test "tt_hint: data MD scaled" {
   tt_set_test_vectors(engine)
   engine.graphics.zp0 = Glyph
   engine.graphics.zp1 = Glyph
-  engine.graphics.glyph.points.set(1, { x: 132, y: -256 })
-  engine.graphics.glyph.points.set(3, { x: -64, y: 100 })
+  engine.graphics.glyph.points.set(1, { x: 132, y: -256, })
+  engine.graphics.glyph.points.set(3, { x: -64, y: 100, })
   engine.value_stack.push(1).unwrap() |> ignore
   engine.value_stack.push(3).unwrap() |> ignore
   engine.op_md(1).unwrap() |> ignore
@@ -166,8 +166,8 @@ test "tt_hint: data MD twilight (original outline)" {
   tt_set_test_vectors(engine)
   engine.graphics.zp0 = Twilight
   engine.graphics.zp1 = Twilight
-  engine.graphics.twilight.original.set(1, { x: 132, y: -256 })
-  engine.graphics.twilight.original.set(3, { x: -64, y: 100 })
+  engine.graphics.twilight.original.set(1, { x: 132, y: -256, })
+  engine.graphics.twilight.original.set(3, { x: -64, y: 100, })
   engine.value_stack.push(1).unwrap() |> ignore
   engine.value_stack.push(3).unwrap() |> ignore
   engine.op_md(0).unwrap() |> ignore

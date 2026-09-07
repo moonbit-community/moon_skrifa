@@ -37,7 +37,7 @@ priv struct TtRoundState {
 
 ///|
 fn TtRoundState::default() -> TtRoundState {
-  { mode: Grid, threshold: 0, phase: 0, period: 64 }
+  { mode: Grid, threshold: 0, phase: 0, period: 64, }
 }
 
 ///|

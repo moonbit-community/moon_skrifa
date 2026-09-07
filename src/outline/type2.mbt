@@ -354,7 +354,7 @@ fn type2_ivs_item_region_indices(
   if need < region_indexes_off || need > ctx.store.length() {
     return None
   }
-  let out : Array[Int] = Array::new()
+  let out : Array[Int] = Array()
   for i in 0..<region_index_count {
     out.push(
       type2_read_u16_be(ctx.store, region_indexes_off + i * 2).unwrap_or(-1),
@@ -431,8 +431,8 @@ fn Type2BlendState::from_store(
     ctx,
     coords,
     store_index: 0,
-    region_indices: Array::new(),
-    scalars: Array::new(),
+    region_indices: Array(),
+    scalars: Array(),
   }
   if Type2BlendState::set_store_index(s, store_index) {
     Some(s)
@@ -453,7 +453,7 @@ fn Type2BlendState::set_store_index(
     None => return false
     Some(v) => v
   }
-  let scalars : Array[Double] = Array::new()
+  let scalars : Array[Double] = Array()
   for ix in indices.iter() {
     scalars.push(type2_ivs_region_scalar(self.ctx, ix, self.coords))
   }
@@ -507,13 +507,13 @@ fn Type2Eval::Type2Eval(
     local_subrs,
     blend_state,
     cff_hinter: None,
-    out: Array::new(),
+    out: Array(),
     is_open: false,
     have_read_width: false,
     stem_count: 0,
     x: 0.0,
     y: 0.0,
-    stack: Array::new(),
+    stack: Array(),
     stack_ix: 0,
   }
 }
@@ -1009,7 +1009,7 @@ fn Type2Eval::eval_operator(
       }
       while Type2Eval::coords_remaining(self) >= 4 {
         let modes = Array::from_fixed_array([DxY, DxDy, DxY])
-        if !Type2Eval::emit_curves(self, modes.op_as_view()) {
+        if !Type2Eval::emit_curves(self, modes[:]) {
           return None
         }
       }
@@ -1030,7 +1030,7 @@ fn Type2Eval::eval_operator(
             DxDy,
             MaybeDxDy(do_last_delta),
           ])
-          if !Type2Eval::emit_curves(self, modes.op_as_view()) {
+          if !Type2Eval::emit_curves(self, modes[:]) {
             return None
           }
         } else {
@@ -1039,7 +1039,7 @@ fn Type2Eval::eval_operator(
             DxDy,
             DxMaybeDy(do_last_delta),
           ])
-          if !Type2Eval::emit_curves(self, modes.op_as_view()) {
+          if !Type2Eval::emit_curves(self, modes[:]) {
             return None
           }
         }
@@ -1052,7 +1052,7 @@ fn Type2Eval::eval_operator(
     8 | 24 => {
       while Type2Eval::coords_remaining(self) >= 6 {
         let modes = Array::from_fixed_array([DxDy, DxDy, DxDy])
-        if !Type2Eval::emit_curves(self, modes.op_as_view()) {
+        if !Type2Eval::emit_curves(self, modes[:]) {
           return None
         }
       }
@@ -1077,7 +1077,7 @@ fn Type2Eval::eval_operator(
         self.stack_ix = self.stack_ix + 2
       }
       let modes = Array::from_fixed_array([DxDy, DxDy, DxDy])
-      if !Type2Eval::emit_curves(self, modes.op_as_view()) {
+      if !Type2Eval::emit_curves(self, modes[:]) {
         return None
       }
       self.reset_stack()
@@ -1091,7 +1091,7 @@ fn Type2Eval::eval_operator(
       }
       while Type2Eval::coords_remaining(self) > 0 {
         let modes = Array::from_fixed_array([XDy, DxDy, XDy])
-        if !Type2Eval::emit_curves(self, modes.op_as_view()) {
+        if !Type2Eval::emit_curves(self, modes[:]) {
           return None
         }
       }
@@ -1115,7 +1115,7 @@ fn Type2Eval::eval_operator(
             DLargerCoordDist,
           ])
       }
-      if !Type2Eval::emit_curves(self, modes.op_as_view()) {
+      if !Type2Eval::emit_curves(self, modes[:]) {
         return None
       }
       self.reset_stack()

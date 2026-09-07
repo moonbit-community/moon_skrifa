@@ -68,9 +68,9 @@ fn cvar_deltas_fixed16_16(
   if tuple_count <= 0 || data_off < 8 || data_off > cvar.length() {
     return None
   }
-  let sizes : Array[Int] = Array::new()
-  let tuple_indexes : Array[Int] = Array::new()
-  let scalars : Array[Double] = Array::new()
+  let sizes : Array[Int] = Array()
+  let tuple_indexes : Array[Int] = Array()
+  let scalars : Array[Double] = Array()
   let mut header_off = 8
   for _ in 0..<tuple_count {
     let s = cvar_read_u16_be(cvar, header_off).unwrap_or(-1)
@@ -240,8 +240,8 @@ fn cvar_test_b64_val(c : Int) -> Int? {
 
 ///|
 fn cvar_test_b64_decode(s : String) -> Bytes {
-  let out : Array[Byte] = Array::new()
-  let vals : Array[Int] = Array::new()
+  let out : Array[Byte] = Array()
+  let vals : Array[Int] = Array()
   let n = s.length()
   for i in 0..<n {
     let c = s.code_unit_at(i).to_int()
@@ -269,7 +269,7 @@ fn cvar_test_b64_decode(s : String) -> Bytes {
       vals.clear()
     }
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -293,12 +293,7 @@ test "cvar: scaled deltas (coords=0.5,-0.5)" {
   let coords : Array[@moon_skrifa.NormalizedCoord] = Array::from_fixed_array([
     8192, -8192,
   ])
-  let deltas = cvar_deltas_fixed16_16(
-    font,
-    axis_count,
-    coords.op_as_view(),
-    cvt_len,
-  ).unwrap()
+  let deltas = cvar_deltas_fixed16_16(font, axis_count, coords[:], cvt_len).unwrap()
   inspect(deltas.at(65).to_string(), content="1900544")
   inspect(deltas.at(66).to_string(), content="2621440")
   inspect(deltas.at(67).to_string(), content="2129920")

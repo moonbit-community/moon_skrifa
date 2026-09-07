@@ -225,7 +225,7 @@ pub fn BitmapStrikes::BitmapStrikes(font : FontRef) -> BitmapStrikes {
       match BitmapStrikes::with_format(font, Cbdt) {
         None =>
           match BitmapStrikes::with_format(font, Ebdt) {
-            None => { kind: NoStrikes, num_glyphs }
+            None => { kind: NoStrikes, num_glyphs, }
             Some(v) => v
           }
         Some(v) => v
@@ -244,16 +244,18 @@ pub fn BitmapStrikes::with_format(
     Sbix =>
       match font.table(TAG_SBIX) {
         None => None
-        Some(sbix) => Some({ kind: Sbix(sbix), num_glyphs })
+        Some(sbix) => Some({ kind: Sbix(sbix), num_glyphs, })
       }
     Cbdt =>
       match (font.table(TAG_CBLC), font.table(TAG_CBDT)) {
-        (Some(cblc), Some(cbdt)) => Some({ kind: Cbdt(cblc, cbdt), num_glyphs })
+        (Some(cblc), Some(cbdt)) =>
+          Some({ kind: Cbdt(cblc, cbdt), num_glyphs, })
         _ => None
       }
     Ebdt =>
       match (font.table(TAG_EBLC), font.table(TAG_EBDT)) {
-        (Some(eblc), Some(ebdt)) => Some({ kind: Ebdt(eblc, ebdt), num_glyphs })
+        (Some(eblc), Some(ebdt)) =>
+          Some({ kind: Ebdt(eblc, ebdt), num_glyphs, })
         _ => None
       }
   }
@@ -285,7 +287,7 @@ pub fn BitmapStrikes::is_empty(self : BitmapStrikes) -> Bool {
 
 ///|
 pub fn BitmapStrikes::iter(self : BitmapStrikes) -> Array[BitmapStrike] {
-  let out : Array[BitmapStrike] = Array::new(capacity=self.len())
+  let out : Array[BitmapStrike] = Array(capacity=self.len())
   for i in 0..<self.len() {
     if self.get(i) is Some(strike) {
       out.push(strike)

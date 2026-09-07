@@ -38,7 +38,7 @@ fn color_test_u32(x : Int) -> UInt {
 fn color_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
   let num_tables = tables.length()
   let header_len = 12 + num_tables * 16
-  let out : Array[Byte] = Array::new()
+  let out : Array[Byte] = Array()
   color_test_push_u32_be(out, color_test_u32(0x00010000))
   color_test_push_u16_be(out, num_tables)
   color_test_push_u16_be(out, 0)
@@ -59,7 +59,7 @@ fn color_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
       out.push(b)
     }
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -67,7 +67,7 @@ const TAG_CPAL : UInt = 0x4350414C // "CPAL"
 
 ///|
 fn color_test_build_cpal() -> Bytes {
-  let out : Array[Byte] = Array::new()
+  let out : Array[Byte] = Array()
   // version 0
   color_test_push_u16_be(out, 0)
   // numPaletteEntries=2
@@ -90,12 +90,12 @@ fn color_test_build_cpal() -> Bytes {
   out.push(255 |> Int::to_byte)
   out.push(0 |> Int::to_byte)
   out.push(255 |> Int::to_byte)
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
 fn color_test_build_cpal_v1() -> Bytes {
-  let out : Array[Byte] = Array::new()
+  let out : Array[Byte] = Array()
   // version 1
   color_test_push_u16_be(out, 1)
   // numPaletteEntries=2
@@ -143,7 +143,7 @@ fn color_test_build_cpal_v1() -> Bytes {
   // palette entry label array
   color_test_push_u16_be(out, 400)
   color_test_push_u16_be(out, 401)
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|

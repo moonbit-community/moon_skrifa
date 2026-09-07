@@ -132,12 +132,12 @@ fn CmapIterLimits::default_for_font(font : FontRef) -> CmapIterLimits {
   // real-world cmaps while preventing pathological tables from producing
   // huge allocations.
   let cap = if num_glyphs <= 0 { 65536 } else { num_glyphs * 256 }
-  { max_mappings: cap }
+  { max_mappings: cap, }
 }
 
 ///|
 fn CmapIterLimits::default() -> CmapIterLimits {
-  { max_mappings: 65536 }
+  { max_mappings: 65536, }
 }
 
 ///|
@@ -269,9 +269,9 @@ pub fn Charmap::mappings(self : Charmap) -> Array[(UInt, GlyphId)] {
       } else if sub.format == 12 {
         cmap_iter_format12(cmap, sub.off, self.cmap12_limits)
       } else {
-        Array::new()
+        Array()
       }
-    _ => Array::new()
+    _ => Array()
   }
 }
 
@@ -293,7 +293,7 @@ pub fn Charmap::variant_mappings(
 ) -> Array[(UInt, UInt, MapVariant)] {
   match (self.cmap, self.variant_off) {
     (Some(cmap), Some(off)) => cmap_iter_variants(cmap, off)
-    _ => Array::new()
+    _ => Array()
   }
 }
 
@@ -414,7 +414,7 @@ fn cmap_select_mappings(
         Some((_, _, off)) => {
           let format = cmap_read_u16_be(cmap, off).unwrap_or(-1)
           if format == 4 || format == 12 {
-            Some(CodepointSubtable::{ off, format, is_symbol: cp_is_symbol })
+            Some(CodepointSubtable::{ off, format, is_symbol: cp_is_symbol, })
           } else {
             None
           }
@@ -622,7 +622,7 @@ fn cmap_iter_format12(
   base : Int,
   limits : CmapIterLimits,
 ) -> Array[(UInt, GlyphId)] {
-  let out : Array[(UInt, GlyphId)] = Array::new()
+  let out : Array[(UInt, GlyphId)] = Array()
   let length = cmap_read_u32_be_int(cmap, base + 4).unwrap_or(-1)
   if length < 0 || base + length > cmap.length() {
     return out
@@ -660,7 +660,7 @@ fn cmap_iter_format12(
 
 ///|
 fn cmap_iter_format4(cmap : BytesView, base : Int) -> Array[(UInt, GlyphId)] {
-  let out : Array[(UInt, GlyphId)] = Array::new()
+  let out : Array[(UInt, GlyphId)] = Array()
   // BMP only; enumerate all codepoints and reuse `cmap_map_format4`, keeping
   // iterator semantics aligned with point lookups.
   for cp in 0..<0x10000 {
@@ -773,7 +773,7 @@ fn cmap_iter_variants(
   cmap : BytesView,
   base : Int,
 ) -> Array[(UInt, UInt, MapVariant)] {
-  let out : Array[(UInt, UInt, MapVariant)] = Array::new()
+  let out : Array[(UInt, UInt, MapVariant)] = Array()
   if cmap_read_u16_be(cmap, base).unwrap_or(-1) != 14 {
     return out
   }

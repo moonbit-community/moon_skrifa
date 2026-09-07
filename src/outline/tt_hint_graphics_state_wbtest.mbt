@@ -15,18 +15,18 @@
 ///|
 fn tt_make_mock_gs(fv_x : Int, fv_y : Int) -> TtGraphicsState {
   let points = Array::from_fixed_array([
-    TtPoint::{ x: -5, y: -20 },
-    { x: 10, y: 10 },
-    { x: 20, y: 20 },
+    TtPoint::{ x: -5, y: -20, },
+    { x: 10, y: 10, },
+    { x: 20, y: 20, },
   ])
   let original = Array::from_fixed_array([
-    TtPoint::{ x: 0, y: 0 },
-    { x: 10, y: 10 },
-    { x: 20, y: -42 },
+    TtPoint::{ x: 0, y: 0, },
+    { x: 10, y: 10, },
+    { x: 20, y: -42, },
   ])
   let flags = Array::make(3, 0)
   let glyph = TtZone::{
-    unscaled: Array::new(),
+    unscaled: Array(),
     original,
     points,
     flags,
@@ -34,8 +34,8 @@ fn tt_make_mock_gs(fv_x : Int, fv_y : Int) -> TtGraphicsState {
   }
   let gs = TtGraphicsState::default()
   let (nx, ny) = tt_hint_normalize14(fv_x, fv_y)
-  gs.freedom_vector = { x: nx, y: ny }
-  gs.proj_vector = { x: nx, y: ny }
+  gs.freedom_vector = { x: nx, y: ny, }
+  gs.proj_vector = { x: nx, y: ny, }
   gs.zp0 = Glyph
   gs.zp1 = Glyph
   gs.zp2 = Glyph

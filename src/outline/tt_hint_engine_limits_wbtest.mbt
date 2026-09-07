@@ -14,26 +14,26 @@
 
 ///|
 fn tt_bytes_for_limits(xs : FixedArray[Byte]) -> Bytes {
-  Bytes::from_array(Array::from_fixed_array(xs).op_as_view())
+  Bytes::from_array(Array::from_fixed_array(xs)[:])
 }
 
 ///|
 test "tt_hint: loop budget backward jumps" {
   let zero = (0).to_byte()
-  let font = Bytes::from_array(Array::make(2048, zero).op_as_view())
-  let empty = Bytes::from_array(Array::new().op_as_view())
+  let font = Bytes::from_array(Array::make(2048, zero)[:])
+  let empty = Bytes::from_array(Array()[:])
   let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
-  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array::new()
+  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array()
   let engine = TtEngine(
     font[:],
     empty[:],
     empty[:],
     retained,
-    Array::new(),
-    Array::new(),
+    Array(),
+    Array(),
     None,
     0,
-    coords0.op_as_view(),
+    coords0[:],
     64,
     32,
     64,
@@ -67,9 +67,9 @@ test "tt_hint: loop budget backward jumps" {
 
 ///|
 test "tt_hint: loop budget loopcall" {
-  let empty = Bytes::from_array(Array::new().op_as_view())
+  let empty = Bytes::from_array(Array()[:])
   let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
-  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array::new()
+  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array()
 
   // Define FDEF 0 in the font program (body is ENDF only).
   let font = tt_bytes_for_limits([
@@ -96,11 +96,11 @@ test "tt_hint: loop budget loopcall" {
     prep[:],
     empty[:],
     retained,
-    Array::new(),
-    Array::new(),
+    Array(),
+    Array(),
     Some(1),
     0,
-    coords0.op_as_view(),
+    coords0[:],
     64,
     32,
     64,
@@ -116,20 +116,20 @@ test "tt_hint: loop budget loopcall" {
 
 ///|
 test "tt_hint: jmpr does not bounds-check pc" {
-  let code = Bytes::from_array(Array::make(8, (0).to_byte()).op_as_view())
-  let empty = Bytes::from_array(Array::new().op_as_view())
+  let code = Bytes::from_array(Array::make(8, (0).to_byte())[:])
+  let empty = Bytes::from_array(Array()[:])
   let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
-  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array::new()
+  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array()
   let engine = TtEngine(
     code[:],
     empty[:],
     empty[:],
     retained,
-    Array::new(),
-    Array::new(),
+    Array(),
+    Array(),
     None,
     0,
-    coords0.op_as_view(),
+    coords0[:],
     64,
     32,
     64,
@@ -143,7 +143,7 @@ test "tt_hint: jmpr does not bounds-check pc" {
 
 ///|
 test "tt_hint: DefinitionTooLarge in pedantic mode" {
-  let huge : Array[Byte] = Array::new()
+  let huge : Array[Byte] = Array()
   huge.push((0xB0).to_byte())
   huge.push((0).to_byte())
   huge.push((0x2C).to_byte())
@@ -152,20 +152,20 @@ test "tt_hint: DefinitionTooLarge in pedantic mode" {
     huge.push((0).to_byte())
   }
   huge.push((0x2D).to_byte())
-  let font = Bytes::from_array(huge.op_as_view())
-  let empty = Bytes::from_array(Array::new().op_as_view())
+  let font = Bytes::from_array(huge[:])
+  let empty = Bytes::from_array(Array()[:])
   let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
-  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array::new()
+  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array()
   let engine = TtEngine(
     font[:],
     empty[:],
     empty[:],
     retained,
-    Array::new(),
-    Array::new(),
+    Array(),
+    Array(),
     None,
     0,
-    coords0.op_as_view(),
+    coords0[:],
     64,
     32,
     64,

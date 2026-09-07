@@ -37,8 +37,8 @@ fn b64_val(c : Int) -> Int? {
 
 ///|
 fn b64_decode(s : String) -> Bytes {
-  let out : Array[Byte] = Array::new()
-  let vals : Array[Int] = Array::new()
+  let out : Array[Byte] = Array()
+  let vals : Array[Int] = Array()
   let n = s.length()
   for i in 0..<n {
     let c = s.code_unit_at(i).to_int()
@@ -66,7 +66,7 @@ fn b64_decode(s : String) -> Bytes {
       vals.clear()
     }
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -78,7 +78,7 @@ fn golden_font(b64 : String) -> @moon_skrifa.FontRef {
 fn autohint_segments_test_view(
   segments : Array[AutoHintSegment],
 ) -> Array[AutoHintSegment] {
-  let out : Array[AutoHintSegment] = Array::new()
+  let out : Array[AutoHintSegment] = Array()
   for s in segments.iter() {
     let t = AutoHintSegment::default()
     t.flags = s.flags
@@ -176,7 +176,7 @@ test "autohint topo: segments notoserifhebrew gid=8 horizontal" {
   autohint_parity_font_notoserifhebrew_autohint_metrics_b64() |> ignore
   let font = golden_font(notoserifhebrew_autohint_metrics_b64())
   let gid = @moon_skrifa.GlyphId::GlyphId((8).to_uint16())
-  let outline = AutoHintOutline::from_path(Array::new())
+  let outline = AutoHintOutline::from_path(Array())
   match outline._fill_unscaled(font, gid) {
     Ok(_) => ()
     Err(e) => {
@@ -201,7 +201,7 @@ test "autohint topo: segments notoserifhebrew gid=8 horizontal" {
   inspect(autohint_compute_segments(outline, axis, Default), content="true")
   autohint_link_segments(outline, axis, 0, Default, None)
   let got = autohint_segments_test_view(axis.segments)
-  let expected : Array[AutoHintSegment] = Array::new()
+  let expected : Array[AutoHintSegment] = Array()
   expected.push(
     autohint_expected_segment(0, Up, 55, 0, 26, 360, 372, Some(3), None),
   )
@@ -236,7 +236,7 @@ test "autohint topo: segments notoserifhebrew gid=8 horizontal" {
 test "autohint topo: segments notoserifhebrew gid=8 vertical" {
   let font = golden_font(notoserifhebrew_autohint_metrics_b64())
   let gid = @moon_skrifa.GlyphId::GlyphId((8).to_uint16())
-  let outline = AutoHintOutline::from_path(Array::new())
+  let outline = AutoHintOutline::from_path(Array())
   match outline._fill_unscaled(font, gid) {
     Ok(_) => ()
     Err(e) => {
@@ -261,7 +261,7 @@ test "autohint topo: segments notoserifhebrew gid=8 vertical" {
   inspect(autohint_compute_segments(outline, axis, Default), content="true")
   autohint_link_segments(outline, axis, 0, Default, None)
   let got = autohint_segments_test_view(axis.segments)
-  let expected : Array[AutoHintSegment] = Array::new()
+  let expected : Array[AutoHintSegment] = Array()
   expected.push(
     autohint_expected_segment(0, Left, 0, 0, 85, 470, 418, Some(2), None),
   )

@@ -24,7 +24,7 @@ test "LocationRef effective_coords" {
 ///|
 test "LocationRef effective_coords non-default" {
   let arr : Array[NormalizedCoord] = Array::from_fixed_array([0, 1])
-  let r = LocationRef::LocationRef(arr.op_as_view())
+  let r = LocationRef::LocationRef(arr[:])
   inspect(r.is_default(), content="false")
   inspect(r.effective_coords().length(), content="2")
 }

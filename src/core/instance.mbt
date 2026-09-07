@@ -25,12 +25,12 @@ pub struct Size {
 
 ///|
 pub fn Size::Size(size : Double) -> Size {
-  { ppem: Some(size) }
+  { ppem: Some(size), }
 }
 
 ///|
 pub fn Size::unscaled() -> Size {
-  { ppem: None }
+  { ppem: None, }
 }
 
 ///|
@@ -106,8 +106,8 @@ pub fn LocationRef::LocationRef(
 
 ///|
 pub fn LocationRef::default() -> LocationRef {
-  let empty : Array[NormalizedCoord] = Array::new()
-  LocationRef(empty.op_as_view())
+  let empty : Array[NormalizedCoord] = Array()
+  LocationRef(empty[:])
 }
 
 ///|
@@ -128,8 +128,8 @@ pub fn LocationRef::effective_coords(
   self : LocationRef,
 ) -> ArrayView[NormalizedCoord] {
   if self.is_default() {
-    let empty : Array[NormalizedCoord] = Array::new()
-    empty.op_as_view()
+    let empty : Array[NormalizedCoord] = Array()
+    empty[:]
   } else {
     self.coords
   }
@@ -143,7 +143,7 @@ pub struct Location {
 
 ///|
 pub fn Location::Location(len : Int) -> Location {
-  { coords: SmallVec::with_len(len, 0, MAX_INLINE_COORDS) }
+  { coords: SmallVec::with_len(len, 0, MAX_INLINE_COORDS), }
 }
 
 ///|
@@ -153,7 +153,7 @@ pub fn Location::from_array(coords : Array[NormalizedCoord]) -> Location {
   for i in 0..<len {
     v = v.set(i, coords.at(i))
   }
-  { coords: v }
+  { coords: v, }
 }
 
 ///|

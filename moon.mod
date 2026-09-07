@@ -1,6 +1,6 @@
 name = "Milky2018/moon_skrifa"
 
-version = "0.1.8"
+version = "0.1.9"
 
 readme = "README.mbt.md"
 
@@ -12,6 +12,4 @@ keywords = [ "font", "opentype", "truetype" ]
 
 description = "MoonBit port of Fontations skrifa (font parsing, metrics, color/bitmap glyph helpers)."
 
-options(
-  source: "src",
-)
+source = "src"

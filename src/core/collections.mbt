@@ -37,17 +37,17 @@ priv struct SmallVec[T] {
 ///|
 fn[T : Default] SmallVec::SmallVec(inline_cap : Int) -> SmallVec[T] {
   let buf = FixedArray::make(inline_cap, T::default())
-  { storage: Inline(buf, 0), inline_cap }
+  { storage: Inline(buf, 0), inline_cap, }
 }
 
 ///|
 fn[T] SmallVec::with_len(len : Int, value : T, inline_cap : Int) -> SmallVec[T] {
   if len <= inline_cap {
     let buf = FixedArray::make(inline_cap, value)
-    { storage: Inline(buf, len), inline_cap }
+    { storage: Inline(buf, len), inline_cap, }
   } else {
     let vec = Array::make(len, value)
-    { storage: Heap(vec), inline_cap }
+    { storage: Heap(vec), inline_cap, }
   }
 }
 
@@ -71,7 +71,7 @@ fn[T] SmallVec::is_inline(self : SmallVec[T]) -> Bool {
 fn[T] SmallVec::as_view(self : SmallVec[T]) -> ArrayView[T] {
   match self.storage {
     Inline(buf, len) => buf[0:len]
-    Heap(vec) => vec.op_as_view()
+    Heap(vec) => vec[:]
   }
 }
 
@@ -79,7 +79,7 @@ fn[T] SmallVec::as_view(self : SmallVec[T]) -> ArrayView[T] {
 fn[T] SmallVec::to_array(self : SmallVec[T]) -> Array[T] {
   match self.storage {
     Inline(buf, len) => {
-      let out = Array::new(capacity=len)
+      let out = Array(capacity=len)
       for i in 0..<len {
         out.push(buf.at(i))
       }
@@ -93,10 +93,10 @@ fn[T] SmallVec::to_array(self : SmallVec[T]) -> Array[T] {
 fn[T] SmallVec::clear(self : SmallVec[T]) -> SmallVec[T] {
   match self.storage {
     Inline(buf, _len) =>
-      { storage: Inline(buf, 0), inline_cap: self.inline_cap }
+      { storage: Inline(buf, 0), inline_cap: self.inline_cap, }
     Heap(vec) => {
       vec.clear()
-      { storage: Heap(vec), inline_cap: self.inline_cap }
+      { storage: Heap(vec), inline_cap: self.inline_cap, }
     }
   }
 }
@@ -110,18 +110,18 @@ fn[T] SmallVec::try_reserve(
     Inline(buf, len) => {
       let need = len + additional
       if need > self.inline_cap {
-        let vec = Array::new(capacity=need)
+        let vec = Array(capacity=need)
         for i in 0..<len {
           vec.push(buf.at(i))
         }
-        ({ storage: Heap(vec), inline_cap: self.inline_cap }, true)
+        ({ storage: Heap(vec), inline_cap: self.inline_cap, }, true)
       } else {
         (self, true)
       }
     }
     Heap(vec) => {
       vec.reserve_capacity(vec.length() + additional)
-      ({ storage: Heap(vec), inline_cap: self.inline_cap }, true)
+      ({ storage: Heap(vec), inline_cap: self.inline_cap, }, true)
     }
   }
 }
@@ -131,19 +131,19 @@ fn[T] SmallVec::push(self : SmallVec[T], value : T) -> SmallVec[T] {
   match self.storage {
     Inline(buf, len) =>
       if len + 1 > self.inline_cap {
-        let vec = Array::new(capacity=len + 1)
+        let vec = Array(capacity=len + 1)
         for i in 0..<len {
           vec.push(buf.at(i))
         }
         vec.push(value)
-        { storage: Heap(vec), inline_cap: self.inline_cap }
+        { storage: Heap(vec), inline_cap: self.inline_cap, }
       } else {
         buf.set(len, value)
-        { storage: Inline(buf, len + 1), inline_cap: self.inline_cap }
+        { storage: Inline(buf, len + 1), inline_cap: self.inline_cap, }
       }
     Heap(vec) => {
       vec.push(value)
-      { storage: Heap(vec), inline_cap: self.inline_cap }
+      { storage: Heap(vec), inline_cap: self.inline_cap, }
     }
   }
 }
@@ -155,7 +155,7 @@ fn[T] SmallVec::pop(self : SmallVec[T]) -> (SmallVec[T], T?) {
       if len > 0 {
         let v = buf.at(len - 1)
         (
-          { storage: Inline(buf, len - 1), inline_cap: self.inline_cap },
+          { storage: Inline(buf, len - 1), inline_cap: self.inline_cap, },
           Some(v),
         )
       } else {
@@ -163,7 +163,7 @@ fn[T] SmallVec::pop(self : SmallVec[T]) -> (SmallVec[T], T?) {
       }
     Heap(vec) => {
       let v = vec.pop()
-      ({ storage: Heap(vec), inline_cap: self.inline_cap }, v)
+      ({ storage: Heap(vec), inline_cap: self.inline_cap, }, v)
     }
   }
 }
@@ -173,11 +173,11 @@ fn[T] SmallVec::truncate(self : SmallVec[T], new_len : Int) -> SmallVec[T] {
   match self.storage {
     Inline(buf, len) => {
       let next_len = if new_len < len { new_len } else { len }
-      { storage: Inline(buf, next_len), inline_cap: self.inline_cap }
+      { storage: Inline(buf, next_len), inline_cap: self.inline_cap, }
     }
     Heap(vec) => {
       vec.truncate(new_len)
-      { storage: Heap(vec), inline_cap: self.inline_cap }
+      { storage: Heap(vec), inline_cap: self.inline_cap, }
     }
   }
 }
@@ -200,7 +200,7 @@ fn[T] SmallVec::set(self : SmallVec[T], i : Int, v : T) -> SmallVec[T] {
         // Keep behavior simple: ignore out-of-range writes (only used in tests).
         i |> ignore
       }
-      { storage: Inline(buf, len), inline_cap: self.inline_cap }
+      { storage: Inline(buf, len), inline_cap: self.inline_cap, }
     }
     Heap(vec) => {
       if i >= 0 && i < vec.length() {
@@ -208,7 +208,7 @@ fn[T] SmallVec::set(self : SmallVec[T], i : Int, v : T) -> SmallVec[T] {
       } else {
         i |> ignore
       }
-      { storage: Heap(vec), inline_cap: self.inline_cap }
+      { storage: Heap(vec), inline_cap: self.inline_cap, }
     }
   }
 }

@@ -35,7 +35,7 @@ priv struct TtVec14 {
 ///|
 fn TtVec14::default() -> TtVec14 {
   // (1, 0) in 2.14 (x-axis), matches fontations/FreeType defaults.
-  { x: 0x4000, y: 0 }
+  { x: 0x4000, y: 0, }
 }
 
 ///|
@@ -420,7 +420,7 @@ fn TtGraphicsState::point_displacement(
   let fv = self.freedom_vector
   let dx = tt_mul_div_round(dist, fv.x, self.fdotp)
   let dy = tt_mul_div_round(dist, fv.y, self.fdotp)
-  Ok({ zone: zone_ptr, point_ix, dx, dy })
+  Ok({ zone: zone_ptr, point_ix, dx, dy, })
 }
 
 ///|
@@ -446,7 +446,7 @@ fn TtGraphicsState::move_zp2_point(
         Err(e) => return Err(e)
         Ok(v) => v
       }
-      match zone.set_point(index, { x: p.x + dx, y: p.y }) {
+      match zone.set_point(index, { x: p.x + dx, y: p.y, }) {
         Err(e) => return Err(e)
         Ok(_) => ()
       }
@@ -464,7 +464,7 @@ fn TtGraphicsState::move_zp2_point(
         Err(e) => return Err(e)
         Ok(v) => v
       }
-      match zone.set_point(index, { x: p.x, y: p.y + dy }) {
+      match zone.set_point(index, { x: p.x, y: p.y + dy, }) {
         Err(e) => return Err(e)
         Ok(_) => ()
       }
@@ -502,7 +502,7 @@ fn TtGraphicsState::move_point(
           Err(e) => return Err(e)
           Ok(v) => v
         }
-        match zone.set_point(index, { x: p.x + distance_bits, y: p.y }) {
+        match zone.set_point(index, { x: p.x + distance_bits, y: p.y, }) {
           Err(e) => return Err(e)
           Ok(_) => ()
         }
@@ -518,7 +518,7 @@ fn TtGraphicsState::move_point(
           Err(e) => return Err(e)
           Ok(v) => v
         }
-        match zone.set_point(index, { x: p.x, y: p.y + distance_bits }) {
+        match zone.set_point(index, { x: p.x, y: p.y + distance_bits, }) {
           Err(e) => return Err(e)
           Ok(_) => ()
         }
@@ -536,7 +536,7 @@ fn TtGraphicsState::move_point(
             Err(e) => return Err(e)
             Ok(v) => v
           }
-          match zone.set_point(index, { x: p.x + dx, y: p.y }) {
+          match zone.set_point(index, { x: p.x + dx, y: p.y, }) {
             Err(e) => return Err(e)
             Ok(_) => ()
           }
@@ -553,7 +553,7 @@ fn TtGraphicsState::move_point(
             Err(e) => return Err(e)
             Ok(v) => v
           }
-          match zone.set_point(index, { x: p.x, y: p.y + dy }) {
+          match zone.set_point(index, { x: p.x, y: p.y + dy, }) {
             Err(e) => return Err(e)
             Ok(_) => ()
           }

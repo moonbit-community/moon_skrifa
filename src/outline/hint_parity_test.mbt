@@ -1090,11 +1090,11 @@ test "hint: round advance when prep disables hinting" {
       (1).to_byte(), // value
       (1).to_byte(), // selector
       (0x8E).to_byte(), // INSTCTRL
-    ]).op_as_view(),
+    ])[:],
   )
-  let glyph0 = Bytes::from_array(Array::new().op_as_view())
+  let glyph0 = Bytes::from_array(Array()[:])
   let glyph1 = glyf_outline_test_glyph_simple_quad()
-  let glyf_out : Array[Byte] = Array::new()
+  let glyf_out : Array[Byte] = Array()
   for b in glyph0.iter() {
     glyf_out.push(b)
   }
@@ -1120,7 +1120,7 @@ test "hint: round advance when prep disables hinting" {
         ),
       ),
       (0x6C6F6361, loca), // "loca"
-      (0x676C7966, Bytes::from_array(glyf_out.op_as_view())), // "glyf"
+      (0x676C7966, Bytes::from_array(glyf_out[:])), // "glyf"
       (0x70726570, prep), // "prep"
     ]),
   )
@@ -1312,7 +1312,7 @@ test "hint golden: Vazirmatn VF (gid=2 size=16 coords=0) hinted SVG matches font
   let gid : @moon_skrifa.GlyphId = GlyphId((2).to_uint16())
   let size = @moon_skrifa.Size::Size(16.0)
   let coords : Array[@moon_skrifa.NormalizedCoord] = Array::from_fixed_array([0])
-  let loc = @moon_skrifa.LocationRef::LocationRef(coords.op_as_view())
+  let loc = @moon_skrifa.LocationRef::LocationRef(coords[:])
   let opts = Engine::Interpreter.into()
   let outlines0 = OutlineGlyphCollection::from_font(font)
   let hinter = HintingInstance::create(outlines0, size, loc, opts).unwrap()
@@ -1337,7 +1337,7 @@ test "hint golden: Vazirmatn VF (gid=2 size=16 coords=0.5) hinted SVG matches fo
   let coords : Array[@moon_skrifa.NormalizedCoord] = Array::from_fixed_array([
     8192,
   ])
-  let loc = @moon_skrifa.LocationRef::LocationRef(coords.op_as_view())
+  let loc = @moon_skrifa.LocationRef::LocationRef(coords[:])
   let opts = Engine::Interpreter.into()
   let outlines0 = OutlineGlyphCollection::from_font(font)
   let hinter = HintingInstance::create(outlines0, size, loc, opts).unwrap()
@@ -1624,7 +1624,7 @@ test "hint: composite glyf instructions (vazirmatn gid=2)" {
   let gid : @moon_skrifa.GlyphId = GlyphId((2).to_uint16())
   let size = @moon_skrifa.Size::Size(16.0)
   let coords : Array[@moon_skrifa.NormalizedCoord] = Array::from_fixed_array([0])
-  let loc = @moon_skrifa.LocationRef::LocationRef(coords.op_as_view())
+  let loc = @moon_skrifa.LocationRef::LocationRef(coords[:])
   let opts = Engine::Interpreter.into()
   let outlines0 = OutlineGlyphCollection::from_font(font)
   let hinter = HintingInstance::create(outlines0, size, loc, opts).unwrap()
@@ -1704,7 +1704,7 @@ test "hint: empty glyph advance unhinted (hvar truncated adv index map)" {
   let coords : Array[@moon_skrifa.NormalizedCoord] = Array::from_fixed_array([
     8192,
   ])
-  let loc = @moon_skrifa.LocationRef::LocationRef(coords.op_as_view())
+  let loc = @moon_skrifa.LocationRef::LocationRef(coords[:])
   let gid = font.charmap().glyph_id((32).reinterpret_as_uint()).unwrap()
   let glyph = outlines.get(gid).unwrap()
   let metrics = glyph
@@ -1724,7 +1724,7 @@ test "hint: empty glyph advance hinted (hvar truncated adv index map)" {
   let coords : Array[@moon_skrifa.NormalizedCoord] = Array::from_fixed_array([
     8192,
   ])
-  let loc = @moon_skrifa.LocationRef::LocationRef(coords.op_as_view())
+  let loc = @moon_skrifa.LocationRef::LocationRef(coords[:])
   let size = @moon_skrifa.Size::Size(24.0)
   let hinting = HintingInstance::create(
     outlines0,
@@ -1746,8 +1746,8 @@ test "hint: tthint subset should not fail in pedantic mode" {
   let font = golden_font(hint_parity_font_tthint_subset_b64())
   let outlines = OutlineGlyphCollection::from_font(font)
   let size = @moon_skrifa.Size::Size(16.0)
-  let coords : Array[@moon_skrifa.NormalizedCoord] = Array::new()
-  let loc = @moon_skrifa.LocationRef::LocationRef(coords.op_as_view())
+  let coords : Array[@moon_skrifa.NormalizedCoord] = Array()
+  let loc = @moon_skrifa.LocationRef::LocationRef(coords[:])
   let hinting = HintingInstance::create(
     outlines,
     size,

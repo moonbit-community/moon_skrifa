@@ -33,11 +33,11 @@ test "tt_hint: zone flip_on_curve point" {
   let on = TT_POINT_ON_CURVE
   let off = 0
   let zone = TtZone::{
-    unscaled: Array::new(),
-    original: Array::new(),
-    points: Array::make(4, { x: 0, y: 0 }),
+    unscaled: Array(),
+    original: Array(),
+    points: Array::make(4, { x: 0, y: 0, }),
     flags: Array::from_fixed_array([on, off, off, on]),
-    contours: Array::new(),
+    contours: Array(),
   }
   for i in 0..<4 {
     zone.flip_on_curve(i).unwrap() |> ignore
@@ -53,11 +53,11 @@ test "tt_hint: zone set_on_curve regions" {
   let on = TT_POINT_ON_CURVE
   let off = 0
   let zone = TtZone::{
-    unscaled: Array::new(),
-    original: Array::new(),
-    points: Array::make(4, { x: 0, y: 0 }),
+    unscaled: Array(),
+    original: Array(),
+    points: Array::make(4, { x: 0, y: 0, }),
     flags: Array::from_fixed_array([on, off, off, on]),
-    contours: Array::new(),
+    contours: Array(),
   }
   zone.set_on_curve(0, 2, true).unwrap() |> ignore
   zone.set_on_curve(2, 4, false).unwrap() |> ignore
@@ -72,17 +72,17 @@ test "tt_hint: zone iup shift" {
   let untouched = 0
   let touched = TT_POINT_TOUCHED_X | TT_POINT_TOUCHED_Y
   let original = Array::from_fixed_array([
-    TtPoint::{ x: 0, y: 0 },
-    { x: 10, y: 10 },
-    { x: 20, y: 20 },
+    TtPoint::{ x: 0, y: 0, },
+    { x: 10, y: 10, },
+    { x: 20, y: 20, },
   ])
   let points = Array::from_fixed_array([
-    TtPoint::{ x: -5, y: -20 },
-    { x: 10, y: 10 },
-    { x: 20, y: 20 },
+    TtPoint::{ x: -5, y: -20, },
+    { x: 10, y: 10, },
+    { x: 20, y: 20, },
   ])
   let zone = TtZone::{
-    unscaled: Array::new(),
+    unscaled: Array(),
     original,
     points,
     contours: Array::from_fixed_array([3]),
@@ -90,12 +90,20 @@ test "tt_hint: zone iup shift" {
   }
   zone.iup(X).unwrap() |> ignore
   inspect(
-    tt_points_equal(zone, [{ x: -5, y: -20 }, { x: 5, y: 10 }, { x: 15, y: 20 }]),
+    tt_points_equal(zone, [
+      { x: -5, y: -20, },
+      { x: 5, y: 10, },
+      { x: 15, y: 20, },
+    ]),
     content="true",
   )
   zone.iup(Y).unwrap() |> ignore
   inspect(
-    tt_points_equal(zone, [{ x: -5, y: -20 }, { x: 5, y: -10 }, { x: 15, y: 0 }]),
+    tt_points_equal(zone, [
+      { x: -5, y: -20, },
+      { x: 5, y: -10, },
+      { x: 15, y: 0, },
+    ]),
     content="true",
   )
 }
@@ -105,19 +113,19 @@ test "tt_hint: zone iup interpolate" {
   let untouched = 0
   let touched = TT_POINT_TOUCHED_X | TT_POINT_TOUCHED_Y
   let unscaled = Array::from_fixed_array([
-    TtPoint::{ x: 0, y: 0 },
-    { x: 500, y: 500 },
-    { x: 1000, y: 1000 },
+    TtPoint::{ x: 0, y: 0, },
+    { x: 500, y: 500, },
+    { x: 1000, y: 1000, },
   ])
   let original = Array::from_fixed_array([
-    TtPoint::{ x: 0, y: 0 },
-    { x: 10, y: 10 },
-    { x: 20, y: 20 },
+    TtPoint::{ x: 0, y: 0, },
+    { x: 10, y: 10, },
+    { x: 20, y: 20, },
   ])
   let points = Array::from_fixed_array([
-    TtPoint::{ x: -5, y: -20 },
-    { x: 10, y: 10 },
-    { x: 27, y: 56 },
+    TtPoint::{ x: -5, y: -20, },
+    { x: 10, y: 10, },
+    { x: 27, y: 56, },
   ])
   let zone = TtZone::{
     unscaled,
@@ -129,18 +137,18 @@ test "tt_hint: zone iup interpolate" {
   zone.iup(X).unwrap() |> ignore
   inspect(
     tt_points_equal(zone, [
-      { x: -5, y: -20 },
-      { x: 11, y: 10 },
-      { x: 27, y: 56 },
+      { x: -5, y: -20, },
+      { x: 11, y: 10, },
+      { x: 27, y: 56, },
     ]),
     content="true",
   )
   zone.iup(Y).unwrap() |> ignore
   inspect(
     tt_points_equal(zone, [
-      { x: -5, y: -20 },
-      { x: 11, y: 18 },
-      { x: 27, y: 56 },
+      { x: -5, y: -20, },
+      { x: 11, y: 18, },
+      { x: 27, y: 56, },
     ]),
     content="true",
   )

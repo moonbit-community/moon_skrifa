@@ -177,7 +177,7 @@ pub fn HmtxMetrics::from_font(font : FontRef) -> HmtxMetrics? {
   if need < 0 || hmtx.length() < need {
     return None
   }
-  Some({ num_glyphs, num_hmetrics, hmtx })
+  Some({ num_glyphs, num_hmetrics, hmtx, })
 }
 
 ///|
@@ -367,7 +367,7 @@ pub fn Metrics::Metrics(
           scale
         let y_max = metrics_read_i16_be(head, 42).unwrap_or(0).to_double() *
           scale
-        bounds = Some({ x_min, y_min, x_max, y_max })
+        bounds = Some({ x_min, y_min, x_max, y_max, })
       }
     }
   }
@@ -411,7 +411,7 @@ pub fn Metrics::Metrics(
       let ul_pos = metrics_read_i16_be(post, 8).unwrap_or(0).to_double() * scale
       let ul_thick = metrics_read_i16_be(post, 10).unwrap_or(0).to_double() *
         scale
-      underline = Some({ offset: ul_pos, thickness: ul_thick })
+      underline = Some({ offset: ul_pos, thickness: ul_thick, })
     }
   }
   let mut ascent = 0.0
@@ -431,7 +431,7 @@ pub fn Metrics::Metrics(
         scale
       let so_size = metrics_read_i16_be(os2_tbl, 30).unwrap_or(0).to_double() *
         scale
-      strikeout = Some({ offset: so_pos, thickness: so_size })
+      strikeout = Some({ offset: so_pos, thickness: so_size, })
       // sxHeight and sCapHeight are present in OS/2 v2+ (offsets 86/88).
       if os2_tbl.length() >= 90 {
         let xh = metrics_read_i16_be(os2_tbl, 86).unwrap_or(0)
@@ -1253,7 +1253,7 @@ fn metrics_gvar_points(
   if count == 0 {
     return Some((None, off))
   }
-  let points : Array[Int] = Array::new()
+  let points : Array[Int] = Array()
   let mut last = 0
   while points.length() < count {
     let ctrl = metrics_read_u8(gvar, off).unwrap_or(-1)
@@ -1456,8 +1456,8 @@ fn GlyphMetrics::gvar_phantom_deltas(
   if headers_end < headers_off || headers_end > end {
     return (0, 0)
   }
-  let sizes : Array[Int] = Array::new()
-  let tuple_indexes : Array[Int] = Array::new()
+  let sizes : Array[Int] = Array()
+  let tuple_indexes : Array[Int] = Array()
   for i in 0..<tuple_count {
     let h = headers_off + i * 4
     let s = metrics_read_u16_be(gvar, h).unwrap_or(-1)
@@ -1474,7 +1474,7 @@ fn GlyphMetrics::gvar_phantom_deltas(
   if axis_count <= 0 {
     return (0, 0)
   }
-  let scalars : Array[Double] = Array::new()
+  let scalars : Array[Double] = Array()
   for i in 0..<tuple_count {
     let ti = tuple_indexes.at(i)
     // Flags used by gvar tupleIndex.

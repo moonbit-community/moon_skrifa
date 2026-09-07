@@ -18,17 +18,17 @@ fn tt_make_engine_for_misc(
   axis_count : Int,
   coords : Array[@moon_skrifa.NormalizedCoord],
 ) -> TtEngine {
-  let empty = Bytes::from_array(Array::new().op_as_view())
+  let empty = Bytes::from_array(Array()[:])
   TtEngine(
     empty[:],
     empty[:],
     empty[:],
     retained,
-    Array::new(),
-    Array::new(),
+    Array(),
+    Array(),
     None,
     axis_count,
-    coords.op_as_view(),
+    coords[:],
     64,
     32,
     64,
@@ -91,7 +91,7 @@ const GRAYSCALE_CLEARTYPE_RESULT_BIT : Int = 1 << 19
 
 ///|
 test "tt_hint: misc GETINFO" {
-  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array::new()
+  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array()
   let retained0 = TtRetainedGraphicsState::new_with_flags(
     0x10000,
     20,
@@ -252,7 +252,7 @@ test "tt_hint: misc GETINFO" {
 
 ///|
 test "tt_hint: misc GETVARIATION pads/truncates and GETDATA returns 17" {
-  let empty_coords : Array[@moon_skrifa.NormalizedCoord] = Array::new()
+  let empty_coords : Array[@moon_skrifa.NormalizedCoord] = Array()
   let retained0 = TtRetainedGraphicsState::new_with_flags(
     0x10000,
     20,

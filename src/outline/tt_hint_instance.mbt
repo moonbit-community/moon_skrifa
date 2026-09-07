@@ -32,11 +32,11 @@ const TAG_CVT_TT : UInt = 0x63767420 // "cvt "
 const TAG_FVAR_TT : UInt = 0x66766172 // "fvar"
 
 ///|
-let tt_empty_bytes : Bytes = Bytes::from_array(Array::new().op_as_view())
+let tt_empty_bytes : Bytes = Bytes::from_array(Array()[:])
 
 ///|
 fn tt_empty_bytes_view() -> BytesView {
-  tt_empty_bytes.op_as_view()
+  tt_empty_bytes[:]
 }
 
 ///|
@@ -79,12 +79,12 @@ fn TtHintInstance::default() -> TtHintInstance {
   {
     functions: TtDefinitionSet(0),
     instructions: TtDefinitionSet(0),
-    cvt: Array::new(),
-    storage: Array::new(),
+    cvt: Array(),
+    storage: Array(),
     retained: TtRetainedGraphicsState::default(),
-    twilight_points: Array::new(),
-    twilight_original: Array::new(),
-    twilight_flags: Array::new(),
+    twilight_points: Array(),
+    twilight_original: Array(),
+    twilight_flags: Array(),
     max_stack: 0,
     max_call_depth: 32,
     max_function_defs: 0,
@@ -124,10 +124,10 @@ fn tt_parse_maxp_limits(maxp : BytesView) -> (Int, Int, Int, Int, Int) {
 ///|
 fn tt_load_cvt(font : @moon_skrifa.FontRef) -> Array[Int] {
   match font.table(TAG_CVT_TT) {
-    None => Array::new()
+    None => Array()
     Some(cvt) => {
       let n = cvt.length() / 2
-      let out : Array[Int] = Array::new()
+      let out : Array[Int] = Array()
       for i in 0..<n {
         let v = tt_read_i16_be(cvt, i * 2).unwrap_or(0)
         out.push(v * 64)
@@ -141,7 +141,7 @@ fn tt_load_cvt(font : @moon_skrifa.FontRef) -> Array[Int] {
 fn tt_scale_cvt_for_size(cvt : Array[Int], scale_bits : Int) -> Array[Int] {
   // CVT values are already in 26.6; scale by (scale_bits >> 6) (16.16).
   let s = scale_bits >> 6
-  let out : Array[Int] = Array::new()
+  let out : Array[Int] = Array()
   for v in cvt.iter() {
     let vv = v.to_int64() * s.to_int64()
     let adj = 0x8000 - (if vv < 0 { 1 } else { 0 })
@@ -160,21 +160,21 @@ fn tt_fvar_axis_count(font : @moon_skrifa.FontRef) -> Int {
 
 ///|
 fn tt_make_twilight_zone(point_count : Int) -> TtZone {
-  let pts : Array[TtPoint] = Array::make(point_count, { x: 0, y: 0 })
-  let orig : Array[TtPoint] = Array::make(point_count, { x: 0, y: 0 })
+  let pts : Array[TtPoint] = Array::make(point_count, { x: 0, y: 0, })
+  let orig : Array[TtPoint] = Array::make(point_count, { x: 0, y: 0, })
   let flags : Array[Int] = Array::make(point_count, 0)
   let contours : Array[Int] = Array::from_fixed_array([point_count])
-  { unscaled: Array::new(), original: orig, points: pts, flags, contours }
+  { unscaled: Array(), original: orig, points: pts, flags, contours, }
 }
 
 ///|
 fn tt_make_empty_glyph_zone() -> TtZone {
   {
-    unscaled: Array::new(),
-    original: Array::new(),
-    points: Array::new(),
-    flags: Array::new(),
-    contours: Array::new(),
+    unscaled: Array(),
+    original: Array(),
+    points: Array(),
+    flags: Array(),
+    contours: Array(),
   }
 }
 
@@ -211,7 +211,7 @@ fn TtHintInstance::reconfigure(
     cvar_deltas_fixed16_16(font, axis_count, coords, base_cvt.length()) {
     None => base_cvt
     Some(deltas_bits) => {
-      let out : Array[Int] = Array::new()
+      let out : Array[Int] = Array()
       for i in 0..<base_cvt.length() {
         out.push(base_cvt.at(i) + cvar_fixed16_16_to_f26_6(deltas_bits.at(i)))
       }
@@ -220,8 +220,8 @@ fn TtHintInstance::reconfigure(
   }
   self.cvt = tt_scale_cvt_for_size(cvt, scale_bits)
   // Twilight buffers.
-  self.twilight_points = Array::make(max_twilight_points, { x: 0, y: 0 })
-  self.twilight_original = Array::make(max_twilight_points, { x: 0, y: 0 })
+  self.twilight_points = Array::make(max_twilight_points, { x: 0, y: 0, })
+  self.twilight_original = Array::make(max_twilight_points, { x: 0, y: 0, })
   self.twilight_flags = Array::make(max_twilight_points, 0)
   // Create engine to run fpgm+prep.
   let fpgm = font.table(TAG_FPGM_TT).unwrap_or(tt_empty_bytes_view())
@@ -307,7 +307,7 @@ fn TtHintInstance::hint_glyph(
   engine.instructions = self.instructions
   // Reset twilight zone to the instance state for each glyph run.
   let tz = TtZone::{
-    unscaled: Array::new(),
+    unscaled: Array(),
     original: self.twilight_original.copy(),
     points: self.twilight_points.copy(),
     flags: self.twilight_flags.copy(),
@@ -340,7 +340,7 @@ test "hint: scaled cvar cvt" {
   let scale_bits = 67109
   let ppem = 16
   inst
-  .reconfigure(font, scale_bits, ppem, Target::default(), coords.op_as_view())
+  .reconfigure(font, scale_bits, ppem, Target::default(), coords[:])
   .unwrap()
   |> ignore
   debug_inspect(

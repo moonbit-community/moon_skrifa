@@ -33,7 +33,7 @@ priv struct Decycler[T] {
 
 ///|
 fn[T : Default] Decycler::Decycler(max_depth : Int) -> Decycler[T] {
-  { node_ids: FixedArray::make(max_depth, T::default()), depth: 0, max_depth }
+  { node_ids: FixedArray::make(max_depth, T::default()), depth: 0, max_depth, }
 }
 
 ///|
@@ -60,15 +60,15 @@ fn[T : Eq] Decycler::enter(
 ///|
 fn[T] Decycler::leave(self : Decycler[T]) -> Decycler[T] {
   // Safe for intended usage (paired with a successful `enter`).
-  { node_ids: self.node_ids, depth: self.depth - 1, max_depth: self.max_depth }
+  { node_ids: self.node_ids, depth: self.depth - 1, max_depth: self.max_depth, }
 }
 
 ///|
 test "graph_with_cycles" {
-  let nodes = Array::new()
+  let nodes = Array()
   nodes.push(Node(Array::from_fixed_array([1, 2])))
   nodes.push(Node(Array::from_fixed_array([2, 3])))
-  nodes.push(Node(Array::new()))
+  nodes.push(Node(Array()))
   nodes.push(Node(Array::from_fixed_array([0, 1])))
   let tree = Tree::{ nodes, }
   let decycler : Decycler[Int] = Decycler(MAX_DEPTH)
@@ -81,11 +81,11 @@ test "graph_with_cycles" {
 
 ///|
 test "exceeds_max_depth" {
-  let nodes = Array::new()
+  let nodes = Array()
   for ix in 0..<MAX_DEPTH {
     nodes.push(Node(Array::from_fixed_array([ix + 1])))
   }
-  nodes.push(Node(Array::new()))
+  nodes.push(Node(Array()))
   let tree = Tree::{ nodes, }
   let decycler : Decycler[Int] = Decycler(MAX_DEPTH)
   let ok = match tree.traverse(decycler) {
@@ -97,11 +97,11 @@ test "exceeds_max_depth" {
 
 ///|
 test "well_formed_tree" {
-  let nodes = Array::new()
+  let nodes = Array()
   for ix in 0..<(MAX_DEPTH - 1) {
     nodes.push(Node(Array::from_fixed_array([ix + 1])))
   }
-  nodes.push(Node(Array::new()))
+  nodes.push(Node(Array()))
   let tree = Tree::{ nodes, }
   let decycler : Decycler[Int] = Decycler(MAX_DEPTH)
   let ok = match tree.traverse(decycler) {

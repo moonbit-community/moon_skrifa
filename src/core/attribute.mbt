@@ -288,7 +288,7 @@ pub fn FontRef::attributes(self : FontRef) -> Attributes {
       } else {
         Normal
       }
-      { stretch, style, weight: Weight(weight_class.to_double()) }
+      { stretch, style, weight: Weight(weight_class.to_double()), }
     }
     None =>
       match self.table(TAG_HEAD) {
@@ -304,7 +304,7 @@ pub fn FontRef::attributes(self : FontRef) -> Attributes {
           } else {
             Weight::default()
           }
-          { stretch: Stretch::default(), style, weight }
+          { stretch: Stretch::default(), style, weight, }
         }
         None =>
           {

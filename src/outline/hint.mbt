@@ -53,7 +53,7 @@ pub struct HintingOptions {
 
 ///|
 pub fn HintingOptions::default() -> HintingOptions {
-  { engine: AutoFallback, target: Target::default() }
+  { engine: AutoFallback, target: Target::default(), }
 }
 
 ///|
@@ -62,7 +62,7 @@ pub fn HintingOptions::HintingOptions(
   engine : Engine,
   target : Target,
 ) -> HintingOptions {
-  { engine, target }
+  { engine, target, }
 }
 
 ///|
@@ -153,7 +153,7 @@ pub fn HintingMode::into(self : HintingMode) -> HintingOptions {
       Smooth(mode, true, preserve_linear_metrics)
     }
   }
-  { engine: AutoFallback, target }
+  { engine: AutoFallback, target, }
 }
 
 ///|
@@ -323,7 +323,7 @@ pub fn HintingInstance::create(
 ) -> Result[HintingInstance, DrawError] {
   let h = HintingInstance::{
     size: @moon_skrifa.Size::unscaled(),
-    coords: Array::new(),
+    coords: Array(),
     target: options.target,
     kind: None_,
   }
@@ -342,7 +342,7 @@ pub fn HintingInstance::size(self : HintingInstance) -> @moon_skrifa.Size {
 pub fn HintingInstance::location(
   self : HintingInstance,
 ) -> @moon_skrifa.LocationRef {
-  LocationRef(self.coords.op_as_view())
+  LocationRef(self.coords[:])
 }
 
 ///|
@@ -414,7 +414,7 @@ pub fn HintingInstance::reconfigure(
               scale_bits,
               rounded_ppem,
               self.target,
-              self.coords.op_as_view(),
+              self.coords[:],
             ) {
             Err(e) => return Err(HintingFailed(e))
             Ok(_) => ()
@@ -570,15 +570,15 @@ fn tt_zone_emit_contour_freetype(
 ///|
 fn tt_zone_to_path_freetype(zone : TtZone) -> Array[PathElement] {
   if zone.contours.length() == 0 {
-    return Array::new()
+    return Array()
   }
   let last_end = zone.contours.at(zone.contours.length() - 1)
   let num_points = last_end + 1
   if num_points <= 0 || zone.points.length() < num_points + 4 {
-    return Array::new()
+    return Array()
   }
   let x_shift = zone.points.at(num_points).x
-  let out : Array[PathElement] = Array::new()
+  let out : Array[PathElement] = Array()
   let mut start = 0
   for end_ix in zone.contours.iter() {
     if end_ix >= start {
@@ -681,7 +681,7 @@ fn HintingInstance::hinted_path(
       a.hinted_path(
         glyph,
         self.size,
-        LocationRef(self.coords.op_as_view()),
+        LocationRef(self.coords[:]),
         path_style,
         self.target,
       )
@@ -692,7 +692,7 @@ fn HintingInstance::hinted_path(
       if !tt.is_enabled() {
         let settings = DrawSettings::unhinted(
           self.size,
-          LocationRef(self.coords.op_as_view()),
+          LocationRef(self.coords[:]),
         ).with_path_style(path_style)
         let metrics0 = match glyph.draw(settings, NullPen()) {
           Err(e) => return Err(e)
@@ -718,9 +718,7 @@ fn HintingInstance::hinted_path(
       if path_style is HarfBuzz {
         return Err(HarfBuzzHintingUnsupported)
       }
-      let location = @moon_skrifa.LocationRef::LocationRef(
-        self.coords.op_as_view(),
-      )
+      let location = @moon_skrifa.LocationRef::LocationRef(self.coords[:])
       let path = if is_cff2 {
         cff2_outline_path_hinted(
           glyph.font,
@@ -762,7 +760,7 @@ fn AutoHintInstance::hinted_path(
   }
   let outline = match glyph.kind {
     Glyf => {
-      let o = AutoHintOutline::from_path(Array::new())
+      let o = AutoHintOutline::from_path(Array())
       match o.fill_glyf(glyph.font, glyph.glyph_id) {
         Ok(_) => o
         Err(_) => AutoHintOutline::from_path(unscaled_path)
@@ -970,7 +968,7 @@ fn HintingInstance::hinted_glyf_path(
     tt_load_glyph_zone_for_hinting(
       font,
       gid,
-      self.coords.op_as_view(),
+      self.coords[:],
       scale_bits,
       tt,
       fpgm,
@@ -992,9 +990,9 @@ fn HintingInstance::hinted_glyf_path(
         lsb: Some(lsb),
         advance_width: Some(advance),
       }
-      return Ok((metrics, Array::new()))
+      return Ok((metrics, Array()))
     } else {
-      return Ok((AdjustedMetrics::default(), Array::new()))
+      return Ok((AdjustedMetrics::default(), Array()))
     }
   }
   let last_end = zone.contours.at(zone.contours.length() - 1)

@@ -235,7 +235,7 @@ fn avar_parse(table : BytesView, axis_count : Int) -> AvarData? {
     return None
   }
   let mut off = 8
-  let axes : Array[AvarAxisMap] = Array::new()
+  let axes : Array[AvarAxisMap] = Array()
   for _ in 0..<axis_count {
     if off + 2 > table.length() {
       return None
@@ -245,8 +245,8 @@ fn avar_parse(table : BytesView, axis_count : Int) -> AvarData? {
     if map_count <= 0 {
       return None
     }
-    let from_coords : Array[Int] = Array::new()
-    let to_coords : Array[Int] = Array::new()
+    let from_coords : Array[Int] = Array()
+    let to_coords : Array[Int] = Array()
     for _ in 0..<map_count {
       let from = variation_read_i16_be(table, off).unwrap_or(0)
       let to = variation_read_i16_be(table, off + 2).unwrap_or(0)
@@ -254,7 +254,7 @@ fn avar_parse(table : BytesView, axis_count : Int) -> AvarData? {
       from_coords.push(from)
       to_coords.push(to)
     }
-    axes.push({ from_coords, to_coords })
+    axes.push({ from_coords, to_coords, })
   }
   Some({ axes, })
 }
@@ -276,16 +276,16 @@ pub struct AxisCollection {
 ///|
 pub fn AxisCollection::AxisCollection(font : FontRef) -> AxisCollection {
   let fvar = match font.table(TAG_FVAR) {
-    None => return { axes: Array::new(), instances: Array::new(), avar: None }
+    None => return { axes: Array(), instances: Array(), avar: None, }
     Some(v) => v
   }
   if fvar.length() < 16 {
-    return { axes: Array::new(), instances: Array::new(), avar: None }
+    return { axes: Array(), instances: Array(), avar: None, }
   }
   let major = variation_read_u16_be(fvar, 0).unwrap_or(-1)
   let minor = variation_read_u16_be(fvar, 2).unwrap_or(-1)
   if major != 1 || minor != 0 {
-    return { axes: Array::new(), instances: Array::new(), avar: None }
+    return { axes: Array(), instances: Array(), avar: None, }
   }
   let axes_offset = variation_read_u16_be(fvar, 4).unwrap_or(-1)
   let axis_count = variation_read_u16_be(fvar, 8).unwrap_or(-1)
@@ -297,14 +297,14 @@ pub fn AxisCollection::AxisCollection(font : FontRef) -> AxisCollection {
     axis_size < 20 ||
     instance_count < 0 ||
     instance_size < 4 {
-    return { axes: Array::new(), instances: Array::new(), avar: None }
+    return { axes: Array(), instances: Array(), avar: None, }
   }
-  let axes : Array[AxisRecord] = Array::new()
+  let axes : Array[AxisRecord] = Array()
   let axis_count_i = axis_count
   let axis_size_i = axis_size
   let axes_end = axes_offset + axis_count_i * axis_size_i
   if axes_end < axes_offset || axes_end > fvar.length() {
-    return { axes: Array::new(), instances: Array::new(), avar: None }
+    return { axes: Array(), instances: Array(), avar: None, }
   }
   for i in 0..<axis_count_i {
     let base = axes_offset + i * axis_size_i
@@ -331,9 +331,9 @@ pub fn AxisCollection::AxisCollection(font : FontRef) -> AxisCollection {
   let instances_base = axes_end
   let instances_end = instances_base + instance_count * instance_size
   if instances_end < instances_base || instances_end > fvar.length() {
-    return { axes, instances: Array::new(), avar: None }
+    return { axes, instances: Array(), avar: None, }
   }
-  let instances : Array[InstanceRecord] = Array::new()
+  let instances : Array[InstanceRecord] = Array()
   for i in 0..<instance_count {
     let base = instances_base + i * instance_size
     let subfamily_name_id = variation_read_u16_be(fvar, base).unwrap_or(0)
@@ -343,7 +343,7 @@ pub fn AxisCollection::AxisCollection(font : FontRef) -> AxisCollection {
     if coords_base + coords_len > fvar.length() {
       continue
     }
-    let user_coords : Array[Double] = Array::new()
+    let user_coords : Array[Double] = Array()
     for j in 0..<axis_count_i {
       let c = variation_read_fixed_16_16(fvar, coords_base + j * 4).unwrap_or(
         0.0,
@@ -371,7 +371,7 @@ pub fn AxisCollection::AxisCollection(font : FontRef) -> AxisCollection {
     None => None
     Some(avar_tbl) => avar_parse(avar_tbl, axis_count_i)
   }
-  { axes, instances, avar }
+  { axes, instances, avar, }
 }
 
 ///|
@@ -388,7 +388,7 @@ pub fn AxisCollection::is_empty(self : AxisCollection) -> Bool {
 pub fn AxisCollection::get(self : AxisCollection, index : Int) -> Axis? {
   match self.axes.get(index) {
     None => None
-    Some(r) => Some({ index, record: r })
+    Some(r) => Some({ index, record: r, })
   }
 }
 
@@ -398,7 +398,7 @@ pub fn AxisCollection::get_by_tag(self : AxisCollection, tag : Tag) -> Axis? {
   for i in 0..<n {
     let r = self.axes.at(i)
     if r.tag.to_uint() == tag.to_uint() {
-      return Some({ index: i, record: r })
+      return Some({ index: i, record: r, })
     }
   }
   None
@@ -412,7 +412,7 @@ pub fn AxisCollection::location(
   let n = self.axes.length()
   let coords : Array[NormalizedCoord] = Array::make(n, 0)
   for i in 0..<n {
-    let axis = Axis::{ index: i, record: self.axes.at(i) }
+    let axis = Axis::{ index: i, record: self.axes.at(i), }
     let mut selected : Double? = None
     for s in settings.iter() {
       if s.selector.to_uint() == axis.tag().to_uint() {
@@ -455,7 +455,7 @@ pub fn NamedInstance::postscript_name_id(self : NamedInstance) -> StringId? {
 
 ///|
 pub fn NamedInstance::user_coords(self : NamedInstance) -> ArrayView[Double] {
-  self.record.user_coords.op_as_view()
+  self.record.user_coords[:]
 }
 
 ///|
@@ -501,7 +501,7 @@ pub struct NamedInstanceCollection {
 pub fn NamedInstanceCollection::NamedInstanceCollection(
   font : FontRef,
 ) -> NamedInstanceCollection {
-  { axes: AxisCollection(font) }
+  { axes: AxisCollection(font), }
 }
 
 ///|
@@ -523,7 +523,7 @@ pub fn NamedInstanceCollection::get(
 ) -> NamedInstance? {
   match self.axes.instances.get(index) {
     None => None
-    Some(r) => Some({ axes: self.axes, record: r })
+    Some(r) => Some({ axes: self.axes, record: r, })
   }
 }
 

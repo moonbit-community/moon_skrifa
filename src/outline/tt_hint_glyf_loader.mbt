@@ -255,7 +255,7 @@ fn tt2_decode_simple_glyph_for_hinting(
   }
   let x_min = tt2_read_i16_be(glyph, 2).unwrap_or(0)
   let mut off = 10
-  let contours : Array[Int] = Array::new()
+  let contours : Array[Int] = Array()
   if number_of_contours > 0 {
     for _ in 0..<number_of_contours {
       let v = tt2_read_u16_be(glyph, off).unwrap_or(0)
@@ -280,7 +280,7 @@ fn tt2_decode_simple_glyph_for_hinting(
     return None
   }
   // Decode flags.
-  let point_flags : Array[Int] = Array::new()
+  let point_flags : Array[Int] = Array()
   while point_flags.length() < num_points {
     if off >= glyph.length() {
       return None
@@ -300,7 +300,7 @@ fn tt2_decode_simple_glyph_for_hinting(
     }
   }
   // Decode x deltas.
-  let dxs : Array[Int] = Array::new()
+  let dxs : Array[Int] = Array()
   for i in 0..<num_points {
     let f = point_flags.at(i)
     let short = (f & 0x02) != 0
@@ -321,7 +321,7 @@ fn tt2_decode_simple_glyph_for_hinting(
     }
   }
   // Decode y deltas.
-  let dys : Array[Int] = Array::new()
+  let dys : Array[Int] = Array()
   for i in 0..<num_points {
     let f = point_flags.at(i)
     let short = (f & 0x04) != 0
@@ -343,9 +343,9 @@ fn tt2_decode_simple_glyph_for_hinting(
   }
   // Build point arrays (+ phantom points).
   let total_points = num_points + 4
-  let unscaled : Array[TtPoint] = Array::make(total_points, { x: 0, y: 0 })
-  let original : Array[TtPoint] = Array::make(total_points, { x: 0, y: 0 })
-  let points : Array[TtPoint] = Array::make(total_points, { x: 0, y: 0 })
+  let unscaled : Array[TtPoint] = Array::make(total_points, { x: 0, y: 0, })
+  let original : Array[TtPoint] = Array::make(total_points, { x: 0, y: 0, })
+  let points : Array[TtPoint] = Array::make(total_points, { x: 0, y: 0, })
   let flags : Array[Int] = Array::make(total_points, 0)
   let mut x = 0
   let mut y = 0
@@ -353,10 +353,10 @@ fn tt2_decode_simple_glyph_for_hinting(
     x = x + dxs.at(i)
     y = y + dys.at(i)
     let on = (point_flags.at(i) & 0x01) != 0
-    unscaled.set(i, { x, y })
+    unscaled.set(i, { x, y, })
     let sx = tt2_scale_funits_to_26_6(x, scale_bits)
     let sy = tt2_scale_funits_to_26_6(y, scale_bits)
-    let sp = TtPoint::{ x: sx, y: sy }
+    let sp = TtPoint::{ x: sx, y: sy, }
     original.set(i, sp)
     points.set(i, sp)
     flags.set(i, if on { 1 } else { 0 })
@@ -364,19 +364,19 @@ fn tt2_decode_simple_glyph_for_hinting(
   // Phantom points in font units (see FreeType).
   let phantom0_x = x_min - lsb
   let phantom1_x = phantom0_x + advance
-  unscaled.set(num_points, { x: phantom0_x, y: 0 })
-  unscaled.set(num_points + 1, { x: phantom1_x, y: 0 })
+  unscaled.set(num_points, { x: phantom0_x, y: 0, })
+  unscaled.set(num_points + 1, { x: phantom1_x, y: 0, })
   // Vertical phantom points: based on OS/2 sTypoAscender/Descender.
   // See fontations `Scaler::load` and `setup_phantom_points`.
   // phantom[2].y = yMax + tsb = ascent
   // phantom[3].y = phantom[2].y - vadvance = descent
-  unscaled.set(num_points + 2, { x: 0, y: os2_ascent })
-  unscaled.set(num_points + 3, { x: 0, y: os2_descent })
+  unscaled.set(num_points + 2, { x: 0, y: os2_ascent, })
+  unscaled.set(num_points + 3, { x: 0, y: os2_descent, })
   for i in 0..<4 {
     let p = unscaled.at(num_points + i)
     let sx = tt2_scale_funits_to_26_6(p.x, scale_bits)
     let sy = tt2_scale_funits_to_26_6(p.y, scale_bits)
-    let sp = TtPoint::{ x: sx, y: sy }
+    let sp = TtPoint::{ x: sx, y: sy, }
     original.set(num_points + i, sp)
     points.set(num_points + i, sp)
     flags.set(num_points + i, 0)
@@ -392,7 +392,7 @@ fn tt2_decode_simple_glyph_for_hinting(
       })
     }
   }
-  let zone = TtZone::{ unscaled, original, points, flags, contours }
+  let zone = TtZone::{ unscaled, original, points, flags, contours, }
   Some((zone, instr))
 }
 
@@ -438,7 +438,7 @@ fn tt2_apply_xform_point(p : TtPoint, comp : Tt2Component) -> TtPoint {
   let y = p.y
   let nx = tt_hint_mul_16_16(x, comp.xx16) + tt_hint_mul_16_16(y, comp.xy16)
   let ny = tt_hint_mul_16_16(x, comp.yx16) + tt_hint_mul_16_16(y, comp.yy16)
-  { x: nx, y: ny }
+  { x: nx, y: ny, }
 }
 
 ///|
@@ -562,24 +562,24 @@ fn tt2_load_glyph_zone_for_hinting_impl(
     let (os2_ascent, os2_descent) = tt2_os2_vmetrics(font)
     let phantom0_x = 0 - lsb
     let phantom1_x = phantom0_x + aw
-    let unscaled : Array[TtPoint] = Array::make(4, { x: 0, y: 0 })
-    let original : Array[TtPoint] = Array::make(4, { x: 0, y: 0 })
-    let points : Array[TtPoint] = Array::make(4, { x: 0, y: 0 })
+    let unscaled : Array[TtPoint] = Array::make(4, { x: 0, y: 0, })
+    let original : Array[TtPoint] = Array::make(4, { x: 0, y: 0, })
+    let points : Array[TtPoint] = Array::make(4, { x: 0, y: 0, })
     let flags : Array[Int] = Array::make(4, 0)
-    unscaled.set(0, { x: phantom0_x, y: 0 })
-    unscaled.set(1, { x: phantom1_x, y: 0 })
-    unscaled.set(2, { x: 0, y: os2_ascent })
-    unscaled.set(3, { x: 0, y: os2_descent })
+    unscaled.set(0, { x: phantom0_x, y: 0, })
+    unscaled.set(1, { x: phantom1_x, y: 0, })
+    unscaled.set(2, { x: 0, y: os2_ascent, })
+    unscaled.set(3, { x: 0, y: os2_descent, })
     for i in 0..<4 {
       let p = unscaled.at(i)
       let sx = tt2_scale_funits_to_26_6(p.x, scale_bits)
       let sy = tt2_scale_funits_to_26_6(p.y, scale_bits)
-      let sp = TtPoint::{ x: sx, y: sy }
+      let sp = TtPoint::{ x: sx, y: sy, }
       original.set(i, sp)
       points.set(i, sp)
       flags.set(i, 0)
     }
-    return Ok({ unscaled, original, points, flags, contours: Array::new() })
+    return Ok({ unscaled, original, points, flags, contours: Array(), })
   }
   if glyph.length() < 10 {
     return Err(Read)
@@ -608,8 +608,8 @@ fn tt2_load_glyph_zone_for_hinting_impl(
         None => return Err(Read)
         Some(v) => v
       }
-      let xs : Array[Double] = Array::new()
-      let ys : Array[Double] = Array::new()
+      let xs : Array[Double] = Array()
+      let ys : Array[Double] = Array()
       for i in 0..<point_count {
         let p = zone0.unscaled.at(i)
         xs.push(p.x.to_double())
@@ -634,8 +634,8 @@ fn tt2_load_glyph_zone_for_hinting_impl(
               dy_bits.at(i),
               scale_bits,
             )
-            zone0.original.set(i, { x: sx, y: sy })
-            zone0.points.set(i, { x: sx, y: sy })
+            zone0.original.set(i, { x: sx, y: sy, })
+            zone0.points.set(i, { x: sx, y: sy, })
             if code.length() > 0 {
               // For hinting, adjust unscaled points by rounding off the deltas.
               zone0.unscaled.set(i, {
@@ -677,7 +677,7 @@ fn tt2_load_glyph_zone_for_hinting_impl(
     // Composite glyph: load components, apply transforms/offsets, then run
     // composite instructions (if present) with is_composite=true.
     let mut off = 10
-    let comps : Array[Tt2Component] = Array::new()
+    let comps : Array[Tt2Component] = Array()
     let mut flags_last = 0
     while true {
       flags_last = match tt2_read_u16_be(glyph, off) {
@@ -869,9 +869,9 @@ fn tt2_load_glyph_zone_for_hinting_impl(
       x: tt2_scale_funits_to_26_6(ph3_x_f, scale_bits),
       y: tt2_scale_funits_to_26_6(ph3_y_f, scale_bits),
     }
-    let points_out : Array[TtPoint] = Array::new()
-    let flags_out : Array[Int] = Array::new()
-    let contours_out : Array[Int] = Array::new()
+    let points_out : Array[TtPoint] = Array()
+    let flags_out : Array[Int] = Array()
+    let contours_out : Array[Int] = Array()
     let mut base_point = 0
     for i in 0..<comps.length() {
       let comp = comps.at(i)
@@ -907,8 +907,8 @@ fn tt2_load_glyph_zone_for_hinting_impl(
         ph3 = cph3
       }
       // Extract component outline points and flags.
-      let comp_points : Array[TtPoint] = Array::new()
-      let comp_flags : Array[Int] = Array::new()
+      let comp_points : Array[TtPoint] = Array()
+      let comp_flags : Array[Int] = Array()
       for j in 0..<outline_n {
         comp_points.push(zone_c.points.at(j))
         // Clear touched bits before composite processing.
@@ -950,7 +950,7 @@ fn tt2_load_glyph_zone_for_hinting_impl(
       if ox != 0 || oy != 0 {
         for j in 0..<comp_points.length() {
           let p = comp_points.at(j)
-          comp_points.set(j, { x: p.x + ox, y: p.y + oy })
+          comp_points.set(j, { x: p.x + ox, y: p.y + oy, })
         }
       }
       // Append points and contours.
@@ -968,9 +968,9 @@ fn tt2_load_glyph_zone_for_hinting_impl(
       base_point = points_out.length()
     }
     let total_points = points_out.length() + 4
-    let unscaled : Array[TtPoint] = Array::make(total_points, { x: 0, y: 0 })
-    let original : Array[TtPoint] = Array::make(total_points, { x: 0, y: 0 })
-    let points : Array[TtPoint] = Array::make(total_points, { x: 0, y: 0 })
+    let unscaled : Array[TtPoint] = Array::make(total_points, { x: 0, y: 0, })
+    let original : Array[TtPoint] = Array::make(total_points, { x: 0, y: 0, })
+    let points : Array[TtPoint] = Array::make(total_points, { x: 0, y: 0, })
     let flags : Array[Int] = Array::make(total_points, 0)
     for i in 0..<points_out.length() {
       let p = points_out.at(i)

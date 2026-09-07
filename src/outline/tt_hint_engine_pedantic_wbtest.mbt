@@ -14,19 +14,19 @@
 
 ///|
 test "tt_hint: non-pedantic stack underflow uses 0 (dup/pop)" {
-  let empty = Bytes::from_array(Array::new().op_as_view())
+  let empty = Bytes::from_array(Array()[:])
   let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
-  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array::new()
+  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array()
   let engine = TtEngine(
     empty[:],
     empty[:],
     empty[:],
     retained,
-    Array::new(),
-    Array::new(),
+    Array(),
+    Array(),
     None,
     0,
-    coords0.op_as_view(),
+    coords0[:],
     64,
     32,
     64,
@@ -37,36 +37,32 @@ test "tt_hint: non-pedantic stack underflow uses 0 (dup/pop)" {
   engine.run_program(Font, false).unwrap() |> ignore
 
   // DUP[] on empty stack should push 0.
-  engine
-  .dispatch({ pc: 0, opcode: 0x20, inline_operands: Array::new() })
-  .unwrap()
+  engine.dispatch({ pc: 0, opcode: 0x20, inline_operands: Array(), }).unwrap()
   |> ignore
   inspect(engine.value_stack.length() == 1, content="true")
   inspect(engine.value_stack.pop().unwrap() == 0, content="true")
 
   // POP[] on empty stack should be Ok (consumes 0).
-  engine
-  .dispatch({ pc: 0, opcode: 0x21, inline_operands: Array::new() })
-  .unwrap()
+  engine.dispatch({ pc: 0, opcode: 0x21, inline_operands: Array(), }).unwrap()
   |> ignore
   inspect(engine.value_stack.length() == 0, content="true")
 }
 
 ///|
 test "tt_hint: pedantic stack underflow errors (dup)" {
-  let empty = Bytes::from_array(Array::new().op_as_view())
+  let empty = Bytes::from_array(Array()[:])
   let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
-  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array::new()
+  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array()
   let engine = TtEngine(
     empty[:],
     empty[:],
     empty[:],
     retained,
-    Array::new(),
-    Array::new(),
+    Array(),
+    Array(),
     None,
     0,
-    coords0.op_as_view(),
+    coords0[:],
     64,
     32,
     64,
@@ -75,8 +71,7 @@ test "tt_hint: pedantic stack underflow errors (dup)" {
 
   // Reset in pedantic mode.
   engine.run_program(Font, true).unwrap() |> ignore
-  match
-    engine.dispatch({ pc: 0, opcode: 0x20, inline_operands: Array::new() }) {
+  match engine.dispatch({ pc: 0, opcode: 0x20, inline_operands: Array(), }) {
     Err(ValueStackUnderflow) => ()
     Ok(_) => fail("expected ValueStackUnderflow")
     Err(_) => fail("expected ValueStackUnderflow")

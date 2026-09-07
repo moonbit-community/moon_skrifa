@@ -186,7 +186,7 @@ fn autohint_outline_to_path(
   outline : AutoHintOutline,
   path_style : PathStyle,
 ) -> Array[PathElement] {
-  let out : Array[PathElement] = Array::new()
+  let out : Array[PathElement] = Array()
   for contour in outline.contours.iter() {
     let start = contour.first_ix
     let end = contour.last_ix

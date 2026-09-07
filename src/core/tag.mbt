@@ -65,7 +65,7 @@ pub fn Tag::from_u8s(b0 : Int, b1 : Int, b2 : Int, b3 : Int) -> Tag? {
     let u1 = b1.reinterpret_as_uint()
     let u2 = b2.reinterpret_as_uint()
     let u3 = b3.reinterpret_as_uint()
-    Some({ value: (u0 << 24) | (u1 << 16) | (u2 << 8) | u3 })
+    Some({ value: (u0 << 24) | (u1 << 16) | (u2 << 8) | u3, })
   }
 }
 
@@ -103,5 +103,5 @@ pub fn Tag::to_string(self : Tag) -> String {
     b2.unsafe_to_char(),
     b3.unsafe_to_char(),
   ])
-  String::from_array(chars.op_as_view())
+  String::from_array(chars[:])
 }

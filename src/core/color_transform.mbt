@@ -27,7 +27,7 @@ pub(all) struct Transform {
 
 ///|
 pub fn Transform::default() -> Transform {
-  { xx: 1.0, yx: 0.0, xy: 0.0, yy: 1.0, dx: 0.0, dy: 0.0 }
+  { xx: 1.0, yx: 0.0, xy: 0.0, yy: 1.0, dx: 0.0, dy: 0.0, }
 }
 
 ///|

@@ -37,21 +37,21 @@ test "tt_hint: fdef/call/loopcall basic flow" {
       (0x2A).to_byte(),
       (0x65).to_byte(),
       (0x2D).to_byte(),
-    ]).op_as_view(),
+    ])[:],
   )
-  let empty = Bytes::from_array(Array::new().op_as_view())
+  let empty = Bytes::from_array(Array()[:])
   let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
-  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array::new()
+  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array()
   let engine = TtEngine(
     font[:],
     empty[:],
     empty[:],
     retained,
-    Array::new(),
-    Array::new(),
+    Array(),
+    Array(),
     None,
     0,
-    coords0.op_as_view(),
+    coords0[:],
     64,
     32,
     64,
@@ -73,21 +73,21 @@ test "tt_hint: fdef in glyph program errors" {
       (0).to_byte(),
       (0x2C).to_byte(),
       (0x2D).to_byte(),
-    ]).op_as_view(),
+    ])[:],
   )
-  let empty = Bytes::from_array(Array::new().op_as_view())
+  let empty = Bytes::from_array(Array()[:])
   let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
-  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array::new()
+  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array()
   let engine = TtEngine(
     empty[:],
     empty[:],
     glyph[:],
     retained,
-    Array::new(),
-    Array::new(),
+    Array(),
+    Array(),
     None,
     0,
-    coords0.op_as_view(),
+    coords0[:],
     64,
     32,
     64,
@@ -113,21 +113,21 @@ test "tt_hint: nested definitions error" {
       (0x2C).to_byte(),
       (0x2D).to_byte(),
       (0x2D).to_byte(),
-    ]).op_as_view(),
+    ])[:],
   )
-  let empty = Bytes::from_array(Array::new().op_as_view())
+  let empty = Bytes::from_array(Array()[:])
   let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
-  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array::new()
+  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array()
   let engine = TtEngine(
     font[:],
     empty[:],
     empty[:],
     retained,
-    Array::new(),
-    Array::new(),
+    Array(),
+    Array(),
     None,
     0,
-    coords0.op_as_view(),
+    coords0[:],
     64,
     32,
     64,
@@ -148,21 +148,21 @@ test "tt_hint: TooManyDefinitions when max_function_defs=0" {
       (0).to_byte(),
       (0x2C).to_byte(),
       (0x2D).to_byte(),
-    ]).op_as_view(),
+    ])[:],
   )
-  let empty = Bytes::from_array(Array::new().op_as_view())
+  let empty = Bytes::from_array(Array()[:])
   let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
-  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array::new()
+  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array()
   let engine = TtEngine(
     font[:],
     empty[:],
     empty[:],
     retained,
-    Array::new(),
-    Array::new(),
+    Array(),
+    Array(),
     None,
     0,
-    coords0.op_as_view(),
+    coords0[:],
     64,
     32,
     0,

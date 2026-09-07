@@ -281,12 +281,12 @@ priv struct CffBlues {
 
 ///|
 fn CffBlues::default() -> CffBlues {
-  { pairs: Array::new() }
+  { pairs: Array(), }
 }
 
 ///|
 fn CffBlues::CffBlues(values : ArrayView[CffFixed]) -> CffBlues {
-  let pairs : Array[(CffFixed, CffFixed)] = Array::new()
+  let pairs : Array[(CffFixed, CffFixed)] = Array()
   let n = values.length()
   let mut i = 0
   while i + 1 < n {
@@ -298,7 +298,7 @@ fn CffBlues::CffBlues(values : ArrayView[CffFixed]) -> CffBlues {
 
 ///|
 fn CffBlues::values(self : CffBlues) -> ArrayView[(CffFixed, CffFixed)] {
-  self.pairs.op_as_view()
+  self.pairs[:]
 }
 
 ///|
@@ -364,7 +364,7 @@ priv struct HintState {
 
 ///|
 fn HintState::default() -> HintState {
-  let zones : Array[BlueZone] = Array::new()
+  let zones : Array[BlueZone] = Array()
   for _ in 0..<CFF_HINT_MAX_BLUE_ZONES {
     zones.push(BlueZone::default())
   }
@@ -402,7 +402,7 @@ fn HintState::HintState(params : HintParams, scale : CffFixed) -> HintState {
 
 ///|
 fn HintState::zones(self : HintState) -> ArrayView[BlueZone] {
-  self.zones[0:self.zone_count].op_as_view()
+  self.zones[0:self.zone_count][:]
 }
 
 ///|
@@ -428,7 +428,7 @@ fn HintState::build_zones(self : HintState, params : HintParams) -> Unit {
     }
     _ => ()
   }
-  let zones : Array[BlueZone] = Array::new()
+  let zones : Array[BlueZone] = Array()
   for _ in 0..<CFF_HINT_MAX_BLUE_ZONES {
     zones.push(BlueZone::default())
   }
@@ -776,11 +776,11 @@ priv struct HintMap {
 
 ///|
 fn HintMap::HintMap(scale : CffFixed) -> HintMap {
-  let edges : Array[Hint] = Array::new()
+  let edges : Array[Hint] = Array()
   for _ in 0..<CFF_HINT_MAX_HINTS {
     edges.push(Hint::default())
   }
-  { edges, len: 0, is_valid: false, scale }
+  { edges, len: 0, is_valid: false, scale, }
 }
 
 ///|
@@ -901,7 +901,7 @@ fn HintMap::insert(
 
 ///|
 fn HintMap::adjust(self : HintMap) -> Unit {
-  let saved : Array[(Int, CffFixed)] = Array::new()
+  let saved : Array[(Int, CffFixed)] = Array()
   for _ in 0..<CFF_HINT_MAX_HINTS {
     saved.push((0, CffFixed::zero()))
   }
@@ -1016,20 +1016,20 @@ priv struct HintMask {
 
 ///|
 fn HintMask::default() -> HintMask {
-  let mask : Array[Byte] = Array::new()
+  let mask : Array[Byte] = Array()
   for _ in 0..<CFF_HINT_MASK_SIZE {
     mask.push((0).to_byte())
   }
-  { mask, is_valid: false }
+  { mask, is_valid: false, }
 }
 
 ///|
 fn HintMask::all() -> HintMask {
-  let mask : Array[Byte] = Array::new()
+  let mask : Array[Byte] = Array()
   for _ in 0..<CFF_HINT_MASK_SIZE {
     mask.push((0xFF).to_byte())
   }
-  { mask, is_valid: true }
+  { mask, is_valid: true, }
 }
 
 ///|
@@ -1239,7 +1239,7 @@ fn CffHintingSink::CffHintingSink(
   out : Array[PathElement],
   matrix : CffMatrix?,
 ) -> CffHintingSink {
-  let stem_hints : Array[StemHint] = Array::new()
+  let stem_hints : Array[StemHint] = Array()
   for _ in 0..<CFF_HINT_MAX_HINTS {
     stem_hints.push(StemHint::default())
   }
@@ -1366,11 +1366,11 @@ fn CffHintingSink::hstem(
 
 ///|
 fn HintMask::from_bytes_view(bytes : BytesView) -> HintMask? {
-  let a : Array[Byte] = Array::new()
+  let a : Array[Byte] = Array()
   for b in bytes.iter() {
     a.push(b)
   }
-  HintMask::from_bytes(a.op_as_view())
+  HintMask::from_bytes(a[:])
 }
 
 ///|

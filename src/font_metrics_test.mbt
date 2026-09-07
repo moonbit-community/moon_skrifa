@@ -60,7 +60,7 @@ fn fm_test_write_u32_be(buf : Array[Byte], pos : Int, v : UInt) -> Unit {
 fn fm_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
   let num_tables = tables.length()
   let header_len = 12 + num_tables * 16
-  let out : Array[Byte] = Array::new()
+  let out : Array[Byte] = Array()
   fm_test_push_u32_be(out, fm_test_u32(0x00010000))
   fm_test_push_u16_be(out, num_tables)
   fm_test_push_u16_be(out, 0)
@@ -81,7 +81,7 @@ fn fm_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
       out.push(b)
     }
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -101,7 +101,7 @@ fn fm_test_build_head(units_per_em : Int) -> Bytes {
   // head needs unitsPerEm at offset 18 (u16).
   let buf : Array[Byte] = Array::make(54, 0 |> Int::to_byte)
   fm_test_write_u16_be(buf, 18, units_per_em)
-  Bytes::from_array(buf.op_as_view())
+  Bytes::from_array(buf[:])
 }
 
 ///|
@@ -118,7 +118,7 @@ fn fm_test_build_head_with_bbox(
   fm_test_write_i16_be(buf, 38, y_min)
   fm_test_write_i16_be(buf, 40, x_max)
   fm_test_write_i16_be(buf, 42, y_max)
-  Bytes::from_array(buf.op_as_view())
+  Bytes::from_array(buf[:])
 }
 
 ///|
@@ -128,7 +128,7 @@ fn fm_test_build_hhea(ascent : Int, descent : Int, line_gap : Int) -> Bytes {
   fm_test_write_i16_be(buf, 4, ascent)
   fm_test_write_i16_be(buf, 6, descent)
   fm_test_write_i16_be(buf, 8, line_gap)
-  Bytes::from_array(buf.op_as_view())
+  Bytes::from_array(buf[:])
 }
 
 ///|
@@ -143,7 +143,7 @@ fn fm_test_build_hhea_with_max_width(
   fm_test_write_i16_be(buf, 6, descent)
   fm_test_write_i16_be(buf, 8, line_gap)
   fm_test_write_u16_be(buf, 10, max_width)
-  Bytes::from_array(buf.op_as_view())
+  Bytes::from_array(buf[:])
 }
 
 ///|
@@ -161,7 +161,7 @@ fn fm_test_build_post(
   fm_test_write_i16_be(buf, 8, ul_pos)
   fm_test_write_i16_be(buf, 10, ul_thick)
   fm_test_write_u32_be(buf, 12, fm_test_u32(if is_fixed_pitch { 1 } else { 0 }))
-  Bytes::from_array(buf.op_as_view())
+  Bytes::from_array(buf[:])
 }
 
 ///|
@@ -177,7 +177,7 @@ fn fm_test_build_os2(
   fm_test_write_i16_be(buf, 68, typo_a)
   fm_test_write_i16_be(buf, 70, typo_d)
   fm_test_write_i16_be(buf, 72, typo_gap)
-  Bytes::from_array(buf.op_as_view())
+  Bytes::from_array(buf[:])
 }
 
 ///|
@@ -185,7 +185,7 @@ fn fm_test_build_maxp(num_glyphs : Int) -> Bytes {
   let buf : Array[Byte] = Array::make(6, 0 |> Int::to_byte)
   fm_test_write_u32_be(buf, 0, fm_test_u32(0x00010000))
   fm_test_write_u16_be(buf, 4, num_glyphs)
-  Bytes::from_array(buf.op_as_view())
+  Bytes::from_array(buf[:])
 }
 
 ///|
@@ -229,7 +229,7 @@ test "FontMetrics: additional fields (bbox/count/widths/heights)" {
   // sxHeight/sCapHeight at 86/88
   fm_test_write_i16_be(os2_buf, 86, 11)
   fm_test_write_i16_be(os2_buf, 88, 12)
-  let os2 = Bytes::from_array(os2_buf.op_as_view())
+  let os2 = Bytes::from_array(os2_buf[:])
   let post = fm_test_build_post(false, 0, 0)
   let sfnt = fm_test_build_sfnt(
     Array::from_fixed_array([

@@ -67,7 +67,7 @@ pub struct AdjustedMetrics {
 
 ///|
 pub fn AdjustedMetrics::default() -> AdjustedMetrics {
-  { has_overlaps: false, lsb: None, advance_width: None }
+  { has_overlaps: false, lsb: None, advance_width: None, }
 }
 
 ///|
@@ -90,7 +90,7 @@ pub fn OutlineGlyphCollection::OutlineGlyphCollection(
   } else {
     None
   }
-  { font, kind }
+  { font, kind, }
 }
 
 ///|
@@ -112,19 +112,19 @@ pub fn OutlineGlyphCollection::with_format(
   match format {
     Glyf =>
       if font.table(TAG_GLYF) is Some(_) {
-        Some({ font, kind: Some(format) })
+        Some({ font, kind: Some(format), })
       } else {
         None
       }
     Cff =>
       if font.table(TAG_CFF) is Some(_) {
-        Some({ font, kind: Some(format) })
+        Some({ font, kind: Some(format), })
       } else {
         None
       }
     Cff2 =>
       if font.table(TAG_CFF2) is Some(_) {
-        Some({ font, kind: Some(format) })
+        Some({ font, kind: Some(format), })
       } else {
         None
       }
@@ -182,7 +182,7 @@ pub fn DrawSettings::with_memory(
   self : DrawSettings,
   memory : Array[Byte]?,
 ) -> DrawSettings {
-  { instance: self.instance, memory, path_style: self.path_style }
+  { instance: self.instance, memory, path_style: self.path_style, }
 }
 
 ///|
@@ -190,7 +190,7 @@ pub fn DrawSettings::with_path_style(
   self : DrawSettings,
   path_style : PathStyle,
 ) -> DrawSettings {
-  { instance: self.instance, memory: self.memory, path_style }
+  { instance: self.instance, memory: self.memory, path_style, }
 }
 
 ///|
@@ -338,7 +338,7 @@ pub fn[P : OutlinePen] OutlineGlyph::draw(
       } else {
         (lsb0, advance_width0)
       }
-      AdjustedMetrics::{ has_overlaps, lsb, advance_width }
+      AdjustedMetrics::{ has_overlaps, lsb, advance_width, }
     }
     _ => AdjustedMetrics::default()
   }
@@ -428,7 +428,7 @@ pub fn OutlineGlyphCollection::get(
       if idx < 0 || idx >= n {
         None
       } else {
-        Some({ font: self.font, glyph_id: gid, kind })
+        Some({ font: self.font, glyph_id: gid, kind, })
       }
     }
   }
@@ -439,7 +439,7 @@ pub fn OutlineGlyphCollection::get(
 pub fn OutlineGlyphCollection::iter(
   self : OutlineGlyphCollection,
 ) -> Array[(@moon_skrifa.GlyphId, OutlineGlyph)] {
-  let out : Array[(@moon_skrifa.GlyphId, OutlineGlyph)] = Array::new()
+  let out : Array[(@moon_skrifa.GlyphId, OutlineGlyph)] = Array()
   let n = self.glyph_count()
   for i in 0..<n {
     let gid : @moon_skrifa.GlyphId = GlyphId(i.to_uint16())
@@ -613,7 +613,7 @@ fn outline_scale_path(
   if scale == 1.0 {
     return path
   }
-  let out : Array[PathElement] = Array::new()
+  let out : Array[PathElement] = Array()
   for e in path.iter() {
     match e {
       MoveTo(x, y) =>

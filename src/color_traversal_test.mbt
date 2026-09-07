@@ -68,7 +68,7 @@ fn color_trav_test_push_f2dot14(out : Array[Byte], v : Double) -> Unit {
 fn color_trav_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
   let num_tables = tables.length()
   let header_len = 12 + num_tables * 16
-  let out : Array[Byte] = Array::new()
+  let out : Array[Byte] = Array()
   color_trav_test_push_u32_be(out, 0x00010000)
   color_trav_test_push_u16_be(out, num_tables)
   color_trav_test_push_u16_be(out, 0)
@@ -89,7 +89,7 @@ fn color_trav_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
       out.push(b)
     }
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -97,7 +97,7 @@ const COLOR_TRAV_TEST_TAG_COLR : UInt = 0x434F4C52 // "COLR"
 
 ///|
 fn color_trav_test_build_colr_v1_layers() -> Bytes {
-  let out : Array[Byte] = Array::new()
+  let out : Array[Byte] = Array()
   // COLR header v1 (34 bytes)
   color_trav_test_push_u16_be(out, 1) // version
   color_trav_test_push_u16_be(out, 0) // numBaseGlyphRecords (v0)
@@ -145,12 +145,12 @@ fn color_trav_test_build_colr_v1_layers() -> Bytes {
   color_trav_test_push_u8(out, 2)
   color_trav_test_push_u16_be(out, 2)
   color_trav_test_push_f2dot14(out, 1.0)
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
 fn color_trav_test_build_colr_v1_transform() -> Bytes {
-  let out : Array[Byte] = Array::new()
+  let out : Array[Byte] = Array()
   // COLR header v1 (34 bytes)
   color_trav_test_push_u16_be(out, 1)
   color_trav_test_push_u16_be(out, 0)
@@ -190,12 +190,12 @@ fn color_trav_test_build_colr_v1_transform() -> Bytes {
   // LayerList: minimal valid table (numLayers=1, offset points to self but unused)
   color_trav_test_push_u32_be(out, 1)
   color_trav_test_push_u32_be(out, 4)
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
 fn color_trav_test_build_colr_v1_composite() -> Bytes {
-  let out : Array[Byte] = Array::new()
+  let out : Array[Byte] = Array()
   color_trav_test_push_u16_be(out, 1)
   color_trav_test_push_u16_be(out, 0)
   color_trav_test_push_u32_be(out, 0)
@@ -231,12 +231,12 @@ fn color_trav_test_build_colr_v1_composite() -> Bytes {
   // LayerList: minimal valid table
   color_trav_test_push_u32_be(out, 1)
   color_trav_test_push_u32_be(out, 4)
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
 fn color_trav_test_build_colr_v1_cycle() -> Bytes {
-  let out : Array[Byte] = Array::new()
+  let out : Array[Byte] = Array()
   color_trav_test_push_u16_be(out, 1)
   color_trav_test_push_u16_be(out, 0)
   color_trav_test_push_u32_be(out, 0)
@@ -261,12 +261,12 @@ fn color_trav_test_build_colr_v1_cycle() -> Bytes {
   // LayerList: minimal valid table
   color_trav_test_push_u32_be(out, 1)
   color_trav_test_push_u32_be(out, 4)
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
 fn color_trav_test_build_colr_v1_linear_gradient_with_clip() -> Bytes {
-  let out : Array[Byte] = Array::new()
+  let out : Array[Byte] = Array()
   // COLR header v1 (34 bytes)
   color_trav_test_push_u16_be(out, 1)
   color_trav_test_push_u16_be(out, 0)
@@ -305,7 +305,7 @@ fn color_trav_test_build_colr_v1_linear_gradient_with_clip() -> Bytes {
   color_trav_test_push_i16_be(out, 0)
   color_trav_test_push_i16_be(out, 100)
 
-  // ColorLine: extend=Pad(0), 2 stops
+  // ColorLine: extend_mode=Pad(0), 2 stops
   color_trav_test_push_u8(out, 0)
   color_trav_test_push_u16_be(out, 2)
   // stop0: offset=0, pi=1, alpha=1
@@ -333,12 +333,12 @@ fn color_trav_test_build_colr_v1_linear_gradient_with_clip() -> Bytes {
   color_trav_test_push_i16_be(out, 0)
   color_trav_test_push_i16_be(out, 50)
   color_trav_test_push_i16_be(out, 60)
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
 fn color_trav_test_build_colr_v1_var_solid_alpha() -> Bytes {
-  let out : Array[Byte] = Array::new()
+  let out : Array[Byte] = Array()
   color_trav_test_push_u16_be(out, 1)
   color_trav_test_push_u16_be(out, 0)
   color_trav_test_push_u32_be(out, 0)
@@ -395,7 +395,7 @@ fn color_trav_test_build_colr_v1_var_solid_alpha() -> Bytes {
   color_trav_test_push_u16_be(out, 1)
   color_trav_test_push_u16_be(out, 0)
   color_trav_test_push_i16_be(out, 8192)
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -405,7 +405,7 @@ priv struct ColorTravTestPainter {
 
 ///|
 fn ColorTravTestPainter::ColorTravTestPainter() -> ColorTravTestPainter {
-  { ops: Array::new() }
+  { ops: Array(), }
 }
 
 ///|
@@ -450,26 +450,26 @@ impl ColorPainter for ColorTravTestPainter with fn fill(p, brush) {
         " a=" +
         (alpha * 16384.0).round().to_int().to_string(),
       )
-    LinearGradient(_, _, stops, extend) =>
+    LinearGradient(_, _, stops, extend_mode) =>
       p.ops.push(
         "fill_linear n=" +
         stops.length().to_string() +
         " e=" +
-        extend.raw().to_string(),
+        extend_mode.raw().to_string(),
       )
-    RadialGradient(_, _, _, _, stops, extend) =>
+    RadialGradient(_, _, _, _, stops, extend_mode) =>
       p.ops.push(
         "fill_radial n=" +
         stops.length().to_string() +
         " e=" +
-        extend.raw().to_string(),
+        extend_mode.raw().to_string(),
       )
-    SweepGradient(_, _, _, stops, extend) =>
+    SweepGradient(_, _, _, stops, extend_mode) =>
       p.ops.push(
         "fill_sweep n=" +
         stops.length().to_string() +
         " e=" +
-        extend.raw().to_string(),
+        extend_mode.raw().to_string(),
       )
   }
 }
@@ -505,7 +505,7 @@ impl ColorPainter for ColorTravTestPainter with fn pop_layer_with_mode(p, mode) 
 
 ///|
 test "COLRv1 traversal: layers + glyph + solid" {
-  ColorStop::{ offset: 0.0, palette_index: 0, alpha: 1.0 } |> ignore
+  ColorStop::{ offset: 0.0, palette_index: 0, alpha: 1.0, } |> ignore
   let colr = color_trav_test_build_colr_v1_layers()
   let sfnt = color_trav_test_build_sfnt(
     Array::from_fixed_array([(COLOR_TRAV_TEST_TAG_COLR, colr)]),
@@ -608,7 +608,7 @@ test "COLRv1 traversal: var solid alpha delta" {
   match
     font.paint_colr_v1_at(
       GlyphId((2).to_uint16()),
-      LocationRef(coords.op_as_view()),
+      LocationRef(coords[:]),
       painter1,
     ) {
     Err(_) => inspect("err", content="ok")

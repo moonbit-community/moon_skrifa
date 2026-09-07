@@ -53,7 +53,7 @@ pub fn GlyphName::is_synthesized(self : GlyphName) -> Bool {
 ///|
 fn glyph_name_truncate(s : String) -> String {
   // Glyph names are expected to be ASCII; truncate by code units.
-  let out : Array[Char] = Array::new(capacity=MAX_GLYPH_NAME_LEN)
+  let out : Array[Char] = Array(capacity=MAX_GLYPH_NAME_LEN)
   let mut n = 0
   for c in s {
     if n >= MAX_GLYPH_NAME_LEN {
@@ -62,21 +62,21 @@ fn glyph_name_truncate(s : String) -> String {
     out.push(c)
     n = n + 1
   }
-  String::from_array(out.op_as_view())
+  String::from_array(out[:])
 }
 
 ///|
 fn glyph_name_latin1_string(bytes : BytesView) -> String {
-  let chars : Array[Char] = Array::new()
+  let chars : Array[Char] = Array()
   for b in bytes.iter() {
     chars.push(b.to_int().unsafe_to_char())
   }
-  String::from_array(chars.op_as_view())
+  String::from_array(chars[:])
 }
 
 ///|
 fn glyph_name_synthesize(gid : GlyphId) -> GlyphName {
-  { name: glyph_name_truncate("gid" + gid.to_string()), synthesized: true }
+  { name: glyph_name_truncate("gid" + gid.to_string()), synthesized: true, }
 }
 
 ///|
@@ -185,7 +185,7 @@ fn cff_index1_read(data : BytesView) -> CffIndex1? {
     return None
   }
   if count == 0 {
-    Some({ data, count: 0, off_size: 0, offsets_base: 2, objects_base: 2 })
+    Some({ data, count: 0, off_size: 0, offsets_base: 2, objects_base: 2, })
   } else {
     if data.length() < 3 {
       return None
@@ -199,7 +199,7 @@ fn cff_index1_read(data : BytesView) -> CffIndex1? {
     if objects_base > data.length() {
       return None
     }
-    Some({ data, count, off_size, offsets_base, objects_base })
+    Some({ data, count, off_size, offsets_base, objects_base, })
   }
 }
 
@@ -264,8 +264,8 @@ priv struct CffDictOffsets {
 ///|
 fn cff_dict_parse_offsets(data : BytesView) -> CffDictOffsets {
   // Minimal DICT parsing: only integer operands and ops 15 (charset), 17 (charstrings).
-  let info = CffDictOffsets::{ charset_offset: None, charstrings_offset: None }
-  let stack : Array[Int] = Array::new()
+  let info = CffDictOffsets::{ charset_offset: None, charstrings_offset: None, }
+  let stack : Array[Int] = Array()
   let mut pos = 0
   while pos < data.length() {
     let b0 = data.at(pos).to_int()
@@ -494,17 +494,17 @@ pub fn GlyphNames::GlyphNames(font : FontRef) -> GlyphNames {
     Some(post) =>
       // Prefer `post` if it resolves at least one glyph name.
       if glyph_name_post_v2_get(post, 0) is Some(_) {
-        return { inner: Post(post, num_glyphs) }
+        return { inner: Post(post, num_glyphs), }
       }
   }
   match font.table(GLYPH_TAG_CFF) {
     None => ()
     Some(cff) =>
       if glyph_name_cff_get(cff, 0) is Some(_) {
-        return { inner: Cff(cff, num_glyphs) }
+        return { inner: Cff(cff, num_glyphs), }
       }
   }
-  { inner: Synthesized(num_glyphs) }
+  { inner: Synthesized(num_glyphs), }
 }
 
 ///|
@@ -540,7 +540,7 @@ pub fn GlyphNames::get(self : GlyphNames, glyph_id : GlyphId) -> GlyphName? {
       if s.is_empty() {
         Some(glyph_name_synthesize(glyph_id))
       } else {
-        Some({ name: s, synthesized: false })
+        Some({ name: s, synthesized: false, })
       }
   }
 }

@@ -38,7 +38,7 @@ fn colr_test_u32(x : Int) -> UInt {
 fn colr_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
   let num_tables = tables.length()
   let header_len = 12 + num_tables * 16
-  let out : Array[Byte] = Array::new()
+  let out : Array[Byte] = Array()
   colr_test_push_u32_be(out, colr_test_u32(0x00010000))
   colr_test_push_u16_be(out, num_tables)
   colr_test_push_u16_be(out, 0)
@@ -59,7 +59,7 @@ fn colr_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
       out.push(b)
     }
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -67,7 +67,7 @@ const TAG_COLR : UInt = 0x434F4C52 // "COLR"
 
 ///|
 fn colr_test_build_colr() -> Bytes {
-  let out : Array[Byte] = Array::new()
+  let out : Array[Byte] = Array()
   // header:
   // version=0, numBaseGlyphRecords=1
   colr_test_push_u16_be(out, 0)
@@ -86,12 +86,12 @@ fn colr_test_build_colr() -> Bytes {
   colr_test_push_u16_be(out, 1)
   colr_test_push_u16_be(out, 11)
   colr_test_push_u16_be(out, 2)
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
 fn colr_test_build_colr_v1_empty() -> Bytes {
-  let out : Array[Byte] = Array::new()
+  let out : Array[Byte] = Array()
   // header:
   // version=1, numBaseGlyphRecords=0
   colr_test_push_u16_be(out, 1)
@@ -106,12 +106,12 @@ fn colr_test_build_colr_v1_empty() -> Bytes {
   colr_test_push_u32_be(out, colr_test_u32(0)) // clipListOffset
   colr_test_push_u32_be(out, colr_test_u32(0)) // varIndexMapOffset
   colr_test_push_u32_be(out, colr_test_u32(0)) // itemVariationStoreOffset
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
 fn colr_test_build_colr_v1_with_base_glyph(gid : Int) -> Bytes {
-  let out : Array[Byte] = Array::new()
+  let out : Array[Byte] = Array()
   // header:
   // version=1, no v0 records
   colr_test_push_u16_be(out, 1)
@@ -136,7 +136,7 @@ fn colr_test_build_colr_v1_with_base_glyph(gid : Int) -> Bytes {
   out.push(2 |> Int::to_byte)
   colr_test_push_u16_be(out, 3)
   colr_test_push_u16_be(out, 0x4000)
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -237,7 +237,7 @@ test "COLR get_with_format/get APIs" {
     .unwrap()
   inspect(glyph.format() is ColrV0, content="true")
   inspect(glyph.layers().unwrap().length(), content="2")
-  let painter = ColrTestPainter::{ fills: Array::new() }
+  let painter = ColrTestPainter::{ fills: Array(), }
   match glyph.paint(LocationRef::default(), painter) {
     Err(_) => inspect("err", content="ok")
     Ok(_) => {

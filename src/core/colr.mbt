@@ -308,13 +308,13 @@ pub fn ColorGlyphCollection::get_with_format(
   match glyph_format {
     ColrV0 =>
       if self.layers(glyph_id) is Some(_) {
-        Some({ collection: self, glyph_id, format: glyph_format })
+        Some({ collection: self, glyph_id, format: glyph_format, })
       } else {
         None
       }
     ColrV1 =>
       if self.v1_has_glyph(glyph_id) {
-        Some({ collection: self, glyph_id, format: glyph_format })
+        Some({ collection: self, glyph_id, format: glyph_format, })
       } else {
         None
       }
@@ -374,7 +374,7 @@ pub fn ColorGlyphCollection::layers(
   if first_layer + num > self.num_layers {
     return None
   }
-  let out : Array[ColorLayer] = Array::new(capacity=num)
+  let out : Array[ColorLayer] = Array(capacity=num)
   for i in 0..<num {
     let lpos = self.layer_off + (first_layer + i) * 4
     let layer_gid = colr_read_u16_be(colr, lpos).unwrap_or(-1)

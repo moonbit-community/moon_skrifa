@@ -787,7 +787,7 @@ fn color_trav_read_color_line(
   if extend_raw < 0 {
     return None
   }
-  let extend = extend_from_u8(extend_raw)
+  let extend_mode = extend_from_u8(extend_raw)
   let num = color_trav_read_u16_be(colr, color_line_off + 1).unwrap_or(-1)
   if num < 0 {
     return None
@@ -798,7 +798,7 @@ fn color_trav_read_color_line(
   if end < stops_off || end > colr.length() {
     return None
   }
-  let out : Array[ColorStop] = Array::new(capacity=num)
+  let out : Array[ColorStop] = Array(capacity=num)
   for i in 0..<num {
     let p = stops_off + i * rec_len
     let stop_offset0 = color_trav_read_f2dot14(colr, p).unwrap_or(0.0)
@@ -827,11 +827,11 @@ fn color_trav_read_color_line(
         alpha: color_trav_apply_f2dot14_delta(alpha0, d1),
       })
     } else {
-      out.push({ offset: stop_offset0, palette_index: pi, alpha: alpha0 })
+      out.push({ offset: stop_offset0, palette_index: pi, alpha: alpha0, })
     }
   }
   color_trav_sort_color_stops(out)
-  Some((extend, out))
+  Some((extend_mode, out))
 }
 
 ///|
@@ -910,7 +910,7 @@ fn color_trav_make_linear_brush(
   p1_in : (Double, Double),
   p2_in : (Double, Double),
   stops : Array[ColorStop],
-  extend : Extend,
+  extend_mode : Extend,
 ) -> Brush? {
   if stops.is_empty() {
     return None
@@ -938,10 +938,10 @@ fn color_trav_make_linear_brush(
   let first = stops.at(0)
   let mut last = stops.at(stops.length() - 1)
   let mut range = last.offset - first.offset
-  if range == 0.0 && !extend_is_pad(extend) {
+  if range == 0.0 && !extend_is_pad(extend_mode) {
     return None
   }
-  if range == 0.0 && extend_is_pad(extend) {
+  if range == 0.0 && extend_is_pad(extend_mode) {
     stops.push({
       offset: last.offset + 1.0,
       palette_index: last.palette_index,
@@ -960,9 +960,9 @@ fn color_trav_make_linear_brush(
     let p0n = color_trav_point_add(p0, p0_off)
     let scale = 1.0 / range
     color_trav_rescale_stops(stops, start_offset, scale)
-    Some(LinearGradient(p0n, p3, stops, extend))
+    Some(LinearGradient(p0n, p3, stops, extend_mode))
   } else {
-    Some(LinearGradient(p0, p3, stops, extend))
+    Some(LinearGradient(p0, p3, stops, extend_mode))
   }
 }
 
@@ -973,7 +973,7 @@ fn color_trav_make_radial_brush(
   c1_in : (Double, Double),
   r1_in : Double,
   stops : Array[ColorStop],
-  extend : Extend,
+  extend_mode : Extend,
 ) -> Brush? {
   if stops.is_empty() {
     return None
@@ -982,10 +982,10 @@ fn color_trav_make_radial_brush(
   let first = stops.at(0)
   let last = stops.at(stops.length() - 1)
   let mut range = last.offset - first.offset
-  if range == 0.0 && !extend_is_pad(extend) {
+  if range == 0.0 && !extend_is_pad(extend_mode) {
     return None
   }
-  if range == 0.0 && extend_is_pad(extend) {
+  if range == 0.0 && extend_is_pad(extend_mode) {
     stops.push({
       offset: last.offset + 1.0,
       palette_index: last.palette_index,
@@ -1019,7 +1019,7 @@ fn color_trav_make_radial_brush(
   } else if range != 0.0 {
     // Already normalized above.
   }
-  Some(RadialGradient(c0, r0, c1, r1, stops, extend))
+  Some(RadialGradient(c0, r0, c1, r1, stops, extend_mode))
 }
 
 ///|
@@ -1028,7 +1028,7 @@ fn color_trav_make_sweep_brush(
   start_angle : Double,
   end_angle : Double,
   stops : Array[ColorStop],
-  extend : Extend,
+  extend_mode : Extend,
 ) -> Brush? {
   if stops.is_empty() {
     return None
@@ -1040,10 +1040,10 @@ fn color_trav_make_sweep_brush(
   let first = stops.at(0)
   let last = stops.at(stops.length() - 1)
   let mut range = last.offset - first.offset
-  if range == 0.0 && !extend_is_pad(extend) {
+  if range == 0.0 && !extend_is_pad(extend_mode) {
     return None
   }
-  if range == 0.0 && extend_is_pad(extend) {
+  if range == 0.0 && extend_is_pad(extend_mode) {
     stops.push({
       offset: last.offset + 1.0,
       palette_index: last.palette_index,
@@ -1084,21 +1084,21 @@ fn color_trav_make_sweep_brush(
       })
     }
   }
-  if start_deg == end_deg && !extend_is_pad(extend) {
+  if start_deg == end_deg && !extend_is_pad(extend_mode) {
     return None
   }
-  Some(SweepGradient(c0, start_deg, end_deg, stops, extend))
+  Some(SweepGradient(c0, start_deg, end_deg, stops, extend_mode))
 }
 
 ///|
 fn color_trav_transform_translate(dx : Double, dy : Double) -> Transform {
   let base = Transform::default()
-  { xx: base.xx, yx: base.yx, xy: base.xy, yy: base.yy, dx, dy }
+  { xx: base.xx, yx: base.yx, xy: base.xy, yy: base.yy, dx, dy, }
 }
 
 ///|
 fn color_trav_transform_scale(sx : Double, sy : Double) -> Transform {
-  { xx: sx, yx: 0.0, xy: 0.0, yy: sy, dx: 0.0, dy: 0.0 }
+  { xx: sx, yx: 0.0, xy: 0.0, yy: sy, dx: 0.0, dy: 0.0, }
 }
 
 ///|
@@ -1107,14 +1107,14 @@ fn color_trav_transform_rotate(angle : Double) -> Transform {
   let theta = angle * COLOR_TRAV_PI
   let c = @math.cos(theta)
   let s = @math.sin(theta)
-  { xx: c, yx: s, xy: -s, yy: c, dx: 0.0, dy: 0.0 }
+  { xx: c, yx: s, xy: -s, yy: c, dx: 0.0, dy: 0.0, }
 }
 
 ///|
 fn color_trav_transform_skew(x_angle : Double, y_angle : Double) -> Transform {
   let tx = @math.tan(x_angle * COLOR_TRAV_PI)
   let ty = @math.tan(y_angle * COLOR_TRAV_PI)
-  { xx: 1.0, yx: ty, xy: tx, yy: 1.0, dx: 0.0, dy: 0.0 }
+  { xx: 1.0, yx: ty, xy: tx, yy: 1.0, dx: 0.0, dy: 0.0, }
 }
 
 ///|
@@ -1258,14 +1258,14 @@ fn[P : ColorPainter] color_trav_traverse_paint(
             ctx.var_store_off,
           ) {
           None => Err(ParseError)
-          Some((extend, stops0)) =>
+          Some((extend_mode, stops0)) =>
             match
               color_trav_make_linear_brush(
                 (x0.to_double(), y0.to_double()),
                 (x1.to_double(), y1.to_double()),
                 (x2.to_double(), y2.to_double()),
                 stops0,
-                extend,
+                extend_mode,
               ) {
               None => Ok(())
               Some(brush) => {
@@ -1362,14 +1362,14 @@ fn[P : ColorPainter] color_trav_traverse_paint(
             ctx.var_store_off,
           ) {
           None => Err(ParseError)
-          Some((extend, stops0)) =>
+          Some((extend_mode, stops0)) =>
             match
               color_trav_make_linear_brush(
                 (x0, y0),
                 (x1, y1),
                 (x2, y2),
                 stops0,
-                extend,
+                extend_mode,
               ) {
               None => Ok(())
               Some(brush) => {
@@ -1403,7 +1403,7 @@ fn[P : ColorPainter] color_trav_traverse_paint(
             ctx.var_store_off,
           ) {
           None => Err(ParseError)
-          Some((extend, stops0)) =>
+          Some((extend_mode, stops0)) =>
             match
               color_trav_make_radial_brush(
                 (x0.to_double(), y0.to_double()),
@@ -1411,7 +1411,7 @@ fn[P : ColorPainter] color_trav_traverse_paint(
                 (x1.to_double(), y1.to_double()),
                 r1.to_double(),
                 stops0,
-                extend,
+                extend_mode,
               ) {
               None => Ok(())
               Some(brush) => {
@@ -1508,7 +1508,7 @@ fn[P : ColorPainter] color_trav_traverse_paint(
             ctx.var_store_off,
           ) {
           None => Err(ParseError)
-          Some((extend, stops0)) =>
+          Some((extend_mode, stops0)) =>
             match
               color_trav_make_radial_brush(
                 (x0, y0),
@@ -1516,7 +1516,7 @@ fn[P : ColorPainter] color_trav_traverse_paint(
                 (x1, y1),
                 r1,
                 stops0,
-                extend,
+                extend_mode,
               ) {
               None => Ok(())
               Some(brush) => {
@@ -1552,14 +1552,14 @@ fn[P : ColorPainter] color_trav_traverse_paint(
             ctx.var_store_off,
           ) {
           None => Err(ParseError)
-          Some((extend, stops0)) =>
+          Some((extend_mode, stops0)) =>
             match
               color_trav_make_sweep_brush(
                 (cx.to_double(), cy.to_double()),
                 start_angle,
                 end_angle,
                 stops0,
-                extend,
+                extend_mode,
               ) {
               None => Ok(())
               Some(brush) => {
@@ -1638,14 +1638,14 @@ fn[P : ColorPainter] color_trav_traverse_paint(
             ctx.var_store_off,
           ) {
           None => Err(ParseError)
-          Some((extend, stops0)) =>
+          Some((extend_mode, stops0)) =>
             match
               color_trav_make_sweep_brush(
                 (cx, cy),
                 start_angle,
                 end_angle,
                 stops0,
-                extend,
+                extend_mode,
               ) {
               None => Ok(())
               Some(brush) => {
@@ -1756,7 +1756,7 @@ fn[P : ColorPainter] color_trav_traverse_paint(
         let dy = color_trav_read_fixed_16_16(ctx.colr, abs_t + 20).unwrap_or(
           0.0,
         )
-        let t = Transform::{ xx, yx, xy, yy, dx, dy }
+        let t = Transform::{ xx, yx, xy, yy, dx, dy, }
         ColorPainter::push_transform(painter, t)
         let abs_sub = paint_off + sub_off
         let r = color_trav_traverse_paint(
@@ -1859,7 +1859,7 @@ fn[P : ColorPainter] color_trav_traverse_paint(
             ctx.coords,
           ),
         )
-        let t = Transform::{ xx, yx, xy, yy, dx, dy }
+        let t = Transform::{ xx, yx, xy, yy, dx, dy, }
         ColorPainter::push_transform(painter, t)
         let abs_sub = paint_off + sub_off
         let r = color_trav_traverse_paint(
@@ -2716,7 +2716,7 @@ pub fn[P : ColorPainter] FontRef::paint_colr_v1_at(
             }
           }
       }
-      let stack : Array[Int] = Array::new()
+      let stack : Array[Int] = Array()
       let r = color_trav_traverse_paint(ctx, root_paint_off, stack, 0, painter)
       if pushed {
         ColorPainter::pop_clip(painter)

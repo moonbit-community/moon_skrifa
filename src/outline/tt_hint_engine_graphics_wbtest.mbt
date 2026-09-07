@@ -14,19 +14,19 @@
 
 ///|
 fn tt_make_engine_for_graphics(scale : Int, ppem : Int) -> TtEngine {
-  let empty = Bytes::from_array(Array::new().op_as_view())
+  let empty = Bytes::from_array(Array()[:])
   let retained = TtRetainedGraphicsState(scale, ppem, Target::default())
-  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array::new()
+  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array()
   TtEngine(
     empty[:],
     empty[:],
     empty[:],
     retained,
-    Array::new(),
-    Array::new(),
+    Array(),
+    Array(),
     None,
     0,
-    coords0.op_as_view(),
+    coords0[:],
     64,
     32,
     64,
@@ -38,8 +38,8 @@ fn tt_make_engine_for_graphics(scale : Int, ppem : Int) -> TtEngine {
 test "tt_hint: graphics set vectors to coord axis (SVTCA*)" {
   let engine = tt_make_engine_for_graphics(0x10000, 20)
   let one = 0x4000
-  let x_axis = TtVec14::{ x: one, y: 0 }
-  let y_axis = TtVec14::{ x: 0, y: one }
+  let x_axis = TtVec14::{ x: one, y: 0, }
+  let y_axis = TtVec14::{ x: 0, y: one, }
   engine.op_svtca(0x00).unwrap() |> ignore
   inspect(engine.graphics.freedom_vector.x == y_axis.x, content="true")
   inspect(engine.graphics.freedom_vector.y == y_axis.y, content="true")
@@ -68,8 +68,8 @@ test "tt_hint: graphics set vectors to coord axis (SVTCA*)" {
 test "tt_hint: graphics set/get vectors from stack (SPVFS/SFVFS/GPV/GFV)" {
   let engine = tt_make_engine_for_graphics(0x10000, 20)
   let one = 0x4000
-  let x_axis = TtVec14::{ x: one, y: 0 }
-  let y_axis = TtVec14::{ x: 0, y: one }
+  let x_axis = TtVec14::{ x: one, y: 0, }
+  let y_axis = TtVec14::{ x: 0, y: one, }
 
   // projection vector
   engine.value_stack.push(x_axis.x).unwrap() |> ignore
@@ -98,16 +98,16 @@ test "tt_hint: graphics set/get vectors from stack (SPVFS/SFVFS/GPV/GFV)" {
 test "tt_hint: graphics set vectors to line (SPVTL/SFVTL/SDPVTL)" {
   let engine = tt_make_engine_for_graphics(0x10000, 20)
   let one = 0x4000
-  let x_axis = TtVec14::{ x: one, y: 0 }
-  let y_axis = TtVec14::{ x: 0, y: one }
+  let x_axis = TtVec14::{ x: one, y: 0, }
+  let y_axis = TtVec14::{ x: 0, y: one, }
 
   // Set up a glyph zone with 2 points and 2 original points (26.6 bits).
   engine.graphics.glyph = {
-    unscaled: Array::new(),
-    points: Array::from_fixed_array([{ x: 0, y: 0 }, { x: 64, y: 0 }]),
-    original: Array::from_fixed_array([{ x: 0, y: 64 }, { x: 0, y: -64 }]),
+    unscaled: Array(),
+    points: Array::from_fixed_array([{ x: 0, y: 0, }, { x: 64, y: 0, }]),
+    original: Array::from_fixed_array([{ x: 0, y: 64, }, { x: 0, y: -64, }]),
     flags: Array::make(2, 0),
-    contours: Array::new(),
+    contours: Array(),
   }
 
   // Set all zone pointers to glyph.
@@ -316,13 +316,13 @@ test "tt_hint: graphics simple state setting + INSTCTRL + SCANCTRL" {
 test "tt_hint: graphics set vectors to line handles equal points (x-axis default)" {
   let engine = tt_make_engine_for_graphics(0x10000, 20)
   let one = 0x4000
-  let x_axis = TtVec14::{ x: one, y: 0 }
+  let x_axis = TtVec14::{ x: one, y: 0, }
   engine.graphics.glyph = {
-    unscaled: Array::new(),
-    points: Array::from_fixed_array([{ x: 0, y: 0 }, { x: 0, y: 0 }]),
-    original: Array::from_fixed_array([{ x: 0, y: 0 }, { x: 0, y: 0 }]),
+    unscaled: Array(),
+    points: Array::from_fixed_array([{ x: 0, y: 0, }, { x: 0, y: 0, }]),
+    original: Array::from_fixed_array([{ x: 0, y: 0, }, { x: 0, y: 0, }]),
     flags: Array::make(2, 0),
-    contours: Array::new(),
+    contours: Array(),
   }
   engine.value_stack.push(1).unwrap() |> ignore
   engine.op_szps().unwrap() |> ignore

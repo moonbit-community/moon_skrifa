@@ -39,7 +39,7 @@ const PROVIDER_TEST_TAG_TEST : UInt = 0x74657374 // "test"
 
 ///|
 fn provider_test_make_min_sfnt() -> Bytes {
-  let out = Array::new()
+  let out = Array()
   provider_test_push_u32_be(out, provider_test_u32(0x00010000))
   provider_test_push_u16_be(out, 1)
   provider_test_push_u16_be(out, 0)
@@ -53,7 +53,7 @@ fn provider_test_make_min_sfnt() -> Bytes {
   out.push(0x62 |> Int::to_byte)
   out.push(0x63 |> Int::to_byte)
   out.push(0x64 |> Int::to_byte)
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|

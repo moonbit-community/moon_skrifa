@@ -39,7 +39,7 @@ fn u32(x : Int) -> UInt {
 fn make_sfnt_with_tags(tags : Array[UInt]) -> Bytes {
   let num_tables = tags.length()
   let dir_end = 12 + num_tables * 16
-  let out = Array::new()
+  let out = Array()
   push_u32_be(out, u32(0x00010000))
   push_u16_be(out, num_tables)
   push_u16_be(out, 0)
@@ -51,7 +51,7 @@ fn make_sfnt_with_tags(tags : Array[UInt]) -> Bytes {
     push_u32_be(out, u32(dir_end))
     push_u32_be(out, u32(0))
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -70,14 +70,14 @@ const TAG_CFF2 : UInt = 0x43464632 // "CFF2"
 
 ///|
 test "OutlineGlyphCollection::format None when no font" {
-  let font = make_font(Array::new())
+  let font = make_font(Array())
   let c = OutlineGlyphCollection::OutlineGlyphCollection(font)
   inspect(c.format() is None, content="true")
 }
 
 ///|
 test "OutlineGlyphCollection::format None when no outline tables" {
-  let font = make_font(Array::new())
+  let font = make_font(Array())
   let c = OutlineGlyphCollection::OutlineGlyphCollection(font)
   inspect(c.format() is None, content="true")
 }

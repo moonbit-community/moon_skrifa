@@ -290,7 +290,7 @@ pub fn ColorPalettes::color(
   let g = cpal.at(pos + 1)
   let r = cpal.at(pos + 2)
   let a = cpal.at(pos + 3)
-  Some({ r, g, b, a })
+  Some({ r, g, b, a, })
 }
 
 ///|
@@ -302,7 +302,7 @@ pub fn ColorPalettes::get(self : ColorPalettes, index : Int) -> ColorPalette? {
   if start_index < 0 || start_index + self.num_entries > self.num_records {
     return None
   }
-  Some({ palettes: self, index })
+  Some({ palettes: self, index, })
 }
 
 ///|
@@ -337,7 +337,7 @@ pub fn ColorPalette::index(self : ColorPalette) -> Int {
 ///|
 pub fn ColorPalette::colors(self : ColorPalette) -> Array[Color] {
   let count = self.palettes.entries_per_palette()
-  let out : Array[Color] = Array::new(capacity=count)
+  let out : Array[Color] = Array(capacity=count)
   for i in 0..<count {
     if self.color(i) is Some(c) {
       out.push(c)
@@ -364,7 +364,7 @@ pub fn ColorPalette::palette_type(self : ColorPalette) -> ColorPaletteType? {
     Some(v) => v
   }
   let raw = color_read_u32_be(cpal, off + self.index * 4).unwrap_or(0)
-  Some({ bits: raw })
+  Some({ bits: raw, })
 }
 
 ///|

@@ -227,7 +227,7 @@ fn cff_outline_path(
     Some(v) => v
   }
   if charstring.length() == 0 {
-    return Some(Array::new())
+    return Some(Array())
   }
 
   // Optional local Subrs.
@@ -389,7 +389,7 @@ fn cff_outline_path_hinted(
     Some(v) => v
   }
   if charstring.length() == 0 {
-    return Some(Array::new())
+    return Some(Array())
   }
 
   // Resolve private dict + optional font dict matrix for CID-keyed CFF.

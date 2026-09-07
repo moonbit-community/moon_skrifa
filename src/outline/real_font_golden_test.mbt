@@ -123,8 +123,8 @@ fn b64_val(c : Int) -> Int? {
 
 ///|
 fn b64_decode(s : String) -> Bytes {
-  let out : Array[Byte] = Array::new()
-  let vals : Array[Int] = Array::new()
+  let out : Array[Byte] = Array()
+  let vals : Array[Int] = Array()
   let n = s.length()
   for i in 0..<n {
     let c = s.code_unit_at(i).to_int()
@@ -152,7 +152,7 @@ fn b64_decode(s : String) -> Bytes {
       vals.clear()
     }
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -166,10 +166,9 @@ test "golden: glyf Vazirmatn gid=2 size=16 ft coords=0" {
   let outlines = OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(GlyphId((2).to_uint16())).unwrap()
   let coords : Array[@moon_skrifa.NormalizedCoord] = Array::from_fixed_array([0])
-  let settings = DrawSettings::unhinted(
-    Size(16.0),
-    LocationRef(coords.op_as_view()),
-  ).with_path_style(FreeType)
+  let settings = DrawSettings::unhinted(Size(16.0), LocationRef(coords[:])).with_path_style(
+    FreeType,
+  )
   let pen = SvgPen::with_precision(3)
   glyph.draw(settings, pen).unwrap() |> ignore
   inspect(
@@ -186,10 +185,9 @@ test "golden: glyf Vazirmatn gid=2 size=16 ft coords=0.5" {
   let coords : Array[@moon_skrifa.NormalizedCoord] = Array::from_fixed_array([
     8192,
   ])
-  let settings = DrawSettings::unhinted(
-    Size(16.0),
-    LocationRef(coords.op_as_view()),
-  ).with_path_style(FreeType)
+  let settings = DrawSettings::unhinted(Size(16.0), LocationRef(coords[:])).with_path_style(
+    FreeType,
+  )
   let pen = SvgPen::with_precision(3)
   glyph.draw(settings, pen).unwrap() |> ignore
   inspect(
@@ -204,10 +202,9 @@ test "golden: glyf Vazirmatn gid=2 size=16 hb coords=0 (16.16 fixed)" {
   let outlines = OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(GlyphId((2).to_uint16())).unwrap()
   let coords : Array[@moon_skrifa.NormalizedCoord] = Array::from_fixed_array([0])
-  let settings = DrawSettings::unhinted(
-    Size(16.0),
-    LocationRef(coords.op_as_view()),
-  ).with_path_style(HarfBuzz)
+  let settings = DrawSettings::unhinted(Size(16.0), LocationRef(coords[:])).with_path_style(
+    HarfBuzz,
+  )
   let pen = SvgPen::with_precision(3)
   glyph.draw(settings, pen).unwrap() |> ignore
   inspect(
@@ -224,10 +221,9 @@ test "golden: glyf Vazirmatn gid=2 size=16 hb coords=0.5 (16.16 fixed)" {
   let coords : Array[@moon_skrifa.NormalizedCoord] = Array::from_fixed_array([
     8192,
   ])
-  let settings = DrawSettings::unhinted(
-    Size(16.0),
-    LocationRef(coords.op_as_view()),
-  ).with_path_style(HarfBuzz)
+  let settings = DrawSettings::unhinted(Size(16.0), LocationRef(coords[:])).with_path_style(
+    HarfBuzz,
+  )
   let pen = SvgPen::with_precision(3)
   glyph.draw(settings, pen).unwrap() |> ignore
   inspect(

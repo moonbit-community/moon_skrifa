@@ -37,7 +37,7 @@ fn string_test_u32(x : Int) -> UInt {
 
 ///|
 fn string_test_encode_utf16be(s : String) -> Array[Byte] {
-  let out : Array[Byte] = Array::new()
+  let out : Array[Byte] = Array()
   for ch in s {
     let cp = ch.to_int()
     if cp < 0 || cp > 0x10FFFF {
@@ -65,15 +65,15 @@ fn string_test_build_name_table_v0(
   records : Array[(Int, Int, Int, Int, String)],
 ) -> Bytes {
   let count = records.length()
-  let storage : Array[Byte] = Array::new()
-  let rec_meta : Array[(Int, Int)] = Array::new()
+  let storage : Array[Byte] = Array()
+  let rec_meta : Array[(Int, Int)] = Array()
   for r in records {
     let (platform_id, _, _, _, value) = r
     let off = storage.length()
     let bytes = match platform_id {
       0 | 3 => string_test_encode_utf16be(value)
       _ => {
-        let tmp : Array[Byte] = Array::new()
+        let tmp : Array[Byte] = Array()
         for ch in value {
           let b = ch.to_int()
           if b >= 0 && b <= 255 {
@@ -88,7 +88,7 @@ fn string_test_build_name_table_v0(
     }
     rec_meta.push((bytes.length(), off))
   }
-  let out : Array[Byte] = Array::new()
+  let out : Array[Byte] = Array()
   // format=0
   string_test_push_u16_be(out, 0)
   string_test_push_u16_be(out, count)
@@ -107,7 +107,7 @@ fn string_test_build_name_table_v0(
   for b in storage.iter() {
     out.push(b)
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -115,8 +115,8 @@ fn string_test_build_name_table_v0_raw(
   records : Array[(Int, Int, Int, Int, Array[Byte])],
 ) -> Bytes {
   let count = records.length()
-  let storage : Array[Byte] = Array::new()
-  let rec_meta : Array[(Int, Int)] = Array::new()
+  let storage : Array[Byte] = Array()
+  let rec_meta : Array[(Int, Int)] = Array()
   for r in records {
     let (_, _, _, _, bytes) = r
     let off = storage.length()
@@ -125,7 +125,7 @@ fn string_test_build_name_table_v0_raw(
     }
     rec_meta.push((bytes.length(), off))
   }
-  let out : Array[Byte] = Array::new()
+  let out : Array[Byte] = Array()
   // format=0
   string_test_push_u16_be(out, 0)
   string_test_push_u16_be(out, count)
@@ -144,7 +144,7 @@ fn string_test_build_name_table_v0_raw(
   for b in storage.iter() {
     out.push(b)
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -154,15 +154,15 @@ fn string_test_build_name_table_v1(
 ) -> Bytes {
   let count = records.length()
   let tag_count = lang_tags.length()
-  let storage : Array[Byte] = Array::new()
-  let rec_meta : Array[(Int, Int)] = Array::new()
+  let storage : Array[Byte] = Array()
+  let rec_meta : Array[(Int, Int)] = Array()
   for r in records {
     let (platform_id, _, _, _, value) = r
     let off = storage.length()
     let bytes = match platform_id {
       0 | 3 => string_test_encode_utf16be(value)
       _ => {
-        let tmp : Array[Byte] = Array::new()
+        let tmp : Array[Byte] = Array()
         for ch in value {
           let b = ch.to_int()
           if b >= 0 && b <= 255 {
@@ -177,7 +177,7 @@ fn string_test_build_name_table_v1(
     }
     rec_meta.push((bytes.length(), off))
   }
-  let tag_meta : Array[(Int, Int)] = Array::new()
+  let tag_meta : Array[(Int, Int)] = Array()
   for tag in lang_tags {
     let off = storage.length()
     let bytes = string_test_encode_utf16be(tag)
@@ -186,7 +186,7 @@ fn string_test_build_name_table_v1(
     }
     tag_meta.push((bytes.length(), off))
   }
-  let out : Array[Byte] = Array::new()
+  let out : Array[Byte] = Array()
   // format=1
   string_test_push_u16_be(out, 1)
   string_test_push_u16_be(out, count)
@@ -211,14 +211,14 @@ fn string_test_build_name_table_v1(
   for b in storage.iter() {
     out.push(b)
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
 fn string_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
   let num_tables = tables.length()
   let header_len = 12 + num_tables * 16
-  let out : Array[Byte] = Array::new()
+  let out : Array[Byte] = Array()
   string_test_push_u32_be(out, string_test_u32(0x00010000))
   string_test_push_u16_be(out, num_tables)
   string_test_push_u16_be(out, 0)
@@ -239,7 +239,7 @@ fn string_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
       out.push(b)
     }
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -275,7 +275,7 @@ test "localized() from name v0" {
   let sfnt = string_test_build_sfnt(Array::from_fixed_array([(TAG_NAME, name)]))
   let font = FontRef::from_bytes(sfnt).unwrap()
   let strings = font.localized_strings(STRING_ID_SUBFAMILY_NAME)
-  let pairs : Array[(String, String)] = Array::new()
+  let pairs : Array[(String, String)] = Array()
   for s in strings.strings().iter() {
     pairs.push((s.language().unwrap(), s.to_string()))
   }
@@ -372,7 +372,7 @@ test "name v1 language tags win over langid mapping" {
 
 ///|
 test "macroman decoding (platform 1, encoding 0)" {
-  let bytes : Array[Byte] = Array::new()
+  let bytes : Array[Byte] = Array()
   // 0x8E in MacRoman is U+00E9 (é).
   bytes.push(0x8E |> Int::to_byte)
   let name = string_test_build_name_table_v0_raw(

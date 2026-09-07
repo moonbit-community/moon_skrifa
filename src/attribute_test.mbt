@@ -57,7 +57,7 @@ fn attr_test_set_i32_be(buf : Array[Byte], offset : Int, v : Int) -> Unit {
 fn attr_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
   let num_tables = tables.length()
   let header_len = 12 + num_tables * 16
-  let out : Array[Byte] = Array::new()
+  let out : Array[Byte] = Array()
   attr_test_push_u32_be(out, attr_test_u32(0x00010000))
   attr_test_push_u16_be(out, num_tables)
   attr_test_push_u16_be(out, 0)
@@ -78,7 +78,7 @@ fn attr_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
       out.push(b)
     }
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -96,7 +96,7 @@ test "missing_os2 uses head.macStyle italic+bold" {
   // macStyle at offset 44.
   attr_test_set_u16_be(head, 44, 0x0001 | 0x0002)
   let sfnt = attr_test_build_sfnt(
-    Array::from_fixed_array([(TAG_HEAD, Bytes::from_array(head.op_as_view()))]),
+    Array::from_fixed_array([(TAG_HEAD, Bytes::from_array(head[:]))]),
   )
   let font = FontRef::from_bytes(sfnt).unwrap()
   let attrs = font.attributes()
@@ -125,8 +125,8 @@ test "so_stylish uses OS/2 + post italicAngle" {
   attr_test_set_i32_be(post, 4, -14 * 65536)
   let sfnt = attr_test_build_sfnt(
     Array::from_fixed_array([
-      (TAG_OS2, Bytes::from_array(os2.op_as_view())),
-      (TAG_POST, Bytes::from_array(post.op_as_view())),
+      (TAG_OS2, Bytes::from_array(os2[:])),
+      (TAG_POST, Bytes::from_array(post[:])),
     ]),
   )
   let font = FontRef::from_bytes(sfnt).unwrap()

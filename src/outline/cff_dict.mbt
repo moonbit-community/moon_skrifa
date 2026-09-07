@@ -67,7 +67,7 @@ fn cff_dict_parse(data : BytesView) -> CffDictInfo {
     font_matrix: None,
     font_matrix_upem: None,
   }
-  let stack : Array[CffDictNum] = Array::new()
+  let stack : Array[CffDictNum] = Array()
   let mut pos = 0
   while pos < data.length() {
     let b0 = data.at(pos).to_int()
@@ -76,7 +76,7 @@ fn cff_dict_parse(data : BytesView) -> CffDictInfo {
       match cff_dict_parse_number_scaled(data, pos, b0) {
         None => break
         Some((v, scaling, p)) => {
-          stack.push({ value: v, scaling })
+          stack.push({ value: v, scaling, })
           pos = p
         }
       }
@@ -153,7 +153,7 @@ fn cff_dict_parse(data : BytesView) -> CffDictInfo {
             let yy = CffFixed::from_f64(stack.at(3).value * scale)
             let dx = CffFixed::from_f64(stack.at(4).value * scale)
             let dy = CffFixed::from_f64(stack.at(5).value * scale)
-            info.font_matrix = Some({ xx, yx, xy, yy, dx, dy })
+            info.font_matrix = Some({ xx, yx, xy, yy, dx, dy, })
             info.font_matrix_upem = Some(upem)
           }
         }
@@ -385,12 +385,12 @@ priv struct CffPrivateDictHintInfo {
 
 ///|
 fn CffPrivateDictHintInfo::default() -> CffPrivateDictHintInfo {
-  { hint_params: HintParams::default(), subrs_offset: None, store_index: 0 }
+  { hint_params: HintParams::default(), subrs_offset: None, store_index: 0, }
 }
 
 ///|
 fn cff_dict_stack_to_fixed(values : Array[Double]) -> Array[CffFixed] {
-  let out : Array[CffFixed] = Array::new()
+  let out : Array[CffFixed] = Array()
   for v in values.iter() {
     out.push(CffFixed::from_f64(v))
   }
@@ -457,7 +457,7 @@ fn cff_private_dict_hint_info(
   blend_state : Type2BlendState?,
 ) -> CffPrivateDictHintInfo {
   let info = CffPrivateDictHintInfo::default()
-  let stack : Array[Double] = Array::new()
+  let stack : Array[Double] = Array()
   let mut pos = 0
   while pos < private_dict.length() {
     let b0 = private_dict.at(pos).to_int()
@@ -485,26 +485,24 @@ fn cff_private_dict_hint_info(
     match op {
       6 => {
         cff_dict_stack_apply_delta_prefix_sum(stack)
-        info.hint_params.blues = CffBlues(
-          cff_dict_stack_to_fixed(stack).op_as_view(),
-        )
+        info.hint_params.blues = CffBlues(cff_dict_stack_to_fixed(stack)[:])
       }
       7 => {
         cff_dict_stack_apply_delta_prefix_sum(stack)
         info.hint_params.other_blues = CffBlues(
-          cff_dict_stack_to_fixed(stack).op_as_view(),
+          cff_dict_stack_to_fixed(stack)[:],
         )
       }
       8 => {
         cff_dict_stack_apply_delta_prefix_sum(stack)
         info.hint_params.family_blues = CffBlues(
-          cff_dict_stack_to_fixed(stack).op_as_view(),
+          cff_dict_stack_to_fixed(stack)[:],
         )
       }
       9 => {
         cff_dict_stack_apply_delta_prefix_sum(stack)
         info.hint_params.family_other_blues = CffBlues(
-          cff_dict_stack_to_fixed(stack).op_as_view(),
+          cff_dict_stack_to_fixed(stack)[:],
         )
       }
       // BlueScale/Shift/Fuzz/LanguageGroup (escaped opcodes 12 9.. etc).

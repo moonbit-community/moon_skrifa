@@ -59,7 +59,7 @@ fn TtProgramState::TtProgramState(
     glyph,
     current,
     decoder: TtDecoder(code),
-    call_stack: Array::new(),
+    call_stack: Array(),
     max_call_depth,
   }
 }
@@ -95,9 +95,9 @@ fn TtProgramState::push_frame(
     return Err(CallStackOverflow)
   }
   // Save the caller decoder so we can resume there.
-  self.call_stack.push({ decoder: self.decoder, return_pc, kind: ReturnOnly })
+  self.call_stack.push({ decoder: self.decoder, return_pc, kind: ReturnOnly, })
   // Switch current decoder to callee.
-  self.decoder = { code: callee, pc: start_pc }
+  self.decoder = { code: callee, pc: start_pc, }
   Ok(())
 }
 
@@ -117,7 +117,7 @@ fn TtProgramState::push_loopcall_frame(
     return_pc,
     kind: LoopCall(callee, remaining),
   })
-  self.decoder = { code: callee, pc: start_pc }
+  self.decoder = { code: callee, pc: start_pc, }
   Ok(())
 }
 
@@ -142,7 +142,7 @@ fn TtProgramState::pop_frame(self : TtProgramState) -> Result[Unit, HintError] {
           return_pc: frame.return_pc,
           kind: LoopCall(code, remaining - 1),
         })
-        self.decoder = { code, pc: 0 }
+        self.decoder = { code, pc: 0, }
         Ok(())
       } else {
         self.decoder = frame.decoder

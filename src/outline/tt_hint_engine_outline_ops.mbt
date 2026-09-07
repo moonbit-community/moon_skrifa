@@ -331,7 +331,7 @@ fn TtEngine::op_mdap(self : TtEngine, opcode : Int) -> Result[Unit, HintError] {
         Err(e) => return Err(e)
         Ok(v) => v
       },
-      { x: 0, y: 0 },
+      { x: 0, y: 0, },
     )
     self.graphics.round(cur_dist) - cur_dist
   } else {
@@ -382,7 +382,7 @@ fn TtEngine::op_miap(self : TtEngine, opcode : Int) -> Result[Unit, HintError] {
       Err(e) => return Err(e)
       Ok(v) => v
     },
-    { x: 0, y: 0 },
+    { x: 0, y: 0, },
   )
   if (opcode & 1) != 0 {
     let delta = tt_abs_i(distance - original_distance)
@@ -675,7 +675,7 @@ fn TtEngine::op_isect(self : TtEngine) -> Result[Unit, HintError] {
   } else {
     ((pa0.x + pa1.x + pb0.x + pb1.x) / 4, (pa0.y + pa1.y + pb0.y + pb1.y) / 4)
   }
-  match z2.set_point(point_ix, { x: new_x, y: new_y }) {
+  match z2.set_point(point_ix, { x: new_x, y: new_y, }) {
     Err(e) => return Err(e)
     Ok(_) => ()
   }

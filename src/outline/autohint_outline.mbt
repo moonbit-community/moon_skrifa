@@ -109,7 +109,7 @@ priv struct AutoHintPointFlags {
 
 ///|
 fn AutoHintPointFlags::default() -> AutoHintPointFlags {
-  { bits: 0 }
+  { bits: 0, }
 }
 
 ///|
@@ -132,7 +132,7 @@ fn AutoHintPointMarker::bit(self : AutoHintPointMarker) -> Int {
 
 ///|
 fn AutoHintPointFlags::with_on_curve(on_curve : Bool) -> AutoHintPointFlags {
-  { bits: if on_curve { 1 } else { 0 } }
+  { bits: if on_curve { 1 } else { 0 }, }
 }
 
 ///|
@@ -268,8 +268,8 @@ fn autohint_round_font_units(v : Double) -> Int {
 
 ///|
 fn AutoHintOutline::from_path(path : Array[PathElement]) -> AutoHintOutline {
-  let points : Array[AutoHintPoint] = Array::new()
-  let contours : Array[AutoHintContour] = Array::new()
+  let points : Array[AutoHintPoint] = Array()
+  let contours : Array[AutoHintContour] = Array()
   let mut in_contour = false
   let mut contour_start = 0
   for e in path.iter() {
@@ -383,7 +383,7 @@ fn AutoHintOutline::from_path(path : Array[PathElement]) -> AutoHintOutline {
     }
   }
   if in_contour && points.length() > contour_start {
-    contours.push({ first_ix: contour_start, last_ix: points.length() - 1 })
+    contours.push({ first_ix: contour_start, last_ix: points.length() - 1, })
   }
   let outline = AutoHintOutline::{
     units_per_em: 0,
@@ -546,7 +546,7 @@ priv struct AutoHintOutlineData {
 
 ///|
 fn AutoHintOutlineData::AutoHintOutlineData() -> AutoHintOutlineData {
-  { points: Array::new(), contours: Array::new() }
+  { points: Array(), contours: Array(), }
 }
 
 ///|
@@ -559,7 +559,10 @@ fn autohint_outline_data_append(
     dst.points.push(p)
   }
   for c in src.contours.iter() {
-    dst.contours.push({ first_ix: c.first_ix + base, last_ix: c.last_ix + base })
+    dst.contours.push({
+      first_ix: c.first_ix + base,
+      last_ix: c.last_ix + base,
+    })
   }
 }
 
@@ -606,7 +609,7 @@ fn autohint_outline_decode_simple_glyf(
 ) -> Result[AutoHintOutlineData, DrawError] {
   let data = AutoHintOutlineData()
   let mut off = 10
-  let end_pts : Array[Int] = Array::new()
+  let end_pts : Array[Int] = Array()
   for _ in 0..<number_of_contours {
     let v = match autohint_outline_read_u16_be(glyph, off) {
       None => return Err(Read)
@@ -627,7 +630,7 @@ fn autohint_outline_decode_simple_glyf(
     return Ok(data)
   }
   // Flags stream.
-  let flags : Array[Int] = Array::new()
+  let flags : Array[Int] = Array()
   while flags.length() < num_points {
     if off >= glyph.length() {
       return Err(Read)
@@ -647,7 +650,7 @@ fn autohint_outline_decode_simple_glyf(
     }
   }
   // Decode coordinates.
-  let dxs : Array[Int] = Array::new()
+  let dxs : Array[Int] = Array()
   for i in 0..<num_points {
     let f = flags.at(i)
     let short = (f & 0x02) != 0
@@ -670,7 +673,7 @@ fn autohint_outline_decode_simple_glyf(
       dxs.push(d)
     }
   }
-  let dys : Array[Int] = Array::new()
+  let dys : Array[Int] = Array()
   for i in 0..<num_points {
     let f = flags.at(i)
     let short = (f & 0x04) != 0
@@ -715,7 +718,7 @@ fn autohint_outline_decode_simple_glyf(
     if end < contour_start || end >= data.points.length() {
       return Err(Read)
     }
-    data.contours.push({ first_ix: contour_start, last_ix: end })
+    data.contours.push({ first_ix: contour_start, last_ix: end, })
     contour_start = end + 1
   }
   Ok(data)

@@ -85,14 +85,14 @@ pub struct SvgPen {
 
 ///|
 pub fn SvgPen::SvgPen() -> SvgPen {
-  { s: "", precision: None }
+  { s: "", precision: None, }
 }
 
 ///|
 /// Creates a new SVG pen that formats floating point values with the given
 /// precision (the number of digits printed after the decimal point).
 pub fn SvgPen::with_precision(precision : Int) -> SvgPen {
-  { s: "", precision: Some(precision) }
+  { s: "", precision: Some(precision), }
 }
 
 ///|
@@ -232,7 +232,7 @@ pub struct NullPen {
 
 ///|
 pub fn NullPen::NullPen() -> NullPen {
-  { _unit: () }
+  { _unit: (), }
 }
 
 ///|
@@ -259,3 +259,9 @@ pub impl OutlinePen for NullPen with fn curve_to(_, _, _, _, _, _, _) {
 pub impl OutlinePen for NullPen with fn close(_) {
 
 }
+
+///|
+pub extend NullPen with OutlinePen::{close, curve_to, line_to, quad_to, move_to}
+
+///|
+pub extend SvgPen with OutlinePen::{close, curve_to, line_to, quad_to, move_to}

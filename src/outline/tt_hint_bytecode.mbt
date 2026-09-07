@@ -39,7 +39,7 @@ priv struct TtDecoder {
 
 ///|
 fn TtDecoder::TtDecoder(code : BytesView) -> TtDecoder {
-  { code, pc: 0 }
+  { code, pc: 0, }
 }
 
 ///|
@@ -54,7 +54,7 @@ fn TtDecoder::decode(self : TtDecoder) -> Result[TtInstruction?, HintError] {
   let start = self.pc
   let op = self.code.at(self.pc).to_int()
   self.pc = self.pc + 1
-  let operands : Array[Int] = Array::new()
+  let operands : Array[Int] = Array()
   // PUSHB[1..8] 0xB0..0xB7
   if op >= 0xB0 && op <= 0xB7 {
     let n = op - 0xB0 + 1
@@ -65,7 +65,7 @@ fn TtDecoder::decode(self : TtDecoder) -> Result[TtInstruction?, HintError] {
       operands.push(self.code.at(self.pc).to_int())
       self.pc = self.pc + 1
     }
-    return Ok(Some({ pc: start, opcode: op, inline_operands: operands }))
+    return Ok(Some({ pc: start, opcode: op, inline_operands: operands, }))
   }
   // PUSHW[1..8] 0xB8..0xBF
   if op >= 0xB8 && op <= 0xBF {
@@ -79,7 +79,7 @@ fn TtDecoder::decode(self : TtDecoder) -> Result[TtInstruction?, HintError] {
       operands.push(tt_read_i16_be(self.code, off).unwrap_or(0))
     }
     self.pc = self.pc + bytes
-    return Ok(Some({ pc: start, opcode: op, inline_operands: operands }))
+    return Ok(Some({ pc: start, opcode: op, inline_operands: operands, }))
   }
   // NPUSHB 0x40
   if op == 0x40 {
@@ -95,7 +95,7 @@ fn TtDecoder::decode(self : TtDecoder) -> Result[TtInstruction?, HintError] {
       operands.push(self.code.at(self.pc).to_int())
       self.pc = self.pc + 1
     }
-    return Ok(Some({ pc: start, opcode: op, inline_operands: operands }))
+    return Ok(Some({ pc: start, opcode: op, inline_operands: operands, }))
   }
   // NPUSHW 0x41
   if op == 0x41 {
@@ -113,7 +113,7 @@ fn TtDecoder::decode(self : TtDecoder) -> Result[TtInstruction?, HintError] {
       operands.push(tt_read_i16_be(self.code, off).unwrap_or(0))
     }
     self.pc = self.pc + bytes
-    return Ok(Some({ pc: start, opcode: op, inline_operands: operands }))
+    return Ok(Some({ pc: start, opcode: op, inline_operands: operands, }))
   }
-  Ok(Some({ pc: start, opcode: op, inline_operands: operands }))
+  Ok(Some({ pc: start, opcode: op, inline_operands: operands, }))
 }

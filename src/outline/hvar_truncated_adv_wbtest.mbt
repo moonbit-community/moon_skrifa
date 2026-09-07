@@ -31,8 +31,8 @@ fn hvar_b64_val(c : Int) -> Int? {
 
 ///|
 fn hvar_b64_decode(s : String) -> Bytes {
-  let out : Array[Byte] = Array::new()
-  let vals : Array[Int] = Array::new()
+  let out : Array[Byte] = Array()
+  let vals : Array[Int] = Array()
   let n = s.length()
   for i in 0..<n {
     let c = s.code_unit_at(i).to_int()
@@ -59,7 +59,7 @@ fn hvar_b64_decode(s : String) -> Bytes {
       vals.clear()
     }
   }
-  Bytes::from_array(out.op_as_view())
+  Bytes::from_array(out[:])
 }
 
 ///|
@@ -122,7 +122,7 @@ test "hvar truncated adv: hinter kind + empty advance" {
   let coords : Array[@moon_skrifa.NormalizedCoord] = Array::from_fixed_array([
     8192,
   ])
-  let loc = @moon_skrifa.LocationRef::LocationRef(coords.op_as_view())
+  let loc = @moon_skrifa.LocationRef::LocationRef(coords[:])
   let size = @moon_skrifa.Size::Size(24.0)
   let hinting = HintingInstance::create(
     outlines0,

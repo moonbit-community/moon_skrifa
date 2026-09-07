@@ -54,7 +54,7 @@ fn TtLoopBudget::TtLoopBudget(
       // 300 + 22 * cvt_len
       300 + 22 * cvt_len
   }
-  { limit, backward_jumps: 0, loop_calls: 0 }
+  { limit, backward_jumps: 0, loop_calls: 0, }
 }
 
 ///|
@@ -930,7 +930,7 @@ fn TtEngine::op_jrof(self : TtEngine, pc : Int) -> Result[Unit, HintError] {
 
 ///|
 fn tt_engine_find_endf(code : BytesView, start : Int) -> Result[Int, HintError] {
-  let dec = TtDecoder::{ code, pc: start }
+  let dec = TtDecoder::{ code, pc: start, }
   while true {
     let ins = match dec.decode() {
       Err(e) => return Err(e)

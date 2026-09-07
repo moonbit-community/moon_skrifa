@@ -27,11 +27,11 @@ fn TtEngine::op_svtca(
   let x = (opcode & 1) << 14
   let y = x ^ 0x4000
   if opcode < 4 {
-    self.graphics.proj_vector = { x, y }
-    self.graphics.dual_proj_vector = { x, y }
+    self.graphics.proj_vector = { x, y, }
+    self.graphics.dual_proj_vector = { x, y, }
   }
   if (opcode & 2) == 0 {
-    self.graphics.freedom_vector = { x, y }
+    self.graphics.freedom_vector = { x, y, }
   }
   self.graphics.update_projection_state()
   Ok(())
@@ -50,7 +50,7 @@ fn tt_line_vector(p1 : TtPoint, p2 : TtPoint, is_parallel : Bool) -> TtVec14 {
     a = -c
   }
   let (nx, ny) = tt_hint_normalize14(a, b)
-  { x: nx, y: ny }
+  { x: nx, y: ny, }
 }
 
 ///|
@@ -99,7 +99,7 @@ fn TtEngine::op_spvfs(self : TtEngine) -> Result[Unit, HintError] {
     self.graphics.proj_vector
   } else {
     let (nx, ny) = tt_hint_normalize14(x, y)
-    { x: nx, y: ny }
+    { x: nx, y: ny, }
   }
   self.graphics.proj_vector = v
   self.graphics.dual_proj_vector = v
@@ -123,7 +123,7 @@ fn TtEngine::op_sfvfs(self : TtEngine) -> Result[Unit, HintError] {
     self.graphics.freedom_vector
   } else {
     let (nx, ny) = tt_hint_normalize14(x, y)
-    { x: nx, y: ny }
+    { x: nx, y: ny, }
   }
   self.graphics.freedom_vector = v
   self.graphics.update_projection_state()

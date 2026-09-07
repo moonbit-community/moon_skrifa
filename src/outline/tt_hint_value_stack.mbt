@@ -25,7 +25,7 @@ priv struct TtValueStack {
 
 ///|
 fn TtValueStack::TtValueStack(buf : Array[Int], check : Bool) -> TtValueStack {
-  { buf, len: 0, check }
+  { buf, len: 0, check, }
 }
 
 ///|
