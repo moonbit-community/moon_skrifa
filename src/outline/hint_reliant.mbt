@@ -83,7 +83,7 @@ fn skip_pdf_random_tag(name : String) -> String {
     }
   }
   // Strip the `ABCDEF+` prefix.
-  let out : Array[Char] = Array()
+  let out : Array[Char] = []
   let mut idx = 0
   for c in name {
     if idx >= 7 {

@@ -57,7 +57,7 @@ fn attr_test_set_i32_be(buf : Array[Byte], offset : Int, v : Int) -> Unit {
 fn attr_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
   let num_tables = tables.length()
   let header_len = 12 + num_tables * 16
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   attr_test_push_u32_be(out, attr_test_u32(0x00010000))
   attr_test_push_u16_be(out, num_tables)
   attr_test_push_u16_be(out, 0)

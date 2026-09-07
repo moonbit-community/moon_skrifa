@@ -151,7 +151,7 @@ pub fn string_id_checked_add(id : StringId, rhs : UInt16) -> StringId? {
 /// This matches `fontations/font-types::NameId::predefined()`: IDs `0..15` and
 /// `16..=25` (note: ID 15 is not assigned).
 pub fn string_id_predefined() -> Array[StringId] {
-  let out : Array[StringId] = Array()
+  let out : Array[StringId] = []
   for i in 0..<15 {
     out.push(i.to_uint16())
   }
@@ -178,7 +178,7 @@ fn string_decode_utf16be(view : BytesView) -> String? {
   if len < 0 || (len & 1) != 0 {
     return None
   }
-  let chars : Array[Char] = Array()
+  let chars : Array[Char] = []
   let mut i = 0
   while i + 1 < len {
     let u = string_read_u16_be(view, i).unwrap_or(-1)
@@ -352,7 +352,7 @@ fn string_mac_roman_code_point(b : Int) -> Int {
 
 ///|
 fn string_decode_bytes_mac_roman(view : BytesView) -> String {
-  let chars : Array[Char] = Array()
+  let chars : Array[Char] = []
   for b in view.iter() {
     let cp = string_mac_roman_code_point(b.to_int())
     chars.push(cp.unsafe_to_char())
@@ -745,7 +745,7 @@ pub fn LocalizedString::language(self : LocalizedString) -> String? {
 
 ///|
 pub fn LocalizedString::chars(self : LocalizedString) -> Array[Char] {
-  let out : Array[Char] = Array()
+  let out : Array[Char] = []
   for ch in self.value {
     out.push(ch)
   }
@@ -819,33 +819,33 @@ pub fn FontRef::localized_strings(
   id : StringId,
 ) -> LocalizedStrings {
   let name = match self.table(TAG_NAME) {
-    None => return { id, strings: Array(), }
+    None => return { id, strings: [], }
     Some(v) => v
   }
   let format = string_read_u16_be(name, 0).unwrap_or(-1)
   let count = string_read_u16_be(name, 2).unwrap_or(-1)
   let string_offset = string_read_u16_be(name, 4).unwrap_or(-1)
   if format < 0 || count < 0 || string_offset < 0 {
-    return { id, strings: Array(), }
+    return { id, strings: [], }
   }
   let records_base = 6
   let records_end = records_base + count * 12
   if records_end < records_base || records_end > name.length() {
-    return { id, strings: Array(), }
+    return { id, strings: [], }
   }
-  let lang_tags : Array[(Int, Int)] = Array()
+  let lang_tags : Array[(Int, Int)] = []
   if format == 1 {
     if records_end + 2 > name.length() {
-      return { id, strings: Array(), }
+      return { id, strings: [], }
     }
     let tag_count = string_read_u16_be(name, records_end).unwrap_or(-1)
     if tag_count < 0 {
-      return { id, strings: Array(), }
+      return { id, strings: [], }
     }
     let tags_base = records_end + 2
     let tags_end = tags_base + tag_count * 4
     if tags_end < tags_base || tags_end > name.length() {
-      return { id, strings: Array(), }
+      return { id, strings: [], }
     }
     for i in 0..<tag_count {
       let pos = tags_base + i * 4
@@ -857,12 +857,12 @@ pub fn FontRef::localized_strings(
       lang_tags.push((len, off))
     }
   } else if format != 0 {
-    return { id, strings: Array(), }
+    return { id, strings: [], }
   }
   if string_offset > name.length() {
-    return { id, strings: Array(), }
+    return { id, strings: [], }
   }
-  let strings : Array[LocalizedString] = Array()
+  let strings : Array[LocalizedString] = []
   for i in 0..<count {
     let pos = records_base + i * 12
     let platform_id = string_read_u16_be(name, pos).unwrap_or(-1)

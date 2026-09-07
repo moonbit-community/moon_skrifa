@@ -354,7 +354,7 @@ fn type2_ivs_item_region_indices(
   if need < region_indexes_off || need > ctx.store.length() {
     return None
   }
-  let out : Array[Int] = Array()
+  let out : Array[Int] = []
   for i in 0..<region_index_count {
     out.push(
       type2_read_u16_be(ctx.store, region_indexes_off + i * 2).unwrap_or(-1),
@@ -431,8 +431,8 @@ fn Type2BlendState::from_store(
     ctx,
     coords,
     store_index: 0,
-    region_indices: Array(),
-    scalars: Array(),
+    region_indices: [],
+    scalars: [],
   }
   if Type2BlendState::set_store_index(s, store_index) {
     Some(s)
@@ -453,7 +453,7 @@ fn Type2BlendState::set_store_index(
     None => return false
     Some(v) => v
   }
-  let scalars : Array[Double] = Array()
+  let scalars : Array[Double] = []
   for ix in indices.iter() {
     scalars.push(type2_ivs_region_scalar(self.ctx, ix, self.coords))
   }
@@ -507,13 +507,13 @@ fn Type2Eval::Type2Eval(
     local_subrs,
     blend_state,
     cff_hinter: None,
-    out: Array(),
+    out: [],
     is_open: false,
     have_read_width: false,
     stem_count: 0,
     x: 0.0,
     y: 0.0,
-    stack: Array(),
+    stack: [],
     stack_ix: 0,
   }
 }

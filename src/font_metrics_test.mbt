@@ -60,7 +60,7 @@ fn fm_test_write_u32_be(buf : Array[Byte], pos : Int, v : UInt) -> Unit {
 fn fm_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
   let num_tables = tables.length()
   let header_len = 12 + num_tables * 16
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   fm_test_push_u32_be(out, fm_test_u32(0x00010000))
   fm_test_push_u16_be(out, num_tables)
   fm_test_push_u16_be(out, 0)

@@ -255,7 +255,7 @@ fn tt2_decode_simple_glyph_for_hinting(
   }
   let x_min = tt2_read_i16_be(glyph, 2).unwrap_or(0)
   let mut off = 10
-  let contours : Array[Int] = Array()
+  let contours : Array[Int] = []
   if number_of_contours > 0 {
     for _ in 0..<number_of_contours {
       let v = tt2_read_u16_be(glyph, off).unwrap_or(0)
@@ -280,7 +280,7 @@ fn tt2_decode_simple_glyph_for_hinting(
     return None
   }
   // Decode flags.
-  let point_flags : Array[Int] = Array()
+  let point_flags : Array[Int] = []
   while point_flags.length() < num_points {
     if off >= glyph.length() {
       return None
@@ -300,7 +300,7 @@ fn tt2_decode_simple_glyph_for_hinting(
     }
   }
   // Decode x deltas.
-  let dxs : Array[Int] = Array()
+  let dxs : Array[Int] = []
   for i in 0..<num_points {
     let f = point_flags.at(i)
     let short = (f & 0x02) != 0
@@ -321,7 +321,7 @@ fn tt2_decode_simple_glyph_for_hinting(
     }
   }
   // Decode y deltas.
-  let dys : Array[Int] = Array()
+  let dys : Array[Int] = []
   for i in 0..<num_points {
     let f = point_flags.at(i)
     let short = (f & 0x04) != 0
@@ -579,7 +579,7 @@ fn tt2_load_glyph_zone_for_hinting_impl(
       points.set(i, sp)
       flags.set(i, 0)
     }
-    return Ok({ unscaled, original, points, flags, contours: Array(), })
+    return Ok({ unscaled, original, points, flags, contours: [], })
   }
   if glyph.length() < 10 {
     return Err(Read)
@@ -608,8 +608,8 @@ fn tt2_load_glyph_zone_for_hinting_impl(
         None => return Err(Read)
         Some(v) => v
       }
-      let xs : Array[Double] = Array()
-      let ys : Array[Double] = Array()
+      let xs : Array[Double] = []
+      let ys : Array[Double] = []
       for i in 0..<point_count {
         let p = zone0.unscaled.at(i)
         xs.push(p.x.to_double())
@@ -677,7 +677,7 @@ fn tt2_load_glyph_zone_for_hinting_impl(
     // Composite glyph: load components, apply transforms/offsets, then run
     // composite instructions (if present) with is_composite=true.
     let mut off = 10
-    let comps : Array[Tt2Component] = Array()
+    let comps : Array[Tt2Component] = []
     let mut flags_last = 0
     while true {
       flags_last = match tt2_read_u16_be(glyph, off) {
@@ -869,9 +869,9 @@ fn tt2_load_glyph_zone_for_hinting_impl(
       x: tt2_scale_funits_to_26_6(ph3_x_f, scale_bits),
       y: tt2_scale_funits_to_26_6(ph3_y_f, scale_bits),
     }
-    let points_out : Array[TtPoint] = Array()
-    let flags_out : Array[Int] = Array()
-    let contours_out : Array[Int] = Array()
+    let points_out : Array[TtPoint] = []
+    let flags_out : Array[Int] = []
+    let contours_out : Array[Int] = []
     let mut base_point = 0
     for i in 0..<comps.length() {
       let comp = comps.at(i)
@@ -907,8 +907,8 @@ fn tt2_load_glyph_zone_for_hinting_impl(
         ph3 = cph3
       }
       // Extract component outline points and flags.
-      let comp_points : Array[TtPoint] = Array()
-      let comp_flags : Array[Int] = Array()
+      let comp_points : Array[TtPoint] = []
+      let comp_flags : Array[Int] = []
       for j in 0..<outline_n {
         comp_points.push(zone_c.points.at(j))
         // Clear touched bits before composite processing.

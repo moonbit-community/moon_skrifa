@@ -79,7 +79,7 @@ fn[T] SmallVec::as_view(self : SmallVec[T]) -> ArrayView[T] {
 fn[T] SmallVec::to_array(self : SmallVec[T]) -> Array[T] {
   match self.storage {
     Inline(buf, len) => {
-      let out = Array(capacity=len)
+      let out = Array::new(capacity=len)
       for i in 0..<len {
         out.push(buf.at(i))
       }
@@ -110,7 +110,7 @@ fn[T] SmallVec::try_reserve(
     Inline(buf, len) => {
       let need = len + additional
       if need > self.inline_cap {
-        let vec = Array(capacity=need)
+        let vec = Array::new(capacity=need)
         for i in 0..<len {
           vec.push(buf.at(i))
         }
@@ -131,7 +131,7 @@ fn[T] SmallVec::push(self : SmallVec[T], value : T) -> SmallVec[T] {
   match self.storage {
     Inline(buf, len) =>
       if len + 1 > self.inline_cap {
-        let vec = Array(capacity=len + 1)
+        let vec = Array::new(capacity=len + 1)
         for i in 0..<len {
           vec.push(buf.at(i))
         }

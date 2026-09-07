@@ -44,7 +44,7 @@ const TAG_FVAR : UInt = 0x66766172 // "fvar"
 
 ///|
 fn variation_test_build_fvar_table() -> Bytes {
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   // fvar header (16 bytes)
   // major=1 minor=0
   variation_test_push_u16_be(out, 1)
@@ -79,7 +79,7 @@ fn variation_test_build_fvar_table() -> Bytes {
 fn variation_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
   let num_tables = tables.length()
   let header_len = 12 + num_tables * 16
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   variation_test_push_u32_be(out, variation_test_u32(0x00010000))
   variation_test_push_u16_be(out, num_tables)
   variation_test_push_u16_be(out, 0)

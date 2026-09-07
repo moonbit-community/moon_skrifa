@@ -68,9 +68,9 @@ fn cvar_deltas_fixed16_16(
   if tuple_count <= 0 || data_off < 8 || data_off > cvar.length() {
     return None
   }
-  let sizes : Array[Int] = Array()
-  let tuple_indexes : Array[Int] = Array()
-  let scalars : Array[Double] = Array()
+  let sizes : Array[Int] = []
+  let tuple_indexes : Array[Int] = []
+  let scalars : Array[Double] = []
   let mut header_off = 8
   for _ in 0..<tuple_count {
     let s = cvar_read_u16_be(cvar, header_off).unwrap_or(-1)
@@ -240,8 +240,8 @@ fn cvar_test_b64_val(c : Int) -> Int? {
 
 ///|
 fn cvar_test_b64_decode(s : String) -> Bytes {
-  let out : Array[Byte] = Array()
-  let vals : Array[Int] = Array()
+  let out : Array[Byte] = []
+  let vals : Array[Int] = []
   let n = s.length()
   for i in 0..<n {
     let c = s.code_unit_at(i).to_int()

@@ -269,9 +269,9 @@ pub fn Charmap::mappings(self : Charmap) -> Array[(UInt, GlyphId)] {
       } else if sub.format == 12 {
         cmap_iter_format12(cmap, sub.off, self.cmap12_limits)
       } else {
-        Array()
+        []
       }
-    _ => Array()
+    _ => []
   }
 }
 
@@ -293,7 +293,7 @@ pub fn Charmap::variant_mappings(
 ) -> Array[(UInt, UInt, MapVariant)] {
   match (self.cmap, self.variant_off) {
     (Some(cmap), Some(off)) => cmap_iter_variants(cmap, off)
-    _ => Array()
+    _ => []
   }
 }
 
@@ -622,7 +622,7 @@ fn cmap_iter_format12(
   base : Int,
   limits : CmapIterLimits,
 ) -> Array[(UInt, GlyphId)] {
-  let out : Array[(UInt, GlyphId)] = Array()
+  let out : Array[(UInt, GlyphId)] = []
   let length = cmap_read_u32_be_int(cmap, base + 4).unwrap_or(-1)
   if length < 0 || base + length > cmap.length() {
     return out
@@ -660,7 +660,7 @@ fn cmap_iter_format12(
 
 ///|
 fn cmap_iter_format4(cmap : BytesView, base : Int) -> Array[(UInt, GlyphId)] {
-  let out : Array[(UInt, GlyphId)] = Array()
+  let out : Array[(UInt, GlyphId)] = []
   // BMP only; enumerate all codepoints and reuse `cmap_map_format4`, keeping
   // iterator semantics aligned with point lookups.
   for cp in 0..<0x10000 {
@@ -773,7 +773,7 @@ fn cmap_iter_variants(
   cmap : BytesView,
   base : Int,
 ) -> Array[(UInt, UInt, MapVariant)] {
-  let out : Array[(UInt, UInt, MapVariant)] = Array()
+  let out : Array[(UInt, UInt, MapVariant)] = []
   if cmap_read_u16_be(cmap, base).unwrap_or(-1) != 14 {
     return out
   }

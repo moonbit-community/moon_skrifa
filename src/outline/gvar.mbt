@@ -258,7 +258,7 @@ fn gvar_points(
   if count == 0 {
     return Some((None, off))
   }
-  let points : Array[Int] = Array()
+  let points : Array[Int] = []
   let mut last = 0
   while points.length() < count {
     let ctrl = gvar_read_u8(gvar, off).unwrap_or(-1)
@@ -300,7 +300,7 @@ fn gvar_deltas(
 ) -> (Array[Int], Int)? {
   let mut off = offset
   let mut idx = 0
-  let out : Array[Int] = Array()
+  let out : Array[Int] = []
   while idx < count {
     let ctrl = gvar_read_u8(gvar, off).unwrap_or(-1)
     if ctrl < 0 {
@@ -789,10 +789,10 @@ fn glyf_apply_gvar_simple(
   if tuple_count <= 0 || data_rel < 0 {
     return
   }
-  let sizes : Array[Int] = Array()
-  let tuple_indexes : Array[Int] = Array()
+  let sizes : Array[Int] = []
+  let tuple_indexes : Array[Int] = []
   let axis_count = ctx.axis_count
-  let scalars : Array[Double] = Array()
+  let scalars : Array[Double] = []
 
   // TupleVariationHeader is variable-length: the fixed fields are followed
   // by optional embedded peak and intermediate tuples.
@@ -1036,10 +1036,10 @@ fn glyf_gvar_composite_deltas(
   if tuple_count <= 0 || data_rel < 0 {
     return None
   }
-  let sizes : Array[Int] = Array()
-  let tuple_indexes : Array[Int] = Array()
+  let sizes : Array[Int] = []
+  let tuple_indexes : Array[Int] = []
   let axis_count = ctx.axis_count
-  let scalars : Array[Double] = Array()
+  let scalars : Array[Double] = []
   let mut header_off = start + 4
   for _ in 0..<tuple_count {
     let s = gvar_read_u16_be(ctx.gvar, header_off).unwrap_or(-1)
@@ -1271,10 +1271,10 @@ fn glyf_gvar_simple_hint_deltas(
   if tuple_count <= 0 || data_rel < 0 {
     return Some(gvar_zero_deltas(total_points))
   }
-  let sizes : Array[Int] = Array()
-  let tuple_indexes : Array[Int] = Array()
+  let sizes : Array[Int] = []
+  let tuple_indexes : Array[Int] = []
   let axis_count = ctx.axis_count
-  let scalars : Array[Int] = Array()
+  let scalars : Array[Int] = []
   let mut header_off = start + 4
   for _ in 0..<tuple_count {
     let s = gvar_read_u16_be(ctx.gvar, header_off).unwrap_or(-1)
@@ -1550,10 +1550,10 @@ fn glyf_gvar_composite_hint_deltas(
   if tuple_count <= 0 || data_rel < 0 {
     return Some(gvar_zero_deltas(total_points))
   }
-  let sizes : Array[Int] = Array()
-  let tuple_indexes : Array[Int] = Array()
+  let sizes : Array[Int] = []
+  let tuple_indexes : Array[Int] = []
   let axis_count = ctx.axis_count
-  let scalars : Array[Int] = Array()
+  let scalars : Array[Int] = []
   let mut header_off = start + 4
   for _ in 0..<tuple_count {
     let s = gvar_read_u16_be(ctx.gvar, header_off).unwrap_or(-1)

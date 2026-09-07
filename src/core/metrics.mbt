@@ -1253,7 +1253,7 @@ fn metrics_gvar_points(
   if count == 0 {
     return Some((None, off))
   }
-  let points : Array[Int] = Array()
+  let points : Array[Int] = []
   let mut last = 0
   while points.length() < count {
     let ctrl = metrics_read_u8(gvar, off).unwrap_or(-1)
@@ -1456,8 +1456,8 @@ fn GlyphMetrics::gvar_phantom_deltas(
   if headers_end < headers_off || headers_end > end {
     return (0, 0)
   }
-  let sizes : Array[Int] = Array()
-  let tuple_indexes : Array[Int] = Array()
+  let sizes : Array[Int] = []
+  let tuple_indexes : Array[Int] = []
   for i in 0..<tuple_count {
     let h = headers_off + i * 4
     let s = metrics_read_u16_be(gvar, h).unwrap_or(-1)
@@ -1474,7 +1474,7 @@ fn GlyphMetrics::gvar_phantom_deltas(
   if axis_count <= 0 {
     return (0, 0)
   }
-  let scalars : Array[Double] = Array()
+  let scalars : Array[Double] = []
   for i in 0..<tuple_count {
     let ti = tuple_indexes.at(i)
     // Flags used by gvar tupleIndex.

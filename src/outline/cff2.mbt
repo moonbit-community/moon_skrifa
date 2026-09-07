@@ -162,7 +162,7 @@ fn cff2_outline_path_hinted(
     Some(v) => v
   }
   if charstring.length() == 0 {
-    return Some(Array())
+    return Some([])
   }
   let upem = outline_units_per_em(font).to_int()
   let hint_scale = match cff_hint_scale_for_hinting(size, upem) {
@@ -308,7 +308,7 @@ fn cff2_outline_path(
     Some(v) => v
   }
   if charstring.length() == 0 {
-    return Some(Array())
+    return Some([])
   }
   type2_path(charstring, Some(global_ix), None, blend_state)
 }

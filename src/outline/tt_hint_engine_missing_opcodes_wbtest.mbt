@@ -19,11 +19,11 @@ fn tt_bytes(xs : FixedArray[Byte]) -> Bytes {
 
 ///|
 test "tt_hint: missing opcodes (getvariation/getdata/odd/even/mps/debug)" {
-  let empty = Bytes::from_array(Array()[:])
+  let empty = Bytes::from_array([][:])
   let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
-  let cvt : Array[Int] = Array()
-  let storage : Array[Int] = Array()
-  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array()
+  let cvt : Array[Int] = []
+  let storage : Array[Int] = []
+  let coords0 : Array[@moon_skrifa.NormalizedCoord] = []
 
   // Define IDEF for opcode 0x91 (GETVARIATION) that pushes 123.
   let font = tt_bytes([
@@ -64,8 +64,8 @@ test "tt_hint: missing opcodes (getvariation/getdata/odd/even/mps/debug)" {
     prep1[:],
     empty[:],
     retained,
-    Array(),
-    Array(),
+    [],
+    [],
     None,
     2,
     coords1[:],
@@ -85,8 +85,8 @@ test "tt_hint: missing opcodes (getvariation/getdata/odd/even/mps/debug)" {
     prep2[:],
     empty[:],
     retained,
-    Array(),
-    Array(),
+    [],
+    [],
     None,
     1,
     coords1[:],
@@ -112,8 +112,8 @@ test "tt_hint: missing opcodes (getvariation/getdata/odd/even/mps/debug)" {
     prep3[:],
     empty[:],
     retained,
-    Array(),
-    Array(),
+    [],
+    [],
     None,
     0,
     coords0[:],
@@ -133,8 +133,8 @@ test "tt_hint: missing opcodes (getvariation/getdata/odd/even/mps/debug)" {
     prep4[:],
     empty[:],
     retained,
-    Array(),
-    Array(),
+    [],
+    [],
     None,
     0,
     coords0[:],
@@ -153,8 +153,8 @@ test "tt_hint: missing opcodes (getvariation/getdata/odd/even/mps/debug)" {
     prep5[:],
     empty[:],
     retained,
-    Array(),
-    Array(),
+    [],
+    [],
     None,
     0,
     coords0[:],

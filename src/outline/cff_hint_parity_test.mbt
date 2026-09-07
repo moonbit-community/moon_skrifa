@@ -37,8 +37,8 @@ fn cff_hint_b64_val(c : Int) -> Int? {
 
 ///|
 fn cff_hint_b64_decode(s : String) -> Bytes {
-  let out : Array[Byte] = Array()
-  let vals : Array[Int] = Array()
+  let out : Array[Byte] = []
+  let vals : Array[Int] = []
   let n = s.length()
   for i in 0..<n {
     let c = s.code_unit_at(i).to_int()

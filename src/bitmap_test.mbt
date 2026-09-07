@@ -38,7 +38,7 @@ fn bitmap_test_u32(x : Int) -> UInt {
 fn bitmap_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
   let num_tables = tables.length()
   let header_len = 12 + num_tables * 16
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   bitmap_test_push_u32_be(out, bitmap_test_u32(0x00010000))
   bitmap_test_push_u16_be(out, num_tables)
   bitmap_test_push_u16_be(out, 0)
@@ -82,7 +82,7 @@ const TAG_EBDT : UInt = 0x45424454 // "EBDT"
 
 ///|
 fn bitmap_test_build_sbix(ppem : Int) -> Bytes {
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   bitmap_test_push_u16_be(out, 1) // version
   bitmap_test_push_u16_be(out, 0) // flags
   bitmap_test_push_u32_be(out, bitmap_test_u32(1)) // numStrikes
@@ -94,7 +94,7 @@ fn bitmap_test_build_sbix(ppem : Int) -> Bytes {
 
 ///|
 fn bitmap_test_build_maxp(num_glyphs : Int) -> Bytes {
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   // version 1.0
   bitmap_test_push_u32_be(out, bitmap_test_u32(0x00010000))
   bitmap_test_push_u16_be(out, num_glyphs)
@@ -114,7 +114,7 @@ fn bitmap_test_build_sbix_with_glyph(
   let strike_off = 12
   let glyph_data_off = 12
   let glyph_end_off = glyph_data_off + 8 + data_len
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   bitmap_test_push_u16_be(out, 1) // version
   bitmap_test_push_u16_be(out, 0) // flags
   bitmap_test_push_u32_be(out, bitmap_test_u32(1)) // numStrikes
@@ -148,7 +148,7 @@ fn bitmap_test_build_sbix_multi_with_glyph(
   let strike_len = 20 + data_len
   let strike_offsets_base = 8
   let strikes_base = strike_offsets_base + num_strikes * 4
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   bitmap_test_push_u16_be(out, 1) // version
   bitmap_test_push_u16_be(out, 0) // flags
   bitmap_test_push_u32_be(out, bitmap_test_u32(num_strikes)) // numStrikes
@@ -183,7 +183,7 @@ fn bitmap_test_build_cblc_index1(
   bit_depth : Int,
   major : Int,
 ) -> Bytes {
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   // major/minor
   bitmap_test_push_u16_be(out, major)
   bitmap_test_push_u16_be(out, 0)
@@ -236,7 +236,7 @@ fn bitmap_test_build_cbdt_format17(
   png : Bytes,
   major : Int,
 ) -> Bytes {
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   // major/minor
   bitmap_test_push_u16_be(out, major)
   bitmap_test_push_u16_be(out, 0)
@@ -256,7 +256,7 @@ fn bitmap_test_build_cbdt_format17(
 
 ///|
 fn bitmap_test_build_loc(ppem_x : Int, ppem_y : Int) -> Bytes {
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   bitmap_test_push_u16_be(out, 3) // major
   bitmap_test_push_u16_be(out, 0) // minor
   bitmap_test_push_u32_be(out, bitmap_test_u32(1)) // numSizes
@@ -287,7 +287,7 @@ test "bitmap strikes sbix" {
 ///|
 test "bitmap strikes cblc/cbdt" {
   let cblc = bitmap_test_build_loc(10, 12)
-  let cbdt = Bytes::from_array(Array()[:])
+  let cbdt = Bytes::from_array([][:])
   let sfnt = bitmap_test_build_sfnt(
     Array::from_fixed_array([(TAG_CBLC, cblc), (TAG_CBDT, cbdt)]),
   )
@@ -302,7 +302,7 @@ test "bitmap strikes cblc/cbdt" {
 ///|
 test "bitmap strikes eblc/ebdt" {
   let eblc = bitmap_test_build_loc(11, 13)
-  let ebdt = Bytes::from_array(Array()[:])
+  let ebdt = Bytes::from_array([][:])
   let sfnt = bitmap_test_build_sfnt(
     Array::from_fixed_array([(TAG_EBLC, eblc), (TAG_EBDT, ebdt)]),
   )
@@ -462,7 +462,7 @@ test "bitmap ebdt/eblc glyph (format 1 + indexSubTable1)" {
   // EBDT (major=2) with one glyph:
   // small metrics: height=1, width=8, bearing_x=-1, bearing_y=2, advance=0
   // data: 1 byte (byte-aligned)
-  let ebdt_out : Array[Byte] = Array()
+  let ebdt_out : Array[Byte] = []
   bitmap_test_push_u16_be(ebdt_out, 2)
   bitmap_test_push_u16_be(ebdt_out, 0)
   ebdt_out.push(1 |> Int::to_byte)

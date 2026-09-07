@@ -14,9 +14,9 @@
 
 ///|
 fn tt_make_engine_for_cvt_storage() -> TtEngine {
-  let empty = Bytes::from_array(Array()[:])
+  let empty = Bytes::from_array([][:])
   let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
-  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array()
+  let coords0 : Array[@moon_skrifa.NormalizedCoord] = []
   TtEngine(
     empty[:],
     empty[:],

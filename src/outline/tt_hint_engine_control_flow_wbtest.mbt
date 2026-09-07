@@ -19,16 +19,16 @@ fn tt_bytes_for_control_flow(xs : FixedArray[Byte]) -> Bytes {
 
 ///|
 fn tt_make_engine_for_control_flow() -> TtEngine {
-  let empty = Bytes::from_array(Array()[:])
+  let empty = Bytes::from_array([][:])
   let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
-  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array()
+  let coords0 : Array[@moon_skrifa.NormalizedCoord] = []
   TtEngine(
     empty[:],
     empty[:],
     empty[:],
     retained,
-    Array(),
-    Array(),
+    [],
+    [],
     None,
     0,
     coords0[:],

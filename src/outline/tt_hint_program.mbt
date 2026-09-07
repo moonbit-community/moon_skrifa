@@ -59,7 +59,7 @@ fn TtProgramState::TtProgramState(
     glyph,
     current,
     decoder: TtDecoder(code),
-    call_stack: Array(),
+    call_stack: [],
     max_call_depth,
   }
 }

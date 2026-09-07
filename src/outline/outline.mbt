@@ -439,7 +439,7 @@ pub fn OutlineGlyphCollection::get(
 pub fn OutlineGlyphCollection::iter(
   self : OutlineGlyphCollection,
 ) -> Array[(@moon_skrifa.GlyphId, OutlineGlyph)] {
-  let out : Array[(@moon_skrifa.GlyphId, OutlineGlyph)] = Array()
+  let out : Array[(@moon_skrifa.GlyphId, OutlineGlyph)] = []
   let n = self.glyph_count()
   for i in 0..<n {
     let gid : @moon_skrifa.GlyphId = GlyphId(i.to_uint16())
@@ -613,7 +613,7 @@ fn outline_scale_path(
   if scale == 1.0 {
     return path
   }
-  let out : Array[PathElement] = Array()
+  let out : Array[PathElement] = []
   for e in path.iter() {
     match e {
       MoveTo(x, y) =>

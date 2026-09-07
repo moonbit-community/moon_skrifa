@@ -323,7 +323,7 @@ pub fn HintingInstance::create(
 ) -> Result[HintingInstance, DrawError] {
   let h = HintingInstance::{
     size: @moon_skrifa.Size::unscaled(),
-    coords: Array(),
+    coords: [],
     target: options.target,
     kind: None_,
   }
@@ -570,15 +570,15 @@ fn tt_zone_emit_contour_freetype(
 ///|
 fn tt_zone_to_path_freetype(zone : TtZone) -> Array[PathElement] {
   if zone.contours.length() == 0 {
-    return Array()
+    return []
   }
   let last_end = zone.contours.at(zone.contours.length() - 1)
   let num_points = last_end + 1
   if num_points <= 0 || zone.points.length() < num_points + 4 {
-    return Array()
+    return []
   }
   let x_shift = zone.points.at(num_points).x
-  let out : Array[PathElement] = Array()
+  let out : Array[PathElement] = []
   let mut start = 0
   for end_ix in zone.contours.iter() {
     if end_ix >= start {
@@ -760,7 +760,7 @@ fn AutoHintInstance::hinted_path(
   }
   let outline = match glyph.kind {
     Glyf => {
-      let o = AutoHintOutline::from_path(Array())
+      let o = AutoHintOutline::from_path([])
       match o.fill_glyf(glyph.font, glyph.glyph_id) {
         Ok(_) => o
         Err(_) => AutoHintOutline::from_path(unscaled_path)
@@ -990,9 +990,9 @@ fn HintingInstance::hinted_glyf_path(
         lsb: Some(lsb),
         advance_width: Some(advance),
       }
-      return Ok((metrics, Array()))
+      return Ok((metrics, []))
     } else {
-      return Ok((AdjustedMetrics::default(), Array()))
+      return Ok((AdjustedMetrics::default(), []))
     }
   }
   let last_end = zone.contours.at(zone.contours.length() - 1)

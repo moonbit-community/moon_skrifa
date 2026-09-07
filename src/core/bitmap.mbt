@@ -287,7 +287,7 @@ pub fn BitmapStrikes::is_empty(self : BitmapStrikes) -> Bool {
 
 ///|
 pub fn BitmapStrikes::iter(self : BitmapStrikes) -> Array[BitmapStrike] {
-  let out : Array[BitmapStrike] = Array(capacity=self.len())
+  let out : Array[BitmapStrike] = Array::new(capacity=self.len())
   for i in 0..<self.len() {
     if self.get(i) is Some(strike) {
       out.push(strike)

@@ -53,7 +53,7 @@ pub fn GlyphName::is_synthesized(self : GlyphName) -> Bool {
 ///|
 fn glyph_name_truncate(s : String) -> String {
   // Glyph names are expected to be ASCII; truncate by code units.
-  let out : Array[Char] = Array(capacity=MAX_GLYPH_NAME_LEN)
+  let out : Array[Char] = Array::new(capacity=MAX_GLYPH_NAME_LEN)
   let mut n = 0
   for c in s {
     if n >= MAX_GLYPH_NAME_LEN {
@@ -67,7 +67,7 @@ fn glyph_name_truncate(s : String) -> String {
 
 ///|
 fn glyph_name_latin1_string(bytes : BytesView) -> String {
-  let chars : Array[Char] = Array()
+  let chars : Array[Char] = []
   for b in bytes.iter() {
     chars.push(b.to_int().unsafe_to_char())
   }
@@ -265,7 +265,7 @@ priv struct CffDictOffsets {
 fn cff_dict_parse_offsets(data : BytesView) -> CffDictOffsets {
   // Minimal DICT parsing: only integer operands and ops 15 (charset), 17 (charstrings).
   let info = CffDictOffsets::{ charset_offset: None, charstrings_offset: None, }
-  let stack : Array[Int] = Array()
+  let stack : Array[Int] = []
   let mut pos = 0
   while pos < data.length() {
     let b0 = data.at(pos).to_int()

@@ -43,7 +43,7 @@ fn u32(x : Int) -> UInt {
 
 ///|
 fn make_min_sfnt_with_table_offset(table_offset : Int) -> Bytes {
-  let out = Array()
+  let out = []
   // sfnt version: 0x00010000
   push_u32_be(out, u32(0x00010000))
   // numTables=1, searchRange/entrySelector/rangeShift=0
@@ -72,7 +72,7 @@ fn make_min_sfnt() -> Bytes {
 
 ///|
 fn make_min_ttc() -> Bytes {
-  let out = Array()
+  let out = []
   push_u32_be(out, TAG_TTCF)
   push_u32_be(out, u32(0x00010000)) // version
   push_u32_be(out, u32(1)) // numFonts

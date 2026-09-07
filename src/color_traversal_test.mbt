@@ -68,7 +68,7 @@ fn color_trav_test_push_f2dot14(out : Array[Byte], v : Double) -> Unit {
 fn color_trav_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
   let num_tables = tables.length()
   let header_len = 12 + num_tables * 16
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   color_trav_test_push_u32_be(out, 0x00010000)
   color_trav_test_push_u16_be(out, num_tables)
   color_trav_test_push_u16_be(out, 0)
@@ -97,7 +97,7 @@ const COLOR_TRAV_TEST_TAG_COLR : UInt = 0x434F4C52 // "COLR"
 
 ///|
 fn color_trav_test_build_colr_v1_layers() -> Bytes {
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   // COLR header v1 (34 bytes)
   color_trav_test_push_u16_be(out, 1) // version
   color_trav_test_push_u16_be(out, 0) // numBaseGlyphRecords (v0)
@@ -150,7 +150,7 @@ fn color_trav_test_build_colr_v1_layers() -> Bytes {
 
 ///|
 fn color_trav_test_build_colr_v1_transform() -> Bytes {
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   // COLR header v1 (34 bytes)
   color_trav_test_push_u16_be(out, 1)
   color_trav_test_push_u16_be(out, 0)
@@ -195,7 +195,7 @@ fn color_trav_test_build_colr_v1_transform() -> Bytes {
 
 ///|
 fn color_trav_test_build_colr_v1_composite() -> Bytes {
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   color_trav_test_push_u16_be(out, 1)
   color_trav_test_push_u16_be(out, 0)
   color_trav_test_push_u32_be(out, 0)
@@ -236,7 +236,7 @@ fn color_trav_test_build_colr_v1_composite() -> Bytes {
 
 ///|
 fn color_trav_test_build_colr_v1_cycle() -> Bytes {
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   color_trav_test_push_u16_be(out, 1)
   color_trav_test_push_u16_be(out, 0)
   color_trav_test_push_u32_be(out, 0)
@@ -266,7 +266,7 @@ fn color_trav_test_build_colr_v1_cycle() -> Bytes {
 
 ///|
 fn color_trav_test_build_colr_v1_linear_gradient_with_clip() -> Bytes {
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   // COLR header v1 (34 bytes)
   color_trav_test_push_u16_be(out, 1)
   color_trav_test_push_u16_be(out, 0)
@@ -338,7 +338,7 @@ fn color_trav_test_build_colr_v1_linear_gradient_with_clip() -> Bytes {
 
 ///|
 fn color_trav_test_build_colr_v1_var_solid_alpha() -> Bytes {
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   color_trav_test_push_u16_be(out, 1)
   color_trav_test_push_u16_be(out, 0)
   color_trav_test_push_u32_be(out, 0)
@@ -405,7 +405,7 @@ priv struct ColorTravTestPainter {
 
 ///|
 fn ColorTravTestPainter::ColorTravTestPainter() -> ColorTravTestPainter {
-  { ops: Array(), }
+  { ops: [], }
 }
 
 ///|

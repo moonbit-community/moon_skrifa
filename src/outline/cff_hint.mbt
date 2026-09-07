@@ -281,12 +281,12 @@ priv struct CffBlues {
 
 ///|
 fn CffBlues::default() -> CffBlues {
-  { pairs: Array(), }
+  { pairs: [], }
 }
 
 ///|
 fn CffBlues::CffBlues(values : ArrayView[CffFixed]) -> CffBlues {
-  let pairs : Array[(CffFixed, CffFixed)] = Array()
+  let pairs : Array[(CffFixed, CffFixed)] = []
   let n = values.length()
   let mut i = 0
   while i + 1 < n {
@@ -364,7 +364,7 @@ priv struct HintState {
 
 ///|
 fn HintState::default() -> HintState {
-  let zones : Array[BlueZone] = Array()
+  let zones : Array[BlueZone] = []
   for _ in 0..<CFF_HINT_MAX_BLUE_ZONES {
     zones.push(BlueZone::default())
   }
@@ -428,7 +428,7 @@ fn HintState::build_zones(self : HintState, params : HintParams) -> Unit {
     }
     _ => ()
   }
-  let zones : Array[BlueZone] = Array()
+  let zones : Array[BlueZone] = []
   for _ in 0..<CFF_HINT_MAX_BLUE_ZONES {
     zones.push(BlueZone::default())
   }
@@ -776,7 +776,7 @@ priv struct HintMap {
 
 ///|
 fn HintMap::HintMap(scale : CffFixed) -> HintMap {
-  let edges : Array[Hint] = Array()
+  let edges : Array[Hint] = []
   for _ in 0..<CFF_HINT_MAX_HINTS {
     edges.push(Hint::default())
   }
@@ -901,7 +901,7 @@ fn HintMap::insert(
 
 ///|
 fn HintMap::adjust(self : HintMap) -> Unit {
-  let saved : Array[(Int, CffFixed)] = Array()
+  let saved : Array[(Int, CffFixed)] = []
   for _ in 0..<CFF_HINT_MAX_HINTS {
     saved.push((0, CffFixed::zero()))
   }
@@ -1016,7 +1016,7 @@ priv struct HintMask {
 
 ///|
 fn HintMask::default() -> HintMask {
-  let mask : Array[Byte] = Array()
+  let mask : Array[Byte] = []
   for _ in 0..<CFF_HINT_MASK_SIZE {
     mask.push((0).to_byte())
   }
@@ -1025,7 +1025,7 @@ fn HintMask::default() -> HintMask {
 
 ///|
 fn HintMask::all() -> HintMask {
-  let mask : Array[Byte] = Array()
+  let mask : Array[Byte] = []
   for _ in 0..<CFF_HINT_MASK_SIZE {
     mask.push((0xFF).to_byte())
   }
@@ -1239,7 +1239,7 @@ fn CffHintingSink::CffHintingSink(
   out : Array[PathElement],
   matrix : CffMatrix?,
 ) -> CffHintingSink {
-  let stem_hints : Array[StemHint] = Array()
+  let stem_hints : Array[StemHint] = []
   for _ in 0..<CFF_HINT_MAX_HINTS {
     stem_hints.push(StemHint::default())
   }
@@ -1366,7 +1366,7 @@ fn CffHintingSink::hstem(
 
 ///|
 fn HintMask::from_bytes_view(bytes : BytesView) -> HintMask? {
-  let a : Array[Byte] = Array()
+  let a : Array[Byte] = []
   for b in bytes.iter() {
     a.push(b)
   }

@@ -110,9 +110,9 @@ fn AutoHintUnscaledAxisMetrics::default(
 ) -> AutoHintUnscaledAxisMetrics {
   {
     dim,
-    widths: Array(),
+    widths: [],
     width_metrics: AutoHintWidthMetrics::default(),
-    blues: Array(),
+    blues: [],
   }
 }
 
@@ -143,9 +143,9 @@ fn AutoHintScaledAxisMetrics::default(dim : Int) -> AutoHintScaledAxisMetrics {
     dim,
     scale: 0,
     delta: 0,
-    widths: Array(),
+    widths: [],
     width_metrics: AutoHintWidthMetrics::default(),
-    blues: Array(),
+    blues: [],
   }
 }
 
@@ -365,7 +365,7 @@ fn autohint_load_outline_for_metrics(
   gid : @moon_skrifa.GlyphId,
 ) -> AutoHintOutline? {
   let font = outlines.font
-  let outline = AutoHintOutline::from_path(Array())
+  let outline = AutoHintOutline::from_path([])
   match outline.fill_glyf(font, gid) {
     Ok(_) => if outline.is_empty() { None } else { Some(outline) }
     Err(_) => {
@@ -432,7 +432,7 @@ fn autohint_compute_unscaled_widths(
   units_per_em : Int,
   std_chars : String,
 ) -> Array[AutoHintUnscaledAxisMetrics] {
-  let axes : Array[AutoHintUnscaledAxisMetrics] = Array()
+  let axes : Array[AutoHintUnscaledAxisMetrics] = []
   axes.push(AutoHintUnscaledAxisMetrics::default(AUTOHINT_DIM_HORIZONTAL))
   axes.push(AutoHintUnscaledAxisMetrics::default(AUTOHINT_DIM_VERTICAL))
   let gid = match autohint_pick_standard_glyph(outlines, std_chars) {
@@ -518,13 +518,13 @@ fn autohint_compute_default_blues(
   blues_data : Array[(String, Int)],
   units_per_em : Int,
 ) -> Array[AutoHintUnscaledBlue] {
-  let blues : Array[AutoHintUnscaledBlue] = Array()
+  let blues : Array[AutoHintUnscaledBlue] = []
   for entry in blues_data.iter() {
     let (blue_str, blue_zones) = entry
     if blues.length() >= AUTOHINT_MAX_BLUES {
       continue
     }
-    let values : Array[Int] = Array()
+    let values : Array[Int] = []
     let mut ascender = 0
     let mut descender = 0
     let is_top_like = autohint_blue_is_top_like(blue_zones)
@@ -582,7 +582,7 @@ fn autohint_compute_default_blues(
         // a sufficiently long horizontal segment, ignoring narrow bumps.
         let length_threshold = units_per_em / 25
         let flat_threshold = units_per_em / 14
-        let candidates : Array[Int] = Array()
+        let candidates : Array[Int] = []
         for p in outline.points.iter() {
           let y = p.fy
           if extremum_y - y >= 0 && extremum_y - y <= flat_threshold {
@@ -655,7 +655,7 @@ fn autohint_compute_default_blues(
     return blues
   }
   // Sort from bottom to top, then adjust to avoid overlaps.
-  let sorted_ix : Array[Int] = Array()
+  let sorted_ix : Array[Int] = []
   for i in 0..<blues.length() {
     sorted_ix.push(i)
   }
@@ -715,7 +715,7 @@ fn autohint_compute_cjk_blues(
   blues_data : Array[(String, Int)],
 ) -> Array[AutoHintUnscaledBlue] {
   // This returns only vertical blues (horizontal are disabled).
-  let blues : Array[AutoHintUnscaledBlue] = Array()
+  let blues : Array[AutoHintUnscaledBlue] = []
   for entry in blues_data.iter() {
     let (blue_str, blue_zones) = entry
     if blues.length() >= AUTOHINT_MAX_BLUES {
@@ -726,8 +726,8 @@ fn autohint_compute_cjk_blues(
     }
     autohint_blue_is_right(blue_zones) |> ignore
     let is_top = autohint_blue_is_top(blue_zones)
-    let fills : Array[Int] = Array()
-    let flats : Array[Int] = Array()
+    let fills : Array[Int] = []
+    let flats : Array[Int] = []
     let mut is_fill = true
     for ch in blue_str {
       if ch == ' ' {
@@ -808,10 +808,10 @@ fn autohint_compute_unscaled_blues(
   style_ix : Int,
   units_per_em : Int,
 ) -> Array[Array[AutoHintUnscaledBlue]] {
-  let out : Array[Array[AutoHintUnscaledBlue]] = Array()
+  let out : Array[Array[AutoHintUnscaledBlue]] = []
   match group {
     Default => {
-      out.push(Array())
+      out.push([])
       out.push(
         autohint_compute_default_blues(
           outlines,
@@ -823,7 +823,7 @@ fn autohint_compute_unscaled_blues(
     Cjk => {
       // CJK blues are computed in both directions upstream, but horizontal
       // zones are disabled. Keep structure identical: [h, v].
-      out.push(Array())
+      out.push([])
       out.push(
         autohint_compute_cjk_blues(outlines, autohint_style_blues(style_ix)),
       )
@@ -1030,7 +1030,7 @@ fn autohint_scale_style_metrics(
   scale : AutoHintScale,
 ) -> AutoHintScaledStyleMetrics {
   let mut scale = scale
-  let axes : Array[AutoHintScaledAxisMetrics] = Array()
+  let axes : Array[AutoHintScaledAxisMetrics] = []
   for dim in 0..<2 {
     let axis = unscaled.axes.at(dim)
     let (s, scaled_axis) = match unscaled.group {
@@ -1085,7 +1085,7 @@ fn autohint_sort_and_quantize_widths(
     }
     ix = ix + 1
   }
-  let out : Array[Int] = Array()
+  let out : Array[Int] = []
   for i in 0..<widths.length() {
     let v = widths[i]
     if v != 0 {

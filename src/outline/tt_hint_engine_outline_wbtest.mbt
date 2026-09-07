@@ -14,9 +14,9 @@
 
 ///|
 fn tt_make_engine_for_outline() -> TtEngine {
-  let empty = Bytes::from_array(Array()[:])
+  let empty = Bytes::from_array([][:])
   let retained = TtRetainedGraphicsState::default()
-  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array()
+  let coords0 : Array[@moon_skrifa.NormalizedCoord] = []
   let engine = TtEngine(
     empty[:],
     empty[:],
@@ -47,11 +47,11 @@ fn tt_make_engine_for_outline() -> TtEngine {
     contours: Array::from_fixed_array([31]),
   }
   engine.graphics.twilight = {
-    unscaled: Array(),
+    unscaled: [],
     original: Array::make(16, { x: 0, y: 0, }),
     points: Array::make(16, { x: 0, y: 0, }),
     flags: Array::make(16, 0),
-    contours: Array(),
+    contours: [],
   }
   // Outline engine tests mirror fontations non-pedantic defaults.
   engine.graphics.is_pedantic = false

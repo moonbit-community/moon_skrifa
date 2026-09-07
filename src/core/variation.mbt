@@ -235,7 +235,7 @@ fn avar_parse(table : BytesView, axis_count : Int) -> AvarData? {
     return None
   }
   let mut off = 8
-  let axes : Array[AvarAxisMap] = Array()
+  let axes : Array[AvarAxisMap] = []
   for _ in 0..<axis_count {
     if off + 2 > table.length() {
       return None
@@ -245,8 +245,8 @@ fn avar_parse(table : BytesView, axis_count : Int) -> AvarData? {
     if map_count <= 0 {
       return None
     }
-    let from_coords : Array[Int] = Array()
-    let to_coords : Array[Int] = Array()
+    let from_coords : Array[Int] = []
+    let to_coords : Array[Int] = []
     for _ in 0..<map_count {
       let from = variation_read_i16_be(table, off).unwrap_or(0)
       let to = variation_read_i16_be(table, off + 2).unwrap_or(0)
@@ -276,16 +276,16 @@ pub struct AxisCollection {
 ///|
 pub fn AxisCollection::AxisCollection(font : FontRef) -> AxisCollection {
   let fvar = match font.table(TAG_FVAR) {
-    None => return { axes: Array(), instances: Array(), avar: None, }
+    None => return { axes: [], instances: [], avar: None, }
     Some(v) => v
   }
   if fvar.length() < 16 {
-    return { axes: Array(), instances: Array(), avar: None, }
+    return { axes: [], instances: [], avar: None, }
   }
   let major = variation_read_u16_be(fvar, 0).unwrap_or(-1)
   let minor = variation_read_u16_be(fvar, 2).unwrap_or(-1)
   if major != 1 || minor != 0 {
-    return { axes: Array(), instances: Array(), avar: None, }
+    return { axes: [], instances: [], avar: None, }
   }
   let axes_offset = variation_read_u16_be(fvar, 4).unwrap_or(-1)
   let axis_count = variation_read_u16_be(fvar, 8).unwrap_or(-1)
@@ -297,14 +297,14 @@ pub fn AxisCollection::AxisCollection(font : FontRef) -> AxisCollection {
     axis_size < 20 ||
     instance_count < 0 ||
     instance_size < 4 {
-    return { axes: Array(), instances: Array(), avar: None, }
+    return { axes: [], instances: [], avar: None, }
   }
-  let axes : Array[AxisRecord] = Array()
+  let axes : Array[AxisRecord] = []
   let axis_count_i = axis_count
   let axis_size_i = axis_size
   let axes_end = axes_offset + axis_count_i * axis_size_i
   if axes_end < axes_offset || axes_end > fvar.length() {
-    return { axes: Array(), instances: Array(), avar: None, }
+    return { axes: [], instances: [], avar: None, }
   }
   for i in 0..<axis_count_i {
     let base = axes_offset + i * axis_size_i
@@ -331,9 +331,9 @@ pub fn AxisCollection::AxisCollection(font : FontRef) -> AxisCollection {
   let instances_base = axes_end
   let instances_end = instances_base + instance_count * instance_size
   if instances_end < instances_base || instances_end > fvar.length() {
-    return { axes, instances: Array(), avar: None, }
+    return { axes, instances: [], avar: None, }
   }
-  let instances : Array[InstanceRecord] = Array()
+  let instances : Array[InstanceRecord] = []
   for i in 0..<instance_count {
     let base = instances_base + i * instance_size
     let subfamily_name_id = variation_read_u16_be(fvar, base).unwrap_or(0)
@@ -343,7 +343,7 @@ pub fn AxisCollection::AxisCollection(font : FontRef) -> AxisCollection {
     if coords_base + coords_len > fvar.length() {
       continue
     }
-    let user_coords : Array[Double] = Array()
+    let user_coords : Array[Double] = []
     for j in 0..<axis_count_i {
       let c = variation_read_fixed_16_16(fvar, coords_base + j * 4).unwrap_or(
         0.0,

@@ -33,7 +33,7 @@ test "OutlineGlyphCollection basic" {
     x.reinterpret_as_uint()
   }
   // Minimal SFNT with no tables (valid enough for FontRef table lookups).
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   push_u32_be(out, u32(0x00010000))
   push_u16_be(out, 0)
   push_u16_be(out, 0)

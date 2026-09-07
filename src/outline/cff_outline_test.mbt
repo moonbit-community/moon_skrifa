@@ -41,14 +41,14 @@ fn cff_test_u32(x : Int) -> UInt {
 ///|
 fn cff_test_index1(objects : Array[Array[Byte]]) -> Array[Byte] {
   let count = objects.length()
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   cff_test_push_u16_be(out, count)
   if count == 0 {
     return out
   }
   // offSize = 1
   out.push(1 |> Int::to_byte)
-  let offsets : Array[Int] = Array()
+  let offsets : Array[Int] = []
   let mut off = 1
   offsets.push(off)
   for obj in objects {
@@ -110,10 +110,10 @@ fn cff_test_build_cff_table() -> Bytes {
   let subrs = cff_test_index1(Array::from_fixed_array([s0]))
 
   // Private DICT: Subrs offset points right after the dict bytes.
-  let private_dict : Array[Byte] = Array()
+  let private_dict : Array[Byte] = []
   cff_test_dict_i32(private_dict, 6)
   private_dict.push(19 |> Int::to_byte)
-  let private_data : Array[Byte] = Array()
+  let private_data : Array[Byte] = []
   for b in private_dict.iter() {
     private_data.push(b)
   }
@@ -149,14 +149,14 @@ fn cff_test_build_cff_table() -> Bytes {
   let private_off = charstrings_off + charstrings.length()
 
   // Top DICT: CharStrings offset + Private range.
-  let top_dict : Array[Byte] = Array()
+  let top_dict : Array[Byte] = []
   cff_test_dict_i32(top_dict, charstrings_off)
   top_dict.push(17 |> Int::to_byte)
   cff_test_dict_i32(top_dict, private_size)
   cff_test_dict_i32(top_dict, private_off)
   top_dict.push(18 |> Int::to_byte)
   let top_ix = cff_test_index1(Array::from_fixed_array([top_dict]))
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   // CFF header: major=1 minor=0 hdrSize=4 offSize=1
   out.push(1 |> Int::to_byte)
   out.push(0 |> Int::to_byte)
@@ -185,7 +185,7 @@ fn cff_test_build_cff_table() -> Bytes {
 fn cff_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
   let num_tables = tables.length()
   let header_len = 12 + num_tables * 16
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   cff_test_push_u32_be(out, cff_test_u32(0x00010000))
   cff_test_push_u16_be(out, num_tables)
   cff_test_push_u16_be(out, 0)

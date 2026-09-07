@@ -14,16 +14,16 @@
 
 ///|
 test "tt_hint: non-pedantic stack underflow uses 0 (dup/pop)" {
-  let empty = Bytes::from_array(Array()[:])
+  let empty = Bytes::from_array([][:])
   let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
-  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array()
+  let coords0 : Array[@moon_skrifa.NormalizedCoord] = []
   let engine = TtEngine(
     empty[:],
     empty[:],
     empty[:],
     retained,
-    Array(),
-    Array(),
+    [],
+    [],
     None,
     0,
     coords0[:],
@@ -37,29 +37,29 @@ test "tt_hint: non-pedantic stack underflow uses 0 (dup/pop)" {
   engine.run_program(Font, false).unwrap() |> ignore
 
   // DUP[] on empty stack should push 0.
-  engine.dispatch({ pc: 0, opcode: 0x20, inline_operands: Array(), }).unwrap()
+  engine.dispatch({ pc: 0, opcode: 0x20, inline_operands: [], }).unwrap()
   |> ignore
   inspect(engine.value_stack.length() == 1, content="true")
   inspect(engine.value_stack.pop().unwrap() == 0, content="true")
 
   // POP[] on empty stack should be Ok (consumes 0).
-  engine.dispatch({ pc: 0, opcode: 0x21, inline_operands: Array(), }).unwrap()
+  engine.dispatch({ pc: 0, opcode: 0x21, inline_operands: [], }).unwrap()
   |> ignore
   inspect(engine.value_stack.length() == 0, content="true")
 }
 
 ///|
 test "tt_hint: pedantic stack underflow errors (dup)" {
-  let empty = Bytes::from_array(Array()[:])
+  let empty = Bytes::from_array([][:])
   let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
-  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array()
+  let coords0 : Array[@moon_skrifa.NormalizedCoord] = []
   let engine = TtEngine(
     empty[:],
     empty[:],
     empty[:],
     retained,
-    Array(),
-    Array(),
+    [],
+    [],
     None,
     0,
     coords0[:],
@@ -71,7 +71,7 @@ test "tt_hint: pedantic stack underflow errors (dup)" {
 
   // Reset in pedantic mode.
   engine.run_program(Font, true).unwrap() |> ignore
-  match engine.dispatch({ pc: 0, opcode: 0x20, inline_operands: Array(), }) {
+  match engine.dispatch({ pc: 0, opcode: 0x20, inline_operands: [], }) {
     Err(ValueStackUnderflow) => ()
     Ok(_) => fail("expected ValueStackUnderflow")
     Err(_) => fail("expected ValueStackUnderflow")

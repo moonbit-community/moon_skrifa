@@ -126,8 +126,8 @@ fn GlyphStyle::set_digit(self : GlyphStyle) -> GlyphStyle {
 
 ///|
 fn GlyphStyleMap::default() -> GlyphStyleMap {
-  let styles : Array[GlyphStyle] = Array()
-  let metrics_map : Array[Byte] = Array()
+  let styles : Array[GlyphStyle] = []
+  let metrics_map : Array[Byte] = []
   for _ in 0..<AUTOHINT_MAX_STYLES {
     metrics_map.push((0xFF).to_byte())
   }

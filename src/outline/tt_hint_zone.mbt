@@ -92,13 +92,7 @@ priv struct TtZone {
 
 ///|
 fn TtZone::default() -> TtZone {
-  {
-    unscaled: Array(),
-    original: Array(),
-    points: Array(),
-    flags: Array(),
-    contours: Array(),
-  }
+  { unscaled: [], original: [], points: [], flags: [], contours: [], }
 }
 
 ///|

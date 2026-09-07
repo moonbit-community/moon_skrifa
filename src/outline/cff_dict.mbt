@@ -67,7 +67,7 @@ fn cff_dict_parse(data : BytesView) -> CffDictInfo {
     font_matrix: None,
     font_matrix_upem: None,
   }
-  let stack : Array[CffDictNum] = Array()
+  let stack : Array[CffDictNum] = []
   let mut pos = 0
   while pos < data.length() {
     let b0 = data.at(pos).to_int()
@@ -390,7 +390,7 @@ fn CffPrivateDictHintInfo::default() -> CffPrivateDictHintInfo {
 
 ///|
 fn cff_dict_stack_to_fixed(values : Array[Double]) -> Array[CffFixed] {
-  let out : Array[CffFixed] = Array()
+  let out : Array[CffFixed] = []
   for v in values.iter() {
     out.push(CffFixed::from_f64(v))
   }
@@ -457,7 +457,7 @@ fn cff_private_dict_hint_info(
   blend_state : Type2BlendState?,
 ) -> CffPrivateDictHintInfo {
   let info = CffPrivateDictHintInfo::default()
-  let stack : Array[Double] = Array()
+  let stack : Array[Double] = []
   let mut pos = 0
   while pos < private_dict.length() {
     let b0 = private_dict.at(pos).to_int()

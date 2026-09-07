@@ -26,7 +26,7 @@ fn tt_make_mock_gs(fv_x : Int, fv_y : Int) -> TtGraphicsState {
   ])
   let flags = Array::make(3, 0)
   let glyph = TtZone::{
-    unscaled: Array(),
+    unscaled: [],
     original,
     points,
     flags,

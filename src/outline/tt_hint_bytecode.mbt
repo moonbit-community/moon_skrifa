@@ -54,7 +54,7 @@ fn TtDecoder::decode(self : TtDecoder) -> Result[TtInstruction?, HintError] {
   let start = self.pc
   let op = self.code.at(self.pc).to_int()
   self.pc = self.pc + 1
-  let operands : Array[Int] = Array()
+  let operands : Array[Int] = []
   // PUSHB[1..8] 0xB0..0xB7
   if op >= 0xB0 && op <= 0xB7 {
     let n = op - 0xB0 + 1

@@ -44,7 +44,7 @@ fn gvar_test_u32(x : Int) -> UInt {
 fn gvar_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
   let num_tables = tables.length()
   let header_len = 12 + num_tables * 16
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   gvar_test_push_u32_be(out, gvar_test_u32(0x00010000))
   gvar_test_push_u16_be(out, num_tables)
   gvar_test_push_u16_be(out, 0)
@@ -70,7 +70,7 @@ fn gvar_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
 
 ///|
 fn gvar_test_make_maxp(num_glyphs : Int) -> Bytes {
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   gvar_test_push_u32_be(out, gvar_test_u32(0x00010000))
   gvar_test_push_u16_be(out, num_glyphs)
   Bytes::from_array(out[:])
@@ -90,7 +90,7 @@ fn gvar_test_make_head(upem : Int) -> Bytes {
 
 ///|
 fn gvar_test_make_loca_long(offsets : Array[Int]) -> Bytes {
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   for off in offsets {
     gvar_test_push_u32_be(out, gvar_test_u32(off))
   }
@@ -101,7 +101,7 @@ fn gvar_test_make_loca_long(offsets : Array[Int]) -> Bytes {
 fn gvar_test_glyph_simple_quad() -> Bytes {
   // One contour with 3 points:
   // (0,0) on, (50,100) off, (100,0) on.
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   gvar_test_push_i16_be(out, 1)
   gvar_test_push_i16_be(out, 0)
   gvar_test_push_i16_be(out, 0)
@@ -126,7 +126,7 @@ fn gvar_test_make_gvar_one_tuple_sparse_point() -> Bytes {
   // gvar header (20 bytes):
   // axisCount=1, sharedTupleCount=0, glyphCount=2, flags=0 (short offsets),
   // dataArrayOffset=26 (20 + 3*2 offsets).
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   gvar_test_push_u16_be(out, 1) // majorVersion
   gvar_test_push_u16_be(out, 0) // minorVersion
   gvar_test_push_u16_be(out, 1) // axisCount
@@ -157,9 +157,9 @@ fn gvar_test_make_gvar_one_tuple_sparse_point() -> Bytes {
 
 ///|
 test "gvar applies sparse tuple + IUP shift for single delta point" {
-  let glyph0 = Bytes::from_array(Array()[:])
+  let glyph0 = Bytes::from_array([][:])
   let glyph1 = gvar_test_glyph_simple_quad()
-  let glyf_out : Array[Byte] = Array()
+  let glyf_out : Array[Byte] = []
   for b in glyph0.iter() {
     glyf_out.push(b)
   }

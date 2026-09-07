@@ -798,7 +798,7 @@ fn color_trav_read_color_line(
   if end < stops_off || end > colr.length() {
     return None
   }
-  let out : Array[ColorStop] = Array(capacity=num)
+  let out : Array[ColorStop] = Array::new(capacity=num)
   for i in 0..<num {
     let p = stops_off + i * rec_len
     let stop_offset0 = color_trav_read_f2dot14(colr, p).unwrap_or(0.0)
@@ -2716,7 +2716,7 @@ pub fn[P : ColorPainter] FontRef::paint_colr_v1_at(
             }
           }
       }
-      let stack : Array[Int] = Array()
+      let stack : Array[Int] = []
       let r = color_trav_traverse_paint(ctx, root_paint_off, stack, 0, painter)
       if pushed {
         ColorPainter::pop_clip(painter)

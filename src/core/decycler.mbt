@@ -65,10 +65,10 @@ fn[T] Decycler::leave(self : Decycler[T]) -> Decycler[T] {
 
 ///|
 test "graph_with_cycles" {
-  let nodes = Array()
+  let nodes = []
   nodes.push(Node(Array::from_fixed_array([1, 2])))
   nodes.push(Node(Array::from_fixed_array([2, 3])))
-  nodes.push(Node(Array()))
+  nodes.push(Node([]))
   nodes.push(Node(Array::from_fixed_array([0, 1])))
   let tree = Tree::{ nodes, }
   let decycler : Decycler[Int] = Decycler(MAX_DEPTH)
@@ -81,11 +81,11 @@ test "graph_with_cycles" {
 
 ///|
 test "exceeds_max_depth" {
-  let nodes = Array()
+  let nodes = []
   for ix in 0..<MAX_DEPTH {
     nodes.push(Node(Array::from_fixed_array([ix + 1])))
   }
-  nodes.push(Node(Array()))
+  nodes.push(Node([]))
   let tree = Tree::{ nodes, }
   let decycler : Decycler[Int] = Decycler(MAX_DEPTH)
   let ok = match tree.traverse(decycler) {
@@ -97,11 +97,11 @@ test "exceeds_max_depth" {
 
 ///|
 test "well_formed_tree" {
-  let nodes = Array()
+  let nodes = []
   for ix in 0..<(MAX_DEPTH - 1) {
     nodes.push(Node(Array::from_fixed_array([ix + 1])))
   }
-  nodes.push(Node(Array()))
+  nodes.push(Node([]))
   let tree = Tree::{ nodes, }
   let decycler : Decycler[Int] = Decycler(MAX_DEPTH)
   let ok = match tree.traverse(decycler) {

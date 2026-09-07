@@ -1239,6 +1239,6 @@ fn autohint_script_blues(script_ix : Int) -> Array[(String, Int)] {
           AUTOHINT_BLUE_HORIZONTAL | AUTOHINT_BLUE_RIGHT,
         ),
       ]
-    _ => Array()
+    _ => []
   }
 }

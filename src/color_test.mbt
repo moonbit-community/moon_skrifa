@@ -38,7 +38,7 @@ fn color_test_u32(x : Int) -> UInt {
 fn color_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
   let num_tables = tables.length()
   let header_len = 12 + num_tables * 16
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   color_test_push_u32_be(out, color_test_u32(0x00010000))
   color_test_push_u16_be(out, num_tables)
   color_test_push_u16_be(out, 0)
@@ -67,7 +67,7 @@ const TAG_CPAL : UInt = 0x4350414C // "CPAL"
 
 ///|
 fn color_test_build_cpal() -> Bytes {
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   // version 0
   color_test_push_u16_be(out, 0)
   // numPaletteEntries=2
@@ -95,7 +95,7 @@ fn color_test_build_cpal() -> Bytes {
 
 ///|
 fn color_test_build_cpal_v1() -> Bytes {
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   // version 1
   color_test_push_u16_be(out, 1)
   // numPaletteEntries=2

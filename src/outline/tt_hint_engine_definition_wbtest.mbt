@@ -39,16 +39,16 @@ test "tt_hint: fdef/call/loopcall basic flow" {
       (0x2D).to_byte(),
     ])[:],
   )
-  let empty = Bytes::from_array(Array()[:])
+  let empty = Bytes::from_array([][:])
   let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
-  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array()
+  let coords0 : Array[@moon_skrifa.NormalizedCoord] = []
   let engine = TtEngine(
     font[:],
     empty[:],
     empty[:],
     retained,
-    Array(),
-    Array(),
+    [],
+    [],
     None,
     0,
     coords0[:],
@@ -75,16 +75,16 @@ test "tt_hint: fdef in glyph program errors" {
       (0x2D).to_byte(),
     ])[:],
   )
-  let empty = Bytes::from_array(Array()[:])
+  let empty = Bytes::from_array([][:])
   let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
-  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array()
+  let coords0 : Array[@moon_skrifa.NormalizedCoord] = []
   let engine = TtEngine(
     empty[:],
     empty[:],
     glyph[:],
     retained,
-    Array(),
-    Array(),
+    [],
+    [],
     None,
     0,
     coords0[:],
@@ -115,16 +115,16 @@ test "tt_hint: nested definitions error" {
       (0x2D).to_byte(),
     ])[:],
   )
-  let empty = Bytes::from_array(Array()[:])
+  let empty = Bytes::from_array([][:])
   let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
-  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array()
+  let coords0 : Array[@moon_skrifa.NormalizedCoord] = []
   let engine = TtEngine(
     font[:],
     empty[:],
     empty[:],
     retained,
-    Array(),
-    Array(),
+    [],
+    [],
     None,
     0,
     coords0[:],
@@ -150,16 +150,16 @@ test "tt_hint: TooManyDefinitions when max_function_defs=0" {
       (0x2D).to_byte(),
     ])[:],
   )
-  let empty = Bytes::from_array(Array()[:])
+  let empty = Bytes::from_array([][:])
   let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
-  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array()
+  let coords0 : Array[@moon_skrifa.NormalizedCoord] = []
   let engine = TtEngine(
     font[:],
     empty[:],
     empty[:],
     retained,
-    Array(),
-    Array(),
+    [],
+    [],
     None,
     0,
     coords0[:],

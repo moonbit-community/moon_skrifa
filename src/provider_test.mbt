@@ -39,7 +39,7 @@ const PROVIDER_TEST_TAG_TEST : UInt = 0x74657374 // "test"
 
 ///|
 fn provider_test_make_min_sfnt() -> Bytes {
-  let out = Array()
+  let out = []
   provider_test_push_u32_be(out, provider_test_u32(0x00010000))
   provider_test_push_u16_be(out, 1)
   provider_test_push_u16_be(out, 0)

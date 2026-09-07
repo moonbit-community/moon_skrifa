@@ -45,7 +45,7 @@ fn glyf_outline_test_u32(x : Int) -> UInt {
 fn glyf_outline_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
   let num_tables = tables.length()
   let header_len = 12 + num_tables * 16
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   glyf_outline_test_push_u32_be(out, glyf_outline_test_u32(0x00010000))
   glyf_outline_test_push_u16_be(out, num_tables)
   glyf_outline_test_push_u16_be(out, 0)
@@ -71,7 +71,7 @@ fn glyf_outline_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
 
 ///|
 fn glyf_outline_test_make_maxp(num_glyphs : Int) -> Bytes {
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   glyf_outline_test_push_u32_be(out, glyf_outline_test_u32(0x00010000))
   glyf_outline_test_push_u16_be(out, num_glyphs)
   Bytes::from_array(out[:])
@@ -112,7 +112,7 @@ fn glyf_outline_test_make_hmtx(
   advances : Array[Int],
   lsbs : Array[Int],
 ) -> Bytes {
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   let n = advances.length()
   for i in 0..<n {
     let aw = advances.at(i)
@@ -125,7 +125,7 @@ fn glyf_outline_test_make_hmtx(
 
 ///|
 fn glyf_outline_test_make_loca_long(offsets : Array[Int]) -> Bytes {
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   for off in offsets {
     glyf_outline_test_push_u32_be(out, glyf_outline_test_u32(off))
   }
@@ -134,8 +134,8 @@ fn glyf_outline_test_make_loca_long(offsets : Array[Int]) -> Bytes {
 
 ///|
 fn glyf_outline_test_make_font(glyphs : Array[Bytes]) -> @moon_skrifa.FontRef {
-  let offsets : Array[Int] = Array()
-  let glyf_out : Array[Byte] = Array()
+  let offsets : Array[Int] = []
+  let glyf_out : Array[Byte] = []
   let mut off = 0
   offsets.push(off)
   for g in glyphs {
@@ -164,8 +164,8 @@ fn glyf_outline_test_make_font_with_head(
   head : Bytes,
   glyphs : Array[Bytes],
 ) -> @moon_skrifa.FontRef {
-  let offsets : Array[Int] = Array()
-  let glyf_out : Array[Byte] = Array()
+  let offsets : Array[Int] = []
+  let glyf_out : Array[Byte] = []
   let mut off = 0
   offsets.push(off)
   for g in glyphs {
@@ -193,7 +193,7 @@ fn glyf_outline_test_make_font_with_head(
 fn glyf_outline_test_glyph_simple_quad() -> Bytes {
   // One contour with 3 points:
   // (0,0) on, (50,100) off, (100,0) on.
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   glyf_outline_test_push_i16_be(out, 1)
   glyf_outline_test_push_i16_be(out, 0)
   glyf_outline_test_push_i16_be(out, 0)
@@ -217,7 +217,7 @@ fn glyf_outline_test_glyph_simple_quad() -> Bytes {
 fn glyf_outline_test_glyph_simple_quad_hinted() -> Bytes {
   // Same as `glyf_outline_test_glyph_simple_quad` but with a single bytecode
   // instruction to enable embedded hinting.
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   glyf_outline_test_push_i16_be(out, 1)
   glyf_outline_test_push_i16_be(out, 0)
   glyf_outline_test_push_i16_be(out, 0)
@@ -242,7 +242,7 @@ fn glyf_outline_test_glyph_simple_quad_hinted() -> Bytes {
 fn glyf_outline_test_glyph_implied_midpoint() -> Bytes {
   // One contour with 4 points:
   // (0,0) on, (50,100) off, (100,100) off, (150,0) on.
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   glyf_outline_test_push_i16_be(out, 1)
   glyf_outline_test_push_i16_be(out, 0)
   glyf_outline_test_push_i16_be(out, 0)
@@ -268,7 +268,7 @@ fn glyf_outline_test_glyph_implied_midpoint() -> Bytes {
 fn glyf_outline_test_glyph_first_off_second_on() -> Bytes {
   // One contour with 3 points:
   // (50,100) off, (100,0) on, (0,0) on.
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   glyf_outline_test_push_i16_be(out, 1)
   glyf_outline_test_push_i16_be(out, 0)
   glyf_outline_test_push_i16_be(out, 0)
@@ -295,7 +295,7 @@ fn glyf_outline_test_glyph_negative_tie_quad() -> Bytes {
   // One contour with 3 points:
   // (0,0) on, (20,-24) off, (40,0) on.
   // This triggers negative .5 ties at ppem 14/18 when upem=2048.
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   glyf_outline_test_push_i16_be(out, 1)
   glyf_outline_test_push_i16_be(out, 0)
   glyf_outline_test_push_i16_be(out, -24)
@@ -322,7 +322,7 @@ fn glyf_outline_test_glyph_composite_translate(
   dy : Int,
 ) -> Bytes {
   // Composite glyph with a single component using XY translation.
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   glyf_outline_test_push_i16_be(out, -1)
   glyf_outline_test_push_i16_be(out, 0)
   glyf_outline_test_push_i16_be(out, 0)
@@ -346,7 +346,7 @@ fn glyf_outline_test_glyph_composite_point_match(
   // Composite with two components:
   // 1) first component with XY offset (0,0)
   // 2) second component anchored by point matching.
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   glyf_outline_test_push_i16_be(out, -1)
   glyf_outline_test_push_i16_be(out, 0)
   glyf_outline_test_push_i16_be(out, 0)
@@ -371,7 +371,7 @@ fn glyf_outline_test_glyph_composite_point_match(
 test "OutlineGlyphCollection::path empty glyph is empty path" {
   let font = glyf_outline_test_make_font(
     Array::from_fixed_array([
-      Bytes::from_array(Array()[:]),
+      Bytes::from_array([][:]),
       glyf_outline_test_glyph_simple_quad(),
     ]),
   )
@@ -386,7 +386,7 @@ test "OutlineGlyphCollection::path empty glyph is empty path" {
 test "glyf simple outline uses MoveTo/QuadTo/Close" {
   let font = glyf_outline_test_make_font(
     Array::from_fixed_array([
-      Bytes::from_array(Array()[:]),
+      Bytes::from_array([][:]),
       glyf_outline_test_glyph_simple_quad(),
     ]),
   )
@@ -404,7 +404,7 @@ test "glyf simple outline uses MoveTo/QuadTo/Close" {
 test "glyf consecutive off-curve points insert implied on-curve midpoint" {
   let font = glyf_outline_test_make_font(
     Array::from_fixed_array([
-      Bytes::from_array(Array()[:]),
+      Bytes::from_array([][:]),
       glyf_outline_test_glyph_implied_midpoint(),
     ]),
   )
@@ -423,7 +423,7 @@ test "glyf consecutive off-curve points insert implied on-curve midpoint" {
 test "glyf composite outline translates component path" {
   let font = glyf_outline_test_make_font(
     Array::from_fixed_array([
-      Bytes::from_array(Array()[:]),
+      Bytes::from_array([][:]),
       glyf_outline_test_glyph_simple_quad(),
       glyf_outline_test_glyph_composite_translate(1, 10, 20),
     ]),
@@ -442,7 +442,7 @@ test "glyf composite outline translates component path" {
 test "glyf composite outline supports point matching anchors" {
   let font = glyf_outline_test_make_font(
     Array::from_fixed_array([
-      Bytes::from_array(Array()[:]),
+      Bytes::from_array([][:]),
       glyf_outline_test_glyph_simple_quad(),
       glyf_outline_test_glyph_composite_point_match(1, 1, 2, 0),
     ]),
@@ -464,7 +464,7 @@ test "glyf composite outline supports point matching anchors" {
 test "glyf composite recursion is guarded" {
   let font = glyf_outline_test_make_font(
     Array::from_fixed_array([
-      Bytes::from_array(Array()[:]),
+      Bytes::from_array([][:]),
       glyf_outline_test_glyph_composite_translate(1, 0, 0),
     ]),
   )
@@ -481,7 +481,7 @@ test "path scales with size when unitsPerEm is available" {
   let font = glyf_outline_test_make_font_with_head(
     glyf_outline_test_make_head_long_loca_with_upem(1000),
     Array::from_fixed_array([
-      Bytes::from_array(Array()[:]),
+      Bytes::from_array([][:]),
       glyf_outline_test_glyph_simple_quad(),
     ]),
   )
@@ -505,7 +505,7 @@ test "path scaling keeps negative .5 ties away from zero in FreeType mode" {
   let font = glyf_outline_test_make_font_with_head(
     glyf_outline_test_make_head_long_loca_with_upem(2048),
     Array::from_fixed_array([
-      Bytes::from_array(Array()[:]),
+      Bytes::from_array([][:]),
       glyf_outline_test_glyph_negative_tie_quad(),
     ]),
   )
@@ -545,7 +545,7 @@ test "HarfBuzz path_style uses 16.16 fixed-point scaling when size is set" {
   let font = glyf_outline_test_make_font_with_head(
     glyf_outline_test_make_head_long_loca_with_upem(1000),
     Array::from_fixed_array([
-      Bytes::from_array(Array()[:]),
+      Bytes::from_array([][:]),
       glyf_outline_test_glyph_simple_quad(),
     ]),
   )
@@ -568,7 +568,7 @@ test "HarfBuzz path_style uses 16.16 fixed-point scaling when size is set" {
 test "glyf draw_memory_size matches upstream sizing" {
   let font = glyf_outline_test_make_font(
     Array::from_fixed_array([
-      Bytes::from_array(Array()[:]),
+      Bytes::from_array([][:]),
       glyf_outline_test_glyph_simple_quad(),
       glyf_outline_test_glyph_simple_quad_hinted(),
     ]),
@@ -583,9 +583,9 @@ test "glyf draw_memory_size matches upstream sizing" {
 
 ///|
 test "hinted (disabled instance) rounds advance width to integer pixels" {
-  let glyph0 = Bytes::from_array(Array()[:])
+  let glyph0 = Bytes::from_array([][:])
   let glyph1 = glyf_outline_test_glyph_simple_quad()
-  let glyf_out : Array[Byte] = Array()
+  let glyf_out : Array[Byte] = []
   for b in glyph0.iter() {
     glyf_out.push(b)
   }
@@ -635,7 +635,7 @@ test "hinted (disabled instance) rounds advance width to integer pixels" {
 test "path_style affects start point selection when first point is off-curve" {
   let font = glyf_outline_test_make_font(
     Array::from_fixed_array([
-      Bytes::from_array(Array()[:]),
+      Bytes::from_array([][:]),
       glyf_outline_test_glyph_first_off_second_on(),
     ]),
   )

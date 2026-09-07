@@ -374,7 +374,7 @@ pub fn ColorGlyphCollection::layers(
   if first_layer + num > self.num_layers {
     return None
   }
-  let out : Array[ColorLayer] = Array(capacity=num)
+  let out : Array[ColorLayer] = Array::new(capacity=num)
   for i in 0..<num {
     let lpos = self.layer_off + (first_layer + i) * 4
     let layer_gid = colr_read_u16_be(colr, lpos).unwrap_or(-1)

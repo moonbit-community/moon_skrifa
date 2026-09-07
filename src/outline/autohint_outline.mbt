@@ -268,8 +268,8 @@ fn autohint_round_font_units(v : Double) -> Int {
 
 ///|
 fn AutoHintOutline::from_path(path : Array[PathElement]) -> AutoHintOutline {
-  let points : Array[AutoHintPoint] = Array()
-  let contours : Array[AutoHintContour] = Array()
+  let points : Array[AutoHintPoint] = []
+  let contours : Array[AutoHintContour] = []
   let mut in_contour = false
   let mut contour_start = 0
   for e in path.iter() {
@@ -546,7 +546,7 @@ priv struct AutoHintOutlineData {
 
 ///|
 fn AutoHintOutlineData::AutoHintOutlineData() -> AutoHintOutlineData {
-  { points: Array(), contours: Array(), }
+  { points: [], contours: [], }
 }
 
 ///|
@@ -609,7 +609,7 @@ fn autohint_outline_decode_simple_glyf(
 ) -> Result[AutoHintOutlineData, DrawError] {
   let data = AutoHintOutlineData()
   let mut off = 10
-  let end_pts : Array[Int] = Array()
+  let end_pts : Array[Int] = []
   for _ in 0..<number_of_contours {
     let v = match autohint_outline_read_u16_be(glyph, off) {
       None => return Err(Read)
@@ -630,7 +630,7 @@ fn autohint_outline_decode_simple_glyf(
     return Ok(data)
   }
   // Flags stream.
-  let flags : Array[Int] = Array()
+  let flags : Array[Int] = []
   while flags.length() < num_points {
     if off >= glyph.length() {
       return Err(Read)
@@ -650,7 +650,7 @@ fn autohint_outline_decode_simple_glyf(
     }
   }
   // Decode coordinates.
-  let dxs : Array[Int] = Array()
+  let dxs : Array[Int] = []
   for i in 0..<num_points {
     let f = flags.at(i)
     let short = (f & 0x02) != 0
@@ -673,7 +673,7 @@ fn autohint_outline_decode_simple_glyf(
       dxs.push(d)
     }
   }
-  let dys : Array[Int] = Array()
+  let dys : Array[Int] = []
   for i in 0..<num_points {
     let f = flags.at(i)
     let short = (f & 0x04) != 0

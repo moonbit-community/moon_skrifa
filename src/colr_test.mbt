@@ -38,7 +38,7 @@ fn colr_test_u32(x : Int) -> UInt {
 fn colr_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
   let num_tables = tables.length()
   let header_len = 12 + num_tables * 16
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   colr_test_push_u32_be(out, colr_test_u32(0x00010000))
   colr_test_push_u16_be(out, num_tables)
   colr_test_push_u16_be(out, 0)
@@ -67,7 +67,7 @@ const TAG_COLR : UInt = 0x434F4C52 // "COLR"
 
 ///|
 fn colr_test_build_colr() -> Bytes {
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   // header:
   // version=0, numBaseGlyphRecords=1
   colr_test_push_u16_be(out, 0)
@@ -91,7 +91,7 @@ fn colr_test_build_colr() -> Bytes {
 
 ///|
 fn colr_test_build_colr_v1_empty() -> Bytes {
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   // header:
   // version=1, numBaseGlyphRecords=0
   colr_test_push_u16_be(out, 1)
@@ -111,7 +111,7 @@ fn colr_test_build_colr_v1_empty() -> Bytes {
 
 ///|
 fn colr_test_build_colr_v1_with_base_glyph(gid : Int) -> Bytes {
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   // header:
   // version=1, no v0 records
   colr_test_push_u16_be(out, 1)
@@ -237,7 +237,7 @@ test "COLR get_with_format/get APIs" {
     .unwrap()
   inspect(glyph.format() is ColrV0, content="true")
   inspect(glyph.layers().unwrap().length(), content="2")
-  let painter = ColrTestPainter::{ fills: Array(), }
+  let painter = ColrTestPainter::{ fills: [], }
   match glyph.paint(LocationRef::default(), painter) {
     Err(_) => inspect("err", content="ok")
     Ok(_) => {

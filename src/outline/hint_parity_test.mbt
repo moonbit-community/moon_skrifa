@@ -1092,9 +1092,9 @@ test "hint: round advance when prep disables hinting" {
       (0x8E).to_byte(), // INSTCTRL
     ])[:],
   )
-  let glyph0 = Bytes::from_array(Array()[:])
+  let glyph0 = Bytes::from_array([][:])
   let glyph1 = glyf_outline_test_glyph_simple_quad()
-  let glyf_out : Array[Byte] = Array()
+  let glyf_out : Array[Byte] = []
   for b in glyph0.iter() {
     glyf_out.push(b)
   }
@@ -1746,7 +1746,7 @@ test "hint: tthint subset should not fail in pedantic mode" {
   let font = golden_font(hint_parity_font_tthint_subset_b64())
   let outlines = OutlineGlyphCollection::from_font(font)
   let size = @moon_skrifa.Size::Size(16.0)
-  let coords : Array[@moon_skrifa.NormalizedCoord] = Array()
+  let coords : Array[@moon_skrifa.NormalizedCoord] = []
   let loc = @moon_skrifa.LocationRef::LocationRef(coords[:])
   let hinting = HintingInstance::create(
     outlines,

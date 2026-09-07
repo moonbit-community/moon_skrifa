@@ -242,7 +242,7 @@ fn glyf_apply_transform(
   path : Array[PathElement],
   t : GlyfTransform,
 ) -> Array[PathElement] {
-  let out : Array[PathElement] = Array()
+  let out : Array[PathElement] = []
   for e in path {
     match e {
       MoveTo(x, y) => {
@@ -272,7 +272,7 @@ fn glyf_apply_transform(
 
 ///|
 fn glyf_path_points(path : Array[PathElement]) -> Array[(Double, Double)] {
-  let out : Array[(Double, Double)] = Array()
+  let out : Array[(Double, Double)] = []
   for e in path {
     match e {
       MoveTo(x, y) | LineTo(x, y) => out.push((x, y))
@@ -572,7 +572,7 @@ fn glyf_simple_path(
     Some(v) => v
   }
   if number_of_contours == 0 {
-    return Some(Array())
+    return Some([])
   }
   if number_of_contours < 0 {
     // Handled by composite parsing.
@@ -580,7 +580,7 @@ fn glyf_simple_path(
   }
   // Skip bbox (xMin..yMax).
   let mut off = 10
-  let end_pts : Array[Int] = Array()
+  let end_pts : Array[Int] = []
   for _ in 0..<number_of_contours {
     let v = match glyf_read_u16_be(glyph, off) {
       None => return None
@@ -601,11 +601,11 @@ fn glyf_simple_path(
   let last_end = end_pts.at(end_pts.length() - 1)
   let num_points = last_end + 1
   if num_points <= 0 {
-    return Some(Array())
+    return Some([])
   }
 
   // Flags stream.
-  let flags : Array[Int] = Array()
+  let flags : Array[Int] = []
   while flags.length() < num_points {
     if off >= glyph.length() {
       return None
@@ -626,11 +626,11 @@ fn glyf_simple_path(
   }
 
   // Decode coordinates.
-  let points : Array[GlyfPoint] = Array()
+  let points : Array[GlyfPoint] = []
   let mut x = 0
   let mut y = 0
   // x deltas
-  let dxs : Array[Int] = Array()
+  let dxs : Array[Int] = []
   for i in 0..<num_points {
     let f = flags.at(i)
     let short = (f & 0x02) != 0
@@ -654,7 +654,7 @@ fn glyf_simple_path(
     }
   }
   // y deltas
-  let dys : Array[Int] = Array()
+  let dys : Array[Int] = []
   for i in 0..<num_points {
     let f = flags.at(i)
     let short = (f & 0x04) != 0
@@ -685,8 +685,8 @@ fn glyf_simple_path(
   }
 
   // Apply gvar deltas (simple glyphs only) before converting to path.
-  let xs : Array[Double] = Array()
-  let ys : Array[Double] = Array()
+  let xs : Array[Double] = []
+  let ys : Array[Double] = []
   for p in points.iter() {
     xs.push(p.x.to_double())
     ys.push(p.y.to_double())
@@ -694,11 +694,11 @@ fn glyf_simple_path(
   glyf_apply_gvar_simple(ctx.font, gid, ctx.coords, end_pts, xs, ys)
 
   // Convert contours into path elements.
-  let out : Array[PathElement] = Array()
+  let out : Array[PathElement] = []
   match path_style {
     FreeType => {
       // In FreeType mode, points are stored in 26.6 fixed (as Int bits).
-      let scaled : Array[GlyfPointFT] = Array()
+      let scaled : Array[GlyfPointFT] = []
       for i in 0..<points.length() {
         let p = points.at(i)
         let x_du = xs.at(i)
@@ -729,7 +729,7 @@ fn glyf_simple_path(
     HarfBuzz => {
       // In HarfBuzz mode, points are stored as f32 in 16.16 fixed units (as Double here).
       let scale = if ctx.is_scaled { ctx.hb_scale } else { 1.0 }
-      let scaled : Array[GlyfPointF] = Array()
+      let scaled : Array[GlyfPointF] = []
       for i in 0..<points.length() {
         let p = points.at(i)
         scaled.push({ x: xs.at(i) * scale, y: ys.at(i) * scale, on: p.on, })
@@ -823,7 +823,7 @@ fn glyf_composite_path(
   }
   // Skip bbox (xMin..yMax).
   let mut off = 10
-  let comps : Array[GlyfCompositeComp] = Array()
+  let comps : Array[GlyfCompositeComp] = []
   let mut flags = 0
   while true {
     flags = match glyf_read_u16_be(glyph, off) {
@@ -967,7 +967,7 @@ fn glyf_composite_path(
       delta_y = Some(ys)
     }
   }
-  let out : Array[PathElement] = Array()
+  let out : Array[PathElement] = []
   for i in 0..<comps.length() {
     let comp = comps.at(i)
     let comp_path = match
@@ -1098,7 +1098,7 @@ fn glyf_outline_path_idx(
     None => None
     Some(glyph) =>
       if glyph.length() == 0 {
-        Some(Array())
+        Some([])
       } else {
         match glyf_read_i16_be(glyph, 0) {
           None => None
@@ -1301,7 +1301,7 @@ fn glyf_outline_info_from_glyph(glyph : BytesView) -> (Bool, Bool)? {
   }
   // Simple: scan flags for overlap bit; hinting if instruction length > 0.
   let mut off = 10
-  let end_pts : Array[Int] = Array()
+  let end_pts : Array[Int] = []
   for _ in 0..<number_of_contours {
     let v = match glyf_read_u16_be(glyph, off) {
       None => return None
@@ -1326,7 +1326,7 @@ fn glyf_outline_info_from_glyph(glyph : BytesView) -> (Bool, Bool)? {
     return Some((false, has_hinting))
   }
   let mut has_overlaps = false
-  let flags : Array[Int] = Array()
+  let flags : Array[Int] = []
   while flags.length() < num_points {
     if off >= glyph.length() {
       return None
@@ -1383,7 +1383,7 @@ fn glyf_outline_info(
     None => return None
     Some(v) => v
   }
-  let empty : Array[@moon_skrifa.NormalizedCoord] = Array()
+  let empty : Array[@moon_skrifa.NormalizedCoord] = []
   let ctx = GlyfCtx::{
     font,
     glyf,
@@ -1668,7 +1668,7 @@ fn glyf_draw_memory_summary_rec(
   // Composite glyph.
   let mut off = 10
   let point_base = sum.points
-  let comp_ids : Array[Int] = Array()
+  let comp_ids : Array[Int] = []
   let mut flags = 0
   let mut component_count = 0
   while true {
@@ -1782,7 +1782,7 @@ fn glyf_draw_memory_size(
     None => return None
     Some(v) => v
   }
-  let empty : Array[@moon_skrifa.NormalizedCoord] = Array()
+  let empty : Array[@moon_skrifa.NormalizedCoord] = []
   let ctx = GlyfCtx::{
     font,
     glyf,

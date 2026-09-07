@@ -37,13 +37,13 @@ fn glyph_test_u32(x : Int) -> UInt {
 ///|
 fn glyph_test_index1(objects : Array[Array[Byte]]) -> Array[Byte] {
   let count = objects.length()
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   glyph_test_push_u16_be(out, count)
   if count == 0 {
     return out
   }
   out.push(1 |> Int::to_byte) // offSize=1
-  let offsets : Array[Int] = Array()
+  let offsets : Array[Int] = []
   let mut off = 1
   offsets.push(off)
   for obj in objects {
@@ -75,7 +75,7 @@ fn glyph_test_dict_i32(out : Array[Byte], v : Int) -> Unit {
 
 ///|
 fn glyph_test_build_post_v2() -> Bytes {
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   // version 0x00020000
   glyph_test_push_u32_be(out, glyph_test_u32(0x00020000))
   // italicAngle etc, fill zero for 28 bytes
@@ -97,7 +97,7 @@ fn glyph_test_build_post_v2() -> Bytes {
 
 ///|
 fn glyph_test_build_post_v2_standard_name(name_index : Int) -> Bytes {
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   glyph_test_push_u32_be(out, glyph_test_u32(0x00020000))
   for _ in 0..<28 {
     out.push(0 |> Int::to_byte)
@@ -109,7 +109,7 @@ fn glyph_test_build_post_v2_standard_name(name_index : Int) -> Bytes {
 
 ///|
 fn glyph_test_build_post_v1() -> Bytes {
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   glyph_test_push_u32_be(out, glyph_test_u32(0x00010000))
   // Keep 32-byte post v1 header shape.
   for _ in 0..<28 {
@@ -121,7 +121,7 @@ fn glyph_test_build_post_v1() -> Bytes {
 ///|
 fn glyph_test_build_cff_custom_charset(format : Int, sid : Int) -> Bytes {
   // Header (4)
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   out.push(1 |> Int::to_byte)
   out.push(0 |> Int::to_byte)
   out.push(4 |> Int::to_byte)
@@ -141,10 +141,10 @@ fn glyph_test_build_cff_custom_charset(format : Int, sid : Int) -> Bytes {
   )
 
   // Global Subrs INDEX (empty)
-  let global_ix = glyph_test_index1(Array())
+  let global_ix = glyph_test_index1([])
 
   // CharStrings INDEX: 2 glyphs with empty charstrings.
-  let char_ix = glyph_test_index1(Array::from_fixed_array([Array(), Array()]))
+  let char_ix = glyph_test_index1(Array::from_fixed_array([[], []]))
   let header_len = 4
   let name_len = name_ix.length()
 
@@ -158,7 +158,7 @@ fn glyph_test_build_cff_custom_charset(format : Int, sid : Int) -> Bytes {
     _ => 0
   }
   if charset_len == 0 {
-    return Bytes::from_array(Array()[:])
+    return Bytes::from_array([][:])
   }
   // Top DICT bytes: charset(i32+op) + charstrings(i32+op) => 6+6=12
   let top_dict_len = 12
@@ -167,7 +167,7 @@ fn glyph_test_build_cff_custom_charset(format : Int, sid : Int) -> Bytes {
   let global_len = global_ix.length()
   let charset_off = header_len + name_len + top_ix_len + string_len + global_len
   let charstrings_off = charset_off + charset_len
-  let top_dict : Array[Byte] = Array()
+  let top_dict : Array[Byte] = []
   glyph_test_dict_i32(top_dict, charset_off)
   top_dict.push(15 |> Int::to_byte) // charset
   glyph_test_dict_i32(top_dict, charstrings_off)
@@ -205,7 +205,7 @@ fn glyph_test_build_cff_custom_charset(format : Int, sid : Int) -> Bytes {
 fn glyph_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
   let num_tables = tables.length()
   let header_len = 12 + num_tables * 16
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   glyph_test_push_u32_be(out, glyph_test_u32(0x00010000))
   glyph_test_push_u16_be(out, num_tables)
   glyph_test_push_u16_be(out, 0)
@@ -241,7 +241,7 @@ const GLYPH_TEST_TAG_CFF : UInt = 0x43464620 // "CFF "
 ///|
 fn glyph_test_build_maxp(num_glyphs : Int) -> Bytes {
   // maxp: version u32 + numGlyphs u16 (at offset 4); fill minimal 6 bytes.
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   glyph_test_push_u32_be(out, glyph_test_u32(0x00010000))
   glyph_test_push_u16_be(out, num_glyphs)
   Bytes::from_array(out[:])

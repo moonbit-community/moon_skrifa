@@ -39,7 +39,7 @@ fn glyph_metrics_test_push_u32_be(out : Array[Byte], v : Int) -> Unit {
 fn glyph_metrics_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
   let num_tables = tables.length()
   let header_len = 12 + num_tables * 16
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   glyph_metrics_test_push_u32_be(out, 0x00010000)
   glyph_metrics_test_push_u16_be(out, num_tables)
   glyph_metrics_test_push_u16_be(out, 0)
@@ -65,7 +65,7 @@ fn glyph_metrics_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
 
 ///|
 fn glyph_metrics_test_make_maxp(num_glyphs : Int) -> Bytes {
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   glyph_metrics_test_push_u32_be(out, 0x00010000)
   glyph_metrics_test_push_u16_be(out, num_glyphs)
   Bytes::from_array(out[:])
@@ -81,7 +81,7 @@ fn glyph_metrics_test_make_hhea(num_hmetrics : Int) -> Bytes {
 
 ///|
 fn glyph_metrics_test_make_hmtx(advance : Int, lsb : Int) -> Bytes {
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   glyph_metrics_test_push_u16_be(out, advance)
   glyph_metrics_test_push_i16_be(out, lsb)
   Bytes::from_array(out[:])
@@ -108,7 +108,7 @@ fn glyph_metrics_test_make_head_long_loca(units_per_em : Int) -> Bytes {
 
 ///|
 fn glyph_metrics_test_make_loca_long(offsets : Array[Int]) -> Bytes {
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   for off in offsets {
     glyph_metrics_test_push_u32_be(out, off)
   }
@@ -119,7 +119,7 @@ fn glyph_metrics_test_make_loca_long(offsets : Array[Int]) -> Bytes {
 fn glyph_metrics_test_glyf_simple_quad() -> Bytes {
   // One contour with 3 points:
   // (0,0) on, (50,100) off, (100,0) on.
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   glyph_metrics_test_push_i16_be(out, 1)
   glyph_metrics_test_push_i16_be(out, 0)
   glyph_metrics_test_push_i16_be(out, 0)
@@ -141,7 +141,7 @@ fn glyph_metrics_test_glyf_simple_quad() -> Bytes {
 
 ///|
 fn glyph_metrics_test_make_gvar_phantom_deltas(dx0 : Int, dx1 : Int) -> Bytes {
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   // gvar header (axisCount=1, glyphCount=1, long offsets)
   glyph_metrics_test_push_u16_be(out, 1) // major
   glyph_metrics_test_push_u16_be(out, 0) // minor
@@ -181,7 +181,7 @@ fn glyph_metrics_test_make_gvar_phantom_deltas(dx0 : Int, dx1 : Int) -> Bytes {
 
 ///|
 fn glyph_metrics_test_make_hvar() -> Bytes {
-  let out : Array[Byte] = Array()
+  let out : Array[Byte] = []
   // version 1.0 (MajorMinor)
   glyph_metrics_test_push_u16_be(out, 1)
   glyph_metrics_test_push_u16_be(out, 0)
@@ -333,7 +333,7 @@ test "GlyphMetrics gvar phantom deltas fallback" {
       (GM_TAG_HMTX, glyph_metrics_test_make_hmtx(500, 10)),
       (GM_TAG_HEAD, glyph_metrics_test_make_head_long_loca(1000)),
       (GM_TAG_LOCA, loca),
-      (GM_TAG_GLYF, Bytes::from_array(Array()[:])),
+      (GM_TAG_GLYF, Bytes::from_array([][:])),
       (GM_TAG_GVAR, gvar),
     ]),
   )

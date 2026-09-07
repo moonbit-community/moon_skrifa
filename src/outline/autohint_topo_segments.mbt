@@ -80,7 +80,7 @@ priv struct AutoHintAxis {
 
 ///|
 fn AutoHintAxis::default() -> AutoHintAxis {
-  { dim: 0, major_dir: None_, segments: Array(), edges: Array(), }
+  { dim: 0, major_dir: None_, segments: [], edges: [], }
 }
 
 ///|

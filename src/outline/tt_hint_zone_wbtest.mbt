@@ -33,11 +33,11 @@ test "tt_hint: zone flip_on_curve point" {
   let on = TT_POINT_ON_CURVE
   let off = 0
   let zone = TtZone::{
-    unscaled: Array(),
-    original: Array(),
+    unscaled: [],
+    original: [],
     points: Array::make(4, { x: 0, y: 0, }),
     flags: Array::from_fixed_array([on, off, off, on]),
-    contours: Array(),
+    contours: [],
   }
   for i in 0..<4 {
     zone.flip_on_curve(i).unwrap() |> ignore
@@ -53,11 +53,11 @@ test "tt_hint: zone set_on_curve regions" {
   let on = TT_POINT_ON_CURVE
   let off = 0
   let zone = TtZone::{
-    unscaled: Array(),
-    original: Array(),
+    unscaled: [],
+    original: [],
     points: Array::make(4, { x: 0, y: 0, }),
     flags: Array::from_fixed_array([on, off, off, on]),
-    contours: Array(),
+    contours: [],
   }
   zone.set_on_curve(0, 2, true).unwrap() |> ignore
   zone.set_on_curve(2, 4, false).unwrap() |> ignore
@@ -82,7 +82,7 @@ test "tt_hint: zone iup shift" {
     { x: 20, y: 20, },
   ])
   let zone = TtZone::{
-    unscaled: Array(),
+    unscaled: [],
     original,
     points,
     contours: Array::from_fixed_array([3]),

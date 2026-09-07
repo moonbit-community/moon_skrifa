@@ -14,16 +14,16 @@
 
 ///|
 fn tt_make_engine_for_graphics(scale : Int, ppem : Int) -> TtEngine {
-  let empty = Bytes::from_array(Array()[:])
+  let empty = Bytes::from_array([][:])
   let retained = TtRetainedGraphicsState(scale, ppem, Target::default())
-  let coords0 : Array[@moon_skrifa.NormalizedCoord] = Array()
+  let coords0 : Array[@moon_skrifa.NormalizedCoord] = []
   TtEngine(
     empty[:],
     empty[:],
     empty[:],
     retained,
-    Array(),
-    Array(),
+    [],
+    [],
     None,
     0,
     coords0[:],
@@ -103,11 +103,11 @@ test "tt_hint: graphics set vectors to line (SPVTL/SFVTL/SDPVTL)" {
 
   // Set up a glyph zone with 2 points and 2 original points (26.6 bits).
   engine.graphics.glyph = {
-    unscaled: Array(),
+    unscaled: [],
     points: Array::from_fixed_array([{ x: 0, y: 0, }, { x: 64, y: 0, }]),
     original: Array::from_fixed_array([{ x: 0, y: 64, }, { x: 0, y: -64, }]),
     flags: Array::make(2, 0),
-    contours: Array(),
+    contours: [],
   }
 
   // Set all zone pointers to glyph.
@@ -318,11 +318,11 @@ test "tt_hint: graphics set vectors to line handles equal points (x-axis default
   let one = 0x4000
   let x_axis = TtVec14::{ x: one, y: 0, }
   engine.graphics.glyph = {
-    unscaled: Array(),
+    unscaled: [],
     points: Array::from_fixed_array([{ x: 0, y: 0, }, { x: 0, y: 0, }]),
     original: Array::from_fixed_array([{ x: 0, y: 0, }, { x: 0, y: 0, }]),
     flags: Array::make(2, 0),
-    contours: Array(),
+    contours: [],
   }
   engine.value_stack.push(1).unwrap() |> ignore
   engine.op_szps().unwrap() |> ignore

@@ -32,7 +32,7 @@ const TAG_CVT_TT : UInt = 0x63767420 // "cvt "
 const TAG_FVAR_TT : UInt = 0x66766172 // "fvar"
 
 ///|
-let tt_empty_bytes : Bytes = Bytes::from_array(Array()[:])
+let tt_empty_bytes : Bytes = Bytes::from_array([][:])
 
 ///|
 fn tt_empty_bytes_view() -> BytesView {
@@ -79,12 +79,12 @@ fn TtHintInstance::default() -> TtHintInstance {
   {
     functions: TtDefinitionSet(0),
     instructions: TtDefinitionSet(0),
-    cvt: Array(),
-    storage: Array(),
+    cvt: [],
+    storage: [],
     retained: TtRetainedGraphicsState::default(),
-    twilight_points: Array(),
-    twilight_original: Array(),
-    twilight_flags: Array(),
+    twilight_points: [],
+    twilight_original: [],
+    twilight_flags: [],
     max_stack: 0,
     max_call_depth: 32,
     max_function_defs: 0,
@@ -124,10 +124,10 @@ fn tt_parse_maxp_limits(maxp : BytesView) -> (Int, Int, Int, Int, Int) {
 ///|
 fn tt_load_cvt(font : @moon_skrifa.FontRef) -> Array[Int] {
   match font.table(TAG_CVT_TT) {
-    None => Array()
+    None => []
     Some(cvt) => {
       let n = cvt.length() / 2
-      let out : Array[Int] = Array()
+      let out : Array[Int] = []
       for i in 0..<n {
         let v = tt_read_i16_be(cvt, i * 2).unwrap_or(0)
         out.push(v * 64)
@@ -141,7 +141,7 @@ fn tt_load_cvt(font : @moon_skrifa.FontRef) -> Array[Int] {
 fn tt_scale_cvt_for_size(cvt : Array[Int], scale_bits : Int) -> Array[Int] {
   // CVT values are already in 26.6; scale by (scale_bits >> 6) (16.16).
   let s = scale_bits >> 6
-  let out : Array[Int] = Array()
+  let out : Array[Int] = []
   for v in cvt.iter() {
     let vv = v.to_int64() * s.to_int64()
     let adj = 0x8000 - (if vv < 0 { 1 } else { 0 })
@@ -164,18 +164,12 @@ fn tt_make_twilight_zone(point_count : Int) -> TtZone {
   let orig : Array[TtPoint] = Array::make(point_count, { x: 0, y: 0, })
   let flags : Array[Int] = Array::make(point_count, 0)
   let contours : Array[Int] = Array::from_fixed_array([point_count])
-  { unscaled: Array(), original: orig, points: pts, flags, contours, }
+  { unscaled: [], original: orig, points: pts, flags, contours, }
 }
 
 ///|
 fn tt_make_empty_glyph_zone() -> TtZone {
-  {
-    unscaled: Array(),
-    original: Array(),
-    points: Array(),
-    flags: Array(),
-    contours: Array(),
-  }
+  { unscaled: [], original: [], points: [], flags: [], contours: [], }
 }
 
 ///|
@@ -211,7 +205,7 @@ fn TtHintInstance::reconfigure(
     cvar_deltas_fixed16_16(font, axis_count, coords, base_cvt.length()) {
     None => base_cvt
     Some(deltas_bits) => {
-      let out : Array[Int] = Array()
+      let out : Array[Int] = []
       for i in 0..<base_cvt.length() {
         out.push(base_cvt.at(i) + cvar_fixed16_16_to_f26_6(deltas_bits.at(i)))
       }
@@ -307,7 +301,7 @@ fn TtHintInstance::hint_glyph(
   engine.instructions = self.instructions
   // Reset twilight zone to the instance state for each glyph run.
   let tz = TtZone::{
-    unscaled: Array(),
+    unscaled: [],
     original: self.twilight_original.copy(),
     points: self.twilight_points.copy(),
     flags: self.twilight_flags.copy(),
