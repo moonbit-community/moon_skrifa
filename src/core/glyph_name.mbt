@@ -53,7 +53,8 @@ pub fn GlyphName::is_synthesized(self : GlyphName) -> Bool {
 ///|
 fn glyph_name_truncate(s : String) -> String {
   // Glyph names are expected to be ASCII; truncate by code units.
-  let out : Array[Char] = Array::new(capacity=MAX_GLYPH_NAME_LEN)
+  let out : Array[Char] = []
+  out.reserve_capacity(MAX_GLYPH_NAME_LEN)
   let mut n = 0
   for c in s {
     if n >= MAX_GLYPH_NAME_LEN {

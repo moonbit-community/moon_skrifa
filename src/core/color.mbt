@@ -337,7 +337,8 @@ pub fn ColorPalette::index(self : ColorPalette) -> Int {
 ///|
 pub fn ColorPalette::colors(self : ColorPalette) -> Array[Color] {
   let count = self.palettes.entries_per_palette()
-  let out : Array[Color] = Array::new(capacity=count)
+  let out : Array[Color] = []
+  out.reserve_capacity(count)
   for i in 0..<count {
     if self.color(i) is Some(c) {
       out.push(c)

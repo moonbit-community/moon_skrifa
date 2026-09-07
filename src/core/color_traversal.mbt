@@ -798,7 +798,8 @@ fn color_trav_read_color_line(
   if end < stops_off || end > colr.length() {
     return None
   }
-  let out : Array[ColorStop] = Array::new(capacity=num)
+  let out : Array[ColorStop] = []
+  out.reserve_capacity(num)
   for i in 0..<num {
     let p = stops_off + i * rec_len
     let stop_offset0 = color_trav_read_f2dot14(colr, p).unwrap_or(0.0)
