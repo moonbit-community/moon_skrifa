@@ -16,19 +16,19 @@
 /// Color palettes (OpenType `CPAL` table) MVP.
 ///
 /// Ported from `fontations/skrifa/src/color/*` (Apache-2.0 OR MIT).
-const COLOR_TAG_CPAL : UInt = 0x4350414C // "CPAL"
+const COLOR_TAG_CPAL : UInt32 = 0x4350414C // "CPAL"
 
 ///|
-const COLOR_CPAL_VERSION_1 : Int = 1
+const COLOR_CPAL_VERSION_1 : Int32 = 1
 
 ///|
-const COLOR_CPAL_PALETTE_USABLE_WITH_LIGHT_BACKGROUND : UInt = 0x00000001
+const COLOR_CPAL_PALETTE_USABLE_WITH_LIGHT_BACKGROUND : UInt32 = 0x00000001
 
 ///|
-const COLOR_CPAL_PALETTE_USABLE_WITH_DARK_BACKGROUND : UInt = 0x00000002
+const COLOR_CPAL_PALETTE_USABLE_WITH_DARK_BACKGROUND : UInt32 = 0x00000002
 
 ///|
-fn color_read_u16_be(view : BytesView, offset : Int) -> Int? {
+fn color_read_u16_be(view : BytesView, offset : Int32) -> Int32? {
   if offset < 0 || offset + 2 > view.length() {
     None
   } else {
@@ -39,7 +39,7 @@ fn color_read_u16_be(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn color_read_u32_be(view : BytesView, offset : Int) -> UInt? {
+fn color_read_u32_be(view : BytesView, offset : Int32) -> UInt32? {
   if offset < 0 || offset + 4 > view.length() {
     None
   } else {
@@ -52,7 +52,7 @@ fn color_read_u32_be(view : BytesView, offset : Int) -> UInt? {
 }
 
 ///|
-fn color_read_u32_be_int(view : BytesView, offset : Int) -> Int? {
+fn color_read_u32_be_int(view : BytesView, offset : Int32) -> Int32? {
   match color_read_u32_be(view, offset) {
     None => None
     Some(u) => Some(u.to_uint64().to_int())
@@ -89,11 +89,11 @@ pub fn Color::a(self : Color) -> Byte {
 
 ///|
 pub struct ColorPaletteType {
-  bits : UInt
+  bits : UInt32
 }
 
 ///|
-pub fn ColorPaletteType::raw(self : ColorPaletteType) -> UInt {
+pub fn ColorPaletteType::raw(self : ColorPaletteType) -> UInt32 {
   self.bits
 }
 
@@ -114,21 +114,21 @@ pub fn ColorPaletteType::usable_with_dark_background(
 ///|
 pub struct ColorPalettes {
   priv cpal : BytesView?
-  priv version : Int
-  priv num_entries : Int
-  priv num_palettes : Int
-  priv num_records : Int
-  priv color_records_off : Int
-  priv indices_off : Int
-  priv palette_types_off : Int?
-  priv palette_labels_off : Int?
-  priv palette_entry_labels_off : Int?
+  priv version : Int32
+  priv num_entries : Int32
+  priv num_palettes : Int32
+  priv num_records : Int32
+  priv color_records_off : Int32
+  priv indices_off : Int32
+  priv palette_types_off : Int32?
+  priv palette_labels_off : Int32?
+  priv palette_entry_labels_off : Int32?
 }
 
 ///|
 pub struct ColorPalette {
   priv palettes : ColorPalettes
-  priv index : Int
+  priv index : Int32
 }
 
 ///|
@@ -181,9 +181,9 @@ pub fn ColorPalettes::ColorPalettes(font : FontRef) -> ColorPalettes {
       if records_end < records_off || records_end > cpal.length() {
         return ColorPalettes::empty()
       }
-      let mut palette_types_off : Int? = None
-      let mut palette_labels_off : Int? = None
-      let mut palette_entry_labels_off : Int? = None
+      let mut palette_types_off : Int32? = None
+      let mut palette_labels_off : Int32? = None
+      let mut palette_entry_labels_off : Int32? = None
       if version >= COLOR_CPAL_VERSION_1 {
         if cpal.length() < 24 {
           return ColorPalettes::empty()
@@ -227,12 +227,12 @@ pub fn ColorPalettes::ColorPalettes(font : FontRef) -> ColorPalettes {
 }
 
 ///|
-pub fn ColorPalettes::len(self : ColorPalettes) -> Int {
+pub fn ColorPalettes::len(self : ColorPalettes) -> Int32 {
   self.num_palettes
 }
 
 ///|
-pub fn ColorPalettes::version(self : ColorPalettes) -> Int {
+pub fn ColorPalettes::version(self : ColorPalettes) -> Int32 {
   self.version
 }
 
@@ -242,15 +242,15 @@ pub fn ColorPalettes::is_empty(self : ColorPalettes) -> Bool {
 }
 
 ///|
-pub fn ColorPalettes::entries_per_palette(self : ColorPalettes) -> Int {
+pub fn ColorPalettes::entries_per_palette(self : ColorPalettes) -> Int32 {
   self.num_entries
 }
 
 ///|
 fn ColorPalettes::palette_start_index(
   self : ColorPalettes,
-  palette : Int,
-) -> Int? {
+  palette : Int32,
+) -> Int32? {
   let cpal = match self.cpal {
     None => return None
     Some(v) => v
@@ -264,8 +264,8 @@ fn ColorPalettes::palette_start_index(
 ///|
 pub fn ColorPalettes::color(
   self : ColorPalettes,
-  palette : Int,
-  entry : Int,
+  palette : Int32,
+  entry : Int32,
 ) -> Color? {
   let cpal = match self.cpal {
     None => return None
@@ -294,7 +294,7 @@ pub fn ColorPalettes::color(
 }
 
 ///|
-pub fn ColorPalettes::get(self : ColorPalettes, index : Int) -> ColorPalette? {
+pub fn ColorPalettes::get(self : ColorPalettes, index : Int32) -> ColorPalette? {
   let start_index = match self.palette_start_index(index) {
     None => return None
     Some(v) => v
@@ -308,7 +308,7 @@ pub fn ColorPalettes::get(self : ColorPalettes, index : Int) -> ColorPalette? {
 ///|
 pub fn ColorPalettes::color_label(
   self : ColorPalettes,
-  color_index : Int,
+  color_index : Int32,
 ) -> StringId? {
   let cpal = match self.cpal {
     None => return None
@@ -330,7 +330,7 @@ pub fn ColorPalettes::color_label(
 }
 
 ///|
-pub fn ColorPalette::index(self : ColorPalette) -> Int {
+pub fn ColorPalette::index(self : ColorPalette) -> Int32 {
   self.index
 }
 
@@ -350,7 +350,7 @@ pub fn ColorPalette::colors(self : ColorPalette) -> Array[Color] {
 }
 
 ///|
-pub fn ColorPalette::color(self : ColorPalette, entry : Int) -> Color? {
+pub fn ColorPalette::color(self : ColorPalette, entry : Int32) -> Color? {
   self.palettes.color(self.index, entry)
 }
 

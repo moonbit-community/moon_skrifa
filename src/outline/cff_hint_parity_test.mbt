@@ -19,7 +19,7 @@
 /// upstream reference outputs.
 
 ///|
-fn cff_hint_b64_val(c : Int) -> Int? {
+fn cff_hint_b64_val(c : Int32) -> Int32? {
   if c >= 65 && c <= 90 {
     Some(c - 65)
   } else if c >= 97 && c <= 122 {
@@ -38,7 +38,7 @@ fn cff_hint_b64_val(c : Int) -> Int? {
 ///|
 fn cff_hint_b64_decode(s : String) -> Bytes {
   let out : Array[Byte] = []
-  let vals : Array[Int] = []
+  let vals : Array[Int32] = []
   let n = s.length()
   for i in 0..<n {
     let c = s.code_unit_at(i).to_int()
@@ -162,16 +162,19 @@ fn cff_hint_font_notosansjp_regular_subset_otf_b64() -> String {
 ///|
 test "cff hinting: Cantarell VF (gid=1 size=16) matches fontations hinted SVG" {
   let font = cff_hint_golden_font(cff_hint_font_cantarell_vf_trimmed_b64())
-  let outlines0 = OutlineGlyphCollection::from_font(font)
+  let outlines0 = @outline.OutlineGlyphCollection::from_font(font)
   let size = @moon_skrifa.Size::Size(16.0)
   let loc = @moon_skrifa.LocationRef::default()
-  let opts = Engine::Interpreter.into()
-  let hinter = HintingInstance::create(outlines0, size, loc, opts).unwrap()
-  let outlines = OutlineGlyphCollection::from_font(font)
+  let opts = @outline.Engine::Interpreter.into()
+  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts).unwrap()
+  let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(GlyphId((1).to_uint16())).unwrap()
-  let pen = SvgPen::with_precision(6)
+  let pen = @outline.SvgPen::with_precision(6)
   glyph
-  .draw(DrawSettings::hinted(hinter, false).with_path_style(FreeType), pen)
+  .draw(
+    @outline.DrawSettings::hinted(hinter, false).with_path_style(FreeType),
+    pen,
+  )
   .unwrap()
   |> ignore
   inspect(
@@ -185,16 +188,19 @@ test "cff hinting: NotoSansJP-Regular subset (gid=0 size=16) matches fontations 
   let font = cff_hint_golden_font(
     cff_hint_font_notosansjp_regular_subset_otf_b64(),
   )
-  let outlines0 = OutlineGlyphCollection::from_font(font)
+  let outlines0 = @outline.OutlineGlyphCollection::from_font(font)
   let size = @moon_skrifa.Size::Size(16.0)
   let loc = @moon_skrifa.LocationRef::default()
-  let opts = Engine::Interpreter.into()
-  let hinter = HintingInstance::create(outlines0, size, loc, opts).unwrap()
-  let outlines = OutlineGlyphCollection::from_font(font)
+  let opts = @outline.Engine::Interpreter.into()
+  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts).unwrap()
+  let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(GlyphId((0).to_uint16())).unwrap()
-  let pen = SvgPen::with_precision(6)
+  let pen = @outline.SvgPen::with_precision(6)
   glyph
-  .draw(DrawSettings::hinted(hinter, false).with_path_style(FreeType), pen)
+  .draw(
+    @outline.DrawSettings::hinted(hinter, false).with_path_style(FreeType),
+    pen,
+  )
   .unwrap()
   |> ignore
   inspect(

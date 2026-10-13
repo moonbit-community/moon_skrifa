@@ -19,12 +19,12 @@
 /// path conversion.
 
 ///|
-fn autohint_f26dot6_to_double(bits : Int) -> Double {
+fn autohint_f26dot6_to_double(bits : Int32) -> Double {
   bits.to_double() / 64.0
 }
 
 ///|
-fn autohint_midpoint_i32(a : Int, b : Int) -> Int {
+fn autohint_midpoint_i32(a : Int32, b : Int32) -> Int32 {
   (a + b) / 2
 }
 
@@ -32,8 +32,8 @@ fn autohint_midpoint_i32(a : Int, b : Int) -> Int {
 fn autohint_emit_contour(
   out : Array[PathElement],
   outline : AutoHintOutline,
-  start : Int,
-  end : Int,
+  start : Int32,
+  end : Int32,
   path_style : PathStyle,
 ) -> Unit {
   let n = end - start + 1
@@ -76,7 +76,7 @@ fn autohint_emit_contour(
   out.push(
     MoveTo(autohint_f26dot6_to_double(sx), autohint_f26dot6_to_double(sy)),
   )
-  let mut control : (Int, Int)? = None
+  let mut control : (Int32, Int32)? = None
   if start_idx == -1 {
     for i in start..<(end + 1) {
       let p = outline.points.at(i)

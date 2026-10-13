@@ -13,7 +13,7 @@
 // limitations under the License.
 
 ///|
-fn tt_make_engine_for_graphics(scale : Int, ppem : Int) -> TtEngine {
+fn tt_make_engine_for_graphics(scale : Int32, ppem : Int32) -> TtEngine {
   let empty = Bytes::from_array([][:])
   let retained = TtRetainedGraphicsState(scale, ppem, Target::default())
   let coords0 : Array[@moon_skrifa.NormalizedCoord] = []

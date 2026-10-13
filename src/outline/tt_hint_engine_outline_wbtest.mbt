@@ -73,9 +73,9 @@ fn tt_set_test_vectors_for_outline(engine : TtEngine) -> Unit {
 ///|
 fn tt_set_point_for_outline(
   engine : TtEngine,
-  point_ix : Int,
-  x : Int,
-  y : Int,
+  point_ix : Int32,
+  x : Int32,
+  y : Int32,
 ) -> Unit {
   engine.graphics.glyph.points.set(point_ix, { x, y, })
 }

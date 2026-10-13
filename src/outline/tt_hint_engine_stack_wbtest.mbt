@@ -13,8 +13,8 @@
 // limitations under the License.
 
 ///|
-fn tt_stack_snapshot(engine : TtEngine) -> Array[Int] {
-  let out : Array[Int] = []
+fn tt_stack_snapshot(engine : TtEngine) -> Array[Int32] {
+  let out : Array[Int32] = []
   let n = engine.value_stack.length()
   for i in 0..<n {
     out.push(engine.value_stack.buf.at(i))
@@ -23,7 +23,7 @@ fn tt_stack_snapshot(engine : TtEngine) -> Array[Int] {
 }
 
 ///|
-fn tt_stack_eq(engine : TtEngine, expected : FixedArray[Int]) -> Bool {
+fn tt_stack_eq(engine : TtEngine, expected : FixedArray[Int32]) -> Bool {
   let got = tt_stack_snapshot(engine)
   if got.length() != expected.length() {
     return false

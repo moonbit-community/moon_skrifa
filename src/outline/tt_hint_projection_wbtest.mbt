@@ -13,7 +13,7 @@
 // limitations under the License.
 
 ///|
-fn tt_vec14_normalize(x : Int, y : Int) -> TtVec14 {
+fn tt_vec14_normalize(x : Int32, y : Int32) -> TtVec14 {
   let (nx, ny) = tt_hint_normalize14(x, y)
   { x: nx, y: ny, }
 }
@@ -28,7 +28,7 @@ test "tt_hint: projection one axis" {
     state.proj_vector.x == 0x4000 && state.proj_vector.y == 0,
     content="true",
   )
-  let cases : Array[(TtPoint, TtPoint, Int)] = Array::from_fixed_array([
+  let cases : Array[(TtPoint, TtPoint, Int32)] = Array::from_fixed_array([
     ({ x: 0, y: 0, }, { x: 0, y: 0, }, 0),
     ({ x: 100, y: 100, }, { x: 0, y: 0, }, 100),
     ({ x: 42, y: 100, }, { x: 100, y: 0, }, -58),
@@ -47,7 +47,7 @@ test "tt_hint: projection both axes" {
   state.proj_vector = tt_vec14_normalize(0x4000, 0x4000)
   state.update_projection_state()
   inspect(state.proj_axis is Both, content="true")
-  let cases : Array[(TtPoint, TtPoint, Int)] = Array::from_fixed_array([
+  let cases : Array[(TtPoint, TtPoint, Int32)] = Array::from_fixed_array([
     ({ x: 0, y: 0, }, { x: 0, y: 0, }, 0),
     ({ x: 100, y: 100, }, { x: 0, y: 0, }, 141),
     ({ x: 42, y: 100, }, { x: 100, y: 0, }, 30),

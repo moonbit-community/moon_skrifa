@@ -21,9 +21,9 @@
 
 ///|
 priv struct AutoHintStyleRange {
-  first : Int
-  last : Int
-  bits : Int
+  first : Int32
+  last : Int32
+  bits : Int32
 }
 
 ///|
@@ -466,9 +466,9 @@ fn autohint_style_ranges() -> Array[AutoHintStyleRange] {
 
 ///|
 fn autohint_style_range_for_codepoint(
-  ch : Int,
+  ch : Int32,
   ranges : ArrayView[AutoHintStyleRange],
-) -> (Int, Int, Int)? {
+) -> (Int32, Int32, Int32)? {
   if ch < 0 {
     return None
   }
@@ -489,7 +489,7 @@ fn autohint_style_range_for_codepoint(
 }
 
 ///|
-fn autohint_style_script_ix(style_ix : Int) -> Int {
+fn autohint_style_script_ix(style_ix : Int32) -> Int32 {
   match style_ix {
     0 => 0
     1 => 1
@@ -586,7 +586,7 @@ fn autohint_style_script_ix(style_ix : Int) -> Int {
 }
 
 ///|
-fn autohint_script_group(script_ix : Int) -> AutoHintScriptGroup {
+fn autohint_script_group(script_ix : Int32) -> AutoHintScriptGroup {
   match script_ix {
     0 => Default
     1 => Default
@@ -653,7 +653,7 @@ fn autohint_script_group(script_ix : Int) -> AutoHintScriptGroup {
 }
 
 ///|
-fn autohint_script_hint_top_to_bottom(script_ix : Int) -> Bool {
+fn autohint_script_hint_top_to_bottom(script_ix : Int32) -> Bool {
   match script_ix {
     0 => false
     1 => false
@@ -720,7 +720,7 @@ fn autohint_script_hint_top_to_bottom(script_ix : Int) -> Bool {
 }
 
 ///|
-fn autohint_script_std_chars(script_ix : Int) -> String {
+fn autohint_script_std_chars(script_ix : Int32) -> String {
   match script_ix {
     0 => "𞤌 𞤮"
     1 => "ل ح ـ"
@@ -787,7 +787,7 @@ fn autohint_script_std_chars(script_ix : Int) -> String {
 }
 
 ///|
-fn autohint_script_blues(script_ix : Int) -> Array[(String, Int)] {
+fn autohint_script_blues(script_ix : Int32) -> Array[(String, Int32)] {
   match script_ix {
     0 =>
       [

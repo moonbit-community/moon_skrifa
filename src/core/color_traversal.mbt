@@ -20,7 +20,7 @@
 /// Current scope:
 /// - Formats: all COLRv1 paint formats 1..=32 (including gradients, transforms and var variants)
 /// - ClipList support (including ClipBox format 2 variation deltas)
-const COLOR_TRAV_TAG_COLR : UInt = 0x434F4C52 // "COLR"
+const COLOR_TRAV_TAG_COLR : UInt32 = 0x434F4C52 // "COLR"
 
 ///|
 pub(all) enum PaintError {
@@ -28,7 +28,7 @@ pub(all) enum PaintError {
   GlyphNotFound(GlyphId)
   PaintCycleDetected
   DepthLimitExceeded
-  UnsupportedPaintFormat(Int)
+  UnsupportedPaintFormat(Int32)
 }
 
 ///|
@@ -79,7 +79,7 @@ pub(all) enum Extend {
 }
 
 ///|
-fn extend_from_u8(raw : Int) -> Extend {
+fn extend_from_u8(raw : Int32) -> Extend {
   match raw {
     0 => Pad
     1 => Repeat
@@ -89,7 +89,7 @@ fn extend_from_u8(raw : Int) -> Extend {
 }
 
 ///|
-pub fn Extend::raw(self : Extend) -> Int {
+pub fn Extend::raw(self : Extend) -> Int32 {
   match self {
     Pad => 0
     Repeat => 1
@@ -104,7 +104,7 @@ fn extend_is_pad(e : Extend) -> Bool {
 }
 
 ///|
-fn composite_mode_from_u8(raw : Int) -> CompositeMode {
+fn composite_mode_from_u8(raw : Int32) -> CompositeMode {
   match raw {
     0 => Clear
     1 => Src
@@ -139,7 +139,7 @@ fn composite_mode_from_u8(raw : Int) -> CompositeMode {
 }
 
 ///|
-pub fn CompositeMode::raw(self : CompositeMode) -> Int {
+pub fn CompositeMode::raw(self : CompositeMode) -> Int32 {
   match self {
     Clear => 0
     Src => 1
@@ -176,13 +176,13 @@ pub fn CompositeMode::raw(self : CompositeMode) -> Int {
 ///|
 pub(all) struct ColorStop {
   offset : Double
-  palette_index : Int
+  palette_index : Int32
   alpha : Double
 }
 
 ///|
 pub(all) enum Brush {
-  Solid(Int, Double)
+  Solid(Int32, Double)
   LinearGradient((Double, Double), (Double, Double), Array[ColorStop], Extend)
   RadialGradient(
     (Double, Double),
@@ -214,10 +214,10 @@ pub(open) trait ColorPainter {
 }
 
 ///|
-const COLOR_TRAV_MAX_DEPTH : Int = 64
+const COLOR_TRAV_MAX_DEPTH : Int32 = 64
 
 ///|
-fn color_trav_read_u8(view : BytesView, offset : Int) -> Int? {
+fn color_trav_read_u8(view : BytesView, offset : Int32) -> Int32? {
   if offset < 0 || offset + 1 > view.length() {
     None
   } else {
@@ -226,7 +226,7 @@ fn color_trav_read_u8(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn color_trav_read_i8(view : BytesView, offset : Int) -> Int? {
+fn color_trav_read_i8(view : BytesView, offset : Int32) -> Int32? {
   match color_trav_read_u8(view, offset) {
     None => None
     Some(u) => if u >= 0x80 { Some(u - 0x100) } else { Some(u) }
@@ -234,7 +234,7 @@ fn color_trav_read_i8(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn color_trav_read_u16_be(view : BytesView, offset : Int) -> Int? {
+fn color_trav_read_u16_be(view : BytesView, offset : Int32) -> Int32? {
   if offset < 0 || offset + 2 > view.length() {
     None
   } else {
@@ -245,7 +245,7 @@ fn color_trav_read_u16_be(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn color_trav_read_i16_be(view : BytesView, offset : Int) -> Int? {
+fn color_trav_read_i16_be(view : BytesView, offset : Int32) -> Int32? {
   match color_trav_read_u16_be(view, offset) {
     None => None
     Some(u) => if u >= 0x8000 { Some(u - 0x10000) } else { Some(u) }
@@ -253,7 +253,7 @@ fn color_trav_read_i16_be(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn color_trav_read_u24_be(view : BytesView, offset : Int) -> Int? {
+fn color_trav_read_u24_be(view : BytesView, offset : Int32) -> Int32? {
   if offset < 0 || offset + 3 > view.length() {
     None
   } else {
@@ -265,7 +265,7 @@ fn color_trav_read_u24_be(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn color_trav_read_u32_be(view : BytesView, offset : Int) -> UInt? {
+fn color_trav_read_u32_be(view : BytesView, offset : Int32) -> UInt32? {
   if offset < 0 || offset + 4 > view.length() {
     None
   } else {
@@ -278,7 +278,7 @@ fn color_trav_read_u32_be(view : BytesView, offset : Int) -> UInt? {
 }
 
 ///|
-fn color_trav_read_u32_be_int(view : BytesView, offset : Int) -> Int? {
+fn color_trav_read_u32_be_int(view : BytesView, offset : Int32) -> Int32? {
   match color_trav_read_u32_be(view, offset) {
     None => None
     Some(u) => Some(u.to_uint64().to_int())
@@ -286,7 +286,7 @@ fn color_trav_read_u32_be_int(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn color_trav_read_fixed_16_16(view : BytesView, offset : Int) -> Double? {
+fn color_trav_read_fixed_16_16(view : BytesView, offset : Int32) -> Double? {
   match color_trav_read_u32_be(view, offset) {
     None => None
     Some(u) => Some(u.reinterpret_as_int().to_double() / 65536.0)
@@ -294,7 +294,7 @@ fn color_trav_read_fixed_16_16(view : BytesView, offset : Int) -> Double? {
 }
 
 ///|
-fn color_trav_read_f2dot14(view : BytesView, offset : Int) -> Double? {
+fn color_trav_read_f2dot14(view : BytesView, offset : Int32) -> Double? {
   match color_trav_read_i16_be(view, offset) {
     None => None
     Some(v) => Some(v.to_double() / 16384.0)
@@ -305,20 +305,20 @@ fn color_trav_read_f2dot14(view : BytesView, offset : Int) -> Double? {
 const COLOR_TRAV_PI : Double = 3.141592653589793
 
 ///|
-const COLOR_TRAV_NO_VARIATION_DELTAS : UInt = 0xFFFFFFFF
+const COLOR_TRAV_NO_VARIATION_DELTAS : UInt32 = 0xFFFFFFFF
 
 ///|
-fn color_trav_var_index_add(base : UInt, add : Int) -> UInt {
+fn color_trav_var_index_add(base : UInt32, add : Int32) -> UInt32 {
   base + add.reinterpret_as_uint()
 }
 
 ///|
-fn color_trav_apply_fword_delta(base : Int, delta : Double) -> Double {
+fn color_trav_apply_fword_delta(base : Int32, delta : Double) -> Double {
   base.to_double() + delta
 }
 
 ///|
-fn color_trav_apply_ufword_delta(base : Int, delta : Double) -> Double {
+fn color_trav_apply_ufword_delta(base : Int32, delta : Double) -> Double {
   base.to_double() + delta
 }
 
@@ -333,21 +333,21 @@ fn color_trav_apply_f2dot14_delta(base : Double, delta : Double) -> Double {
 }
 
 ///|
-fn color_trav_var_entry_size(entry_format : Int) -> Int {
+fn color_trav_var_entry_size(entry_format : Int32) -> Int32 {
   ((entry_format & 0x30) >> 4) + 1
 }
 
 ///|
-fn color_trav_var_bit_count(entry_format : Int) -> Int {
+fn color_trav_var_bit_count(entry_format : Int32) -> Int32 {
   (entry_format & 0x0F) + 1
 }
 
 ///|
 fn color_trav_var_index_map_get(
   colr : BytesView,
-  map_off : Int,
-  index : UInt,
-) -> (Int, Int)? {
+  map_off : Int32,
+  index : UInt32,
+) -> (Int32, Int32)? {
   let format = color_trav_read_u8(colr, map_off).unwrap_or(-1)
   if format != 0 && format != 1 {
     return None
@@ -375,7 +375,7 @@ fn color_trav_var_index_map_get(
   }
   let data_off = if format == 0 { map_off + 4 } else { map_off + 6 }
   let entry_off = data_off + idx * entry_size
-  let entry : Int? = match entry_size {
+  let entry : Int32? = match entry_size {
     1 => color_trav_read_u8(colr, entry_off)
     2 => color_trav_read_u16_be(colr, entry_off)
     3 => color_trav_read_u24_be(colr, entry_off)
@@ -395,8 +395,8 @@ fn color_trav_var_index_map_get(
 ///|
 fn color_trav_region_scalar(
   colr : BytesView,
-  region_list_off : Int,
-  region_index : Int,
+  region_list_off : Int32,
+  region_index : Int32,
   coords : ArrayView[NormalizedCoord],
 ) -> Double {
   let axis_count = color_trav_read_u16_be(colr, region_list_off).unwrap_or(-1)
@@ -449,9 +449,9 @@ fn color_trav_region_scalar(
 ///|
 fn color_trav_item_variation_store_delta(
   colr : BytesView,
-  store_off : Int,
-  outer : Int,
-  inner : Int,
+  store_off : Int32,
+  outer : Int32,
+  inner : Int32,
   coords : ArrayView[NormalizedCoord],
 ) -> Double {
   if coords.is_empty() {
@@ -524,9 +524,9 @@ fn color_trav_item_variation_store_delta(
 ///|
 fn color_trav_var_delta(
   colr : BytesView,
-  var_index_map_off : Int?,
-  store_off : Int?,
-  var_index : UInt,
+  var_index_map_off : Int32?,
+  store_off : Int32?,
+  var_index : UInt32,
   coords : ArrayView[NormalizedCoord],
 ) -> Double {
   if coords.is_empty() {
@@ -571,7 +571,7 @@ fn color_trav_sort_color_stops(stops : Array[ColorStop]) -> Unit {
 }
 
 ///|
-fn color_trav_stack_contains(stack : Array[Int], id : Int) -> Bool {
+fn color_trav_stack_contains(stack : Array[Int32], id : Int32) -> Bool {
   for x in stack {
     if x == id {
       return true
@@ -583,9 +583,9 @@ fn color_trav_stack_contains(stack : Array[Int], id : Int) -> Bool {
 ///|
 fn color_trav_base_paint_offset(
   colr : BytesView,
-  base_glyph_list_off : Int,
+  base_glyph_list_off : Int32,
   glyph_id : GlyphId,
-) -> Int? {
+) -> Int32? {
   let gid = glyph_id.to_uint64().to_int()
   if gid < 0 {
     return None
@@ -635,9 +635,9 @@ fn color_trav_base_paint_offset(
 ///|
 fn color_trav_layer_paint_offset(
   colr : BytesView,
-  layer_list_off : Int,
-  layer_index : Int,
-) -> Int? {
+  layer_list_off : Int32,
+  layer_index : Int32,
+) -> Int32? {
   let num = color_trav_read_u32_be_int(colr, layer_list_off).unwrap_or(-1)
   if num <= 0 {
     return None
@@ -667,11 +667,11 @@ fn color_trav_layer_paint_offset(
 ///|
 fn color_trav_clip_box(
   colr : BytesView,
-  clip_list_off : Int,
+  clip_list_off : Int32,
   glyph_id : GlyphId,
   coords : ArrayView[NormalizedCoord],
-  var_index_map_off : Int?,
-  var_store_off : Int?,
+  var_index_map_off : Int32?,
+  var_store_off : Int32?,
 ) -> (Double, Double, Double, Double)? {
   let gid = glyph_id.to_uint64().to_int()
   if gid < 0 {
@@ -777,11 +777,11 @@ fn color_trav_clip_box(
 ///|
 fn color_trav_read_color_line(
   colr : BytesView,
-  color_line_off : Int,
+  color_line_off : Int32,
   is_var : Bool,
   coords : ArrayView[NormalizedCoord],
-  var_index_map_off : Int?,
-  var_store_off : Int?,
+  var_index_map_off : Int32?,
+  var_store_off : Int32?,
 ) -> (Extend, Array[ColorStop])? {
   let extend_raw = color_trav_read_u8(colr, color_line_off).unwrap_or(-1)
   if extend_raw < 0 {
@@ -1132,20 +1132,20 @@ fn color_trav_transform_around_center(
 ///|
 priv struct ColorTravCtx {
   colr : BytesView
-  base_glyph_list_off : Int
-  layer_list_off : Int
-  clip_list_off : Int?
-  var_index_map_off : Int?
-  var_store_off : Int?
+  base_glyph_list_off : Int32
+  layer_list_off : Int32
+  clip_list_off : Int32?
+  var_index_map_off : Int32?
+  var_store_off : Int32?
   coords : ArrayView[NormalizedCoord]
 }
 
 ///|
 fn[P : ColorPainter] color_trav_traverse_paint(
   ctx : ColorTravCtx,
-  paint_off : Int,
-  stack : Array[Int],
-  depth : Int,
+  paint_off : Int32,
+  stack : Array[Int32],
+  depth : Int32,
   painter : P,
 ) -> Result[Unit, PaintError] {
   if depth >= COLOR_TRAV_MAX_DEPTH {
@@ -2717,7 +2717,7 @@ pub fn[P : ColorPainter] FontRef::paint_colr_v1_at(
             }
           }
       }
-      let stack : Array[Int] = []
+      let stack : Array[Int32] = []
       let r = color_trav_traverse_paint(ctx, root_paint_off, stack, 0, painter)
       if pushed {
         ColorPainter::pop_clip(painter)

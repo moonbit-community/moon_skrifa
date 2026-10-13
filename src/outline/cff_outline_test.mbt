@@ -14,19 +14,19 @@
 
 ///|
 /// CFF outline extraction tests using synthetic SFNT bytes.
-const CFF_TEST_TAG_CFF : UInt = 0x43464620 // "CFF "
+const CFF_TEST_TAG_CFF : UInt32 = 0x43464620 // "CFF "
 
 ///|
-fn cff_test_push_u16_be(out : Array[Byte], v : Int) -> Unit {
+fn cff_test_push_u16_be(out : Array[Byte], v : Int32) -> Unit {
   let u = v.reinterpret_as_uint()
-  let mask = 255 |> Int::reinterpret_as_uint
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((u >> 8) & mask).to_byte())
   out.push((u & mask).to_byte())
 }
 
 ///|
-fn cff_test_push_u32_be(out : Array[Byte], v : UInt) -> Unit {
-  let mask = 255 |> Int::reinterpret_as_uint
+fn cff_test_push_u32_be(out : Array[Byte], v : UInt32) -> Unit {
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((v >> 24) & mask).to_byte())
   out.push(((v >> 16) & mask).to_byte())
   out.push(((v >> 8) & mask).to_byte())
@@ -34,7 +34,7 @@ fn cff_test_push_u32_be(out : Array[Byte], v : UInt) -> Unit {
 }
 
 ///|
-fn cff_test_u32(x : Int) -> UInt {
+fn cff_test_u32(x : Int32) -> UInt32 {
   x.reinterpret_as_uint()
 }
 
@@ -47,8 +47,8 @@ fn cff_test_index1(objects : Array[Array[Byte]]) -> Array[Byte] {
     return out
   }
   // offSize = 1
-  out.push(1 |> Int::to_byte)
-  let offsets : Array[Int] = []
+  out.push(1 |> Int32::to_byte)
+  let offsets : Array[Int32] = []
   let mut off = 1
   offsets.push(off)
   for obj in objects {
@@ -56,7 +56,7 @@ fn cff_test_index1(objects : Array[Array[Byte]]) -> Array[Byte] {
     offsets.push(off)
   }
   for o in offsets {
-    out.push(o |> Int::to_byte)
+    out.push(o |> Int32::to_byte)
   }
   for obj in objects {
     for b in obj.iter() {
@@ -67,11 +67,11 @@ fn cff_test_index1(objects : Array[Array[Byte]]) -> Array[Byte] {
 }
 
 ///|
-fn cff_test_dict_i32(out : Array[Byte], v : Int) -> Unit {
+fn cff_test_dict_i32(out : Array[Byte], v : Int32) -> Unit {
   // 29 + i32 big endian.
-  out.push(29 |> Int::to_byte)
+  out.push(29 |> Int32::to_byte)
   let u = v.reinterpret_as_uint()
-  let mask = 255 |> Int::reinterpret_as_uint
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((u >> 24) & mask).to_byte())
   out.push(((u >> 16) & mask).to_byte())
   out.push(((u >> 8) & mask).to_byte())
@@ -79,7 +79,7 @@ fn cff_test_dict_i32(out : Array[Byte], v : Int) -> Unit {
 }
 
 ///|
-fn cff_test_cs_int(v : Int) -> Byte {
+fn cff_test_cs_int(v : Int32) -> Byte {
   // Enough for [-107,107] and [0,100] in this test.
   (v + 139).to_byte()
 }
@@ -87,15 +87,15 @@ fn cff_test_cs_int(v : Int) -> Byte {
 ///|
 fn cff_test_build_cff_table() -> Bytes {
   // CharStrings:
-  let g0 : Array[Byte] = Array::from_fixed_array([14 |> Int::to_byte])
+  let g0 : Array[Byte] = Array::from_fixed_array([14 |> Int32::to_byte])
   // 0 0 rmoveto; -107 callsubr; endchar
   let g1 : Array[Byte] = Array::from_fixed_array([
     cff_test_cs_int(0),
     cff_test_cs_int(0),
-    21 |> Int::to_byte,
+    21 |> Int32::to_byte,
     cff_test_cs_int(-107),
-    10 |> Int::to_byte,
-    14 |> Int::to_byte,
+    10 |> Int32::to_byte,
+    14 |> Int32::to_byte,
   ])
   let charstrings = cff_test_index1(Array::from_fixed_array([g0, g1]))
 
@@ -104,15 +104,15 @@ fn cff_test_build_cff_table() -> Bytes {
   let s0 : Array[Byte] = Array::from_fixed_array([
     cff_test_cs_int(100),
     cff_test_cs_int(0),
-    5 |> Int::to_byte,
-    11 |> Int::to_byte,
+    5 |> Int32::to_byte,
+    11 |> Int32::to_byte,
   ])
   let subrs = cff_test_index1(Array::from_fixed_array([s0]))
 
   // Private DICT: Subrs offset points right after the dict bytes.
   let private_dict : Array[Byte] = []
   cff_test_dict_i32(private_dict, 6)
-  private_dict.push(19 |> Int::to_byte)
+  private_dict.push(19 |> Int32::to_byte)
   let private_data : Array[Byte] = []
   for b in private_dict.iter() {
     private_data.push(b)
@@ -128,10 +128,10 @@ fn cff_test_build_cff_table() -> Bytes {
   let name_ix = cff_test_index1(
     Array::from_fixed_array([
       Array::from_fixed_array([
-        84 |> Int::to_byte, // 'T'
-        101 |> Int::to_byte, // 'e'
-        115 |> Int::to_byte, // 's'
-        116 |> Int::to_byte, // 't'
+        84 |> Int32::to_byte, // 'T'
+        101 |> Int32::to_byte, // 'e'
+        115 |> Int32::to_byte, // 's'
+        116 |> Int32::to_byte, // 't'
       ]),
     ]),
   )
@@ -151,17 +151,17 @@ fn cff_test_build_cff_table() -> Bytes {
   // Top DICT: CharStrings offset + Private range.
   let top_dict : Array[Byte] = []
   cff_test_dict_i32(top_dict, charstrings_off)
-  top_dict.push(17 |> Int::to_byte)
+  top_dict.push(17 |> Int32::to_byte)
   cff_test_dict_i32(top_dict, private_size)
   cff_test_dict_i32(top_dict, private_off)
-  top_dict.push(18 |> Int::to_byte)
+  top_dict.push(18 |> Int32::to_byte)
   let top_ix = cff_test_index1(Array::from_fixed_array([top_dict]))
   let out : Array[Byte] = []
   // CFF header: major=1 minor=0 hdrSize=4 offSize=1
-  out.push(1 |> Int::to_byte)
-  out.push(0 |> Int::to_byte)
-  out.push(4 |> Int::to_byte)
-  out.push(1 |> Int::to_byte)
+  out.push(1 |> Int32::to_byte)
+  out.push(0 |> Int32::to_byte)
+  out.push(4 |> Int32::to_byte)
+  out.push(1 |> Int32::to_byte)
   for b in name_ix.iter() {
     out.push(b)
   }
@@ -182,7 +182,7 @@ fn cff_test_build_cff_table() -> Bytes {
 }
 
 ///|
-fn cff_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
+fn cff_test_build_sfnt(tables : Array[(UInt32, Bytes)]) -> Bytes {
   let num_tables = tables.length()
   let header_len = 12 + num_tables * 16
   let out : Array[Byte] = []
@@ -210,7 +210,7 @@ fn cff_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
 }
 
 ///|
-fn cff_test_elem_eq(a : PathElement, b : PathElement) -> Bool {
+fn cff_test_elem_eq(a : @outline.PathElement, b : @outline.PathElement) -> Bool {
   fn feq(a : Double, b : Double) -> Bool {
     (a - b).abs() <= 0.000001
   }
@@ -233,7 +233,10 @@ fn cff_test_elem_eq(a : PathElement, b : PathElement) -> Bool {
 }
 
 ///|
-fn cff_test_path_eq(a : Array[PathElement], b : Array[PathElement]) -> Bool {
+fn cff_test_path_eq(
+  a : Array[@outline.PathElement],
+  b : Array[@outline.PathElement],
+) -> Bool {
   if a.length() != b.length() {
     return false
   }
@@ -253,10 +256,12 @@ test "CFF outline path uses callsubr (local subrs)" {
     Array::from_fixed_array([(CFF_TEST_TAG_CFF, cff)]),
   )
   let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
-  let c = OutlineGlyphCollection::from_font(font)
-  let path = c.path(outline_test_gid(1), DrawSettings::default()).unwrap()
+  let c = @outline.OutlineGlyphCollection::from_font(font)
+  let path = c
+    .path(outline_test_gid(1), @outline.DrawSettings::default())
+    .unwrap()
   let expected = Array::from_fixed_array([
-    PathElement::MoveTo(0.0, 0.0),
+    @outline.PathElement::MoveTo(0.0, 0.0),
     LineTo(100.0, 0.0),
     Close,
   ])

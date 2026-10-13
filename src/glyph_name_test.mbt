@@ -13,16 +13,16 @@
 // limitations under the License.
 
 ///|
-fn glyph_test_push_u16_be(out : Array[Byte], v : Int) -> Unit {
+fn glyph_test_push_u16_be(out : Array[Byte], v : Int32) -> Unit {
   let u = v.reinterpret_as_uint()
-  let mask = 255 |> Int::reinterpret_as_uint
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((u >> 8) & mask).to_byte())
   out.push((u & mask).to_byte())
 }
 
 ///|
-fn glyph_test_push_u32_be(out : Array[Byte], v : UInt) -> Unit {
-  let mask = 255 |> Int::reinterpret_as_uint
+fn glyph_test_push_u32_be(out : Array[Byte], v : UInt32) -> Unit {
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((v >> 24) & mask).to_byte())
   out.push(((v >> 16) & mask).to_byte())
   out.push(((v >> 8) & mask).to_byte())
@@ -30,7 +30,7 @@ fn glyph_test_push_u32_be(out : Array[Byte], v : UInt) -> Unit {
 }
 
 ///|
-fn glyph_test_u32(x : Int) -> UInt {
+fn glyph_test_u32(x : Int32) -> UInt32 {
   x.reinterpret_as_uint()
 }
 
@@ -42,8 +42,8 @@ fn glyph_test_index1(objects : Array[Array[Byte]]) -> Array[Byte] {
   if count == 0 {
     return out
   }
-  out.push(1 |> Int::to_byte) // offSize=1
-  let offsets : Array[Int] = []
+  out.push(1 |> Int32::to_byte) // offSize=1
+  let offsets : Array[Int32] = []
   let mut off = 1
   offsets.push(off)
   for obj in objects {
@@ -51,7 +51,7 @@ fn glyph_test_index1(objects : Array[Array[Byte]]) -> Array[Byte] {
     offsets.push(off)
   }
   for o in offsets {
-    out.push(o |> Int::to_byte)
+    out.push(o |> Int32::to_byte)
   }
   for obj in objects {
     for b in obj.iter() {
@@ -62,11 +62,11 @@ fn glyph_test_index1(objects : Array[Array[Byte]]) -> Array[Byte] {
 }
 
 ///|
-fn glyph_test_dict_i32(out : Array[Byte], v : Int) -> Unit {
+fn glyph_test_dict_i32(out : Array[Byte], v : Int32) -> Unit {
   // 29 + i32 big endian.
-  out.push(29 |> Int::to_byte)
+  out.push(29 |> Int32::to_byte)
   let u = v.reinterpret_as_uint()
-  let mask = 255 |> Int::reinterpret_as_uint
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((u >> 24) & mask).to_byte())
   out.push(((u >> 16) & mask).to_byte())
   out.push(((u >> 8) & mask).to_byte())
@@ -80,27 +80,27 @@ fn glyph_test_build_post_v2() -> Bytes {
   glyph_test_push_u32_be(out, glyph_test_u32(0x00020000))
   // italicAngle etc, fill zero for 28 bytes
   for _ in 0..<28 {
-    out.push(0 |> Int::to_byte)
+    out.push(0 |> Int32::to_byte)
   }
   // numberOfGlyphs = 1
   glyph_test_push_u16_be(out, 1)
   // glyphNameIndex[0] = 258 => first custom string
   glyph_test_push_u16_be(out, 258)
   // stringData: pascal string "Test"
-  out.push(4 |> Int::to_byte)
-  out.push(84 |> Int::to_byte)
-  out.push(101 |> Int::to_byte)
-  out.push(115 |> Int::to_byte)
-  out.push(116 |> Int::to_byte)
+  out.push(4 |> Int32::to_byte)
+  out.push(84 |> Int32::to_byte)
+  out.push(101 |> Int32::to_byte)
+  out.push(115 |> Int32::to_byte)
+  out.push(116 |> Int32::to_byte)
   Bytes::from_array(out[:])
 }
 
 ///|
-fn glyph_test_build_post_v2_standard_name(name_index : Int) -> Bytes {
+fn glyph_test_build_post_v2_standard_name(name_index : Int32) -> Bytes {
   let out : Array[Byte] = []
   glyph_test_push_u32_be(out, glyph_test_u32(0x00020000))
   for _ in 0..<28 {
-    out.push(0 |> Int::to_byte)
+    out.push(0 |> Int32::to_byte)
   }
   glyph_test_push_u16_be(out, 1)
   glyph_test_push_u16_be(out, name_index)
@@ -113,29 +113,29 @@ fn glyph_test_build_post_v1() -> Bytes {
   glyph_test_push_u32_be(out, glyph_test_u32(0x00010000))
   // Keep 32-byte post v1 header shape.
   for _ in 0..<28 {
-    out.push(0 |> Int::to_byte)
+    out.push(0 |> Int32::to_byte)
   }
   Bytes::from_array(out[:])
 }
 
 ///|
-fn glyph_test_build_cff_custom_charset(format : Int, sid : Int) -> Bytes {
+fn glyph_test_build_cff_custom_charset(format : Int32, sid : Int32) -> Bytes {
   // Header (4)
   let out : Array[Byte] = []
-  out.push(1 |> Int::to_byte)
-  out.push(0 |> Int::to_byte)
-  out.push(4 |> Int::to_byte)
-  out.push(1 |> Int::to_byte)
+  out.push(1 |> Int32::to_byte)
+  out.push(0 |> Int32::to_byte)
+  out.push(4 |> Int32::to_byte)
+  out.push(1 |> Int32::to_byte)
 
   // Name INDEX ("T")
   let name_ix = glyph_test_index1(
-    Array::from_fixed_array([Array::from_fixed_array([84 |> Int::to_byte])]),
+    Array::from_fixed_array([Array::from_fixed_array([84 |> Int32::to_byte])]),
   )
 
   // String INDEX: 1 custom string, for SID=391 => index 0.
   let str_ix = glyph_test_index1(
     Array::from_fixed_array([
-      Array::from_fixed_array([65 |> Int::to_byte], // 'A'
+      Array::from_fixed_array([65 |> Int32::to_byte], // 'A'
       ),
     ]),
   )
@@ -169,9 +169,9 @@ fn glyph_test_build_cff_custom_charset(format : Int, sid : Int) -> Bytes {
   let charstrings_off = charset_off + charset_len
   let top_dict : Array[Byte] = []
   glyph_test_dict_i32(top_dict, charset_off)
-  top_dict.push(15 |> Int::to_byte) // charset
+  top_dict.push(15 |> Int32::to_byte) // charset
   glyph_test_dict_i32(top_dict, charstrings_off)
-  top_dict.push(17 |> Int::to_byte) // CharStrings
+  top_dict.push(17 |> Int32::to_byte) // CharStrings
   let top_ix = glyph_test_index1(Array::from_fixed_array([top_dict]))
   for b in name_ix.iter() {
     out.push(b)
@@ -187,11 +187,11 @@ fn glyph_test_build_cff_custom_charset(format : Int, sid : Int) -> Bytes {
   }
 
   // Charset maps gid1 -> sid.
-  out.push(format |> Int::to_byte)
+  out.push(format |> Int32::to_byte)
   glyph_test_push_u16_be(out, sid)
   match format {
     0 => ()
-    1 => out.push(0 |> Int::to_byte) // nLeft = 0
+    1 => out.push(0 |> Int32::to_byte) // nLeft = 0
     2 => glyph_test_push_u16_be(out, 0) // nLeft = 0
     _ => ()
   }
@@ -202,7 +202,7 @@ fn glyph_test_build_cff_custom_charset(format : Int, sid : Int) -> Bytes {
 }
 
 ///|
-fn glyph_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
+fn glyph_test_build_sfnt(tables : Array[(UInt32, Bytes)]) -> Bytes {
   let num_tables = tables.length()
   let header_len = 12 + num_tables * 16
   let out : Array[Byte] = []
@@ -230,16 +230,16 @@ fn glyph_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
 }
 
 ///|
-const GLYPH_TEST_TAG_MAXP : UInt = 0x6D617870 // "maxp"
+const GLYPH_TEST_TAG_MAXP : UInt32 = 0x6D617870 // "maxp"
 
 ///|
-const GLYPH_TEST_TAG_POST : UInt = 0x706F7374 // "post"
+const GLYPH_TEST_TAG_POST : UInt32 = 0x706F7374 // "post"
 
 ///|
-const GLYPH_TEST_TAG_CFF : UInt = 0x43464620 // "CFF "
+const GLYPH_TEST_TAG_CFF : UInt32 = 0x43464620 // "CFF "
 
 ///|
-fn glyph_test_build_maxp(num_glyphs : Int) -> Bytes {
+fn glyph_test_build_maxp(num_glyphs : Int32) -> Bytes {
   // maxp: version u32 + numGlyphs u16 (at offset 4); fill minimal 6 bytes.
   let out : Array[Byte] = []
   glyph_test_push_u32_be(out, glyph_test_u32(0x00010000))
@@ -257,7 +257,7 @@ test "glyph_names from post v2 custom string" {
       (GLYPH_TEST_TAG_POST, post),
     ]),
   )
-  let font = FontRef::from_bytes(sfnt).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
   let names = font.glyph_names()
   let ok = if names.source() is Post { true } else { false }
   inspect(ok, content="true")
@@ -274,7 +274,7 @@ test "glyph_names from CFF custom charset + string index" {
       (GLYPH_TEST_TAG_CFF, cff),
     ]),
   )
-  let font = FontRef::from_bytes(sfnt).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
   let names = font.glyph_names()
   let ok = if names.source() is Cff { true } else { false }
   inspect(ok, content="true")
@@ -291,7 +291,7 @@ test "glyph_names from post v2 standard name index" {
       (GLYPH_TEST_TAG_POST, post),
     ]),
   )
-  let font = FontRef::from_bytes(sfnt).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
   let names = font.glyph_names()
   inspect(
     names.get(GlyphId((0).to_uint16())).unwrap().as_str(),
@@ -309,7 +309,7 @@ test "glyph_names from post v1 default names" {
       (GLYPH_TEST_TAG_POST, post),
     ]),
   )
-  let font = FontRef::from_bytes(sfnt).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
   let names = font.glyph_names()
   inspect(
     names.get(GlyphId((0).to_uint16())).unwrap().as_str(),
@@ -327,7 +327,7 @@ test "glyph_names from CFF charset format 1" {
       (GLYPH_TEST_TAG_CFF, cff),
     ]),
   )
-  let font = FontRef::from_bytes(sfnt).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
   let names = font.glyph_names()
   inspect(names.get(GlyphId((1).to_uint16())).unwrap().as_str(), content="A")
 }
@@ -342,7 +342,7 @@ test "glyph_names from CFF charset format 2" {
       (GLYPH_TEST_TAG_CFF, cff),
     ]),
   )
-  let font = FontRef::from_bytes(sfnt).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
   let names = font.glyph_names()
   inspect(names.get(GlyphId((1).to_uint16())).unwrap().as_str(), content="A")
 }
@@ -357,7 +357,7 @@ test "glyph_names from CFF standard SID" {
       (GLYPH_TEST_TAG_CFF, cff),
     ]),
   )
-  let font = FontRef::from_bytes(sfnt).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
   let names = font.glyph_names()
   inspect(
     names.get(GlyphId((1).to_uint16())).unwrap().as_str(),

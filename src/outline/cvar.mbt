@@ -17,21 +17,21 @@
 ///
 /// Ported from `read-fonts` cvar parsing + `skrifa` hint instance setup
 /// (Apache-2.0 OR MIT).
-const TAG_CVAR : UInt = 0x63766172 // "cvar"
+const TAG_CVAR : UInt32 = 0x63766172 // "cvar"
 
 ///|
-fn cvar_fixed16_16_to_f26_6(bits : Int) -> Int {
+fn cvar_fixed16_16_to_f26_6(bits : Int32) -> Int32 {
   // Matches `font_types::Fixed::to_f26dot6()` rounding.
   ((bits.to_int64() + (0x200).to_int64()) >> 10).to_int()
 }
 
 ///|
-fn cvar_read_u16_be(view : BytesView, offset : Int) -> Int? {
+fn cvar_read_u16_be(view : BytesView, offset : Int32) -> Int32? {
   gvar_read_u16_be(view, offset)
 }
 
 ///|
-fn cvar_read_i16_be(view : BytesView, offset : Int) -> Int? {
+fn cvar_read_i16_be(view : BytesView, offset : Int32) -> Int32? {
   gvar_read_i16_be(view, offset)
 }
 
@@ -42,10 +42,10 @@ fn cvar_read_i16_be(view : BytesView, offset : Int) -> Int? {
 /// Returns None if cvar is missing, invalid, or if variation is inactive.
 fn cvar_deltas_fixed16_16(
   font : @moon_skrifa.FontRef,
-  axis_count : Int,
+  axis_count : Int32,
   coords : ArrayView[@moon_skrifa.NormalizedCoord],
-  cvt_len : Int,
-) -> Array[Int]? {
+  cvt_len : Int32,
+) -> Array[Int32]? {
   if axis_count <= 0 || cvt_len <= 0 || coords.is_empty() {
     return None
   }
@@ -68,8 +68,8 @@ fn cvar_deltas_fixed16_16(
   if tuple_count <= 0 || data_off < 8 || data_off > cvar.length() {
     return None
   }
-  let sizes : Array[Int] = []
-  let tuple_indexes : Array[Int] = []
+  let sizes : Array[Int32] = []
+  let tuple_indexes : Array[Int32] = []
   let scalars : Array[Double] = []
   let mut header_off = 8
   for _ in 0..<tuple_count {
@@ -87,7 +87,7 @@ fn cvar_deltas_fixed16_16(
       // cvar has no shared tuples; treat this as malformed.
       return None
     }
-    let peak : Array[Int] = Array::make(axis_count, 0)
+    let peak : Array[Int32] = Array::make(axis_count, 0)
     let need_peak = header_off + axis_count * 2
     if need_peak < header_off || need_peak > cvar.length() {
       return None
@@ -96,11 +96,11 @@ fn cvar_deltas_fixed16_16(
       peak.set(ax, cvar_read_i16_be(cvar, header_off + ax * 2).unwrap_or(0))
     }
     header_off = need_peak
-    let mut start_t : Array[Int]? = None
-    let mut end_t : Array[Int]? = None
+    let mut start_t : Array[Int32]? = None
+    let mut end_t : Array[Int32]? = None
     if intermediate {
-      let st : Array[Int] = Array::make(axis_count, 0)
-      let et : Array[Int] = Array::make(axis_count, 0)
+      let st : Array[Int32] = Array::make(axis_count, 0)
+      let et : Array[Int32] = Array::make(axis_count, 0)
       let need = header_off + axis_count * 4
       if need < header_off || need > cvar.length() {
         return None
@@ -125,7 +125,7 @@ fn cvar_deltas_fixed16_16(
   }
   let out : Array[Double] = Array::make(cvt_len, 0.0)
   let mut cursor = data_off
-  let mut shared_points_list : Array[Int]? = None
+  let mut shared_points_list : Array[Int32]? = None
   if shared_points {
     let (pts, off2) = match gvar_points(cvar, cursor, cvt_len) {
       None => return None
@@ -148,7 +148,7 @@ fn cvar_deltas_fixed16_16(
     }
     // PRIVATE_POINT_NUMBERS = 0x2000.
     let private_points = (ti & 0x2000) != 0
-    let mut points_list : Array[Int]? = None
+    let mut points_list : Array[Int32]? = None
     let mut after_points = cursor
     if private_points || !shared_points {
       let (pts, off2) = match gvar_points(cvar, cursor, cvt_len) {
@@ -187,7 +187,7 @@ fn cvar_deltas_fixed16_16(
     }
     cursor = tuple_end
   }
-  let out_bits : Array[Int] = Array::make(cvt_len, 0)
+  let out_bits : Array[Int32] = Array::make(cvt_len, 0)
   for i in 0..<cvt_len {
     out_bits.set(i, (out.at(i) * 65536.0).round().to_int())
   }
@@ -222,7 +222,7 @@ fn cvar_test_font_cvar_b64() -> String {
 }
 
 ///|
-fn cvar_test_b64_val(c : Int) -> Int? {
+fn cvar_test_b64_val(c : Int32) -> Int32? {
   if c >= 65 && c <= 90 {
     Some(c - 65)
   } else if c >= 97 && c <= 122 {
@@ -241,7 +241,7 @@ fn cvar_test_b64_val(c : Int) -> Int? {
 ///|
 fn cvar_test_b64_decode(s : String) -> Bytes {
   let out : Array[Byte] = []
-  let vals : Array[Int] = []
+  let vals : Array[Int32] = []
   let n = s.length()
   for i in 0..<n {
     let c = s.code_unit_at(i).to_int()

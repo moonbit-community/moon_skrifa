@@ -16,37 +16,37 @@
 /// Mapping of characters (codepoints, not graphemes) to nominal glyph ids.
 ///
 /// Ported from `fontations/skrifa/src/charmap.rs` (Apache-2.0 OR MIT).
-const TAG_CMAP : UInt = 0x636D6170 // "cmap"
+const TAG_CMAP : UInt32 = 0x636D6170 // "cmap"
 
 ///|
-const CMAP_TAG_MAXP : UInt = 0x6D617870 // "maxp"
+const CMAP_TAG_MAXP : UInt32 = 0x6D617870 // "maxp"
 
 ///|
-const CMAP_PLATFORM_UNICODE : Int = 0
+const CMAP_PLATFORM_UNICODE : Int32 = 0
 
 ///|
-const CMAP_PLATFORM_ISO : Int = 2
+const CMAP_PLATFORM_ISO : Int32 = 2
 
 ///|
-const CMAP_PLATFORM_WINDOWS : Int = 3
+const CMAP_PLATFORM_WINDOWS : Int32 = 3
 
 ///|
-const CMAP_ENCODING_MS_SYMBOL : Int = 0
+const CMAP_ENCODING_MS_SYMBOL : Int32 = 0
 
 ///|
-const CMAP_ENCODING_MS_UNICODE_CS : Int = 1
+const CMAP_ENCODING_MS_UNICODE_CS : Int32 = 1
 
 ///|
-const CMAP_ENCODING_APPLE_UNICODE_32 : Int = 4
+const CMAP_ENCODING_APPLE_UNICODE_32 : Int32 = 4
 
 ///|
-const CMAP_ENCODING_APPLE_VARIANT_SELECTOR : Int = 5
+const CMAP_ENCODING_APPLE_VARIANT_SELECTOR : Int32 = 5
 
 ///|
-const CMAP_ENCODING_MS_UCS_4 : Int = 10
+const CMAP_ENCODING_MS_UCS_4 : Int32 = 10
 
 ///|
-fn cmap_read_u16_be(view : BytesView, offset : Int) -> Int? {
+fn cmap_read_u16_be(view : BytesView, offset : Int32) -> Int32? {
   if offset < 0 || offset + 2 > view.length() {
     None
   } else {
@@ -57,7 +57,7 @@ fn cmap_read_u16_be(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn cmap_read_i16_be(view : BytesView, offset : Int) -> Int? {
+fn cmap_read_i16_be(view : BytesView, offset : Int32) -> Int32? {
   match cmap_read_u16_be(view, offset) {
     None => None
     Some(u) => if u >= 0x8000 { Some(u - 0x10000) } else { Some(u) }
@@ -65,7 +65,7 @@ fn cmap_read_i16_be(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn cmap_read_u32_be(view : BytesView, offset : Int) -> UInt? {
+fn cmap_read_u32_be(view : BytesView, offset : Int32) -> UInt32? {
   if offset < 0 || offset + 4 > view.length() {
     None
   } else {
@@ -78,7 +78,7 @@ fn cmap_read_u32_be(view : BytesView, offset : Int) -> UInt? {
 }
 
 ///|
-fn cmap_read_u32_be_int(view : BytesView, offset : Int) -> Int? {
+fn cmap_read_u32_be_int(view : BytesView, offset : Int32) -> Int32? {
   match cmap_read_u32_be(view, offset) {
     None => None
     Some(u) => Some(u.to_uint64().to_int())
@@ -86,7 +86,7 @@ fn cmap_read_u32_be_int(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn cmap_read_u8(view : BytesView, offset : Int) -> Int? {
+fn cmap_read_u8(view : BytesView, offset : Int32) -> Int32? {
   if offset < 0 || offset + 1 > view.length() {
     None
   } else {
@@ -95,7 +95,7 @@ fn cmap_read_u8(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn cmap_read_u24_be(view : BytesView, offset : Int) -> Int? {
+fn cmap_read_u24_be(view : BytesView, offset : Int32) -> Int32? {
   if offset < 0 || offset + 3 > view.length() {
     None
   } else {
@@ -107,7 +107,7 @@ fn cmap_read_u24_be(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn add_delta_u16(value : Int, delta : Int) -> Int {
+fn add_delta_u16(value : Int32, delta : Int32) -> Int32 {
   (value + delta) & 0xFFFF
 }
 
@@ -119,7 +119,7 @@ pub(all) enum MapVariant {
 
 ///|
 priv struct CmapIterLimits {
-  max_mappings : Int
+  max_mappings : Int32
 }
 
 ///|
@@ -142,8 +142,8 @@ fn CmapIterLimits::default() -> CmapIterLimits {
 
 ///|
 priv struct CodepointSubtable {
-  off : Int
-  format : Int
+  off : Int32
+  format : Int32
   is_symbol : Bool
 }
 
@@ -151,13 +151,13 @@ priv struct CodepointSubtable {
 fn CodepointSubtable::map(
   self : CodepointSubtable,
   cmap : BytesView,
-  codepoint : UInt,
+  codepoint : UInt32,
 ) -> GlyphId? {
   match self.map_impl(cmap, codepoint) {
     Some(gid) => Some(gid)
     None =>
-      if self.is_symbol && codepoint <= (0x00FF |> Int::reinterpret_as_uint) {
-        self.map_impl(cmap, codepoint + (0xF000 |> Int::reinterpret_as_uint))
+      if self.is_symbol && codepoint <= (0x00FF |> Int32::reinterpret_as_uint) {
+        self.map_impl(cmap, codepoint + (0xF000 |> Int32::reinterpret_as_uint))
       } else {
         None
       }
@@ -168,13 +168,13 @@ fn CodepointSubtable::map(
 fn CodepointSubtable::map_impl(
   self : CodepointSubtable,
   cmap : BytesView,
-  codepoint : UInt,
+  codepoint : UInt32,
 ) -> GlyphId? {
   let gid = if self.format == 12 {
     cmap_map_format12(cmap, self.off, codepoint)
   } else if self.format == 4 {
     // format 4 only covers BMP.
-    if codepoint > (0xFFFF |> Int::reinterpret_as_uint) {
+    if codepoint > (0xFFFF |> Int32::reinterpret_as_uint) {
       None
     } else {
       cmap_map_format4(cmap, self.off, codepoint.to_uint64().to_int())
@@ -192,7 +192,7 @@ fn CodepointSubtable::map_impl(
 pub struct Charmap {
   priv cmap : BytesView?
   priv codepoint_subtable : CodepointSubtable?
-  priv variant_off : Int?
+  priv variant_off : Int32?
   priv cmap12_limits : CmapIterLimits
 }
 
@@ -248,7 +248,7 @@ pub fn Charmap::has_variant_map(self : Charmap) -> Bool {
 }
 
 ///|
-pub fn Charmap::map(self : Charmap, codepoint : UInt) -> GlyphId? {
+pub fn Charmap::map(self : Charmap, codepoint : UInt32) -> GlyphId? {
   match (self.cmap, self.codepoint_subtable) {
     (Some(cmap), Some(sub)) => sub.map(cmap, codepoint)
     _ => None
@@ -256,12 +256,12 @@ pub fn Charmap::map(self : Charmap, codepoint : UInt) -> GlyphId? {
 }
 
 ///|
-pub fn Charmap::glyph_id(self : Charmap, codepoint : UInt) -> GlyphId? {
+pub fn Charmap::glyph_id(self : Charmap, codepoint : UInt32) -> GlyphId? {
   self.map(codepoint)
 }
 
 ///|
-pub fn Charmap::mappings(self : Charmap) -> Array[(UInt, GlyphId)] {
+pub fn Charmap::mappings(self : Charmap) -> Array[(UInt32, GlyphId)] {
   match (self.cmap, self.codepoint_subtable) {
     (Some(cmap), Some(sub)) =>
       if sub.format == 4 {
@@ -278,8 +278,8 @@ pub fn Charmap::mappings(self : Charmap) -> Array[(UInt, GlyphId)] {
 ///|
 pub fn Charmap::map_variant(
   self : Charmap,
-  codepoint : UInt,
-  selector : UInt,
+  codepoint : UInt32,
+  selector : UInt32,
 ) -> MapVariant? {
   match (self.cmap, self.variant_off) {
     (Some(cmap), Some(off)) => cmap_map_variant(cmap, off, codepoint, selector)
@@ -290,7 +290,7 @@ pub fn Charmap::map_variant(
 ///|
 pub fn Charmap::variant_mappings(
   self : Charmap,
-) -> Array[(UInt, UInt, MapVariant)] {
+) -> Array[(UInt32, UInt32, MapVariant)] {
   match (self.cmap, self.variant_off) {
     (Some(cmap), Some(off)) => cmap_iter_variants(cmap, off)
     _ => []
@@ -304,9 +304,9 @@ pub fn FontRef::charmap(self : FontRef) -> Charmap {
 
 ///|
 pub struct MappingIndex {
-  priv codepoint_index : Int?
+  priv codepoint_index : Int32?
   priv codepoint_is_symbol : Bool
-  priv variant_index : Int?
+  priv variant_index : Int32?
   priv cmap12_limits : CmapIterLimits
 }
 
@@ -402,7 +402,7 @@ pub fn MappingIndex::charmap(self : MappingIndex, font : FontRef) -> Charmap {
 fn cmap_select_mappings(
   font : FontRef,
   cmap : BytesView,
-) -> (CodepointSubtable?, Int?) {
+) -> (CodepointSubtable?, Int32?) {
   let (cp_index, cp_is_symbol, var_index) = cmap_select_mapping_indices(
     font, cmap,
   )
@@ -441,12 +441,12 @@ fn cmap_select_mappings(
 fn cmap_select_mapping_indices(
   _font : FontRef,
   cmap : BytesView,
-) -> (Int?, Bool, Int?) {
+) -> (Int32?, Bool, Int32?) {
   let num_tables = cmap_read_u16_be(cmap, 2).unwrap_or(0)
   let mut best_kind = 0
-  let mut best_index : Int? = None
+  let mut best_index : Int32? = None
   let mut best_is_symbol = false
-  let mut variant_index : Int? = None
+  let mut variant_index : Int32? = None
   // Search encoding records in reverse, prioritizing UCS-4 over UCS-2, and
   // preferring symbol over all others (HarfBuzz behavior).
   for i in 0..<num_tables {
@@ -499,7 +499,10 @@ fn cmap_select_mapping_indices(
 }
 
 ///|
-fn cmap_encoding_record(cmap : BytesView, index : Int) -> (Int, Int, Int)? {
+fn cmap_encoding_record(
+  cmap : BytesView,
+  index : Int32,
+) -> (Int32, Int32, Int32)? {
   if index < 0 {
     return None
   }
@@ -521,8 +524,8 @@ fn cmap_encoding_record(cmap : BytesView, index : Int) -> (Int, Int, Int)? {
 ///|
 fn cmap_map_format12(
   cmap : BytesView,
-  base : Int,
-  codepoint : UInt,
+  base : Int32,
+  codepoint : UInt32,
 ) -> GlyphId? {
   let length = cmap_read_u32_be_int(cmap, base + 4).unwrap_or(-1)
   if length < 0 || base + length > cmap.length() {
@@ -558,7 +561,11 @@ fn cmap_map_format12(
 }
 
 ///|
-fn cmap_map_format4(cmap : BytesView, base : Int, codepoint : Int) -> GlyphId? {
+fn cmap_map_format4(
+  cmap : BytesView,
+  base : Int32,
+  codepoint : Int32,
+) -> GlyphId? {
   let length = cmap_read_u16_be(cmap, base + 2).unwrap_or(-1)
   if length < 0 || base + length > cmap.length() {
     return None
@@ -619,10 +626,10 @@ fn cmap_map_format4(cmap : BytesView, base : Int, codepoint : Int) -> GlyphId? {
 ///|
 fn cmap_iter_format12(
   cmap : BytesView,
-  base : Int,
+  base : Int32,
   limits : CmapIterLimits,
-) -> Array[(UInt, GlyphId)] {
-  let out : Array[(UInt, GlyphId)] = []
+) -> Array[(UInt32, GlyphId)] {
+  let out : Array[(UInt32, GlyphId)] = []
   let length = cmap_read_u32_be_int(cmap, base + 4).unwrap_or(-1)
   if length < 0 || base + length > cmap.length() {
     return out
@@ -652,15 +659,18 @@ fn cmap_iter_format12(
           return out
         }
       }
-      cp = cp + (1 |> Int::reinterpret_as_uint)
+      cp = cp + (1 |> Int32::reinterpret_as_uint)
     }
   }
   out
 }
 
 ///|
-fn cmap_iter_format4(cmap : BytesView, base : Int) -> Array[(UInt, GlyphId)] {
-  let out : Array[(UInt, GlyphId)] = []
+fn cmap_iter_format4(
+  cmap : BytesView,
+  base : Int32,
+) -> Array[(UInt32, GlyphId)] {
+  let out : Array[(UInt32, GlyphId)] = []
   // BMP only; enumerate all codepoints and reuse `cmap_map_format4`, keeping
   // iterator semantics aligned with point lookups.
   for cp in 0..<0x10000 {
@@ -678,9 +688,9 @@ fn cmap_iter_format4(cmap : BytesView, base : Int) -> Array[(UInt, GlyphId)] {
 ///|
 fn cmap_map_variant(
   cmap : BytesView,
-  base : Int,
-  codepoint : UInt,
-  selector : UInt,
+  base : Int32,
+  codepoint : UInt32,
+  selector : UInt32,
 ) -> MapVariant? {
   if cmap_read_u16_be(cmap, base).unwrap_or(-1) != 14 {
     return None
@@ -721,7 +731,11 @@ fn cmap_map_variant(
 }
 
 ///|
-fn cmap_in_default_uvs(cmap : BytesView, base : Int, codepoint : Int) -> Bool {
+fn cmap_in_default_uvs(
+  cmap : BytesView,
+  base : Int32,
+  codepoint : Int32,
+) -> Bool {
   let n_ranges = cmap_read_u32_be_int(cmap, base).unwrap_or(-1)
   if n_ranges <= 0 {
     return false
@@ -745,8 +759,8 @@ fn cmap_in_default_uvs(cmap : BytesView, base : Int, codepoint : Int) -> Bool {
 ///|
 fn cmap_map_non_default_uvs(
   cmap : BytesView,
-  base : Int,
-  codepoint : Int,
+  base : Int32,
+  codepoint : Int32,
 ) -> GlyphId? {
   let n_maps = cmap_read_u32_be_int(cmap, base).unwrap_or(-1)
   if n_maps <= 0 {
@@ -771,9 +785,9 @@ fn cmap_map_non_default_uvs(
 ///|
 fn cmap_iter_variants(
   cmap : BytesView,
-  base : Int,
-) -> Array[(UInt, UInt, MapVariant)] {
-  let out : Array[(UInt, UInt, MapVariant)] = []
+  base : Int32,
+) -> Array[(UInt32, UInt32, MapVariant)] {
+  let out : Array[(UInt32, UInt32, MapVariant)] = []
   if cmap_read_u16_be(cmap, base).unwrap_or(-1) != 14 {
     return out
   }
@@ -811,7 +825,7 @@ fn cmap_iter_variants(
           let end = (start + addl).reinterpret_as_uint()
           while cp <= end {
             out.push((cp, sel_u, UseDefault))
-            cp = cp + (1 |> Int::reinterpret_as_uint)
+            cp = cp + (1 |> Int32::reinterpret_as_uint)
           }
         }
       }

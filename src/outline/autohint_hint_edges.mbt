@@ -19,7 +19,10 @@
 /// (Apache-2.0 OR MIT).
 
 ///|
-fn autohint_snap_width(widths : Array[AutoHintScaledWidth], width : Int) -> Int {
+fn autohint_snap_width(
+  widths : Array[AutoHintScaledWidth],
+  width : Int32,
+) -> Int32 {
   let mut best_dist = 64 + 32 + 2
   let mut ref_width = width
   for candidate in widths.iter() {
@@ -48,11 +51,11 @@ fn autohint_stem_width(
   metrics : AutoHintScaledAxisMetrics,
   group : AutoHintScriptGroup,
   scale : AutoHintScale,
-  width : Int,
-  base_delta : Int,
-  base_flags : Int,
-  stem_flags : Int,
-) -> Int {
+  width : Int32,
+  base_delta : Int32,
+  base_flags : Int32,
+  stem_flags : Int32,
+) -> Int32 {
   if (scale.flags & AUTOHINT_SCALE_STEM_ADJUST) == 0 ||
     (group is Default && metrics.width_metrics.is_extra_light) {
     return width
@@ -166,8 +169,8 @@ fn autohint_align_linked_edge(
   metrics : AutoHintScaledAxisMetrics,
   group : AutoHintScriptGroup,
   scale : AutoHintScale,
-  base_edge_ix : Int,
-  stem_edge_ix : Int,
+  base_edge_ix : Int32,
+  stem_edge_ix : Int32,
 ) -> Unit {
   let base = axis.edges.at(base_edge_ix)
   let stem = axis.edges.at(stem_edge_ix)
@@ -188,8 +191,8 @@ fn autohint_align_linked_edge(
 ///|
 fn autohint_align_serif_edge(
   axis : AutoHintAxis,
-  base_edge_ix : Int,
-  serif_edge_ix : Int,
+  base_edge_ix : Int32,
+  serif_edge_ix : Int32,
 ) -> Unit {
   let base = axis.edges.at(base_edge_ix)
   let serif = axis.edges.at(serif_edge_ix)
@@ -197,26 +200,26 @@ fn autohint_align_serif_edge(
 }
 
 ///|
-const AUTOHINT_CJK_MAX_HORIZONTAL_GAP : Int = 9
+const AUTOHINT_CJK_MAX_HORIZONTAL_GAP : Int32 = 9
 
 ///|
-const AUTOHINT_CJK_MAX_VERTICAL_GAP : Int = 15
+const AUTOHINT_CJK_MAX_VERTICAL_GAP : Int32 = 15
 
 ///|
-const AUTOHINT_CJK_MAX_DELTA_ABS : Int = 14
+const AUTOHINT_CJK_MAX_DELTA_ABS : Int32 = 14
 
 ///|
 fn autohint_apply_stem_adjustment_cjk(
   axis : AutoHintAxis,
-  edge_ix : Int,
-  edge2_ix : Int,
+  edge_ix : Int32,
+  edge2_ix : Int32,
   edge : AutoHintEdge,
   edge2 : AutoHintEdge,
-  cur_pos1 : Int,
-  cur_len : Int,
-  delta : Int,
+  cur_pos1 : Int32,
+  cur_len : Int32,
+  delta : Int32,
   do_stem_adjust : Bool,
-) -> Int {
+) -> Int32 {
   let mut delta_adj = delta
   if !do_stem_adjust {
     if delta_adj < -AUTOHINT_CJK_MAX_DELTA_ABS {
@@ -242,10 +245,10 @@ fn autohint_hint_normal_stem_cjk(
   metrics : AutoHintScaledAxisMetrics,
   group : AutoHintScriptGroup,
   scale : AutoHintScale,
-  edge_ix : Int,
-  edge2_ix : Int,
-  anchor : Int,
-) -> Int {
+  edge_ix : Int32,
+  edge2_ix : Int32,
+  anchor : Int32,
+) -> Int32 {
   let edge = axis.edges.at(edge_ix)
   let edge2 = axis.edges.at(edge2_ix)
   let do_stem_adjust = (scale.flags & AUTOHINT_SCALE_STEM_ADJUST) != 0
@@ -358,9 +361,9 @@ fn autohint_edge_link(
 ///|
 fn autohint_find_bounding_completed_edges(
   edges : Array[AutoHintEdge],
-  ix : Int,
-) -> (Int?, Int?) {
-  let mut before : Int? = None
+  ix : Int32,
+) -> (Int32?, Int32?) {
+  let mut before : Int32? = None
   if ix > 0 {
     let mut j = ix - 1
     while j >= 0 {
@@ -374,7 +377,7 @@ fn autohint_find_bounding_completed_edges(
       j = j - 1
     }
   }
-  let mut after : Int? = None
+  let mut after : Int32? = None
   for j in (ix + 1)..<edges.length() {
     if (edges.at(j).flags & AUTOHINT_FLAG_DONE) != 0 {
       after = Some(j)
@@ -387,7 +390,7 @@ fn autohint_find_bounding_completed_edges(
 ///|
 fn autohint_adjust_link(
   edges : Array[AutoHintEdge],
-  edge_ix : Int,
+  edge_ix : Int32,
   link_dir : AutoHintLinkDir,
   top_to_bottom_hinting : Bool,
 ) -> Unit {
@@ -438,11 +441,11 @@ fn autohint_align_stem_edges(
   group : AutoHintScriptGroup,
   scale : AutoHintScale,
   top_to_bottom_hinting : Bool,
-  anchor_ix : Int?,
-) -> (Int, Int?) {
+  anchor_ix : Int32?,
+) -> (Int32, Int32?) {
   let mut serif_count = 0
   let mut anchor_ix = anchor_ix
-  let mut last_stem_pos : Int? = None
+  let mut last_stem_pos : Int32? = None
   let mut delta = 0
   for edge_ix in 0..<axis.edges.length() {
     let edge = axis.edges.at(edge_ix)
@@ -659,8 +662,8 @@ fn autohint_align_remaining_edges(
   axis : AutoHintAxis,
   group : AutoHintScriptGroup,
   top_to_bottom_hinting : Bool,
-  serif_count : Int,
-  anchor_ix : Int?,
+  serif_count : Int32,
+  anchor_ix : Int32?,
 ) -> Unit {
   if group is Default {
     let mut anchor_ix = anchor_ix
@@ -790,8 +793,8 @@ fn autohint_align_edges_to_blues(
   metrics : AutoHintScaledAxisMetrics,
   group : AutoHintScriptGroup,
   scale : AutoHintScale,
-) -> Int? {
-  let mut anchor_ix : Int? = None
+) -> Int32? {
+  let mut anchor_ix : Int32? = None
   if group is Default && axis.dim != AUTOHINT_DIM_VERTICAL {
     return anchor_ix
   }

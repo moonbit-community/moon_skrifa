@@ -14,16 +14,16 @@
 
 ///|
 /// Localized strings tests using synthetic SFNT bytes.
-fn string_test_push_u16_be(out : Array[Byte], v : Int) -> Unit {
+fn string_test_push_u16_be(out : Array[Byte], v : Int32) -> Unit {
   let u = v.reinterpret_as_uint()
-  let mask = 255 |> Int::reinterpret_as_uint
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((u >> 8) & mask).to_byte())
   out.push((u & mask).to_byte())
 }
 
 ///|
-fn string_test_push_u32_be(out : Array[Byte], v : UInt) -> Unit {
-  let mask = 255 |> Int::reinterpret_as_uint
+fn string_test_push_u32_be(out : Array[Byte], v : UInt32) -> Unit {
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((v >> 24) & mask).to_byte())
   out.push(((v >> 16) & mask).to_byte())
   out.push(((v >> 8) & mask).to_byte())
@@ -31,7 +31,7 @@ fn string_test_push_u32_be(out : Array[Byte], v : UInt) -> Unit {
 }
 
 ///|
-fn string_test_u32(x : Int) -> UInt {
+fn string_test_u32(x : Int32) -> UInt32 {
   x.reinterpret_as_uint()
 }
 
@@ -62,11 +62,11 @@ fn string_test_encode_utf16be(s : String) -> Array[Byte] {
 
 ///|
 fn string_test_build_name_table_v0(
-  records : Array[(Int, Int, Int, Int, String)],
+  records : Array[(Int32, Int32, Int32, Int32, String)],
 ) -> Bytes {
   let count = records.length()
   let storage : Array[Byte] = []
-  let rec_meta : Array[(Int, Int)] = []
+  let rec_meta : Array[(Int32, Int32)] = []
   for r in records {
     let (platform_id, _, _, _, value) = r
     let off = storage.length()
@@ -112,11 +112,11 @@ fn string_test_build_name_table_v0(
 
 ///|
 fn string_test_build_name_table_v0_raw(
-  records : Array[(Int, Int, Int, Int, Array[Byte])],
+  records : Array[(Int32, Int32, Int32, Int32, Array[Byte])],
 ) -> Bytes {
   let count = records.length()
   let storage : Array[Byte] = []
-  let rec_meta : Array[(Int, Int)] = []
+  let rec_meta : Array[(Int32, Int32)] = []
   for r in records {
     let (_, _, _, _, bytes) = r
     let off = storage.length()
@@ -149,13 +149,13 @@ fn string_test_build_name_table_v0_raw(
 
 ///|
 fn string_test_build_name_table_v1(
-  records : Array[(Int, Int, Int, Int, String)],
+  records : Array[(Int32, Int32, Int32, Int32, String)],
   lang_tags : Array[String],
 ) -> Bytes {
   let count = records.length()
   let tag_count = lang_tags.length()
   let storage : Array[Byte] = []
-  let rec_meta : Array[(Int, Int)] = []
+  let rec_meta : Array[(Int32, Int32)] = []
   for r in records {
     let (platform_id, _, _, _, value) = r
     let off = storage.length()
@@ -177,7 +177,7 @@ fn string_test_build_name_table_v1(
     }
     rec_meta.push((bytes.length(), off))
   }
-  let tag_meta : Array[(Int, Int)] = []
+  let tag_meta : Array[(Int32, Int32)] = []
   for tag in lang_tags {
     let off = storage.length()
     let bytes = string_test_encode_utf16be(tag)
@@ -215,7 +215,7 @@ fn string_test_build_name_table_v1(
 }
 
 ///|
-fn string_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
+fn string_test_build_sfnt(tables : Array[(UInt32, Bytes)]) -> Bytes {
   let num_tables = tables.length()
   let header_len = 12 + num_tables * 16
   let out : Array[Byte] = []
@@ -257,24 +257,30 @@ fn string_test_find_by_lang(
 }
 
 ///|
-const TAG_NAME : UInt = 0x6E616D65 // "name"
+const TAG_NAME : UInt32 = 0x6E616D65 // "name"
 
 ///|
 test "localized() from name v0" {
   let name = string_test_build_name_table_v0(
     Array::from_fixed_array([
-      (3, 1, 0x0401, STRING_ID_SUBFAMILY_NAME.to_int(), "عادي"),
-      (3, 1, 0x0408, STRING_ID_SUBFAMILY_NAME.to_int(), "Κανονικά"),
+      (3, 1, 0x0401, @moon_skrifa.STRING_ID_SUBFAMILY_NAME.to_int(), "عادي"),
+      (
+        3,
+        1,
+        0x0408,
+        @moon_skrifa.STRING_ID_SUBFAMILY_NAME.to_int(),
+        "Κανονικά",
+      ),
       // Prefer the Mac language-id mapping: 0 => "en".
-      (1, 0, 0x0000, STRING_ID_SUBFAMILY_NAME.to_int(), "Regular"),
-      (3, 1, 0x042D, STRING_ID_SUBFAMILY_NAME.to_int(), "Arrunta"),
-      (3, 1, 0x0415, STRING_ID_SUBFAMILY_NAME.to_int(), "Normalny"),
-      (3, 1, 0x0804, STRING_ID_SUBFAMILY_NAME.to_int(), "正常"),
+      (1, 0, 0x0000, @moon_skrifa.STRING_ID_SUBFAMILY_NAME.to_int(), "Regular"),
+      (3, 1, 0x042D, @moon_skrifa.STRING_ID_SUBFAMILY_NAME.to_int(), "Arrunta"),
+      (3, 1, 0x0415, @moon_skrifa.STRING_ID_SUBFAMILY_NAME.to_int(), "Normalny"),
+      (3, 1, 0x0804, @moon_skrifa.STRING_ID_SUBFAMILY_NAME.to_int(), "正常"),
     ]),
   )
   let sfnt = string_test_build_sfnt(Array::from_fixed_array([(TAG_NAME, name)]))
-  let font = FontRef::from_bytes(sfnt).unwrap()
-  let strings = font.localized_strings(STRING_ID_SUBFAMILY_NAME)
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
+  let strings = font.localized_strings(@moon_skrifa.STRING_ID_SUBFAMILY_NAME)
   let pairs : Array[(String, String)] = []
   for s in strings.strings().iter() {
     pairs.push((s.language().unwrap(), s.to_string()))
@@ -295,13 +301,13 @@ test "localized() from name v0" {
 test "find_by_language" {
   let name = string_test_build_name_table_v0(
     Array::from_fixed_array([
-      (3, 1, 0x0409, STRING_ID_SUBFAMILY_NAME.to_int(), "Regular"),
-      (3, 1, 0x0415, STRING_ID_SUBFAMILY_NAME.to_int(), "Normalny"),
+      (3, 1, 0x0409, @moon_skrifa.STRING_ID_SUBFAMILY_NAME.to_int(), "Regular"),
+      (3, 1, 0x0415, @moon_skrifa.STRING_ID_SUBFAMILY_NAME.to_int(), "Normalny"),
     ]),
   )
   let sfnt = string_test_build_sfnt(Array::from_fixed_array([(TAG_NAME, name)]))
-  let font = FontRef::from_bytes(sfnt).unwrap()
-  let strings = font.localized_strings(STRING_ID_SUBFAMILY_NAME)
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
+  let strings = font.localized_strings(@moon_skrifa.STRING_ID_SUBFAMILY_NAME)
   let mut found : String? = None
   for s in strings.strings().iter() {
     if s.language() == Some("pl-PL") {
@@ -315,12 +321,15 @@ test "find_by_language" {
 test "LocalizedString::chars" {
   let name = string_test_build_name_table_v0(
     Array::from_fixed_array([
-      (3, 1, 0x0409, STRING_ID_SUBFAMILY_NAME.to_int(), "Aé"),
+      (3, 1, 0x0409, @moon_skrifa.STRING_ID_SUBFAMILY_NAME.to_int(), "Aé"),
     ]),
   )
   let sfnt = string_test_build_sfnt(Array::from_fixed_array([(TAG_NAME, name)]))
-  let font = FontRef::from_bytes(sfnt).unwrap()
-  let s = font.localized_strings(STRING_ID_SUBFAMILY_NAME).strings().at(0)
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
+  let s = font
+    .localized_strings(@moon_skrifa.STRING_ID_SUBFAMILY_NAME)
+    .strings()
+    .at(0)
   let cs = s.chars()
   inspect(cs.length(), content="2")
   inspect(cs.at(0).to_string(), content="A")
@@ -331,15 +340,15 @@ test "LocalizedString::chars" {
 test "english_or_first" {
   let name = string_test_build_name_table_v0(
     Array::from_fixed_array([
-      (3, 1, 0x0415, STRING_ID_SUBFAMILY_NAME.to_int(), "Normalny"),
-      (3, 1, 0x0409, STRING_ID_SUBFAMILY_NAME.to_int(), "Regular"),
+      (3, 1, 0x0415, @moon_skrifa.STRING_ID_SUBFAMILY_NAME.to_int(), "Normalny"),
+      (3, 1, 0x0409, @moon_skrifa.STRING_ID_SUBFAMILY_NAME.to_int(), "Regular"),
     ]),
   )
   let sfnt = string_test_build_sfnt(Array::from_fixed_array([(TAG_NAME, name)]))
-  let font = FontRef::from_bytes(sfnt).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
   inspect(
     font
-    .localized_strings(STRING_ID_SUBFAMILY_NAME)
+    .localized_strings(@moon_skrifa.STRING_ID_SUBFAMILY_NAME)
     .english_or_first()
     .unwrap()
     .to_string(),
@@ -352,17 +361,23 @@ test "name v1 language tags win over langid mapping" {
   let name = string_test_build_name_table_v1(
     Array::from_fixed_array([
       // Language ID 0x8000 refers to langTags[0] ("en-US").
-      (3, 1, 0x8000, STRING_ID_SUBFAMILY_NAME.to_int(), "Regular-US"),
-      (3, 1, 0x0415, STRING_ID_SUBFAMILY_NAME.to_int(), "Normalny"),
-      (3, 1, 0x0409, STRING_ID_SUBFAMILY_NAME.to_int(), "Regular"),
+      (
+        3,
+        1,
+        0x8000,
+        @moon_skrifa.STRING_ID_SUBFAMILY_NAME.to_int(),
+        "Regular-US",
+      ),
+      (3, 1, 0x0415, @moon_skrifa.STRING_ID_SUBFAMILY_NAME.to_int(), "Normalny"),
+      (3, 1, 0x0409, @moon_skrifa.STRING_ID_SUBFAMILY_NAME.to_int(), "Regular"),
     ]),
     Array::from_fixed_array(["en-US"]),
   )
   let sfnt = string_test_build_sfnt(Array::from_fixed_array([(TAG_NAME, name)]))
-  let font = FontRef::from_bytes(sfnt).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
   inspect(
     font
-    .localized_strings(STRING_ID_SUBFAMILY_NAME)
+    .localized_strings(@moon_skrifa.STRING_ID_SUBFAMILY_NAME)
     .english_or_first()
     .unwrap()
     .to_string(),
@@ -374,16 +389,20 @@ test "name v1 language tags win over langid mapping" {
 test "macroman decoding (platform 1, encoding 0)" {
   let bytes : Array[Byte] = []
   // 0x8E in MacRoman is U+00E9 (é).
-  bytes.push(0x8E |> Int::to_byte)
+  bytes.push(0x8E |> Int32::to_byte)
   let name = string_test_build_name_table_v0_raw(
     Array::from_fixed_array([
-      (1, 0, 0, STRING_ID_SUBFAMILY_NAME.to_int(), bytes),
+      (1, 0, 0, @moon_skrifa.STRING_ID_SUBFAMILY_NAME.to_int(), bytes),
     ]),
   )
   let sfnt = string_test_build_sfnt(Array::from_fixed_array([(TAG_NAME, name)]))
-  let font = FontRef::from_bytes(sfnt).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
   inspect(
-    font.localized_strings(STRING_ID_SUBFAMILY_NAME).strings().at(0).to_string(),
+    font
+    .localized_strings(@moon_skrifa.STRING_ID_SUBFAMILY_NAME)
+    .strings()
+    .at(0)
+    .to_string(),
     content="é",
   )
 }
@@ -392,14 +411,14 @@ test "macroman decoding (platform 1, encoding 0)" {
 test "expanded language mapping includes de-DE" {
   let name = string_test_build_name_table_v0(
     Array::from_fixed_array([
-      (3, 1, 0x0407, STRING_ID_SUBFAMILY_NAME.to_int(), "Regular"),
+      (3, 1, 0x0407, @moon_skrifa.STRING_ID_SUBFAMILY_NAME.to_int(), "Regular"),
     ]),
   )
   let sfnt = string_test_build_sfnt(Array::from_fixed_array([(TAG_NAME, name)]))
-  let font = FontRef::from_bytes(sfnt).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
   inspect(
     font
-    .localized_strings(STRING_ID_SUBFAMILY_NAME)
+    .localized_strings(@moon_skrifa.STRING_ID_SUBFAMILY_NAME)
     .strings()
     .at(0)
     .language()
@@ -410,7 +429,7 @@ test "expanded language mapping includes de-DE" {
 
 ///|
 test "StringId::predefined" {
-  let ids = string_id_predefined()
+  let ids = @moon_skrifa.string_id_predefined()
   inspect(ids.length(), content="25")
   inspect(ids.at(0).to_int(), content="0")
   inspect(ids.at(14).to_int(), content="14")

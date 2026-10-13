@@ -19,47 +19,47 @@
 /// (Apache-2.0 OR MIT).
 
 ///|
-const AUTOHINT_MAX_WIDTHS : Int = 16
+const AUTOHINT_MAX_WIDTHS : Int32 = 16
 
 ///|
-const AUTOHINT_MAX_BLUES : Int = 8
+const AUTOHINT_MAX_BLUES : Int32 = 8
 
 ///|
-const AUTOHINT_SCALE_HORIZONTAL_SNAP : Int = 1 << 0
+const AUTOHINT_SCALE_HORIZONTAL_SNAP : Int32 = 1 << 0
 
 ///|
-const AUTOHINT_SCALE_VERTICAL_SNAP : Int = 1 << 1
+const AUTOHINT_SCALE_VERTICAL_SNAP : Int32 = 1 << 1
 
 ///|
-const AUTOHINT_SCALE_STEM_ADJUST : Int = 1 << 2
+const AUTOHINT_SCALE_STEM_ADJUST : Int32 = 1 << 2
 
 ///|
-const AUTOHINT_SCALE_MONO : Int = 1 << 3
+const AUTOHINT_SCALE_MONO : Int32 = 1 << 3
 
 ///|
-const AUTOHINT_SCALE_NO_HORIZONTAL : Int = 1 << 4
+const AUTOHINT_SCALE_NO_HORIZONTAL : Int32 = 1 << 4
 
 ///|
-const AUTOHINT_SCALE_NO_VERTICAL : Int = 1 << 5
+const AUTOHINT_SCALE_NO_VERTICAL : Int32 = 1 << 5
 
 ///|
-const AUTOHINT_SCALE_NO_ADVANCE : Int = 1 << 6
+const AUTOHINT_SCALE_NO_ADVANCE : Int32 = 1 << 6
 
 ///|
 priv struct AutoHintScale {
-  x_scale : Int
-  mut y_scale : Int
-  x_delta : Int
-  y_delta : Int
+  x_scale : Int32
+  mut y_scale : Int32
+  x_delta : Int32
+  y_delta : Int32
   size : Double
-  units_per_em : Int
-  flags : Int
+  units_per_em : Int32
+  flags : Int32
 }
 
 ///|
 priv struct AutoHintWidthMetrics {
-  edge_distance_threshold : Int
-  standard_width : Int
+  edge_distance_threshold : Int32
+  standard_width : Int32
   is_extra_light : Bool
 }
 
@@ -70,8 +70,8 @@ fn AutoHintWidthMetrics::default() -> AutoHintWidthMetrics {
 
 ///|
 priv struct AutoHintScaledWidth {
-  scaled : Int
-  mut fitted : Int
+  scaled : Int32
+  mut fitted : Int32
 }
 
 ///|
@@ -81,32 +81,32 @@ fn AutoHintScaledWidth::default() -> AutoHintScaledWidth {
 
 ///|
 priv struct AutoHintUnscaledBlue {
-  mut position : Int
-  mut overshoot : Int
-  ascender : Int
-  descender : Int
-  zones : Int
+  mut position : Int32
+  mut overshoot : Int32
+  ascender : Int32
+  descender : Int32
+  zones : Int32
 }
 
 ///|
 priv struct AutoHintScaledBlue {
   position : AutoHintScaledWidth
   overshoot : AutoHintScaledWidth
-  zones : Int
+  zones : Int32
   mut is_active : Bool
 }
 
 ///|
 priv struct AutoHintUnscaledAxisMetrics {
-  dim : Int
-  widths : Array[Int]
+  dim : Int32
+  widths : Array[Int32]
   mut width_metrics : AutoHintWidthMetrics
   mut blues : Array[AutoHintUnscaledBlue]
 }
 
 ///|
 fn AutoHintUnscaledAxisMetrics::default(
-  dim : Int,
+  dim : Int32,
 ) -> AutoHintUnscaledAxisMetrics {
   {
     dim,
@@ -119,7 +119,7 @@ fn AutoHintUnscaledAxisMetrics::default(
 ///|
 fn AutoHintUnscaledAxisMetrics::max_width(
   self : AutoHintUnscaledAxisMetrics,
-) -> Int? {
+) -> Int32? {
   if self.widths.is_empty() {
     None
   } else {
@@ -129,16 +129,16 @@ fn AutoHintUnscaledAxisMetrics::max_width(
 
 ///|
 priv struct AutoHintScaledAxisMetrics {
-  dim : Int
-  mut scale : Int
-  mut delta : Int
+  dim : Int32
+  mut scale : Int32
+  mut delta : Int32
   widths : Array[AutoHintScaledWidth]
   mut width_metrics : AutoHintWidthMetrics
   blues : Array[AutoHintScaledBlue]
 }
 
 ///|
-fn AutoHintScaledAxisMetrics::default(dim : Int) -> AutoHintScaledAxisMetrics {
+fn AutoHintScaledAxisMetrics::default(dim : Int32) -> AutoHintScaledAxisMetrics {
   {
     dim,
     scale: 0,
@@ -163,89 +163,89 @@ priv struct AutoHintScaledStyleMetrics {
 }
 
 ///|
-const AUTOHINT_BLUE_NONE : Int = 0
+const AUTOHINT_BLUE_NONE : Int32 = 0
 
 ///|
-const AUTOHINT_BLUE_TOP : Int = 1 << 1
+const AUTOHINT_BLUE_TOP : Int32 = 1 << 1
 
 ///|
-const AUTOHINT_BLUE_SUB_TOP : Int = 1 << 2
+const AUTOHINT_BLUE_SUB_TOP : Int32 = 1 << 2
 
 ///|
-const AUTOHINT_BLUE_NEUTRAL : Int = 1 << 3
+const AUTOHINT_BLUE_NEUTRAL : Int32 = 1 << 3
 
 ///|
-const AUTOHINT_BLUE_ADJUSTMENT : Int = 1 << 4
+const AUTOHINT_BLUE_ADJUSTMENT : Int32 = 1 << 4
 
 ///|
-const AUTOHINT_BLUE_X_HEIGHT : Int = 1 << 5
+const AUTOHINT_BLUE_X_HEIGHT : Int32 = 1 << 5
 
 ///|
-const AUTOHINT_BLUE_LONG : Int = 1 << 6
+const AUTOHINT_BLUE_LONG : Int32 = 1 << 6
 
 ///|
-const AUTOHINT_BLUE_HORIZONTAL : Int = 1 << 2
+const AUTOHINT_BLUE_HORIZONTAL : Int32 = 1 << 2
 
 ///|
-const AUTOHINT_BLUE_RIGHT : Int = AUTOHINT_BLUE_TOP
+const AUTOHINT_BLUE_RIGHT : Int32 = AUTOHINT_BLUE_TOP
 
 ///|
-fn autohint_blue_contains(zones : Int, other : Int) -> Bool {
+fn autohint_blue_contains(zones : Int32, other : Int32) -> Bool {
   (zones & other) == other
 }
 
 ///|
-fn autohint_blue_is_top_like(zones : Int) -> Bool {
+fn autohint_blue_is_top_like(zones : Int32) -> Bool {
   (zones & (AUTOHINT_BLUE_TOP | AUTOHINT_BLUE_SUB_TOP)) != 0
 }
 
 ///|
-fn autohint_blue_is_top(zones : Int) -> Bool {
+fn autohint_blue_is_top(zones : Int32) -> Bool {
   autohint_blue_contains(zones, AUTOHINT_BLUE_TOP)
 }
 
 ///|
-fn autohint_blue_is_sub_top(zones : Int) -> Bool {
+fn autohint_blue_is_sub_top(zones : Int32) -> Bool {
   autohint_blue_contains(zones, AUTOHINT_BLUE_SUB_TOP)
 }
 
 ///|
-fn autohint_blue_is_neutral(zones : Int) -> Bool {
+fn autohint_blue_is_neutral(zones : Int32) -> Bool {
   autohint_blue_contains(zones, AUTOHINT_BLUE_NEUTRAL)
 }
 
 ///|
-fn autohint_blue_is_x_height(zones : Int) -> Bool {
+fn autohint_blue_is_x_height(zones : Int32) -> Bool {
   autohint_blue_contains(zones, AUTOHINT_BLUE_X_HEIGHT)
 }
 
 ///|
-fn autohint_blue_is_horizontal(zones : Int) -> Bool {
+fn autohint_blue_is_horizontal(zones : Int32) -> Bool {
   autohint_blue_contains(zones, AUTOHINT_BLUE_HORIZONTAL)
 }
 
 ///|
-fn autohint_blue_is_right(zones : Int) -> Bool {
+fn autohint_blue_is_right(zones : Int32) -> Bool {
   autohint_blue_contains(zones, AUTOHINT_BLUE_RIGHT)
 }
 
 ///|
-fn autohint_blue_retain_top_like_or_neutral(zones : Int) -> Int {
+fn autohint_blue_retain_top_like_or_neutral(zones : Int32) -> Int32 {
   zones & (AUTOHINT_BLUE_TOP | AUTOHINT_BLUE_SUB_TOP | AUTOHINT_BLUE_NEUTRAL)
 }
 
 ///|
-fn autohint_pix_round(a : Int) -> Int {
+fn autohint_pix_round(a : Int32) -> Int32 {
   (a + 32) & -64
 }
 
 ///|
-fn autohint_pix_floor(a : Int) -> Int {
+fn autohint_pix_floor(a : Int32) -> Int32 {
   a & -64
 }
 
 ///|
-fn autohint_fixed_mul_div(a : Int, b : Int, c : Int) -> Int {
+fn autohint_fixed_mul_div(a : Int32, b : Int32, c : Int32) -> Int32 {
   let mut sign = 1
   let mut aa = a.to_int64()
   let mut bb = b.to_int64()
@@ -278,7 +278,7 @@ fn autohint_fixed_mul_div(a : Int, b : Int, c : Int) -> Int {
 ///|
 fn AutoHintScale::AutoHintScale(
   size : Double,
-  units_per_em : Int,
+  units_per_em : Int32,
   font_style : @moon_skrifa.Style,
   target : Target,
   group : AutoHintScriptGroup,
@@ -332,27 +332,27 @@ fn AutoHintScale::AutoHintScale(
 }
 
 ///|
-fn autohint_style_script_group(style_ix : Int) -> AutoHintScriptGroup {
+fn autohint_style_script_group(style_ix : Int32) -> AutoHintScriptGroup {
   autohint_script_group(autohint_style_script_ix(style_ix))
 }
 
 ///|
-fn autohint_style_hint_top_to_bottom(style_ix : Int) -> Bool {
+fn autohint_style_hint_top_to_bottom(style_ix : Int32) -> Bool {
   autohint_script_hint_top_to_bottom(autohint_style_script_ix(style_ix))
 }
 
 ///|
-fn autohint_style_std_chars(style_ix : Int) -> String {
+fn autohint_style_std_chars(style_ix : Int32) -> String {
   autohint_script_std_chars(autohint_style_script_ix(style_ix))
 }
 
 ///|
-fn autohint_style_blues(style_ix : Int) -> Array[(String, Int)] {
+fn autohint_style_blues(style_ix : Int32) -> Array[(String, Int32)] {
   autohint_script_blues(autohint_style_script_ix(style_ix))
 }
 
 ///|
-fn autohint_char_to_codepoint(c : Char) -> Int? {
+fn autohint_char_to_codepoint(c : Char) -> Int32? {
   // MoonBit represents `Char` as a Unicode scalar value.
   // Most implementations provide `to_int()`; keep this in a tiny helper
   // so it's easy to adjust if the stdlib changes.
@@ -407,7 +407,7 @@ fn autohint_pick_standard_glyph(
     match autohint_char_to_codepoint(ch) {
       None => continue
       Some(cp_i) => {
-        let cp = cp_i |> Int::reinterpret_as_uint
+        let cp = cp_i |> Int32::reinterpret_as_uint
         match font.charmap().map(cp) {
           None => continue
           Some(gid) => {
@@ -429,7 +429,7 @@ fn autohint_pick_standard_glyph(
 ///|
 fn autohint_compute_unscaled_widths(
   outlines : OutlineGlyphCollection,
-  units_per_em : Int,
+  units_per_em : Int32,
   std_chars : String,
 ) -> Array[AutoHintUnscaledAxisMetrics] {
   let axes : Array[AutoHintUnscaledAxisMetrics] = []
@@ -497,7 +497,7 @@ fn autohint_compute_unscaled_widths(
 }
 
 ///|
-fn autohint_sort_ints(values : Array[Int]) -> Unit {
+fn autohint_sort_ints(values : Array[Int32]) -> Unit {
   if values.length() <= 1 {
     return
   }
@@ -515,8 +515,8 @@ fn autohint_sort_ints(values : Array[Int]) -> Unit {
 ///|
 fn autohint_compute_default_blues(
   outlines : OutlineGlyphCollection,
-  blues_data : Array[(String, Int)],
-  units_per_em : Int,
+  blues_data : Array[(String, Int32)],
+  units_per_em : Int32,
 ) -> Array[AutoHintUnscaledBlue] {
   let blues : Array[AutoHintUnscaledBlue] = []
   for entry in blues_data.iter() {
@@ -524,7 +524,7 @@ fn autohint_compute_default_blues(
     if blues.length() >= AUTOHINT_MAX_BLUES {
       continue
     }
-    let values : Array[Int] = []
+    let values : Array[Int32] = []
     let mut ascender = 0
     let mut descender = 0
     let is_top_like = autohint_blue_is_top_like(blue_zones)
@@ -541,7 +541,7 @@ fn autohint_compute_default_blues(
       if cp_i < 0 {
         continue
       }
-      let cp = cp_i |> Int::reinterpret_as_uint
+      let cp = cp_i |> Int32::reinterpret_as_uint
       let gid = match outlines.font.charmap().map(cp) {
         None => continue
         Some(g) => g
@@ -556,9 +556,9 @@ fn autohint_compute_default_blues(
       if outline.points.length() <= 2 {
         continue
       }
-      let mut best_y : Int? = None
+      let mut best_y : Int32? = None
       // First pass: compute extrema + bounds.
-      let mut extremum : Int? = None
+      let mut extremum : Int32? = None
       for p in outline.points.iter() {
         let y = p.fy
         if extremum is None {
@@ -582,7 +582,7 @@ fn autohint_compute_default_blues(
         // a sufficiently long horizontal segment, ignoring narrow bumps.
         let length_threshold = units_per_em / 25
         let flat_threshold = units_per_em / 14
-        let candidates : Array[Int] = []
+        let candidates : Array[Int32] = []
         for p in outline.points.iter() {
           let y = p.fy
           if extremum_y - y >= 0 && extremum_y - y <= flat_threshold {
@@ -592,7 +592,7 @@ fn autohint_compute_default_blues(
         if !candidates.is_empty() {
           autohint_sort_ints(candidates)
           // Walk unique Y levels from highest to lowest.
-          let mut last_y : Int? = None
+          let mut last_y : Int32? = None
           let mut i = candidates.length() - 1
           while true {
             let y0 = candidates.at(i)
@@ -600,8 +600,8 @@ fn autohint_compute_default_blues(
               ()
             } else {
               last_y = Some(y0)
-              let mut min_x : Int? = None
-              let mut max_x : Int? = None
+              let mut min_x : Int32? = None
+              let mut max_x : Int32? = None
               for p in outline.points.iter() {
                 if p.fy != y0 {
                   continue
@@ -655,7 +655,7 @@ fn autohint_compute_default_blues(
     return blues
   }
   // Sort from bottom to top, then adjust to avoid overlaps.
-  let sorted_ix : Array[Int] = []
+  let sorted_ix : Array[Int32] = []
   for i in 0..<blues.length() {
     sorted_ix.push(i)
   }
@@ -712,7 +712,7 @@ fn autohint_compute_default_blues(
 ///|
 fn autohint_compute_cjk_blues(
   outlines : OutlineGlyphCollection,
-  blues_data : Array[(String, Int)],
+  blues_data : Array[(String, Int32)],
 ) -> Array[AutoHintUnscaledBlue] {
   // This returns only vertical blues (horizontal are disabled).
   let blues : Array[AutoHintUnscaledBlue] = []
@@ -726,8 +726,8 @@ fn autohint_compute_cjk_blues(
     }
     autohint_blue_is_right(blue_zones) |> ignore
     let is_top = autohint_blue_is_top(blue_zones)
-    let fills : Array[Int] = []
-    let flats : Array[Int] = []
+    let fills : Array[Int32] = []
+    let flats : Array[Int32] = []
     let mut is_fill = true
     for ch in blue_str {
       if ch == ' ' {
@@ -741,7 +741,7 @@ fn autohint_compute_cjk_blues(
       if cp_i < 0 {
         continue
       }
-      let cp = cp_i |> Int::reinterpret_as_uint
+      let cp = cp_i |> Int32::reinterpret_as_uint
       let gid = match outlines.font.charmap().map(cp) {
         None => continue
         Some(g) => g
@@ -756,7 +756,7 @@ fn autohint_compute_cjk_blues(
       if outline.points.length() <= 2 {
         continue
       }
-      let mut best : Int? = None
+      let mut best : Int32? = None
       for p in outline.points.iter() {
         let v = p.fy
         if best is None {
@@ -805,8 +805,8 @@ fn autohint_compute_cjk_blues(
 fn autohint_compute_unscaled_blues(
   outlines : OutlineGlyphCollection,
   group : AutoHintScriptGroup,
-  style_ix : Int,
-  units_per_em : Int,
+  style_ix : Int32,
+  units_per_em : Int32,
 ) -> Array[Array[AutoHintUnscaledBlue]] {
   let out : Array[Array[AutoHintUnscaledBlue]] = []
   match group {
@@ -835,8 +835,8 @@ fn autohint_compute_unscaled_blues(
 ///|
 fn autohint_compute_unscaled_style_metrics(
   outlines : OutlineGlyphCollection,
-  style_ix : Int,
-  units_per_em : Int,
+  style_ix : Int32,
+  units_per_em : Int32,
 ) -> AutoHintUnscaledStyleMetrics {
   let group = autohint_style_script_group(style_ix)
   let hint_top_to_bottom = autohint_style_hint_top_to_bottom(style_ix)
@@ -1045,8 +1045,8 @@ fn autohint_scale_style_metrics(
 
 ///|
 fn autohint_sort_and_quantize_widths(
-  widths : Array[Int],
-  threshold : Int,
+  widths : Array[Int32],
+  threshold : Int32,
 ) -> Unit {
   if widths.length() <= 1 {
     return
@@ -1085,7 +1085,7 @@ fn autohint_sort_and_quantize_widths(
     }
     ix = ix + 1
   }
-  let out : Array[Int] = []
+  let out : Array[Int32] = []
   for i in 0..<widths.length() {
     let v = widths[i]
     if v != 0 {
@@ -1099,7 +1099,7 @@ fn autohint_sort_and_quantize_widths(
 }
 
 ///|
-fn widths_debug(widths : Array[Int]) -> String {
+fn widths_debug(widths : Array[Int32]) -> String {
   let mut s = "["
   for i in 0..<widths.length() {
     if i != 0 {

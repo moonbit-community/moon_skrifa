@@ -19,7 +19,7 @@
 /// (Apache-2.0 OR MIT).
 
 ///|
-fn autohint_store_point(point : AutoHintPoint, dim : Int, u : Int) -> Unit {
+fn autohint_store_point(point : AutoHintPoint, dim : Int32, u : Int32) -> Unit {
   if dim == AUTOHINT_DIM_HORIZONTAL {
     point.x = u
     point.flags.set_marker(TouchedX)
@@ -35,7 +35,7 @@ fn autohint_align_edge_points(
   outline : AutoHintOutline,
   axis : AutoHintAxis,
   group : AutoHintScriptGroup,
-  scale_flags : Int,
+  scale_flags : Int32,
 ) -> Unit {
   // Snapping is configurable for CJK.
   let snap = group is Default ||
@@ -197,9 +197,9 @@ fn autohint_align_strong_points(
 ///|
 fn autohint_iup_shift(
   outline : AutoHintOutline,
-  p1_ix : Int,
-  p2_ix : Int,
-  ref_ix : Int,
+  p1_ix : Int32,
+  p2_ix : Int32,
+  ref_ix : Int32,
 ) -> Unit {
   let ref_point = outline.points.at(ref_ix)
   let delta = ref_point.u - ref_point.v
@@ -219,10 +219,10 @@ fn autohint_iup_shift(
 ///|
 fn autohint_iup_interpolate(
   outline : AutoHintOutline,
-  p1_ix : Int,
-  p2_ix : Int,
-  ref1_ix : Int,
-  ref2_ix : Int,
+  p1_ix : Int32,
+  p2_ix : Int32,
+  ref1_ix : Int32,
+  ref2_ix : Int32,
 ) -> Unit {
   if p1_ix > p2_ix {
     return
@@ -260,7 +260,7 @@ fn autohint_iup_interpolate(
 
 ///|
 /// Align the weak points; equivalent to the TrueType `IUP` instruction.
-fn autohint_align_weak_points(outline : AutoHintOutline, dim : Int) -> Unit {
+fn autohint_align_weak_points(outline : AutoHintOutline, dim : Int32) -> Unit {
   let touch_mask = (if dim == AUTOHINT_DIM_HORIZONTAL {
     for i in 0..<outline.points.length() {
       let p = outline.points.at(i)
@@ -282,7 +282,7 @@ fn autohint_align_weak_points(outline : AutoHintOutline, dim : Int) -> Unit {
     if first < 0 || last < first || last >= outline.points.length() {
       continue
     }
-    let mut first_touched : Int? = None
+    let mut first_touched : Int32? = None
     for ix in first..<(last + 1) {
       if outline.points.at(ix).flags.has_marker_mask(touch_mask) {
         first_touched = Some(ix)

@@ -30,9 +30,9 @@ priv enum TtRoundMode {
 ///|
 priv struct TtRoundState {
   mut mode : TtRoundMode
-  mut threshold : Int
-  mut phase : Int
-  mut period : Int
+  mut threshold : Int32
+  mut phase : Int32
+  mut period : Int32
 }
 
 ///|
@@ -41,7 +41,7 @@ fn TtRoundState::default() -> TtRoundState {
 }
 
 ///|
-fn TtRoundState::round(self : TtRoundState, distance_bits : Int) -> Int {
+fn TtRoundState::round(self : TtRoundState, distance_bits : Int32) -> Int32 {
   match self.mode {
     HalfGrid =>
       if distance_bits >= 0 {

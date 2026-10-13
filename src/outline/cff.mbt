@@ -18,19 +18,19 @@
 /// This supports a single-font CFF FontSet and Type2 charstrings.
 
 ///|
-const CFF_HEADER_MIN_SIZE : Int = 4
+const CFF_HEADER_MIN_SIZE : Int32 = 4
 
 ///|
-fn cff_read_u16_be(view : BytesView, offset : Int) -> Int? {
+fn cff_read_u16_be(view : BytesView, offset : Int32) -> Int32? {
   type2_read_u16_be(view, offset)
 }
 
 ///|
 fn cff_fdselect_index(
   data : BytesView,
-  offset : Int,
-  glyph_index : Int,
-) -> Int? {
+  offset : Int32,
+  glyph_index : Int32,
+) -> Int32? {
   // Same as CFF2 FDSelect formats 0 and 3.
   if offset < 0 || offset >= data.length() {
     return None
@@ -90,7 +90,7 @@ fn cff_fdselect_index(
 }
 
 ///|
-fn cff_index1_total_size(ix : Type2Index) -> Int? {
+fn cff_index1_total_size(ix : Type2Index) -> Int32? {
   if ix.count == 0 {
     Some(2)
   } else {
@@ -102,7 +102,7 @@ fn cff_index1_total_size(ix : Type2Index) -> Int? {
 }
 
 ///|
-fn cff_slice(view : BytesView, start : Int) -> BytesView? {
+fn cff_slice(view : BytesView, start : Int32) -> BytesView? {
   if start < 0 || start > view.length() {
     None
   } else {
@@ -111,7 +111,7 @@ fn cff_slice(view : BytesView, start : Int) -> BytesView? {
 }
 
 ///|
-fn cff_scale_for_size(size : @moon_skrifa.Size, upem : Int) -> CffFixed? {
+fn cff_scale_for_size(size : @moon_skrifa.Size, upem : Int32) -> CffFixed? {
   match size.ppem() {
     None => None
     Some(ppem) =>
@@ -234,8 +234,8 @@ fn cff_outline_path(
   //
   // For CID-keyed CFF, Private DICT/Subrs may come from FDArray+FDSelect
   // instead of Top DICT.
-  let mut private_size : Int? = dict.private_size
-  let mut private_off : Int? = dict.private_offset
+  let mut private_size : Int32? = dict.private_size
+  let mut private_off : Int32? = dict.private_offset
   if dict.fd_array_offset is Some(fd_array_off) {
     let fd_select_ix = match dict.fd_select_offset {
       None => 0
@@ -286,7 +286,7 @@ fn cff_outline_path(
 ///|
 fn cff_hint_scale_for_hinting(
   size : @moon_skrifa.Size,
-  upem : Int,
+  upem : Int32,
 ) -> CffFixed? {
   match cff_scale_for_size(size, upem) {
     None => None
@@ -393,10 +393,10 @@ fn cff_outline_path_hinted(
   }
 
   // Resolve private dict + optional font dict matrix for CID-keyed CFF.
-  let mut private_size : Int? = dict.private_size
-  let mut private_off : Int? = dict.private_offset
+  let mut private_size : Int32? = dict.private_size
+  let mut private_off : Int32? = dict.private_offset
   let mut sub_matrix : CffMatrix? = None
-  let mut sub_matrix_upem : Int? = None
+  let mut sub_matrix_upem : Int32? = None
   if dict.fd_array_offset is Some(fd_array_off) {
     let fd_select_ix = match dict.fd_select_offset {
       None => 0
@@ -426,7 +426,7 @@ fn cff_outline_path_hinted(
   let upem = outline_units_per_em(font).to_int()
   let mut matrix : CffMatrix? = None
   let mut matrix_upem = upem
-  let top_norm : (CffMatrix, Int)? = match
+  let top_norm : (CffMatrix, Int32)? = match
     (dict.font_matrix, dict.font_matrix_upem) {
     (Some(m), Some(u)) => Some(cff_normalize_font_matrix(m, u))
     _ => None
@@ -508,7 +508,7 @@ fn cff_outline_path_hinted(
 }
 
 ///|
-fn cff_glyph_count(font : @moon_skrifa.FontRef) -> Int? {
+fn cff_glyph_count(font : @moon_skrifa.FontRef) -> Int32? {
   let cff = match font.table(TAG_CFF) {
     None => return None
     Some(v) => v

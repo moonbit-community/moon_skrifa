@@ -16,55 +16,55 @@
 /// Minimal horizontal metrics (maxp/hhea/hmtx).
 ///
 /// Ported from `fontations/skrifa/src/metrics.rs` (Apache-2.0 OR MIT).
-const TAG_MAXP : UInt = 0x6D617870 // "maxp"
+const TAG_MAXP : UInt32 = 0x6D617870 // "maxp"
 
 ///|
-const TAG_HHEA : UInt = 0x68686561 // "hhea"
+const TAG_HHEA : UInt32 = 0x68686561 // "hhea"
 
 ///|
-const TAG_HMTX : UInt = 0x686D7478 // "hmtx"
+const TAG_HMTX : UInt32 = 0x686D7478 // "hmtx"
 
 ///|
-const METRICS_TAG_HEAD : UInt = 0x68656164 // "head"
+const METRICS_TAG_HEAD : UInt32 = 0x68656164 // "head"
 
 ///|
-const METRICS_TAG_OS2 : UInt = 0x4F532F32 // "OS/2"
+const METRICS_TAG_OS2 : UInt32 = 0x4F532F32 // "OS/2"
 
 ///|
-const METRICS_TAG_POST : UInt = 0x706F7374 // "post"
+const METRICS_TAG_POST : UInt32 = 0x706F7374 // "post"
 
 ///|
-const METRICS_TAG_HVAR : UInt = 0x48564152 // "HVAR"
+const METRICS_TAG_HVAR : UInt32 = 0x48564152 // "HVAR"
 
 ///|
-const METRICS_TAG_GVAR : UInt = 0x67564152 // "gvar"
+const METRICS_TAG_GVAR : UInt32 = 0x67564152 // "gvar"
 
 ///|
-const METRICS_TAG_GLYF : UInt = 0x676C7966 // "glyf"
+const METRICS_TAG_GLYF : UInt32 = 0x676C7966 // "glyf"
 
 ///|
-const METRICS_TAG_LOCA : UInt = 0x6C6F6361 // "loca"
+const METRICS_TAG_LOCA : UInt32 = 0x6C6F6361 // "loca"
 
 ///|
 const METRICS_F2DOT14_SCALE : Double = 16384.0
 
 ///|
-const METRICS_COMPOSITE_ARG_1_AND_2_ARE_WORDS : Int = 0x0001
+const METRICS_COMPOSITE_ARG_1_AND_2_ARE_WORDS : Int32 = 0x0001
 
 ///|
-const METRICS_COMPOSITE_MORE_COMPONENTS : Int = 0x0020
+const METRICS_COMPOSITE_MORE_COMPONENTS : Int32 = 0x0020
 
 ///|
-const METRICS_COMPOSITE_WE_HAVE_A_SCALE : Int = 0x0008
+const METRICS_COMPOSITE_WE_HAVE_A_SCALE : Int32 = 0x0008
 
 ///|
-const METRICS_COMPOSITE_WE_HAVE_AN_X_AND_Y_SCALE : Int = 0x0040
+const METRICS_COMPOSITE_WE_HAVE_AN_X_AND_Y_SCALE : Int32 = 0x0040
 
 ///|
-const METRICS_COMPOSITE_WE_HAVE_A_TWO_BY_TWO : Int = 0x0080
+const METRICS_COMPOSITE_WE_HAVE_A_TWO_BY_TWO : Int32 = 0x0080
 
 ///|
-fn metrics_read_u16_be(view : BytesView, offset : Int) -> Int? {
+fn metrics_read_u16_be(view : BytesView, offset : Int32) -> Int32? {
   if offset < 0 || offset + 2 > view.length() {
     None
   } else {
@@ -75,7 +75,7 @@ fn metrics_read_u16_be(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn metrics_read_i16_be(view : BytesView, offset : Int) -> Int? {
+fn metrics_read_i16_be(view : BytesView, offset : Int32) -> Int32? {
   match metrics_read_u16_be(view, offset) {
     None => None
     Some(u) => if u >= 0x8000 { Some(u - 0x10000) } else { Some(u) }
@@ -83,7 +83,7 @@ fn metrics_read_i16_be(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn metrics_read_u32_be(view : BytesView, offset : Int) -> UInt? {
+fn metrics_read_u32_be(view : BytesView, offset : Int32) -> UInt32? {
   if offset < 0 || offset + 4 > view.length() {
     None
   } else {
@@ -96,7 +96,7 @@ fn metrics_read_u32_be(view : BytesView, offset : Int) -> UInt? {
 }
 
 ///|
-fn metrics_read_u32_be_int(view : BytesView, offset : Int) -> Int? {
+fn metrics_read_u32_be_int(view : BytesView, offset : Int32) -> Int32? {
   match metrics_read_u32_be(view, offset) {
     None => None
     Some(u) => Some(u.to_uint64().to_int())
@@ -104,7 +104,7 @@ fn metrics_read_u32_be_int(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn metrics_read_i32_be(view : BytesView, offset : Int) -> Int? {
+fn metrics_read_i32_be(view : BytesView, offset : Int32) -> Int32? {
   match metrics_read_u32_be(view, offset) {
     None => None
     Some(u) => Some(u.reinterpret_as_int())
@@ -112,7 +112,7 @@ fn metrics_read_i32_be(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn metrics_read_u8(view : BytesView, offset : Int) -> Int? {
+fn metrics_read_u8(view : BytesView, offset : Int32) -> Int32? {
   if offset < 0 || offset + 1 > view.length() {
     None
   } else {
@@ -121,7 +121,7 @@ fn metrics_read_u8(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn metrics_read_i8(view : BytesView, offset : Int) -> Int? {
+fn metrics_read_i8(view : BytesView, offset : Int32) -> Int32? {
   match metrics_read_u8(view, offset) {
     None => None
     Some(u) => if u >= 0x80 { Some(u - 0x100) } else { Some(u) }
@@ -129,7 +129,7 @@ fn metrics_read_i8(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn metrics_read_u24_be(view : BytesView, offset : Int) -> Int? {
+fn metrics_read_u24_be(view : BytesView, offset : Int32) -> Int32? {
   if offset < 0 || offset + 3 > view.length() {
     None
   } else {
@@ -142,8 +142,8 @@ fn metrics_read_u24_be(view : BytesView, offset : Int) -> Int? {
 
 ///|
 pub struct HmtxMetrics {
-  priv num_glyphs : Int
-  priv num_hmetrics : Int
+  priv num_glyphs : Int32
+  priv num_hmetrics : Int32
   priv hmtx : BytesView
 }
 
@@ -181,17 +181,17 @@ pub fn HmtxMetrics::from_font(font : FontRef) -> HmtxMetrics? {
 }
 
 ///|
-pub fn HmtxMetrics::num_glyphs(self : HmtxMetrics) -> Int {
+pub fn HmtxMetrics::num_glyphs(self : HmtxMetrics) -> Int32 {
   self.num_glyphs
 }
 
 ///|
-pub fn HmtxMetrics::number_of_hmetrics(self : HmtxMetrics) -> Int {
+pub fn HmtxMetrics::number_of_hmetrics(self : HmtxMetrics) -> Int32 {
   self.num_hmetrics
 }
 
 ///|
-fn HmtxMetrics::glyph_index(self : HmtxMetrics, gid : GlyphId) -> Int? {
+fn HmtxMetrics::glyph_index(self : HmtxMetrics, gid : GlyphId) -> Int32? {
   let idx = gid.to_uint64().to_int()
   if idx < 0 || idx >= self.num_glyphs {
     None
@@ -202,7 +202,7 @@ fn HmtxMetrics::glyph_index(self : HmtxMetrics, gid : GlyphId) -> Int? {
 
 ///|
 /// Returns advance width for a glyph in font units.
-pub fn HmtxMetrics::advance_width(self : HmtxMetrics, gid : GlyphId) -> UInt? {
+pub fn HmtxMetrics::advance_width(self : HmtxMetrics, gid : GlyphId) -> UInt32? {
   match self.glyph_index(gid) {
     None => None
     Some(idx) => {
@@ -221,7 +221,7 @@ pub fn HmtxMetrics::advance_width(self : HmtxMetrics, gid : GlyphId) -> UInt? {
 
 ///|
 /// Returns left side bearing for a glyph in font units.
-pub fn HmtxMetrics::lsb(self : HmtxMetrics, gid : GlyphId) -> Int? {
+pub fn HmtxMetrics::lsb(self : HmtxMetrics, gid : GlyphId) -> Int32? {
   match self.glyph_index(gid) {
     None => None
     Some(idx) =>
@@ -538,21 +538,21 @@ pub fn FontRef::font_metrics_at(
 /// - glyph-variation phantom-point deltas from `gvar`
 pub struct GlyphMetrics {
   priv font : FontRef
-  priv glyph_count : Int
+  priv glyph_count : Int32
   priv base : HmtxMetrics?
   priv scale : Double
   priv coords : ArrayView[NormalizedCoord]
   priv hvar : BytesView?
-  priv hvar_store_off : Int
-  priv hvar_aw_map_off : Int?
-  priv hvar_lsb_map_off : Int?
+  priv hvar_store_off : Int32
+  priv hvar_aw_map_off : Int32?
+  priv hvar_lsb_map_off : Int32?
   priv gvar : BytesView?
-  priv gvar_axis_count : Int
-  priv gvar_shared_tuple_count : Int
-  priv gvar_shared_tuples_off : Int
-  priv gvar_glyph_count : Int
-  priv gvar_flags : Int
-  priv gvar_data_array_off : Int
+  priv gvar_axis_count : Int32
+  priv gvar_shared_tuple_count : Int32
+  priv gvar_shared_tuples_off : Int32
+  priv gvar_glyph_count : Int32
+  priv gvar_flags : Int32
+  priv gvar_data_array_off : Int32
 }
 
 ///|
@@ -607,8 +607,8 @@ pub fn GlyphMetrics::GlyphMetrics(
   let coords = location.effective_coords()
   let mut hvar : BytesView? = None
   let mut store_off = -1
-  let mut aw_map_off : Int? = None
-  let mut lsb_map_off : Int? = None
+  let mut aw_map_off : Int32? = None
+  let mut lsb_map_off : Int32? = None
   match font.table(METRICS_TAG_HVAR) {
     None => ()
     Some(tbl) =>
@@ -684,16 +684,16 @@ pub fn GlyphMetrics::GlyphMetrics(
 }
 
 ///|
-pub fn GlyphMetrics::glyph_count(self : GlyphMetrics) -> Int {
+pub fn GlyphMetrics::glyph_count(self : GlyphMetrics) -> Int32 {
   self.glyph_count
 }
 
 ///|
 fn metrics_glyf_simple_bounds(
   glyf : BytesView,
-  start : Int,
-  end : Int,
-) -> (Int, Int, Int, Int)? {
+  start : Int32,
+  end : Int32,
+) -> (Int32, Int32, Int32, Int32)? {
   if start < 0 || end < start || end > glyf.length() || start + 10 > end {
     return None
   }
@@ -723,7 +723,7 @@ fn metrics_glyf_simple_bounds(
     return None
   }
   // Flags
-  let flags : Array[Int] = Array::make(num_points, 0)
+  let flags : Array[Int32] = Array::make(num_points, 0)
   let mut i = 0
   while i < num_points {
     let f = metrics_read_u8(glyf, pos).unwrap_or(-1)
@@ -749,7 +749,7 @@ fn metrics_glyf_simple_bounds(
     }
   }
   // Decode X coordinates.
-  let xs : Array[Int] = Array::make(num_points, 0)
+  let xs : Array[Int32] = Array::make(num_points, 0)
   let mut x = 0
   for j in 0..<num_points {
     let f = flags.at(j)
@@ -862,21 +862,21 @@ pub fn GlyphMetrics::bounds(self : GlyphMetrics, gid : GlyphId) -> GlyphBounds? 
 }
 
 ///|
-fn metrics_hvar_entry_size(entry_format : Int) -> Int {
+fn metrics_hvar_entry_size(entry_format : Int32) -> Int32 {
   ((entry_format & 0x30) >> 4) + 1
 }
 
 ///|
-fn metrics_hvar_bit_count(entry_format : Int) -> Int {
+fn metrics_hvar_bit_count(entry_format : Int32) -> Int32 {
   (entry_format & 0x0F) + 1
 }
 
 ///|
 fn metrics_hvar_delta_set_index_map_get(
   hvar : BytesView,
-  map_off : Int,
-  index : Int,
-) -> (Int, Int)? {
+  map_off : Int32,
+  index : Int32,
+) -> (Int32, Int32)? {
   let format = metrics_read_u8(hvar, map_off).unwrap_or(-1)
   if format != 0 && format != 1 {
     return None
@@ -904,7 +904,7 @@ fn metrics_hvar_delta_set_index_map_get(
   }
   let idx = if index < map_count { index } else { map_count - 1 }
   let entry_off = data_off + idx * entry_size
-  let entry : Int? = match entry_size {
+  let entry : Int32? = match entry_size {
     1 => metrics_read_u8(hvar, entry_off)
     2 => metrics_read_u16_be(hvar, entry_off)
     3 => metrics_read_u24_be(hvar, entry_off)
@@ -924,8 +924,8 @@ fn metrics_hvar_delta_set_index_map_get(
 ///|
 fn metrics_hvar_region_scalar(
   store : BytesView,
-  region_list_off : Int,
-  region_index : Int,
+  region_list_off : Int32,
+  region_index : Int32,
   coords : ArrayView[NormalizedCoord],
 ) -> Double {
   let axis_count = metrics_read_u16_be(store, region_list_off).unwrap_or(-1)
@@ -978,11 +978,11 @@ fn metrics_hvar_region_scalar(
 ///|
 fn metrics_hvar_item_variation_store_delta(
   store : BytesView,
-  store_off : Int,
-  outer : Int,
-  inner : Int,
+  store_off : Int32,
+  outer : Int32,
+  inner : Int32,
   coords : ArrayView[NormalizedCoord],
-) -> Int {
+) -> Int32 {
   if coords.is_empty() {
     return 0
   }
@@ -1053,11 +1053,11 @@ fn metrics_hvar_item_variation_store_delta(
 ///|
 fn metrics_hvar_delta(
   hvar : BytesView,
-  store_off : Int,
-  map_off : Int?,
+  store_off : Int32,
+  map_off : Int32?,
   gid : GlyphId,
   coords : ArrayView[NormalizedCoord],
-) -> Int {
+) -> Int32 {
   match map_off {
     None => 0
     Some(off) =>
@@ -1079,9 +1079,9 @@ fn metrics_hvar_delta(
 ///|
 fn metrics_glyf_glyph_range(
   font : FontRef,
-  num_glyphs : Int,
-  gid : Int,
-) -> (BytesView, Int, Int)? {
+  num_glyphs : Int32,
+  gid : Int32,
+) -> (BytesView, Int32, Int32)? {
   if gid < 0 || gid >= num_glyphs {
     return None
   }
@@ -1139,10 +1139,10 @@ fn metrics_glyf_glyph_range(
 ///|
 fn metrics_glyf_point_count_idx(
   font : FontRef,
-  num_glyphs : Int,
-  gid : Int,
+  num_glyphs : Int32,
+  gid : Int32,
   visited : Array[Bool],
-) -> Int? {
+) -> Int32? {
   if gid < 0 || gid >= num_glyphs {
     return None
   }
@@ -1216,9 +1216,9 @@ fn metrics_glyf_point_count_idx(
 ///|
 fn metrics_glyf_point_count(
   font : FontRef,
-  num_glyphs : Int,
+  num_glyphs : Int32,
   gid : GlyphId,
-) -> Int? {
+) -> Int32? {
   let idx = gid.to_uint64().to_int()
   if idx < 0 || idx >= num_glyphs {
     return None
@@ -1230,9 +1230,9 @@ fn metrics_glyf_point_count(
 ///|
 fn metrics_gvar_points(
   gvar : BytesView,
-  offset : Int,
-  total_points : Int,
-) -> (Array[Int]?, Int)? {
+  offset : Int32,
+  total_points : Int32,
+) -> (Array[Int32]?, Int32)? {
   let b0 = metrics_read_u8(gvar, offset).unwrap_or(-1)
   if b0 < 0 {
     return None
@@ -1253,7 +1253,7 @@ fn metrics_gvar_points(
   if count == 0 {
     return Some((None, off))
   }
-  let points : Array[Int] = []
+  let points : Array[Int32] = []
   let mut last = 0
   while points.length() < count {
     let ctrl = metrics_read_u8(gvar, off).unwrap_or(-1)
@@ -1289,11 +1289,11 @@ fn metrics_gvar_points(
 ///|
 fn metrics_gvar_deltas_capture(
   gvar : BytesView,
-  offset : Int,
-  count : Int,
-  pos0 : Int,
-  pos1 : Int,
-) -> (Int, Int, Int)? {
+  offset : Int32,
+  count : Int32,
+  pos0 : Int32,
+  pos1 : Int32,
+) -> (Int32, Int32, Int32)? {
   let mut off = offset
   let mut idx = 0
   let mut v0 = 0
@@ -1352,9 +1352,9 @@ fn metrics_gvar_deltas_capture(
 ///|
 fn metrics_gvar_tuple_scalar(
   coords : ArrayView[NormalizedCoord],
-  peak : Array[Int],
-  start : Array[Int]?,
-  end : Array[Int]?,
+  peak : Array[Int32],
+  start : Array[Int32]?,
+  end : Array[Int32]?,
 ) -> Double {
   let axis_count = peak.length()
   let mut scalar = 1.0
@@ -1398,7 +1398,7 @@ fn metrics_gvar_tuple_scalar(
 fn GlyphMetrics::gvar_phantom_deltas(
   self : GlyphMetrics,
   gid : GlyphId,
-) -> (Int, Int) {
+) -> (Int32, Int32) {
   if self.gvar is None || self.coords.is_empty() {
     return (0, 0)
   }
@@ -1456,8 +1456,8 @@ fn GlyphMetrics::gvar_phantom_deltas(
   if headers_end < headers_off || headers_end > end {
     return (0, 0)
   }
-  let sizes : Array[Int] = []
-  let tuple_indexes : Array[Int] = []
+  let sizes : Array[Int32] = []
+  let tuple_indexes : Array[Int32] = []
   for i in 0..<tuple_count {
     let h = headers_off + i * 4
     let s = metrics_read_u16_be(gvar, h).unwrap_or(-1)
@@ -1481,7 +1481,7 @@ fn GlyphMetrics::gvar_phantom_deltas(
     let embedded = (ti & 0x8000) != 0
     let intermediate = (ti & 0x4000) != 0
     let shared_ix = ti & 0x0FFF
-    let peak : Array[Int] = Array::make(axis_count, 0)
+    let peak : Array[Int32] = Array::make(axis_count, 0)
     if embedded {
       let need = tuple_coords_off + axis_count * 2
       if need < tuple_coords_off || need > end {
@@ -1507,11 +1507,11 @@ fn GlyphMetrics::gvar_phantom_deltas(
         peak.set(ax, metrics_read_i16_be(gvar, base + ax * 2).unwrap_or(0))
       }
     }
-    let mut start_t : Array[Int]? = None
-    let mut end_t : Array[Int]? = None
+    let mut start_t : Array[Int32]? = None
+    let mut end_t : Array[Int32]? = None
     if intermediate {
-      let st : Array[Int] = Array::make(axis_count, 0)
-      let et : Array[Int] = Array::make(axis_count, 0)
+      let st : Array[Int32] = Array::make(axis_count, 0)
+      let et : Array[Int32] = Array::make(axis_count, 0)
       let need = tuple_coords_off + axis_count * 4
       if need < tuple_coords_off || need > end {
         return (0, 0)
@@ -1542,7 +1542,7 @@ fn GlyphMetrics::gvar_phantom_deltas(
   let phantom0 = total_points - 4
   let phantom1 = total_points - 3
   let mut cursor = data_off
-  let mut shared_points_list : Array[Int]? = None
+  let mut shared_points_list : Array[Int32]? = None
   if shared_points {
     let (pts, off2) = match metrics_gvar_points(gvar, cursor, total_points) {
       None => return (0, 0)
@@ -1563,7 +1563,7 @@ fn GlyphMetrics::gvar_phantom_deltas(
     let scalar = scalars.at(i)
     // tupleIndex flag: PRIVATE_POINT_NUMBERS = 0x2000.
     let private_points = (ti & 0x2000) != 0
-    let mut points : Array[Int]? = None
+    let mut points : Array[Int32]? = None
     let mut after_points = cursor
     if private_points || !shared_points {
       let (pts, off2) = match metrics_gvar_points(gvar, cursor, total_points) {

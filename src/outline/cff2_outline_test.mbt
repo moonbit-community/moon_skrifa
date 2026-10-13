@@ -14,25 +14,25 @@
 
 ///|
 /// CFF2 outline extraction tests using synthetic SFNT bytes.
-const CFF2_TEST_TAG_CFF2 : UInt = 0x43464632 // "CFF2"
+const CFF2_TEST_TAG_CFF2 : UInt32 = 0x43464632 // "CFF2"
 
 ///|
-fn cff2_test_push_u16_be(out : Array[Byte], v : Int) -> Unit {
+fn cff2_test_push_u16_be(out : Array[Byte], v : Int32) -> Unit {
   let u = v.reinterpret_as_uint()
-  let mask = 255 |> Int::reinterpret_as_uint
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((u >> 8) & mask).to_byte())
   out.push((u & mask).to_byte())
 }
 
 ///|
-fn cff2_test_push_i16_be(out : Array[Byte], v : Int) -> Unit {
+fn cff2_test_push_i16_be(out : Array[Byte], v : Int32) -> Unit {
   // Encode low 16 bits in big-endian.
   cff2_test_push_u16_be(out, v)
 }
 
 ///|
-fn cff2_test_push_u32_be(out : Array[Byte], v : UInt) -> Unit {
-  let mask = 255 |> Int::reinterpret_as_uint
+fn cff2_test_push_u32_be(out : Array[Byte], v : UInt32) -> Unit {
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((v >> 24) & mask).to_byte())
   out.push(((v >> 16) & mask).to_byte())
   out.push(((v >> 8) & mask).to_byte())
@@ -40,7 +40,7 @@ fn cff2_test_push_u32_be(out : Array[Byte], v : UInt) -> Unit {
 }
 
 ///|
-fn cff2_test_u32(x : Int) -> UInt {
+fn cff2_test_u32(x : Int32) -> UInt32 {
   x.reinterpret_as_uint()
 }
 
@@ -52,8 +52,8 @@ fn cff2_test_index2(objects : Array[Array[Byte]]) -> Array[Byte] {
   if count == 0 {
     return out
   }
-  out.push(1 |> Int::to_byte) // offSize=1
-  let offsets : Array[Int] = []
+  out.push(1 |> Int32::to_byte) // offSize=1
+  let offsets : Array[Int32] = []
   let mut off = 1
   offsets.push(off)
   for obj in objects {
@@ -61,7 +61,7 @@ fn cff2_test_index2(objects : Array[Array[Byte]]) -> Array[Byte] {
     offsets.push(off)
   }
   for o in offsets {
-    out.push(o |> Int::to_byte)
+    out.push(o |> Int32::to_byte)
   }
   for obj in objects {
     for b in obj.iter() {
@@ -72,11 +72,11 @@ fn cff2_test_index2(objects : Array[Array[Byte]]) -> Array[Byte] {
 }
 
 ///|
-fn cff2_test_dict_i32(out : Array[Byte], v : Int) -> Unit {
+fn cff2_test_dict_i32(out : Array[Byte], v : Int32) -> Unit {
   // 29 + i32 big endian.
-  out.push(29 |> Int::to_byte)
+  out.push(29 |> Int32::to_byte)
   let u = v.reinterpret_as_uint()
-  let mask = 255 |> Int::reinterpret_as_uint
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((u >> 24) & mask).to_byte())
   out.push(((u >> 16) & mask).to_byte())
   out.push(((u >> 8) & mask).to_byte())
@@ -84,7 +84,7 @@ fn cff2_test_dict_i32(out : Array[Byte], v : Int) -> Unit {
 }
 
 ///|
-fn cff2_test_cs_int(v : Int) -> Byte {
+fn cff2_test_cs_int(v : Int32) -> Byte {
   (v + 139).to_byte()
 }
 
@@ -115,16 +115,16 @@ fn cff2_test_make_vstore_one_region() -> Array[Byte] {
 ///|
 fn cff2_test_build_cff2_table() -> Bytes {
   // CharStrings:
-  let g0 : Array[Byte] = Array::from_fixed_array([14 |> Int::to_byte])
+  let g0 : Array[Byte] = Array::from_fixed_array([14 |> Int32::to_byte])
   // 0 0 rmoveto; 100 0 rlineto; endchar
   let g1 : Array[Byte] = Array::from_fixed_array([
     cff2_test_cs_int(0),
     cff2_test_cs_int(0),
-    21 |> Int::to_byte,
+    21 |> Int32::to_byte,
     cff2_test_cs_int(100),
     cff2_test_cs_int(0),
-    5 |> Int::to_byte,
-    14 |> Int::to_byte,
+    5 |> Int32::to_byte,
+    14 |> Int32::to_byte,
   ])
   let charstrings = cff2_test_index2(Array::from_fixed_array([g0, g1]))
   let header_size = 5
@@ -133,17 +133,17 @@ fn cff2_test_build_cff2_table() -> Bytes {
   // Top DICT: CharStrings offset only.
   let top_dict_template : Array[Byte] = []
   cff2_test_dict_i32(top_dict_template, 0)
-  top_dict_template.push(17 |> Int::to_byte)
+  top_dict_template.push(17 |> Int32::to_byte)
   let top_len = top_dict_template.length()
   let charstrings_off = header_size + top_len + global_subrs.length()
   let top_dict : Array[Byte] = []
   cff2_test_dict_i32(top_dict, charstrings_off)
-  top_dict.push(17 |> Int::to_byte)
+  top_dict.push(17 |> Int32::to_byte)
   let out : Array[Byte] = []
   // Header: major=2 minor=0 headerSize=5 topDictLength=7
-  out.push(2 |> Int::to_byte)
-  out.push(0 |> Int::to_byte)
-  out.push(header_size |> Int::to_byte)
+  out.push(2 |> Int32::to_byte)
+  out.push(0 |> Int32::to_byte)
+  out.push(header_size |> Int32::to_byte)
   cff2_test_push_u16_be(out, top_len)
   for b in top_dict.iter() {
     out.push(b)
@@ -160,21 +160,21 @@ fn cff2_test_build_cff2_table() -> Bytes {
 ///|
 fn cff2_test_build_cff2_table_blend() -> Bytes {
   // CharStrings:
-  let g0 : Array[Byte] = Array::from_fixed_array([14 |> Int::to_byte])
+  let g0 : Array[Byte] = Array::from_fixed_array([14 |> Int32::to_byte])
   // 0 0 rmoveto; 0 vsindex; (100 + 20*scalar) 0 rlineto; endchar
   let g1 : Array[Byte] = Array::from_fixed_array([
     cff2_test_cs_int(0),
     cff2_test_cs_int(0),
-    21 |> Int::to_byte,
+    21 |> Int32::to_byte,
     cff2_test_cs_int(0),
-    15 |> Int::to_byte, // vsindex
+    15 |> Int32::to_byte, // vsindex
     cff2_test_cs_int(100),
     cff2_test_cs_int(20),
     cff2_test_cs_int(1), // numBlends=1
-    16 |> Int::to_byte, // blend
+    16 |> Int32::to_byte, // blend
     cff2_test_cs_int(0),
-    5 |> Int::to_byte,
-    14 |> Int::to_byte,
+    5 |> Int32::to_byte,
+    14 |> Int32::to_byte,
   ])
   let charstrings = cff2_test_index2(Array::from_fixed_array([g0, g1]))
   let header_size = 5
@@ -189,14 +189,14 @@ fn cff2_test_build_cff2_table_blend() -> Bytes {
   let vstore_off = header_size + top_len + global_subrs.length()
   let charstrings_off = vstore_off + vstore.length()
   cff2_test_dict_i32(top_dict, vstore_off)
-  top_dict.push(24 |> Int::to_byte)
+  top_dict.push(24 |> Int32::to_byte)
   cff2_test_dict_i32(top_dict, charstrings_off)
-  top_dict.push(17 |> Int::to_byte)
+  top_dict.push(17 |> Int32::to_byte)
   let out : Array[Byte] = []
   // Header: major=2 minor=0 headerSize=5 topDictLength=12
-  out.push(2 |> Int::to_byte)
-  out.push(0 |> Int::to_byte)
-  out.push(header_size |> Int::to_byte)
+  out.push(2 |> Int32::to_byte)
+  out.push(0 |> Int32::to_byte)
+  out.push(header_size |> Int32::to_byte)
   cff2_test_push_u16_be(out, top_len)
   for b in top_dict.iter() {
     out.push(b)
@@ -214,7 +214,7 @@ fn cff2_test_build_cff2_table_blend() -> Bytes {
 }
 
 ///|
-fn cff2_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
+fn cff2_test_build_sfnt(tables : Array[(UInt32, Bytes)]) -> Bytes {
   let num_tables = tables.length()
   let header_len = 12 + num_tables * 16
   let out : Array[Byte] = []
@@ -242,7 +242,10 @@ fn cff2_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
 }
 
 ///|
-fn cff2_test_elem_eq(a : PathElement, b : PathElement) -> Bool {
+fn cff2_test_elem_eq(
+  a : @outline.PathElement,
+  b : @outline.PathElement,
+) -> Bool {
   fn feq(a : Double, b : Double) -> Bool {
     (a - b).abs() <= 0.000001
   }
@@ -265,7 +268,10 @@ fn cff2_test_elem_eq(a : PathElement, b : PathElement) -> Bool {
 }
 
 ///|
-fn cff2_test_path_eq(a : Array[PathElement], b : Array[PathElement]) -> Bool {
+fn cff2_test_path_eq(
+  a : Array[@outline.PathElement],
+  b : Array[@outline.PathElement],
+) -> Bool {
   if a.length() != b.length() {
     return false
   }
@@ -285,10 +291,12 @@ test "CFF2 outline path basic" {
     Array::from_fixed_array([(CFF2_TEST_TAG_CFF2, cff2)]),
   )
   let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
-  let c = OutlineGlyphCollection::from_font(font)
-  let path = c.path(outline_test_gid(1), DrawSettings::default()).unwrap()
+  let c = @outline.OutlineGlyphCollection::from_font(font)
+  let path = c
+    .path(outline_test_gid(1), @outline.DrawSettings::default())
+    .unwrap()
   let expected = Array::from_fixed_array([
-    PathElement::MoveTo(0.0, 0.0),
+    @outline.PathElement::MoveTo(0.0, 0.0),
     LineTo(100.0, 0.0),
     Close,
   ])
@@ -302,12 +310,14 @@ test "CFF2 blend applies var store region scalar" {
     Array::from_fixed_array([(CFF2_TEST_TAG_CFF2, cff2)]),
   )
   let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
-  let c = OutlineGlyphCollection::from_font(font)
+  let c = @outline.OutlineGlyphCollection::from_font(font)
 
   // Default coords => base outline (dx=100).
-  let base = c.path(outline_test_gid(1), DrawSettings::default()).unwrap()
+  let base = c
+    .path(outline_test_gid(1), @outline.DrawSettings::default())
+    .unwrap()
   let expected_base = Array::from_fixed_array([
-    PathElement::MoveTo(0.0, 0.0),
+    @outline.PathElement::MoveTo(0.0, 0.0),
     LineTo(100.0, 0.0),
     Close,
   ])
@@ -317,13 +327,13 @@ test "CFF2 blend applies var store region scalar" {
   let coords : Array[@moon_skrifa.NormalizedCoord] = Array::from_fixed_array([
     16384,
   ])
-  let settings = DrawSettings::unhinted(
+  let settings = @outline.DrawSettings::unhinted(
     @moon_skrifa.Size::unscaled(),
     LocationRef(coords[:]),
   )
   let varied = c.path(outline_test_gid(1), settings).unwrap()
   let expected_varied = Array::from_fixed_array([
-    PathElement::MoveTo(0.0, 0.0),
+    @outline.PathElement::MoveTo(0.0, 0.0),
     LineTo(120.0, 0.0),
     Close,
   ])

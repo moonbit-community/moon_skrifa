@@ -28,8 +28,8 @@ priv enum TtCoordAxis {
 ///|
 /// 2.14 fixed point vector used for projection/freedom vectors.
 priv struct TtVec14 {
-  x : Int
-  y : Int
+  x : Int32
+  y : Int32
 }
 
 ///|
@@ -42,18 +42,18 @@ fn TtVec14::default() -> TtVec14 {
 /// Persistent graphics state (retained across programs as in FreeType).
 priv struct TtRetainedGraphicsState {
   mut auto_flip : Bool
-  mut control_value_cutin : Int
-  mut delta_base : Int
-  mut delta_shift : Int
-  mut instruct_control : Int
-  mut min_distance : Int
+  mut control_value_cutin : Int32
+  mut delta_base : Int32
+  mut delta_shift : Int32
+  mut instruct_control : Int32
+  mut min_distance : Int32
   mut scan_control : Bool
-  mut scan_type : Int
-  mut single_width_cutin : Int
-  mut single_width : Int
+  mut scan_type : Int32
+  mut single_width_cutin : Int32
+  mut single_width : Int32
   target : Target
-  scale : Int
-  ppem : Int
+  scale : Int32
+  ppem : Int32
   is_rotated : Bool
   is_stretched : Bool
 }
@@ -83,8 +83,8 @@ fn TtRetainedGraphicsState::default() -> TtRetainedGraphicsState {
 
 ///|
 fn TtRetainedGraphicsState::TtRetainedGraphicsState(
-  scale : Int,
-  ppem : Int,
+  scale : Int32,
+  ppem : Int32,
   target : Target,
 ) -> TtRetainedGraphicsState {
   TtRetainedGraphicsState::new_with_flags(scale, ppem, target, false, false)
@@ -92,8 +92,8 @@ fn TtRetainedGraphicsState::TtRetainedGraphicsState(
 
 ///|
 fn TtRetainedGraphicsState::new_with_flags(
-  scale : Int,
-  ppem : Int,
+  scale : Int32,
+  ppem : Int32,
   target : Target,
   is_rotated : Bool,
   is_stretched : Bool,
@@ -127,12 +127,12 @@ priv struct TtGraphicsState {
   mut dual_proj_axis : TtCoordAxis
   mut freedom_vector : TtVec14
   mut freedom_axis : TtCoordAxis
-  mut fdotp : Int
+  mut fdotp : Int32
   mut round_state : TtRoundState
-  mut rp0 : Int
-  mut rp1 : Int
-  mut rp2 : Int
-  mut loop_counter : Int
+  mut rp0 : Int32
+  mut rp1 : Int32
+  mut rp2 : Int32
+  mut loop_counter : Int32
   mut zp0 : TtZonePointer
   mut zp1 : TtZonePointer
   mut zp2 : TtZonePointer
@@ -148,9 +148,9 @@ priv struct TtGraphicsState {
 ///|
 priv struct TtPointDisplacement {
   zone : TtZonePointer
-  point_ix : Int
-  dx : Int
-  dy : Int
+  point_ix : Int32
+  dx : Int32
+  dy : Int32
 }
 
 ///|
@@ -243,7 +243,7 @@ fn TtGraphicsState::zp2_zone(self : TtGraphicsState) -> TtZone {
 }
 
 ///|
-fn tt_dot14(ax : Int, ay : Int, bx : Int, by : Int) -> Int {
+fn tt_dot14(ax : Int32, ay : Int32, bx : Int32, by : Int32) -> Int32 {
   let mut v1 = ax.to_int64() * bx.to_int64()
   let v2 = ay.to_int64() * by.to_int64()
   v1 = v1 + v2
@@ -299,7 +299,7 @@ fn TtGraphicsState::project(
   self : TtGraphicsState,
   p1 : TtPoint,
   p2 : TtPoint,
-) -> Int {
+) -> Int32 {
   match self.proj_axis {
     X => p1.x - p2.x
     Y => p1.y - p2.y
@@ -317,7 +317,7 @@ fn TtGraphicsState::dual_project(
   self : TtGraphicsState,
   p1 : TtPoint,
   p2 : TtPoint,
-) -> Int {
+) -> Int32 {
   match self.dual_proj_axis {
     X => p1.x - p2.x
     Y => p1.y - p2.y
@@ -335,7 +335,7 @@ fn TtGraphicsState::dual_project_unscaled(
   self : TtGraphicsState,
   p1 : TtPoint,
   p2 : TtPoint,
-) -> Int {
+) -> Int32 {
   match self.dual_proj_axis {
     X => p1.x - p2.x
     Y => p1.y - p2.y
@@ -348,13 +348,16 @@ fn TtGraphicsState::dual_project_unscaled(
 }
 
 ///|
-fn TtGraphicsState::round(self : TtGraphicsState, distance_bits : Int) -> Int {
+fn TtGraphicsState::round(
+  self : TtGraphicsState,
+  distance_bits : Int32,
+) -> Int32 {
   self.round_state.round(distance_bits)
 }
 
 ///|
 /// Returns the factor for scaling unscaled points to pixels (26.6).
-fn TtGraphicsState::unscaled_to_pixels(self : TtGraphicsState) -> Int {
+fn TtGraphicsState::unscaled_to_pixels(self : TtGraphicsState) -> Int32 {
   if self.is_composite {
     0x10000
   } else {
@@ -363,7 +366,7 @@ fn TtGraphicsState::unscaled_to_pixels(self : TtGraphicsState) -> Int {
 }
 
 ///|
-fn tt_mul_div_round(a : Int, b : Int, c : Int) -> Int {
+fn tt_mul_div_round(a : Int32, b : Int32, c : Int32) -> Int32 {
   // a * b / c with rounding, matching FreeType-ish behavior.
   if c == 0 {
     return 0x7FFFFFFF
@@ -397,7 +400,7 @@ fn tt_mul_div_round(a : Int, b : Int, c : Int) -> Int {
 /// Computes adjustment made to a point along the current freedom vector.
 fn TtGraphicsState::point_displacement(
   self : TtGraphicsState,
-  opcode : Int,
+  opcode : Int32,
 ) -> Result[TtPointDisplacement, HintError] {
   let (zone_ptr, point_ix) = if (opcode & 1) != 0 {
     (self.zp0, self.rp1)
@@ -427,9 +430,9 @@ fn TtGraphicsState::point_displacement(
 /// Moves a point in zp2 by (dx, dy) in 26.6 units.
 fn TtGraphicsState::move_zp2_point(
   self : TtGraphicsState,
-  index : Int,
-  dx : Int,
-  dy : Int,
+  index : Int32,
+  dx : Int32,
+  dy : Int32,
   touch : Bool,
 ) -> Result[Unit, HintError] {
   // Backward compatibility behavior matches fontations/FreeType:
@@ -484,8 +487,8 @@ fn TtGraphicsState::move_zp2_point(
 fn TtGraphicsState::move_point(
   self : TtGraphicsState,
   zone_ptr : TtZonePointer,
-  index : Int,
-  distance_bits : Int,
+  index : Int32,
+  distance_bits : Int32,
 ) -> Result[Unit, HintError] {
   let back_compat = self.backward_compatibility
   let back_compat_and_did_iup = back_compat && self.did_iup_x && self.did_iup_y

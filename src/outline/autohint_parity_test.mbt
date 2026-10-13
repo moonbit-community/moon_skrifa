@@ -31,17 +31,19 @@ fn autohint_parity_font_notoserifhebrew_autohint_metrics_b64() -> String {
 ///|
 test "autohint: notoserif_autohint_shaping gid=1 size=16 ft" {
   let font = golden_font(autohint_parity_font_notoserif_autohint_shaping_b64())
-  let outlines0 = OutlineGlyphCollection::from_font(font)
-  let h = HintingInstance::create(
+  let outlines0 = @outline.OutlineGlyphCollection::from_font(font)
+  let h = @outline.HintingInstance::create(
     outlines0,
     Size(16.0),
     @moon_skrifa.LocationRef::default(),
-    HintingOptions(Auto(None), Target::default()),
+    HintingOptions(Auto(None), @outline.Target::default()),
   ).unwrap()
-  let outlines = OutlineGlyphCollection::from_font(font)
+  let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(GlyphId((1).to_uint16())).unwrap()
-  let settings = DrawSettings::hinted(h, false).with_path_style(FreeType)
-  let pen = SvgPen::with_precision(3)
+  let settings = @outline.DrawSettings::hinted(h, false).with_path_style(
+    FreeType,
+  )
+  let pen = @outline.SvgPen::with_precision(3)
   glyph.draw(settings, pen).unwrap() |> ignore
   inspect(
     pen.to_string(),
@@ -54,17 +56,19 @@ test "autohint: notoserifhebrew_autohint_metrics gid=1 size=16 ft" {
   let font = golden_font(
     autohint_parity_font_notoserifhebrew_autohint_metrics_b64(),
   )
-  let outlines0 = OutlineGlyphCollection::from_font(font)
-  let h = HintingInstance::create(
+  let outlines0 = @outline.OutlineGlyphCollection::from_font(font)
+  let h = @outline.HintingInstance::create(
     outlines0,
     Size(16.0),
     @moon_skrifa.LocationRef::default(),
-    HintingOptions(Auto(None), Target::default()),
+    HintingOptions(Auto(None), @outline.Target::default()),
   ).unwrap()
-  let outlines = OutlineGlyphCollection::from_font(font)
+  let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(GlyphId((1).to_uint16())).unwrap()
-  let settings = DrawSettings::hinted(h, false).with_path_style(FreeType)
-  let pen = SvgPen::with_precision(3)
+  let settings = @outline.DrawSettings::hinted(h, false).with_path_style(
+    FreeType,
+  )
+  let pen = @outline.SvgPen::with_precision(3)
   glyph.draw(settings, pen).unwrap() |> ignore
   inspect(
     pen.to_string(),

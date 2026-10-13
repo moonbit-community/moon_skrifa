@@ -17,28 +17,28 @@
 ///
 /// This intentionally supports only simple glyphs for now (sufficient for the
 /// hint parity fixtures).
-const TAG_HEAD_TT : UInt = 0x68656164 // "head"
+const TAG_HEAD_TT : UInt32 = 0x68656164 // "head"
 
 ///|
-const TAG_LOCA_TT : UInt = 0x6C6F6361 // "loca"
+const TAG_LOCA_TT : UInt32 = 0x6C6F6361 // "loca"
 
 ///|
-const TAG_MAXP_TT2 : UInt = 0x6D617870 // "maxp"
+const TAG_MAXP_TT2 : UInt32 = 0x6D617870 // "maxp"
 
 ///|
-const TAG_GLYF_TT : UInt = 0x676C7966 // "glyf"
+const TAG_GLYF_TT : UInt32 = 0x676C7966 // "glyf"
 
 ///|
-const TAG_HHEA_TT : UInt = 0x68686561 // "hhea"
+const TAG_HHEA_TT : UInt32 = 0x68686561 // "hhea"
 
 ///|
-const TAG_HMTX_TT : UInt = 0x686D7478 // "hmtx"
+const TAG_HMTX_TT : UInt32 = 0x686D7478 // "hmtx"
 
 ///|
-const TAG_OS2_TT : UInt = 0x4F532F32 // "OS/2"
+const TAG_OS2_TT : UInt32 = 0x4F532F32 // "OS/2"
 
 ///|
-fn tt2_read_u16_be(view : BytesView, offset : Int) -> Int? {
+fn tt2_read_u16_be(view : BytesView, offset : Int32) -> Int32? {
   if offset < 0 || offset + 2 > view.length() {
     None
   } else {
@@ -49,7 +49,7 @@ fn tt2_read_u16_be(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn tt2_read_i16_be(view : BytesView, offset : Int) -> Int? {
+fn tt2_read_i16_be(view : BytesView, offset : Int32) -> Int32? {
   match tt2_read_u16_be(view, offset) {
     None => None
     Some(u) => Some(if u >= 0x8000 { u - 0x10000 } else { u })
@@ -57,7 +57,7 @@ fn tt2_read_i16_be(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn tt2_read_u32_be(view : BytesView, offset : Int) -> UInt? {
+fn tt2_read_u32_be(view : BytesView, offset : Int32) -> UInt32? {
   if offset < 0 || offset + 4 > view.length() {
     None
   } else {
@@ -70,7 +70,7 @@ fn tt2_read_u32_be(view : BytesView, offset : Int) -> UInt? {
 }
 
 ///|
-fn tt2_scale_funits_to_26_6(value : Int, scale_bits : Int) -> Int {
+fn tt2_scale_funits_to_26_6(value : Int32, scale_bits : Int32) -> Int32 {
   let v = value.to_int64() * scale_bits.to_int64()
   let adj = 0x8000 - (if v < 0 { 1 } else { 0 })
   ((v + adj.to_int64()) >> 16).to_int()
@@ -79,10 +79,10 @@ fn tt2_scale_funits_to_26_6(value : Int, scale_bits : Int) -> Int {
 ///|
 /// Scales a font-unit coordinate plus a 16.16 gvar delta into 26.6 bits.
 fn tt2_scale_funits_plus_delta_fixed_to_26_6(
-  value : Int,
-  delta_bits : Int,
-  scale_bits : Int,
-) -> Int {
+  value : Int32,
+  delta_bits : Int32,
+  scale_bits : Int32,
+) -> Int32 {
   // Match fontations' scaling path for gvar deltas:
   // - convert delta 16.16 -> 26.6 (Fixed::to_f26dot6 rounding)
   // - add to value in 26.6
@@ -95,7 +95,7 @@ fn tt2_scale_funits_plus_delta_fixed_to_26_6(
 }
 
 ///|
-fn tt2_round_grid_26_6(bits : Int) -> Int {
+fn tt2_round_grid_26_6(bits : Int32) -> Int32 {
   if bits >= 0 {
     tt_hint_round_26(bits).max(0)
   } else {
@@ -104,7 +104,7 @@ fn tt2_round_grid_26_6(bits : Int) -> Int {
 }
 
 ///|
-fn tt2_os2_vmetrics(font : @moon_skrifa.FontRef) -> (Int, Int) {
+fn tt2_os2_vmetrics(font : @moon_skrifa.FontRef) -> (Int32, Int32) {
   // Matches fontations Outlines::new: use OS/2 sTypoAscender/Descender,
   // defaulting to 0 if the table is missing.
   match font.table(TAG_OS2_TT) {
@@ -196,7 +196,7 @@ fn tt2_glyph_slice(
 fn tt2_hmtx_metrics(
   font : @moon_skrifa.FontRef,
   gid : @moon_skrifa.GlyphId,
-) -> (Int, Int)? {
+) -> (Int32, Int32)? {
   let hhea = match font.table(TAG_HHEA_TT) {
     None => return None
     Some(v) => v
@@ -240,11 +240,11 @@ fn tt2_hmtx_metrics(
 ///|
 fn tt2_decode_simple_glyph_for_hinting(
   glyph : BytesView,
-  scale_bits : Int,
-  advance : Int,
-  lsb : Int,
-  os2_ascent : Int,
-  os2_descent : Int,
+  scale_bits : Int32,
+  advance : Int32,
+  lsb : Int32,
+  os2_ascent : Int32,
+  os2_descent : Int32,
 ) -> (TtZone, BytesView)? {
   if glyph.length() < 10 {
     return None
@@ -255,7 +255,7 @@ fn tt2_decode_simple_glyph_for_hinting(
   }
   let x_min = tt2_read_i16_be(glyph, 2).unwrap_or(0)
   let mut off = 10
-  let contours : Array[Int] = []
+  let contours : Array[Int32] = []
   if number_of_contours > 0 {
     for _ in 0..<number_of_contours {
       let v = tt2_read_u16_be(glyph, off).unwrap_or(0)
@@ -280,7 +280,7 @@ fn tt2_decode_simple_glyph_for_hinting(
     return None
   }
   // Decode flags.
-  let point_flags : Array[Int] = []
+  let point_flags : Array[Int32] = []
   while point_flags.length() < num_points {
     if off >= glyph.length() {
       return None
@@ -300,7 +300,7 @@ fn tt2_decode_simple_glyph_for_hinting(
     }
   }
   // Decode x deltas.
-  let dxs : Array[Int] = []
+  let dxs : Array[Int32] = []
   for i in 0..<num_points {
     let f = point_flags.at(i)
     let short = (f & 0x02) != 0
@@ -321,7 +321,7 @@ fn tt2_decode_simple_glyph_for_hinting(
     }
   }
   // Decode y deltas.
-  let dys : Array[Int] = []
+  let dys : Array[Int32] = []
   for i in 0..<num_points {
     let f = point_flags.at(i)
     let short = (f & 0x04) != 0
@@ -346,7 +346,7 @@ fn tt2_decode_simple_glyph_for_hinting(
   let unscaled : Array[TtPoint] = Array::make(total_points, { x: 0, y: 0, })
   let original : Array[TtPoint] = Array::make(total_points, { x: 0, y: 0, })
   let points : Array[TtPoint] = Array::make(total_points, { x: 0, y: 0, })
-  let flags : Array[Int] = Array::make(total_points, 0)
+  let flags : Array[Int32] = Array::make(total_points, 0)
   let mut x = 0
   let mut y = 0
   for i in 0..<num_points {
@@ -399,33 +399,33 @@ fn tt2_decode_simple_glyph_for_hinting(
 ///|
 
 ///|
-const TT2_COMPOSITE_USE_MY_METRICS : Int = 0x0200
+const TT2_COMPOSITE_USE_MY_METRICS : Int32 = 0x0200
 
 ///|
 priv enum Tt2Anchor {
-  Offset(Int, Int)
-  Point(Int, Int)
+  Offset(Int32, Int32)
+  Point(Int32, Int32)
 }
 
 ///|
 priv struct Tt2Component {
-  flags : Int
+  flags : Int32
   gid : @moon_skrifa.GlyphId
   anchor : Tt2Anchor
-  xx16 : Int
-  yx16 : Int
-  xy16 : Int
-  yy16 : Int
+  xx16 : Int32
+  yx16 : Int32
+  xy16 : Int32
+  yy16 : Int32
   have_xform : Bool
 }
 
 ///|
-fn tt2_read_f2dot14_bits(view : BytesView, offset : Int) -> Int? {
+fn tt2_read_f2dot14_bits(view : BytesView, offset : Int32) -> Int32? {
   tt2_read_i16_be(view, offset)
 }
 
 ///|
-fn tt2_f2dot14_to_16_16(bits : Int) -> Int {
+fn tt2_f2dot14_to_16_16(bits : Int32) -> Int32 {
   bits * 4
 }
 
@@ -442,7 +442,7 @@ fn tt2_apply_xform_point(p : TtPoint, comp : Tt2Component) -> TtPoint {
 }
 
 ///|
-fn tt2_abs_i32(v : Int) -> Int {
+fn tt2_abs_i32(v : Int32) -> Int32 {
   if v < 0 {
     -v
   } else {
@@ -452,7 +452,7 @@ fn tt2_abs_i32(v : Int) -> Int {
 
 ///|
 /// FreeType's guess for hypot(a, b) where inputs are 16.16 fixed values.
-fn tt2_hypot_guess_16_16(a : Int, b : Int) -> Int {
+fn tt2_hypot_guess_16_16(a : Int32, b : Int32) -> Int32 {
   let aa = tt2_abs_i32(a)
   let bb = tt2_abs_i32(b)
   if aa > bb {
@@ -465,11 +465,11 @@ fn tt2_hypot_guess_16_16(a : Int, b : Int) -> Int {
 ///|
 fn tt2_component_offset_bits(
   comp : Tt2Component,
-  scale_bits : Int,
+  scale_bits : Int32,
   is_hinted : Bool,
-  delta_x : Int,
-  delta_y : Int,
-) -> (Int, Int) {
+  delta_x : Int32,
+  delta_y : Int32,
+) -> (Int32, Int32) {
   let mut dx = 0
   let mut dy = 0
   match comp.anchor {
@@ -505,7 +505,7 @@ fn tt2_component_offset_bits(
 }
 
 ///|
-fn tt2_zone_outline_count(zone : TtZone) -> Int? {
+fn tt2_zone_outline_count(zone : TtZone) -> Int32? {
   if zone.contours.is_empty() {
     Some(0)
   } else {
@@ -521,7 +521,7 @@ fn tt2_zone_outline_count(zone : TtZone) -> Int? {
 ///|
 fn tt2_zone_phantoms(
   zone : TtZone,
-  outline_points : Int,
+  outline_points : Int32,
 ) -> (TtPoint, TtPoint, TtPoint, TtPoint)? {
   if outline_points < 0 || zone.points.length() < outline_points + 4 {
     return None
@@ -541,12 +541,12 @@ fn tt2_load_glyph_zone_for_hinting_impl(
   font : @moon_skrifa.FontRef,
   gid : @moon_skrifa.GlyphId,
   coords : ArrayView[@moon_skrifa.NormalizedCoord],
-  scale_bits : Int,
+  scale_bits : Int32,
   tt : TtHintInstance,
   fpgm : BytesView,
   prep : BytesView,
   is_pedantic : Bool,
-  depth : Int,
+  depth : Int32,
 ) -> Result[TtZone, DrawError] {
   if depth > 16 {
     return Err(RecursionLimitExceeded(gid))
@@ -565,7 +565,7 @@ fn tt2_load_glyph_zone_for_hinting_impl(
     let unscaled : Array[TtPoint] = Array::make(4, { x: 0, y: 0, })
     let original : Array[TtPoint] = Array::make(4, { x: 0, y: 0, })
     let points : Array[TtPoint] = Array::make(4, { x: 0, y: 0, })
-    let flags : Array[Int] = Array::make(4, 0)
+    let flags : Array[Int32] = Array::make(4, 0)
     unscaled.set(0, { x: phantom0_x, y: 0, })
     unscaled.set(1, { x: phantom1_x, y: 0, })
     unscaled.set(2, { x: 0, y: os2_ascent, })
@@ -870,8 +870,8 @@ fn tt2_load_glyph_zone_for_hinting_impl(
       y: tt2_scale_funits_to_26_6(ph3_y_f, scale_bits),
     }
     let points_out : Array[TtPoint] = []
-    let flags_out : Array[Int] = []
-    let contours_out : Array[Int] = []
+    let flags_out : Array[Int32] = []
+    let contours_out : Array[Int32] = []
     let mut base_point = 0
     for i in 0..<comps.length() {
       let comp = comps.at(i)
@@ -908,7 +908,7 @@ fn tt2_load_glyph_zone_for_hinting_impl(
       }
       // Extract component outline points and flags.
       let comp_points : Array[TtPoint] = []
-      let comp_flags : Array[Int] = []
+      let comp_flags : Array[Int32] = []
       for j in 0..<outline_n {
         comp_points.push(zone_c.points.at(j))
         // Clear touched bits before composite processing.
@@ -971,7 +971,7 @@ fn tt2_load_glyph_zone_for_hinting_impl(
     let unscaled : Array[TtPoint] = Array::make(total_points, { x: 0, y: 0, })
     let original : Array[TtPoint] = Array::make(total_points, { x: 0, y: 0, })
     let points : Array[TtPoint] = Array::make(total_points, { x: 0, y: 0, })
-    let flags : Array[Int] = Array::make(total_points, 0)
+    let flags : Array[Int32] = Array::make(total_points, 0)
     for i in 0..<points_out.length() {
       let p = points_out.at(i)
       unscaled.set(i, p)
@@ -1038,7 +1038,7 @@ fn tt_load_glyph_zone_for_hinting(
   font : @moon_skrifa.FontRef,
   gid : @moon_skrifa.GlyphId,
   coords : ArrayView[@moon_skrifa.NormalizedCoord],
-  scale_bits : Int,
+  scale_bits : Int32,
   tt : TtHintInstance,
   fpgm : BytesView,
   prep : BytesView,

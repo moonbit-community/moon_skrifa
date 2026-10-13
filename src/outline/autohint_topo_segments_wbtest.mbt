@@ -19,7 +19,7 @@
 /// (Apache-2.0 OR MIT).
 
 ///|
-fn b64_val(c : Int) -> Int? {
+fn b64_val(c : Int32) -> Int32? {
   if c >= 65 && c <= 90 {
     Some(c - 65)
   } else if c >= 97 && c <= 122 {
@@ -38,7 +38,7 @@ fn b64_val(c : Int) -> Int? {
 ///|
 fn b64_decode(s : String) -> Bytes {
   let out : Array[Byte] = []
-  let vals : Array[Int] = []
+  let vals : Array[Int32] = []
   let n = s.length()
   for i in 0..<n {
     let c = s.code_unit_at(i).to_int()
@@ -97,15 +97,15 @@ fn autohint_segments_test_view(
 
 ///|
 fn autohint_expected_segment(
-  flags : Int,
+  flags : Int32,
   dir : AutoHintDirection,
-  pos : Int,
-  delta : Int,
-  min_coord : Int,
-  max_coord : Int,
-  height : Int,
-  link_ix : Int?,
-  serif_ix : Int?,
+  pos : Int32,
+  delta : Int32,
+  min_coord : Int32,
+  max_coord : Int32,
+  height : Int32,
+  link_ix : Int32?,
+  serif_ix : Int32?,
 ) -> AutoHintSegment {
   let s = AutoHintSegment::default()
   s.flags = flags
@@ -132,7 +132,7 @@ fn autohint_dir_debug(dir : AutoHintDirection) -> String {
 }
 
 ///|
-fn autohint_opt_int_debug(v : Int?) -> String {
+fn autohint_opt_int_debug(v : Int32?) -> String {
   match v {
     None => "None"
     Some(n) => n.to_string()

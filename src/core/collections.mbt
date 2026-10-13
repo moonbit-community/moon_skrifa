@@ -21,7 +21,7 @@
 /// `inline_cap` as a runtime parameter; this preserves behavior while still
 /// allowing the inline/heap split used by later ports.
 priv enum Storage[T] {
-  Inline(FixedArray[T], Int)
+  Inline(FixedArray[T], Int32)
   Heap(Array[T])
 }
 
@@ -31,17 +31,21 @@ priv enum Storage[T] {
 /// Unlike upstream, `inline_cap` is a runtime value.
 priv struct SmallVec[T] {
   storage : Storage[T]
-  inline_cap : Int
+  inline_cap : Int32
 }
 
 ///|
-fn[T : Default] SmallVec::SmallVec(inline_cap : Int) -> SmallVec[T] {
+fn[T : Default] SmallVec::SmallVec(inline_cap : Int32) -> SmallVec[T] {
   let buf = FixedArray::make(inline_cap, T::default())
   { storage: Inline(buf, 0), inline_cap, }
 }
 
 ///|
-fn[T] SmallVec::with_len(len : Int, value : T, inline_cap : Int) -> SmallVec[T] {
+fn[T] SmallVec::with_len(
+  len : Int32,
+  value : T,
+  inline_cap : Int32,
+) -> SmallVec[T] {
   if len <= inline_cap {
     let buf = FixedArray::make(inline_cap, value)
     { storage: Inline(buf, len), inline_cap, }
@@ -52,7 +56,7 @@ fn[T] SmallVec::with_len(len : Int, value : T, inline_cap : Int) -> SmallVec[T] 
 }
 
 ///|
-fn[T] SmallVec::len(self : SmallVec[T]) -> Int {
+fn[T] SmallVec::len(self : SmallVec[T]) -> Int32 {
   match self.storage {
     Inline(_buf, len) => len
     Heap(vec) => vec.length()
@@ -105,7 +109,7 @@ fn[T] SmallVec::clear(self : SmallVec[T]) -> SmallVec[T] {
 ///|
 fn[T] SmallVec::try_reserve(
   self : SmallVec[T],
-  additional : Int,
+  additional : Int32,
 ) -> (SmallVec[T], Bool) {
   match self.storage {
     Inline(buf, len) => {
@@ -172,7 +176,7 @@ fn[T] SmallVec::pop(self : SmallVec[T]) -> (SmallVec[T], T?) {
 }
 
 ///|
-fn[T] SmallVec::truncate(self : SmallVec[T], new_len : Int) -> SmallVec[T] {
+fn[T] SmallVec::truncate(self : SmallVec[T], new_len : Int32) -> SmallVec[T] {
   match self.storage {
     Inline(buf, len) => {
       let next_len = if new_len < len { new_len } else { len }
@@ -186,7 +190,7 @@ fn[T] SmallVec::truncate(self : SmallVec[T], new_len : Int) -> SmallVec[T] {
 }
 
 ///|
-fn[T] SmallVec::get(self : SmallVec[T], i : Int) -> T? {
+fn[T] SmallVec::get(self : SmallVec[T], i : Int32) -> T? {
   match self.storage {
     Inline(buf, len) => if i >= 0 && i < len { Some(buf.at(i)) } else { None }
     Heap(vec) => vec.get(i)
@@ -194,7 +198,7 @@ fn[T] SmallVec::get(self : SmallVec[T], i : Int) -> T? {
 }
 
 ///|
-fn[T] SmallVec::set(self : SmallVec[T], i : Int, v : T) -> SmallVec[T] {
+fn[T] SmallVec::set(self : SmallVec[T], i : Int32, v : T) -> SmallVec[T] {
   match self.storage {
     Inline(buf, len) => {
       if i >= 0 && i < len {
@@ -250,7 +254,7 @@ test "store_and_read_heap" {
 
 ///|
 test "spill_to_heap" {
-  let mut vec : SmallVec[Int] = SmallVec(4)
+  let mut vec : SmallVec[Int32] = SmallVec(4)
   for i in 0..<4 {
     vec = vec.push(i)
   }
@@ -262,7 +266,7 @@ test "spill_to_heap" {
 
 ///|
 test "clear_inline" {
-  let mut vec : SmallVec[Int] = SmallVec(4)
+  let mut vec : SmallVec[Int32] = SmallVec(4)
   for i in 0..<4 {
     vec = vec.push(i)
   }
@@ -274,7 +278,7 @@ test "clear_inline" {
 
 ///|
 test "clear_heap" {
-  let mut vec : SmallVec[Int] = SmallVec(3)
+  let mut vec : SmallVec[Int32] = SmallVec(3)
   for i in 0..<4 {
     vec = vec.push(i)
   }
@@ -286,7 +290,7 @@ test "clear_heap" {
 
 ///|
 test "reserve" {
-  let mut vec : SmallVec[Int] = SmallVec(3)
+  let mut vec : SmallVec[Int32] = SmallVec(3)
   for i in 0..<2 {
     vec = vec.push(i)
   }
@@ -328,7 +332,7 @@ test "get_bounds" {
 
 ///|
 test "iter" {
-  let mut vec : SmallVec[Int] = SmallVec(3)
+  let mut vec : SmallVec[Int32] = SmallVec(3)
   for i in 0..<3 {
     vec = vec.push(i)
   }
@@ -340,7 +344,7 @@ test "iter" {
 
 ///|
 test "into_iter" {
-  let mut vec : SmallVec[Int] = SmallVec(3)
+  let mut vec : SmallVec[Int32] = SmallVec(3)
   for i in 0..<3 {
     vec = vec.push(i)
   }

@@ -21,7 +21,7 @@
 ///|
 fn TtEngine::op_svtca(
   self : TtEngine,
-  opcode0 : Int,
+  opcode0 : Int32,
 ) -> Result[Unit, HintError] {
   let opcode = opcode0
   let x = (opcode & 1) << 14
@@ -54,7 +54,10 @@ fn tt_line_vector(p1 : TtPoint, p2 : TtPoint, is_parallel : Bool) -> TtVec14 {
 }
 
 ///|
-fn TtEngine::op_svtl(self : TtEngine, opcode : Int) -> Result[Unit, HintError] {
+fn TtEngine::op_svtl(
+  self : TtEngine,
+  opcode : Int32,
+) -> Result[Unit, HintError] {
   let index1 = match self.value_stack.pop_usize() {
     Err(e) => return Err(e)
     Ok(v) => v
@@ -295,8 +298,8 @@ fn TtEngine::op_roff(self : TtEngine) -> Result[Unit, HintError] {
 ///|
 fn tt_super_round(
   gs : TtGraphicsState,
-  grid_period : Int,
-  selector : Int,
+  grid_period : Int32,
+  selector : Int32,
 ) -> Unit {
   let state = gs.round_state
   let period = match selector & 0xC0 {
@@ -556,7 +559,7 @@ fn TtEngine::op_getinfo(self : TtEngine) -> Result[Unit, HintError] {
 ///|
 fn TtEngine::op_getvariation(
   self : TtEngine,
-  pc : Int,
+  pc : Int32,
 ) -> Result[Unit, HintError] {
   if self.axis_count != 0 {
     for i in 0..<self.axis_count {
@@ -573,7 +576,7 @@ fn TtEngine::op_getvariation(
 }
 
 ///|
-fn TtEngine::op_getdata(self : TtEngine, pc : Int) -> Result[Unit, HintError] {
+fn TtEngine::op_getdata(self : TtEngine, pc : Int32) -> Result[Unit, HintError] {
   if self.axis_count != 0 {
     self.value_stack.push(17)
   } else {
@@ -584,7 +587,7 @@ fn TtEngine::op_getdata(self : TtEngine, pc : Int) -> Result[Unit, HintError] {
 ///|
 fn TtEngine::op_sdpvtl(
   self : TtEngine,
-  opcode : Int,
+  opcode : Int32,
 ) -> Result[Unit, HintError] {
   // Sets dual projection vector to line.
   let index1 = match self.value_stack.pop_usize() {

@@ -14,19 +14,19 @@
 
 ///|
 test "Tag parse + roundtrip" {
-  let tag = Tag::from_str("fvar").unwrap()
+  let tag = @moon_skrifa.Tag::from_str("fvar").unwrap()
   inspect(tag.to_uint().to_string(), content="1719034226")
   inspect(tag.to_string(), content="fvar")
 }
 
 ///|
 test "Tag constructor from bytes" {
-  let tag = Tag::Tag(b"wght")
+  let tag = @moon_skrifa.Tag::Tag(b"wght")
   inspect(tag.to_string(), content="wght")
-  inspect(Tag::Tag(b"abc").to_uint(), content="0")
+  inspect(@moon_skrifa.Tag::Tag(b"abc").to_uint(), content="0")
 }
 
 ///|
 test "Tag invalid string length" {
-  inspect(Tag::from_str("abc") is None, content="true")
+  inspect(@moon_skrifa.Tag::from_str("abc") is None, content="true")
 }

@@ -15,7 +15,7 @@
 ///|
 fn tt_make_engine_for_misc(
   retained : TtRetainedGraphicsState,
-  axis_count : Int,
+  axis_count : Int32,
   coords : Array[@moon_skrifa.NormalizedCoord],
 ) -> TtEngine {
   let empty = Bytes::from_array([][:])
@@ -39,55 +39,55 @@ fn tt_make_engine_for_misc(
 // GETINFO selector/result bit constants (matching fontations).
 
 ///|
-const VERSION_SELECTOR_BIT : Int = 1 << 0
+const VERSION_SELECTOR_BIT : Int32 = 1 << 0
 
 ///|
-const GLYPH_ROTATED_SELECTOR_BIT : Int = 1 << 1
+const GLYPH_ROTATED_SELECTOR_BIT : Int32 = 1 << 1
 
 ///|
-const GLYPH_ROTATED_RESULT_BIT : Int = 1 << 8
+const GLYPH_ROTATED_RESULT_BIT : Int32 = 1 << 8
 
 ///|
-const GLYPH_STRETCHED_SELECTOR_BIT : Int = 1 << 2
+const GLYPH_STRETCHED_SELECTOR_BIT : Int32 = 1 << 2
 
 ///|
-const GLYPH_STRETCHED_RESULT_BIT : Int = 1 << 9
+const GLYPH_STRETCHED_RESULT_BIT : Int32 = 1 << 9
 
 ///|
-const FONT_VARIATIONS_SELECTOR_BIT : Int = 1 << 3
+const FONT_VARIATIONS_SELECTOR_BIT : Int32 = 1 << 3
 
 ///|
-const FONT_VARIATIONS_RESULT_BIT : Int = 1 << 10
+const FONT_VARIATIONS_RESULT_BIT : Int32 = 1 << 10
 
 ///|
-const SUBPIXEL_HINTING_SELECTOR_BIT : Int = 1 << 6
+const SUBPIXEL_HINTING_SELECTOR_BIT : Int32 = 1 << 6
 
 ///|
-const SUBPIXEL_HINTING_RESULT_BIT : Int = 1 << 13
+const SUBPIXEL_HINTING_RESULT_BIT : Int32 = 1 << 13
 
 ///|
-const VERTICAL_LCD_SELECTOR_BIT : Int = 1 << 8
+const VERTICAL_LCD_SELECTOR_BIT : Int32 = 1 << 8
 
 ///|
-const VERTICAL_LCD_RESULT_BIT : Int = 1 << 15
+const VERTICAL_LCD_RESULT_BIT : Int32 = 1 << 15
 
 ///|
-const SUBPIXEL_POSITIONED_SELECTOR_BIT : Int = 1 << 10
+const SUBPIXEL_POSITIONED_SELECTOR_BIT : Int32 = 1 << 10
 
 ///|
-const SUBPIXEL_POSITIONED_RESULT_BIT : Int = 1 << 17
+const SUBPIXEL_POSITIONED_RESULT_BIT : Int32 = 1 << 17
 
 ///|
-const SYMMETRICAL_SMOOTHING_SELECTOR_BIT : Int = 1 << 11
+const SYMMETRICAL_SMOOTHING_SELECTOR_BIT : Int32 = 1 << 11
 
 ///|
-const SYMMETRICAL_SMOOTHING_RESULT_BIT : Int = 1 << 18
+const SYMMETRICAL_SMOOTHING_RESULT_BIT : Int32 = 1 << 18
 
 ///|
-const GRAYSCALE_CLEARTYPE_SELECTOR_BIT : Int = 1 << 12
+const GRAYSCALE_CLEARTYPE_SELECTOR_BIT : Int32 = 1 << 12
 
 ///|
-const GRAYSCALE_CLEARTYPE_RESULT_BIT : Int = 1 << 19
+const GRAYSCALE_CLEARTYPE_RESULT_BIT : Int32 = 1 << 19
 
 ///|
 test "tt_hint: misc GETINFO" {
@@ -204,7 +204,7 @@ test "tt_hint: misc GETINFO" {
 
   // smooth mode bits
   let engine_smooth = tt_make_engine_for_misc(retained0, 0, coords0)
-  let smooth_bits : Array[(Int, Int)] = Array::from_fixed_array([
+  let smooth_bits : Array[(Int32, Int32)] = Array::from_fixed_array([
     (GRAYSCALE_CLEARTYPE_SELECTOR_BIT, GRAYSCALE_CLEARTYPE_RESULT_BIT),
     (SUBPIXEL_HINTING_SELECTOR_BIT, SUBPIXEL_HINTING_RESULT_BIT),
     (SUBPIXEL_POSITIONED_SELECTOR_BIT, SUBPIXEL_POSITIONED_RESULT_BIT),

@@ -54,7 +54,7 @@ fn CffMatrix::transform(
 fn cff_matrix_mul_scaled(
   a : CffMatrix,
   b : CffMatrix,
-  scaling : Int,
+  scaling : Int32,
 ) -> CffMatrix {
   // Ported from `matrix_mul_scaled` in fontations.
   let val = CffFixed::from_i32(scaling)
@@ -72,8 +72,8 @@ fn cff_matrix_mul_scaled(
 ///|
 fn cff_normalize_font_matrix(
   matrix0 : CffMatrix,
-  scaled_upem0 : Int,
-) -> (CffMatrix, Int) {
+  scaled_upem0 : Int32,
+) -> (CffMatrix, Int32) {
   // Ported from `normalize_font_matrix` in read-fonts.
   let factor = if matrix0.yy.bits != CffFixed::zero().bits {
     matrix0.yy.abs()

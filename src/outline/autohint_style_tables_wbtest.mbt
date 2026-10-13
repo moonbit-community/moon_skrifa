@@ -15,8 +15,9 @@
 ///|
 test "autohint style tables: style range lookup" {
   let ranges = autohint_style_ranges()
-  fn style_bits(cp : Int) -> GlyphStyle? {
-    match autohint_style_for_codepoint(ranges, cp |> Int::reinterpret_as_uint) {
+  fn style_bits(cp : Int32) -> GlyphStyle? {
+    match
+      autohint_style_for_codepoint(ranges, cp |> Int32::reinterpret_as_uint) {
       None => None
       Some((_, _, s)) => Some(s)
     }

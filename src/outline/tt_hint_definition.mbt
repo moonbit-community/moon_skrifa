@@ -19,9 +19,9 @@
 /// (Apache-2.0 OR MIT).
 priv struct TtDefinition {
   mut code : BytesView?
-  mut start : Int
-  mut end_ : Int
-  mut key : Int
+  mut start : Int32
+  mut end_ : Int32
+  mut key : Int32
   mut active : Bool
 }
 
@@ -42,9 +42,9 @@ fn TtDefinition::is_defined(self : TtDefinition) -> Bool {
 fn TtDefinition::set(
   self : TtDefinition,
   code : BytesView,
-  start : Int,
-  end_ : Int,
-  key : Int,
+  start : Int32,
+  end_ : Int32,
+  key : Int32,
 ) -> Unit {
   self.code = Some(code)
   self.start = start
@@ -72,7 +72,7 @@ priv struct TtDefinitionSet {
 }
 
 ///|
-fn TtDefinitionSet::TtDefinitionSet(cap : Int) -> TtDefinitionSet {
+fn TtDefinitionSet::TtDefinitionSet(cap : Int32) -> TtDefinitionSet {
   // `Array::make(cap, v)` duplicates `v`. For mutable structs, we need a fresh
   // default instance per slot (matches Rust `vec![Default::default(); cap]`).
   let defs : Array[TtDefinition] = []
@@ -91,7 +91,7 @@ fn TtDefinitionSet::reset(self : TtDefinitionSet) -> Unit {
 }
 
 ///|
-fn TtDefinitionSet::get(self : TtDefinitionSet, index : Int) -> TtDefinition? {
+fn TtDefinitionSet::get(self : TtDefinitionSet, index : Int32) -> TtDefinition? {
   let n = self.defs.length()
   if index >= 0 && index < n {
     let d = self.defs.at(index)
@@ -112,10 +112,10 @@ fn TtDefinitionSet::get(self : TtDefinitionSet, index : Int) -> TtDefinition? {
 ///|
 fn TtDefinitionSet::set_definition(
   self : TtDefinitionSet,
-  index : Int,
+  index : Int32,
   code : BytesView,
-  start : Int,
-  end_ : Int,
+  start : Int32,
+  end_ : Int32,
 ) -> Result[Unit, HintError] {
   if start < 0 || end_ < start || end_ > code.length() {
     return Err(InvalidDefinition(index))
@@ -124,7 +124,7 @@ fn TtDefinitionSet::set_definition(
   if n == 0 {
     return Err(TooManyDefinitions)
   }
-  let mut chosen : Int? = None
+  let mut chosen : Int32? = None
   if index >= 0 && index < n {
     let d = self.defs.at(index)
     if !d.active || d.key == index {
@@ -132,7 +132,7 @@ fn TtDefinitionSet::set_definition(
     }
   }
   if chosen is None {
-    let mut last_inactive : Int? = None
+    let mut last_inactive : Int32? = None
     for j in 0..<n {
       let i = n - 1 - j
       let d = self.defs.at(i)

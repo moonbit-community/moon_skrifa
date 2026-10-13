@@ -17,10 +17,10 @@
 ///
 /// Ported from `fontations/skrifa/src/outline/glyf/deltas.rs` and related
 /// gvar parsing logic (Apache-2.0 OR MIT).
-const TAG_GVAR : UInt = 0x67766172 // "gvar"
+const TAG_GVAR : UInt32 = 0x67766172 // "gvar"
 
 ///|
-fn gvar_read_u8(view : BytesView, offset : Int) -> Int? {
+fn gvar_read_u8(view : BytesView, offset : Int32) -> Int32? {
   if offset < 0 || offset >= view.length() {
     None
   } else {
@@ -29,7 +29,7 @@ fn gvar_read_u8(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn gvar_read_u16_be(view : BytesView, offset : Int) -> Int? {
+fn gvar_read_u16_be(view : BytesView, offset : Int32) -> Int32? {
   if offset < 0 || offset + 2 > view.length() {
     None
   } else {
@@ -40,7 +40,7 @@ fn gvar_read_u16_be(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn gvar_read_i16_be(view : BytesView, offset : Int) -> Int? {
+fn gvar_read_i16_be(view : BytesView, offset : Int32) -> Int32? {
   match gvar_read_u16_be(view, offset) {
     None => None
     Some(u) => if u >= 0x8000 { Some(u - 0x10000) } else { Some(u) }
@@ -48,7 +48,7 @@ fn gvar_read_i16_be(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn gvar_read_u32_be_int(view : BytesView, offset : Int) -> Int? {
+fn gvar_read_u32_be_int(view : BytesView, offset : Int32) -> Int32? {
   if offset < 0 || offset + 4 > view.length() {
     None
   } else {
@@ -63,12 +63,12 @@ fn gvar_read_u32_be_int(view : BytesView, offset : Int) -> Int? {
 ///|
 priv struct GvarCtx {
   gvar : BytesView
-  axis_count : Int
-  shared_tuple_count : Int
-  shared_tuples_off : Int
-  glyph_count : Int
-  flags : Int
-  data_array_off : Int
+  axis_count : Int32
+  shared_tuple_count : Int32
+  shared_tuples_off : Int32
+  glyph_count : Int32
+  flags : Int32
+  data_array_off : Int32
 }
 
 ///|
@@ -110,9 +110,9 @@ fn gvar_ctx(font : @moon_skrifa.FontRef) -> GvarCtx? {
 ///|
 fn gvar_tuple_scalar(
   coords : ArrayView[@moon_skrifa.NormalizedCoord],
-  peak : Array[Int],
-  start : Array[Int]?,
-  end : Array[Int]?,
+  peak : Array[Int32],
+  start : Array[Int32]?,
+  end : Array[Int32]?,
 ) -> Double {
   let axis_count = peak.length()
   let mut scalar = 1.0
@@ -163,7 +163,7 @@ fn gvar_tuple_scalar(
 }
 
 ///|
-fn gvar_f2dot14_to_fixed16_16(bits : Int) -> Int {
+fn gvar_f2dot14_to_fixed16_16(bits : Int32) -> Int32 {
   // F2Dot14 has 14 fractional bits; 16.16 has 16.
   bits << 2
 }
@@ -171,10 +171,10 @@ fn gvar_f2dot14_to_fixed16_16(bits : Int) -> Int {
 ///|
 fn gvar_tuple_scalar_fixed16_16(
   coords : ArrayView[@moon_skrifa.NormalizedCoord],
-  peak : Array[Int],
-  start : Array[Int]?,
-  end : Array[Int]?,
-) -> Int {
+  peak : Array[Int32],
+  start : Array[Int32]?,
+  end : Array[Int32]?,
+) -> Int32 {
   let axis_count = peak.length()
   let mut scalar = 0x10000
   for i in 0..<axis_count {
@@ -235,9 +235,9 @@ fn gvar_tuple_scalar_fixed16_16(
 /// Decodes a point number run list.
 fn gvar_points(
   gvar : BytesView,
-  offset : Int,
-  total_points : Int,
-) -> (Array[Int]?, Int)? {
+  offset : Int32,
+  total_points : Int32,
+) -> (Array[Int32]?, Int32)? {
   let b0 = gvar_read_u8(gvar, offset).unwrap_or(-1)
   if b0 < 0 {
     return None
@@ -258,7 +258,7 @@ fn gvar_points(
   if count == 0 {
     return Some((None, off))
   }
-  let points : Array[Int] = []
+  let points : Array[Int32] = []
   let mut last = 0
   while points.length() < count {
     let ctrl = gvar_read_u8(gvar, off).unwrap_or(-1)
@@ -295,12 +295,12 @@ fn gvar_points(
 /// Decodes a delta run list.
 fn gvar_deltas(
   gvar : BytesView,
-  offset : Int,
-  count : Int,
-) -> (Array[Int], Int)? {
+  offset : Int32,
+  count : Int32,
+) -> (Array[Int32], Int32)? {
   let mut off = offset
   let mut idx = 0
-  let out : Array[Int] = []
+  let out : Array[Int32] = []
   while idx < count {
     let ctrl = gvar_read_u8(gvar, off).unwrap_or(-1)
     if ctrl < 0 {
@@ -357,9 +357,9 @@ fn gvar_shift_contour(
   orig_y : Array[Double],
   out_x : Array[Double],
   out_y : Array[Double],
-  range_start : Int,
-  range_end : Int,
-  ref_ix : Int,
+  range_start : Int32,
+  range_end : Int32,
+  ref_ix : Int32,
 ) -> Bool {
   if ref_ix < range_start || ref_ix > range_end {
     return false
@@ -384,10 +384,10 @@ fn gvar_shift_contour(
 fn gvar_interp_coord(
   orig : Array[Double],
   out : Array[Double],
-  range_start : Int,
-  range_end : Int,
-  ref1_ix_in : Int,
-  ref2_ix_in : Int,
+  range_start : Int32,
+  range_end : Int32,
+  ref1_ix_in : Int32,
+  ref2_ix_in : Int32,
 ) -> Bool {
   if range_start > range_end {
     return true
@@ -431,8 +431,8 @@ fn gvar_interpolate_deltas(
   out_x : Array[Double],
   out_y : Array[Double],
   has_delta : Array[Bool],
-  contours : Array[Int],
-  point_count : Int,
+  contours : Array[Int32],
+  point_count : Int32,
 ) -> Bool {
   let mut point_ix = 0
   for end_point_ix in contours.iter() {
@@ -537,13 +537,13 @@ fn gvar_interpolate_deltas(
 
 ///|
 fn gvar_shift_contour_fixed(
-  orig_x : Array[Int],
-  orig_y : Array[Int],
-  out_x : Array[Int],
-  out_y : Array[Int],
-  range_start : Int,
-  range_end : Int,
-  ref_ix : Int,
+  orig_x : Array[Int32],
+  orig_y : Array[Int32],
+  out_x : Array[Int32],
+  out_y : Array[Int32],
+  range_start : Int32,
+  range_end : Int32,
+  ref_ix : Int32,
 ) -> Bool {
   if ref_ix < range_start || ref_ix > range_end {
     return false
@@ -566,12 +566,12 @@ fn gvar_shift_contour_fixed(
 
 ///|
 fn gvar_interp_coord_fixed(
-  orig : Array[Int],
-  out : Array[Int],
-  range_start : Int,
-  range_end : Int,
-  ref1_ix_in : Int,
-  ref2_ix_in : Int,
+  orig : Array[Int32],
+  out : Array[Int32],
+  range_start : Int32,
+  range_end : Int32,
+  ref1_ix_in : Int32,
+  ref2_ix_in : Int32,
 ) -> Bool {
   if range_start > range_end {
     return true
@@ -614,13 +614,13 @@ fn gvar_interp_coord_fixed(
 
 ///|
 fn gvar_interpolate_deltas_fixed(
-  orig_x : Array[Int],
-  orig_y : Array[Int],
-  out_x : Array[Int],
-  out_y : Array[Int],
+  orig_x : Array[Int32],
+  orig_y : Array[Int32],
+  out_x : Array[Int32],
+  out_y : Array[Int32],
   has_delta : Array[Bool],
-  contours : Array[Int],
-  point_count : Int,
+  contours : Array[Int32],
+  point_count : Int32,
 ) -> Bool {
   let mut point_ix = 0
   for end_point_ix in contours.iter() {
@@ -730,7 +730,7 @@ fn glyf_apply_gvar_simple(
   font : @moon_skrifa.FontRef,
   gid : @moon_skrifa.GlyphId,
   coords : ArrayView[@moon_skrifa.NormalizedCoord],
-  end_pts : Array[Int],
+  end_pts : Array[Int32],
   xs : Array[Double],
   ys : Array[Double],
 ) -> Unit {
@@ -789,8 +789,8 @@ fn glyf_apply_gvar_simple(
   if tuple_count <= 0 || data_rel < 0 {
     return
   }
-  let sizes : Array[Int] = []
-  let tuple_indexes : Array[Int] = []
+  let sizes : Array[Int32] = []
+  let tuple_indexes : Array[Int32] = []
   let axis_count = ctx.axis_count
   let scalars : Array[Double] = []
 
@@ -809,7 +809,7 @@ fn glyf_apply_gvar_simple(
     let embedded = (ti & 0x8000) != 0
     let intermediate = (ti & 0x4000) != 0
     let shared_ix = ti & 0x0FFF
-    let peak : Array[Int] = Array::make(axis_count, 0)
+    let peak : Array[Int32] = Array::make(axis_count, 0)
     if embedded {
       let need = header_off + axis_count * 2
       if need < header_off || need > end {
@@ -835,11 +835,11 @@ fn glyf_apply_gvar_simple(
         peak.set(ax, gvar_read_i16_be(ctx.gvar, base + ax * 2).unwrap_or(0))
       }
     }
-    let mut start_t : Array[Int]? = None
-    let mut end_t : Array[Int]? = None
+    let mut start_t : Array[Int32]? = None
+    let mut end_t : Array[Int32]? = None
     if intermediate {
-      let st : Array[Int] = Array::make(axis_count, 0)
-      let et : Array[Int] = Array::make(axis_count, 0)
+      let st : Array[Int32] = Array::make(axis_count, 0)
+      let et : Array[Int32] = Array::make(axis_count, 0)
       let need = header_off + axis_count * 4
       if need < header_off || need > end {
         return
@@ -868,7 +868,7 @@ fn glyf_apply_gvar_simple(
   let accum_x : Array[Double] = Array::make(point_count, 0.0)
   let accum_y : Array[Double] = Array::make(point_count, 0.0)
   let mut cursor = data_off
-  let mut shared_points_list : Array[Int]? = None
+  let mut shared_points_list : Array[Int32]? = None
   if shared_points {
     let (pts, off2) = match gvar_points(ctx.gvar, cursor, total_points) {
       None => return
@@ -891,7 +891,7 @@ fn glyf_apply_gvar_simple(
     }
     // PRIVATE_POINT_NUMBERS = 0x2000.
     let private_points = (ti & 0x2000) != 0
-    let mut points_list : Array[Int]? = None
+    let mut points_list : Array[Int32]? = None
     let mut after_points = cursor
     if private_points || !shared_points {
       let (pts, off2) = match gvar_points(ctx.gvar, cursor, total_points) {
@@ -980,7 +980,7 @@ fn glyf_gvar_composite_deltas(
   font : @moon_skrifa.FontRef,
   gid : @moon_skrifa.GlyphId,
   coords : ArrayView[@moon_skrifa.NormalizedCoord],
-  component_count : Int,
+  component_count : Int32,
 ) -> (Array[Double], Array[Double])? {
   if coords.is_empty() {
     return None
@@ -1036,8 +1036,8 @@ fn glyf_gvar_composite_deltas(
   if tuple_count <= 0 || data_rel < 0 {
     return None
   }
-  let sizes : Array[Int] = []
-  let tuple_indexes : Array[Int] = []
+  let sizes : Array[Int32] = []
+  let tuple_indexes : Array[Int32] = []
   let axis_count = ctx.axis_count
   let scalars : Array[Double] = []
   let mut header_off = start + 4
@@ -1053,7 +1053,7 @@ fn glyf_gvar_composite_deltas(
     let embedded = (ti & 0x8000) != 0
     let intermediate = (ti & 0x4000) != 0
     let shared_ix = ti & 0x0FFF
-    let peak : Array[Int] = Array::make(axis_count, 0)
+    let peak : Array[Int32] = Array::make(axis_count, 0)
     if embedded {
       let need = header_off + axis_count * 2
       if need < header_off || need > end {
@@ -1079,11 +1079,11 @@ fn glyf_gvar_composite_deltas(
         peak.set(ax, gvar_read_i16_be(ctx.gvar, base + ax * 2).unwrap_or(0))
       }
     }
-    let mut start_t : Array[Int]? = None
-    let mut end_t : Array[Int]? = None
+    let mut start_t : Array[Int32]? = None
+    let mut end_t : Array[Int32]? = None
     if intermediate {
-      let st : Array[Int] = Array::make(axis_count, 0)
-      let et : Array[Int] = Array::make(axis_count, 0)
+      let st : Array[Int32] = Array::make(axis_count, 0)
+      let et : Array[Int32] = Array::make(axis_count, 0)
       let need = header_off + axis_count * 4
       if need < header_off || need > end {
         return None
@@ -1110,7 +1110,7 @@ fn glyf_gvar_composite_deltas(
   let accum_x : Array[Double] = Array::make(component_count, 0.0)
   let accum_y : Array[Double] = Array::make(component_count, 0.0)
   let mut cursor = data_off
-  let mut shared_points_list : Array[Int]? = None
+  let mut shared_points_list : Array[Int32]? = None
   if shared_points {
     let (pts, off2) = match gvar_points(ctx.gvar, cursor, total_points) {
       None => return None
@@ -1133,7 +1133,7 @@ fn glyf_gvar_composite_deltas(
     }
     // PRIVATE_POINT_NUMBERS = 0x2000.
     let private_points = (ti & 0x2000) != 0
-    let mut points_list : Array[Int]? = None
+    let mut points_list : Array[Int32]? = None
     let mut after_points = cursor
     if private_points || !shared_points {
       let (pts, off2) = match gvar_points(ctx.gvar, cursor, total_points) {
@@ -1183,13 +1183,16 @@ fn glyf_gvar_composite_deltas(
 
 ///|
 /// Rounds a 16.16 fixed value to i32, matching FreeType-style rounding.
-fn gvar_fixed16_16_to_i32(bits : Int) -> Int {
+fn gvar_fixed16_16_to_i32(bits : Int32) -> Int32 {
   // Matches `font_types::Fixed::to_i32()` rounding.
   ((bits.to_int64() + (0x8000).to_int64()) >> 16).to_int()
 }
 
 ///|
-fn gvar_scale_funit_delta_to_fixed16_16(delta : Int, scalar_bits : Int) -> Int {
+fn gvar_scale_funit_delta_to_fixed16_16(
+  delta : Int32,
+  scalar_bits : Int32,
+) -> Int32 {
   let bits = delta << 16
   if scalar_bits == 0x10000 {
     bits
@@ -1199,7 +1202,7 @@ fn gvar_scale_funit_delta_to_fixed16_16(delta : Int, scalar_bits : Int) -> Int {
 }
 
 ///|
-fn gvar_zero_deltas(total_points : Int) -> (Array[Int], Array[Int]) {
+fn gvar_zero_deltas(total_points : Int32) -> (Array[Int32], Array[Int32]) {
   (Array::make(total_points, 0), Array::make(total_points, 0))
 }
 
@@ -1212,10 +1215,10 @@ fn glyf_gvar_simple_hint_deltas(
   font : @moon_skrifa.FontRef,
   gid : @moon_skrifa.GlyphId,
   coords : ArrayView[@moon_skrifa.NormalizedCoord],
-  end_pts : Array[Int],
+  end_pts : Array[Int32],
   xs : Array[Double],
   ys : Array[Double],
-) -> (Array[Int], Array[Int])? {
+) -> (Array[Int32], Array[Int32])? {
   if coords.is_empty() {
     return None
   }
@@ -1271,10 +1274,10 @@ fn glyf_gvar_simple_hint_deltas(
   if tuple_count <= 0 || data_rel < 0 {
     return Some(gvar_zero_deltas(total_points))
   }
-  let sizes : Array[Int] = []
-  let tuple_indexes : Array[Int] = []
+  let sizes : Array[Int32] = []
+  let tuple_indexes : Array[Int32] = []
   let axis_count = ctx.axis_count
-  let scalars : Array[Int] = []
+  let scalars : Array[Int32] = []
   let mut header_off = start + 4
   for _ in 0..<tuple_count {
     let s = gvar_read_u16_be(ctx.gvar, header_off).unwrap_or(-1)
@@ -1288,7 +1291,7 @@ fn glyf_gvar_simple_hint_deltas(
     let embedded = (ti & 0x8000) != 0
     let intermediate = (ti & 0x4000) != 0
     let shared_ix = ti & 0x0FFF
-    let peak : Array[Int] = Array::make(axis_count, 0)
+    let peak : Array[Int32] = Array::make(axis_count, 0)
     if embedded {
       let need = header_off + axis_count * 2
       if need < header_off || need > end {
@@ -1314,11 +1317,11 @@ fn glyf_gvar_simple_hint_deltas(
         peak.set(ax, gvar_read_i16_be(ctx.gvar, base + ax * 2).unwrap_or(0))
       }
     }
-    let mut start_t : Array[Int]? = None
-    let mut end_t : Array[Int]? = None
+    let mut start_t : Array[Int32]? = None
+    let mut end_t : Array[Int32]? = None
     if intermediate {
-      let st : Array[Int] = Array::make(axis_count, 0)
-      let et : Array[Int] = Array::make(axis_count, 0)
+      let st : Array[Int32] = Array::make(axis_count, 0)
+      let et : Array[Int32] = Array::make(axis_count, 0)
       let need = header_off + axis_count * 4
       if need < header_off || need > end {
         return Some(gvar_zero_deltas(total_points))
@@ -1342,10 +1345,10 @@ fn glyf_gvar_simple_hint_deltas(
   if data_off < header_off || data_off > end {
     return Some(gvar_zero_deltas(total_points))
   }
-  let accum_x : Array[Int] = Array::make(total_points, 0)
-  let accum_y : Array[Int] = Array::make(total_points, 0)
+  let accum_x : Array[Int32] = Array::make(total_points, 0)
+  let accum_y : Array[Int32] = Array::make(total_points, 0)
   let mut cursor = data_off
-  let mut shared_points_list : Array[Int]? = None
+  let mut shared_points_list : Array[Int32]? = None
   if shared_points {
     let (pts, off2) = match gvar_points(ctx.gvar, cursor, total_points) {
       None => return Some(gvar_zero_deltas(total_points))
@@ -1368,7 +1371,7 @@ fn glyf_gvar_simple_hint_deltas(
     }
     // PRIVATE_POINT_NUMBERS = 0x2000.
     let private_points = (ti & 0x2000) != 0
-    let mut points_list : Array[Int]? = None
+    let mut points_list : Array[Int32]? = None
     let mut after_points = cursor
     if private_points || !shared_points {
       let (pts, off2) = match gvar_points(ctx.gvar, cursor, total_points) {
@@ -1397,10 +1400,10 @@ fn glyf_gvar_simple_hint_deltas(
       return Some(gvar_zero_deltas(total_points))
     }
     // Prepare IUP buffers for real points for this tuple (16.16 coords).
-    let orig_x : Array[Int] = Array::make(point_count, 0)
-    let orig_y : Array[Int] = Array::make(point_count, 0)
-    let out_x : Array[Int] = Array::make(point_count, 0)
-    let out_y : Array[Int] = Array::make(point_count, 0)
+    let orig_x : Array[Int32] = Array::make(point_count, 0)
+    let orig_y : Array[Int32] = Array::make(point_count, 0)
+    let out_x : Array[Int32] = Array::make(point_count, 0)
+    let out_y : Array[Int32] = Array::make(point_count, 0)
     for p_ix in 0..<point_count {
       let x = xs.at(p_ix).round().to_int()
       let y = ys.at(p_ix).round().to_int()
@@ -1494,8 +1497,8 @@ fn glyf_gvar_composite_hint_deltas(
   font : @moon_skrifa.FontRef,
   gid : @moon_skrifa.GlyphId,
   coords : ArrayView[@moon_skrifa.NormalizedCoord],
-  component_count : Int,
-) -> (Array[Int], Array[Int])? {
+  component_count : Int32,
+) -> (Array[Int32], Array[Int32])? {
   if coords.is_empty() {
     return None
   }
@@ -1550,10 +1553,10 @@ fn glyf_gvar_composite_hint_deltas(
   if tuple_count <= 0 || data_rel < 0 {
     return Some(gvar_zero_deltas(total_points))
   }
-  let sizes : Array[Int] = []
-  let tuple_indexes : Array[Int] = []
+  let sizes : Array[Int32] = []
+  let tuple_indexes : Array[Int32] = []
   let axis_count = ctx.axis_count
-  let scalars : Array[Int] = []
+  let scalars : Array[Int32] = []
   let mut header_off = start + 4
   for _ in 0..<tuple_count {
     let s = gvar_read_u16_be(ctx.gvar, header_off).unwrap_or(-1)
@@ -1567,7 +1570,7 @@ fn glyf_gvar_composite_hint_deltas(
     let embedded = (ti & 0x8000) != 0
     let intermediate = (ti & 0x4000) != 0
     let shared_ix = ti & 0x0FFF
-    let peak : Array[Int] = Array::make(axis_count, 0)
+    let peak : Array[Int32] = Array::make(axis_count, 0)
     if embedded {
       let need = header_off + axis_count * 2
       if need < header_off || need > end {
@@ -1593,11 +1596,11 @@ fn glyf_gvar_composite_hint_deltas(
         peak.set(ax, gvar_read_i16_be(ctx.gvar, base + ax * 2).unwrap_or(0))
       }
     }
-    let mut start_t : Array[Int]? = None
-    let mut end_t : Array[Int]? = None
+    let mut start_t : Array[Int32]? = None
+    let mut end_t : Array[Int32]? = None
     if intermediate {
-      let st : Array[Int] = Array::make(axis_count, 0)
-      let et : Array[Int] = Array::make(axis_count, 0)
+      let st : Array[Int32] = Array::make(axis_count, 0)
+      let et : Array[Int32] = Array::make(axis_count, 0)
       let need = header_off + axis_count * 4
       if need < header_off || need > end {
         return Some(gvar_zero_deltas(total_points))
@@ -1621,10 +1624,10 @@ fn glyf_gvar_composite_hint_deltas(
   if data_off < header_off || data_off > end {
     return Some(gvar_zero_deltas(total_points))
   }
-  let accum_x : Array[Int] = Array::make(total_points, 0)
-  let accum_y : Array[Int] = Array::make(total_points, 0)
+  let accum_x : Array[Int32] = Array::make(total_points, 0)
+  let accum_y : Array[Int32] = Array::make(total_points, 0)
   let mut cursor = data_off
-  let mut shared_points_list : Array[Int]? = None
+  let mut shared_points_list : Array[Int32]? = None
   if shared_points {
     let (pts, off2) = match gvar_points(ctx.gvar, cursor, total_points) {
       None => return Some(gvar_zero_deltas(total_points))
@@ -1647,7 +1650,7 @@ fn glyf_gvar_composite_hint_deltas(
     }
     // PRIVATE_POINT_NUMBERS = 0x2000.
     let private_points = (ti & 0x2000) != 0
-    let mut points_list : Array[Int]? = None
+    let mut points_list : Array[Int32]? = None
     let mut after_points = cursor
     if private_points || !shared_points {
       let (pts, off2) = match gvar_points(ctx.gvar, cursor, total_points) {

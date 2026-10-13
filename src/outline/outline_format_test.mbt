@@ -14,16 +14,16 @@
 
 ///|
 /// Outline format detection tests (glyf/CFF/CFF2).
-fn push_u16_be(out : Array[Byte], v : Int) -> Unit {
+fn push_u16_be(out : Array[Byte], v : Int32) -> Unit {
   let u = v.reinterpret_as_uint()
-  let mask = 255 |> Int::reinterpret_as_uint
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((u >> 8) & mask).to_byte())
   out.push((u & mask).to_byte())
 }
 
 ///|
-fn push_u32_be(out : Array[Byte], v : UInt) -> Unit {
-  let mask = 255 |> Int::reinterpret_as_uint
+fn push_u32_be(out : Array[Byte], v : UInt32) -> Unit {
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((v >> 24) & mask).to_byte())
   out.push(((v >> 16) & mask).to_byte())
   out.push(((v >> 8) & mask).to_byte())
@@ -31,12 +31,12 @@ fn push_u32_be(out : Array[Byte], v : UInt) -> Unit {
 }
 
 ///|
-fn u32(x : Int) -> UInt {
+fn u32(x : Int32) -> UInt32 {
   x.reinterpret_as_uint()
 }
 
 ///|
-fn make_sfnt_with_tags(tags : Array[UInt]) -> Bytes {
+fn make_sfnt_with_tags(tags : Array[UInt32]) -> Bytes {
   let num_tables = tags.length()
   let dir_end = 12 + num_tables * 16
   let out = []
@@ -55,37 +55,37 @@ fn make_sfnt_with_tags(tags : Array[UInt]) -> Bytes {
 }
 
 ///|
-fn make_font(tags : Array[UInt]) -> @moon_skrifa.FontRef {
+fn make_font(tags : Array[UInt32]) -> @moon_skrifa.FontRef {
   @moon_skrifa.FontRef::from_bytes(make_sfnt_with_tags(tags)).unwrap()
 }
 
 ///|
-const TAG_GLYF : UInt = 0x676C7966 // "glyf"
+const TAG_GLYF : UInt32 = 0x676C7966 // "glyf"
 
 ///|
-const TAG_CFF : UInt = 0x43464620 // "CFF "
+const TAG_CFF : UInt32 = 0x43464620 // "CFF "
 
 ///|
-const TAG_CFF2 : UInt = 0x43464632 // "CFF2"
+const TAG_CFF2 : UInt32 = 0x43464632 // "CFF2"
 
 ///|
 test "OutlineGlyphCollection::format None when no font" {
   let font = make_font([])
-  let c = OutlineGlyphCollection::OutlineGlyphCollection(font)
+  let c = @outline.OutlineGlyphCollection::OutlineGlyphCollection(font)
   inspect(c.format() is None, content="true")
 }
 
 ///|
 test "OutlineGlyphCollection::format None when no outline tables" {
   let font = make_font([])
-  let c = OutlineGlyphCollection::OutlineGlyphCollection(font)
+  let c = @outline.OutlineGlyphCollection::OutlineGlyphCollection(font)
   inspect(c.format() is None, content="true")
 }
 
 ///|
 test "OutlineGlyphCollection::format glyf" {
   let font = make_font(Array::from_fixed_array([TAG_GLYF]))
-  let c = OutlineGlyphCollection::OutlineGlyphCollection(font)
+  let c = @outline.OutlineGlyphCollection::OutlineGlyphCollection(font)
   let ok = match c.format() {
     Some(Glyf) => true
     _ => false
@@ -96,7 +96,7 @@ test "OutlineGlyphCollection::format glyf" {
 ///|
 test "OutlineGlyphCollection::format CFF" {
   let font = make_font(Array::from_fixed_array([TAG_CFF]))
-  let c = OutlineGlyphCollection::OutlineGlyphCollection(font)
+  let c = @outline.OutlineGlyphCollection::OutlineGlyphCollection(font)
   let ok = match c.format() {
     Some(Cff) => true
     _ => false
@@ -107,7 +107,7 @@ test "OutlineGlyphCollection::format CFF" {
 ///|
 test "OutlineGlyphCollection::format CFF2" {
   let font = make_font(Array::from_fixed_array([TAG_CFF2]))
-  let c = OutlineGlyphCollection::OutlineGlyphCollection(font)
+  let c = @outline.OutlineGlyphCollection::OutlineGlyphCollection(font)
   let ok = match c.format() {
     Some(Cff2) => true
     _ => false
@@ -118,7 +118,7 @@ test "OutlineGlyphCollection::format CFF2" {
 ///|
 test "OutlineGlyphCollection::format prefers glyf" {
   let font = make_font(Array::from_fixed_array([TAG_CFF, TAG_GLYF, TAG_CFF2]))
-  let c = OutlineGlyphCollection::OutlineGlyphCollection(font)
+  let c = @outline.OutlineGlyphCollection::OutlineGlyphCollection(font)
   let ok = match c.format() {
     Some(Glyf) => true
     _ => false

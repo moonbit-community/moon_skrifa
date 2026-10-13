@@ -105,7 +105,7 @@ fn font_notosansjp_vf_subset_otf_b64() -> String {
 }
 
 ///|
-fn b64_val(c : Int) -> Int? {
+fn b64_val(c : Int32) -> Int32? {
   if c >= 65 && c <= 90 {
     Some(c - 65)
   } else if c >= 97 && c <= 122 {
@@ -124,7 +124,7 @@ fn b64_val(c : Int) -> Int? {
 ///|
 fn b64_decode(s : String) -> Bytes {
   let out : Array[Byte] = []
-  let vals : Array[Int] = []
+  let vals : Array[Int32] = []
   let n = s.length()
   for i in 0..<n {
     let c = s.code_unit_at(i).to_int()
@@ -163,13 +163,14 @@ fn golden_font(b64 : String) -> @moon_skrifa.FontRef {
 ///|
 test "golden: glyf Vazirmatn gid=2 size=16 ft coords=0" {
   let font = golden_font(font_vazirmatn_var_trimmed_b64())
-  let outlines = OutlineGlyphCollection::from_font(font)
+  let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(GlyphId((2).to_uint16())).unwrap()
   let coords : Array[@moon_skrifa.NormalizedCoord] = Array::from_fixed_array([0])
-  let settings = DrawSettings::unhinted(Size(16.0), LocationRef(coords[:])).with_path_style(
-    FreeType,
-  )
-  let pen = SvgPen::with_precision(3)
+  let settings = @outline.DrawSettings::unhinted(
+    Size(16.0),
+    LocationRef(coords[:]),
+  ).with_path_style(FreeType)
+  let pen = @outline.SvgPen::with_precision(3)
   glyph.draw(settings, pen).unwrap() |> ignore
   inspect(
     pen.to_string(),
@@ -180,15 +181,16 @@ test "golden: glyf Vazirmatn gid=2 size=16 ft coords=0" {
 ///|
 test "golden: glyf Vazirmatn gid=2 size=16 ft coords=0.5" {
   let font = golden_font(font_vazirmatn_var_trimmed_b64())
-  let outlines = OutlineGlyphCollection::from_font(font)
+  let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(GlyphId((2).to_uint16())).unwrap()
   let coords : Array[@moon_skrifa.NormalizedCoord] = Array::from_fixed_array([
     8192,
   ])
-  let settings = DrawSettings::unhinted(Size(16.0), LocationRef(coords[:])).with_path_style(
-    FreeType,
-  )
-  let pen = SvgPen::with_precision(3)
+  let settings = @outline.DrawSettings::unhinted(
+    Size(16.0),
+    LocationRef(coords[:]),
+  ).with_path_style(FreeType)
+  let pen = @outline.SvgPen::with_precision(3)
   glyph.draw(settings, pen).unwrap() |> ignore
   inspect(
     pen.to_string(),
@@ -199,13 +201,14 @@ test "golden: glyf Vazirmatn gid=2 size=16 ft coords=0.5" {
 ///|
 test "golden: glyf Vazirmatn gid=2 size=16 hb coords=0 (16.16 fixed)" {
   let font = golden_font(font_vazirmatn_var_trimmed_b64())
-  let outlines = OutlineGlyphCollection::from_font(font)
+  let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(GlyphId((2).to_uint16())).unwrap()
   let coords : Array[@moon_skrifa.NormalizedCoord] = Array::from_fixed_array([0])
-  let settings = DrawSettings::unhinted(Size(16.0), LocationRef(coords[:])).with_path_style(
-    HarfBuzz,
-  )
-  let pen = SvgPen::with_precision(3)
+  let settings = @outline.DrawSettings::unhinted(
+    Size(16.0),
+    LocationRef(coords[:]),
+  ).with_path_style(HarfBuzz)
+  let pen = @outline.SvgPen::with_precision(3)
   glyph.draw(settings, pen).unwrap() |> ignore
   inspect(
     pen.to_string(),
@@ -216,15 +219,16 @@ test "golden: glyf Vazirmatn gid=2 size=16 hb coords=0 (16.16 fixed)" {
 ///|
 test "golden: glyf Vazirmatn gid=2 size=16 hb coords=0.5 (16.16 fixed)" {
   let font = golden_font(font_vazirmatn_var_trimmed_b64())
-  let outlines = OutlineGlyphCollection::from_font(font)
+  let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(GlyphId((2).to_uint16())).unwrap()
   let coords : Array[@moon_skrifa.NormalizedCoord] = Array::from_fixed_array([
     8192,
   ])
-  let settings = DrawSettings::unhinted(Size(16.0), LocationRef(coords[:])).with_path_style(
-    HarfBuzz,
-  )
-  let pen = SvgPen::with_precision(3)
+  let settings = @outline.DrawSettings::unhinted(
+    Size(16.0),
+    LocationRef(coords[:]),
+  ).with_path_style(HarfBuzz)
+  let pen = @outline.SvgPen::with_precision(3)
   glyph.draw(settings, pen).unwrap() |> ignore
   inspect(
     pen.to_string(),
@@ -235,13 +239,13 @@ test "golden: glyf Vazirmatn gid=2 size=16 hb coords=0.5 (16.16 fixed)" {
 ///|
 test "golden: CFF2 NotoSansJP-VF gid=0 size=16" {
   let font = golden_font(font_notosansjp_vf_subset_otf_b64())
-  let outlines = OutlineGlyphCollection::from_font(font)
+  let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(GlyphId((0).to_uint16())).unwrap()
-  let settings = DrawSettings::unhinted(
+  let settings = @outline.DrawSettings::unhinted(
     Size(16.0),
     @moon_skrifa.LocationRef::default(),
   ).with_path_style(FreeType)
-  let pen = SvgPen::with_precision(3)
+  let pen = @outline.SvgPen::with_precision(3)
   glyph.draw(settings, pen).unwrap() |> ignore
   inspect(
     pen.to_string(),

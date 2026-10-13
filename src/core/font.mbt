@@ -41,7 +41,7 @@ pub fn GlyphId::to_u16(self : GlyphId) -> UInt16 {
 }
 
 ///|
-pub fn GlyphId::to_int(self : GlyphId) -> Int {
+pub fn GlyphId::to_int(self : GlyphId) -> Int32 {
   self.value.to_int()
 }
 
@@ -76,22 +76,22 @@ pub impl Compare for GlyphId with fn compare(self, other) {
 }
 
 ///|
-const TAG_TTCF : UInt = 0x74746366
+const TAG_TTCF : UInt32 = 0x74746366
 
 ///|
-const SFNT_1_0 : UInt = 0x00010000
+const SFNT_1_0 : UInt32 = 0x00010000
 
 ///|
-const SFNT_OTTO : UInt = 0x4F54544F
+const SFNT_OTTO : UInt32 = 0x4F54544F
 
 ///|
-const SFNT_TRUE : UInt = 0x74727565
+const SFNT_TRUE : UInt32 = 0x74727565
 
 ///|
-const SFNT_TYP1 : UInt = 0x74797031
+const SFNT_TYP1 : UInt32 = 0x74797031
 
 ///|
-fn read_u16_be(data : Bytes, offset : Int) -> Int? {
+fn read_u16_be(data : Bytes, offset : Int32) -> Int32? {
   if offset < 0 || offset + 2 > data.length() {
     None
   } else {
@@ -102,7 +102,7 @@ fn read_u16_be(data : Bytes, offset : Int) -> Int? {
 }
 
 ///|
-fn read_u32_be(data : Bytes, offset : Int) -> UInt? {
+fn read_u32_be(data : Bytes, offset : Int32) -> UInt32? {
   if offset < 0 || offset + 4 > data.length() {
     None
   } else {
@@ -115,7 +115,7 @@ fn read_u32_be(data : Bytes, offset : Int) -> UInt? {
 }
 
 ///|
-fn read_u32_be_int(data : Bytes, offset : Int) -> Int? {
+fn read_u32_be_int(data : Bytes, offset : Int32) -> Int32? {
   match read_u32_be(data, offset) {
     None => None
     Some(u) => Some(u.to_uint64().to_int())
@@ -123,7 +123,7 @@ fn read_u32_be_int(data : Bytes, offset : Int) -> Int? {
 }
 
 ///|
-fn is_supported_sfnt_version(sfnt_version : UInt) -> Bool {
+fn is_supported_sfnt_version(sfnt_version : UInt32) -> Bool {
   sfnt_version == SFNT_1_0 ||
   sfnt_version == SFNT_OTTO ||
   sfnt_version == SFNT_TRUE ||
@@ -131,7 +131,7 @@ fn is_supported_sfnt_version(sfnt_version : UInt) -> Bool {
 }
 
 ///|
-fn validate_sfnt(data : Bytes, base : Int) -> Bool {
+fn validate_sfnt(data : Bytes, base : Int32) -> Bool {
   match read_u32_be(data, base) {
     None => false
     Some(sfnt_version) => {
@@ -156,7 +156,7 @@ fn validate_sfnt(data : Bytes, base : Int) -> Bool {
 ///|
 pub struct FontRef {
   data : Bytes
-  index : UInt
+  index : UInt32
 }
 
 ///|
@@ -169,7 +169,7 @@ pub fn FontRef::from_bytes(data : Bytes) -> FontRef? {
 }
 
 ///|
-pub fn FontRef::from_index(data : Bytes, index : UInt) -> FontRef? {
+pub fn FontRef::from_index(data : Bytes, index : UInt32) -> FontRef? {
   match read_u32_be(data, 0) {
     None => None
     Some(TAG_TTCF) => {
@@ -213,12 +213,12 @@ pub fn FontRef::data(self : FontRef) -> Bytes {
 }
 
 ///|
-pub fn FontRef::index(self : FontRef) -> UInt {
+pub fn FontRef::index(self : FontRef) -> UInt32 {
   self.index
 }
 
 ///|
-fn FontRef::sfnt_offset(self : FontRef) -> Int? {
+fn FontRef::sfnt_offset(self : FontRef) -> Int32? {
   match read_u32_be(self.data, 0) {
     None => None
     Some(TAG_TTCF) => {
@@ -241,7 +241,7 @@ fn FontRef::sfnt_offset(self : FontRef) -> Int? {
 /// Returns the table data as a `BytesView` (slice into the original font bytes).
 ///
 /// `tag` is a big-endian 4-byte OpenType table tag (e.g. `0x636D6170` for "cmap").
-pub fn FontRef::table(self : FontRef, tag : UInt) -> BytesView? {
+pub fn FontRef::table(self : FontRef, tag : UInt32) -> BytesView? {
   match self.sfnt_offset() {
     None => None
     Some(base) => {

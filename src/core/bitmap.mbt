@@ -17,25 +17,25 @@
 ///
 /// This is an incremental port of `fontations/skrifa/src/bitmap.rs`.
 /// For now it supports format detection and strike enumeration (ppem only).
-const TAG_SBIX : UInt = 0x73626978 // "sbix"
+const TAG_SBIX : UInt32 = 0x73626978 // "sbix"
 
 ///|
-const TAG_CBLC : UInt = 0x43424C43 // "CBLC"
+const TAG_CBLC : UInt32 = 0x43424C43 // "CBLC"
 
 ///|
-const TAG_CBDT : UInt = 0x43424454 // "CBDT"
+const TAG_CBDT : UInt32 = 0x43424454 // "CBDT"
 
 ///|
-const TAG_EBLC : UInt = 0x45424C43 // "EBLC"
+const TAG_EBLC : UInt32 = 0x45424C43 // "EBLC"
 
 ///|
-const TAG_EBDT : UInt = 0x45424454 // "EBDT"
+const TAG_EBDT : UInt32 = 0x45424454 // "EBDT"
 
 ///|
-const BITMAP_TAG_MAXP : UInt = 0x6D617870 // "maxp"
+const BITMAP_TAG_MAXP : UInt32 = 0x6D617870 // "maxp"
 
 ///|
-fn bitmap_read_u16_be(view : BytesView, offset : Int) -> Int? {
+fn bitmap_read_u16_be(view : BytesView, offset : Int32) -> Int32? {
   if offset < 0 || offset + 2 > view.length() {
     None
   } else {
@@ -46,7 +46,7 @@ fn bitmap_read_u16_be(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn bitmap_read_u32_be(view : BytesView, offset : Int) -> UInt? {
+fn bitmap_read_u32_be(view : BytesView, offset : Int32) -> UInt32? {
   if offset < 0 || offset + 4 > view.length() {
     None
   } else {
@@ -59,7 +59,7 @@ fn bitmap_read_u32_be(view : BytesView, offset : Int) -> UInt? {
 }
 
 ///|
-fn bitmap_read_u32_be_int(view : BytesView, offset : Int) -> Int? {
+fn bitmap_read_u32_be_int(view : BytesView, offset : Int32) -> Int32? {
   match bitmap_read_u32_be(view, offset) {
     None => None
     Some(u) => Some(u.to_uint64().to_int())
@@ -67,7 +67,7 @@ fn bitmap_read_u32_be_int(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn bitmap_read_i16_be(view : BytesView, offset : Int) -> Int? {
+fn bitmap_read_i16_be(view : BytesView, offset : Int32) -> Int32? {
   match bitmap_read_u16_be(view, offset) {
     None => None
     Some(u) => if u >= 0x8000 { Some(u - 0x10000) } else { Some(u) }
@@ -85,19 +85,19 @@ pub(all) enum BitmapFormat {
 pub(all) enum BitmapImageFormat {
   Png
   Jpeg
-  Unknown(UInt)
+  Unknown(UInt32)
 }
 
 ///|
 pub struct BitmapGlyph {
   priv format : BitmapImageFormat
   priv data : BytesView
-  priv ppem_x : Int
-  priv ppem_y : Int
-  priv origin_x : Int
-  priv origin_y : Int
-  priv width : Int?
-  priv height : Int?
+  priv ppem_x : Int32
+  priv ppem_y : Int32
+  priv origin_x : Int32
+  priv origin_y : Int32
+  priv width : Int32?
+  priv height : Int32?
 }
 
 ///|
@@ -111,51 +111,51 @@ pub fn BitmapGlyph::data(self : BitmapGlyph) -> BytesView {
 }
 
 ///|
-pub fn BitmapGlyph::ppem_x(self : BitmapGlyph) -> Int {
+pub fn BitmapGlyph::ppem_x(self : BitmapGlyph) -> Int32 {
   self.ppem_x
 }
 
 ///|
-pub fn BitmapGlyph::ppem_y(self : BitmapGlyph) -> Int {
+pub fn BitmapGlyph::ppem_y(self : BitmapGlyph) -> Int32 {
   self.ppem_y
 }
 
 ///|
-pub fn BitmapGlyph::origin_x(self : BitmapGlyph) -> Int {
+pub fn BitmapGlyph::origin_x(self : BitmapGlyph) -> Int32 {
   self.origin_x
 }
 
 ///|
-pub fn BitmapGlyph::origin_y(self : BitmapGlyph) -> Int {
+pub fn BitmapGlyph::origin_y(self : BitmapGlyph) -> Int32 {
   self.origin_y
 }
 
 ///|
-pub fn BitmapGlyph::width(self : BitmapGlyph) -> Int? {
+pub fn BitmapGlyph::width(self : BitmapGlyph) -> Int32? {
   self.width
 }
 
 ///|
-pub fn BitmapGlyph::height(self : BitmapGlyph) -> Int? {
+pub fn BitmapGlyph::height(self : BitmapGlyph) -> Int32? {
   self.height
 }
 
 ///|
 pub struct BitmapStrike {
   priv format : BitmapFormat
-  priv ppem_x : Int
-  priv ppem_y : Int
+  priv ppem_x : Int32
+  priv ppem_y : Int32
   priv sbix : BytesView?
-  priv sbix_strike_off : Int
-  priv num_glyphs : Int
+  priv sbix_strike_off : Int32
+  priv num_glyphs : Int32
   priv bdt_loc : BytesView?
   priv bdt_data : BytesView?
   priv bdt_is_color : Bool
-  priv bdt_index_subtable_array_off : Int
-  priv bdt_number_of_index_subtables : Int
-  priv bdt_start_gid : Int
-  priv bdt_end_gid : Int
-  priv bdt_bit_depth : Int
+  priv bdt_index_subtable_array_off : Int32
+  priv bdt_number_of_index_subtables : Int32
+  priv bdt_start_gid : Int32
+  priv bdt_end_gid : Int32
+  priv bdt_bit_depth : Int32
 }
 
 ///|
@@ -164,12 +164,12 @@ pub fn BitmapStrike::format(self : BitmapStrike) -> BitmapFormat {
 }
 
 ///|
-pub fn BitmapStrike::ppem_x(self : BitmapStrike) -> Int {
+pub fn BitmapStrike::ppem_x(self : BitmapStrike) -> Int32 {
   self.ppem_x
 }
 
 ///|
-pub fn BitmapStrike::ppem_y(self : BitmapStrike) -> Int {
+pub fn BitmapStrike::ppem_y(self : BitmapStrike) -> Int32 {
   self.ppem_y
 }
 
@@ -206,11 +206,11 @@ priv enum BitmapStrikesKind {
 ///|
 pub struct BitmapStrikes {
   priv kind : BitmapStrikesKind
-  priv num_glyphs : Int
+  priv num_glyphs : Int32
 }
 
 ///|
-fn bitmap_num_glyphs(font : FontRef) -> Int {
+fn bitmap_num_glyphs(font : FontRef) -> Int32 {
   match font.table(BITMAP_TAG_MAXP) {
     None => 0
     Some(maxp) => bitmap_read_u16_be(maxp, 4).unwrap_or(0)
@@ -272,7 +272,7 @@ pub fn BitmapStrikes::format(self : BitmapStrikes) -> BitmapFormat? {
 }
 
 ///|
-pub fn BitmapStrikes::len(self : BitmapStrikes) -> Int {
+pub fn BitmapStrikes::len(self : BitmapStrikes) -> Int32 {
   match self.kind {
     NoStrikes => 0
     Sbix(sbix) => bitmap_read_u32_be_int(sbix, 4).unwrap_or(0)
@@ -325,7 +325,7 @@ pub fn BitmapStrikes::glyph_for_size(
 }
 
 ///|
-pub fn BitmapStrikes::get(self : BitmapStrikes, index : Int) -> BitmapStrike? {
+pub fn BitmapStrikes::get(self : BitmapStrikes, index : Int32) -> BitmapStrike? {
   if index < 0 || index >= self.len() {
     return None
   }
@@ -369,7 +369,7 @@ fn bitmap_loc_get_size(
   loc : BytesView,
   data : BytesView,
   is_color : Bool,
-  index : Int,
+  index : Int32,
   format : BitmapFormat,
 ) -> BitmapStrike? {
   // EBLC/CBLC: major u16, minor u16, numSizes u32, BitmapSizeTable[numSizes]
@@ -404,7 +404,7 @@ fn bitmap_loc_get_size(
 }
 
 ///|
-fn bitmap_read_u8(view : BytesView, offset : Int) -> Int? {
+fn bitmap_read_u8(view : BytesView, offset : Int32) -> Int32? {
   if offset < 0 || offset + 1 > view.length() {
     None
   } else {
@@ -413,7 +413,7 @@ fn bitmap_read_u8(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn bitmap_read_i8(view : BytesView, offset : Int) -> Int? {
+fn bitmap_read_i8(view : BytesView, offset : Int32) -> Int32? {
   match bitmap_read_u8(view, offset) {
     None => None
     Some(u) => if u >= 0x80 { Some(u - 0x100) } else { Some(u) }
@@ -423,8 +423,8 @@ fn bitmap_read_i8(view : BytesView, offset : Int) -> Int? {
 ///|
 fn bitmap_small_metrics(
   view : BytesView,
-  offset : Int,
-) -> (Int, Int, Int, Int, Int)? {
+  offset : Int32,
+) -> (Int32, Int32, Int32, Int32, Int32)? {
   let h = bitmap_read_u8(view, offset).unwrap_or(-1)
   let w = bitmap_read_u8(view, offset + 1).unwrap_or(-1)
   let bx = bitmap_read_i8(view, offset + 2).unwrap_or(0)
@@ -438,7 +438,7 @@ fn bitmap_small_metrics(
 }
 
 ///|
-fn bitmap_div_ceil(n : Int, d : Int) -> Int {
+fn bitmap_div_ceil(n : Int32, d : Int32) -> Int32 {
   if d == 0 {
     0
   } else {
@@ -451,7 +451,7 @@ fn bitmap_bdt_location(
   loc : BytesView,
   strike : BitmapStrike,
   gid : GlyphId,
-) -> (Int, Int, Int)? {
+) -> (Int32, Int32, Int32)? {
   let gid_i = gid.to_uint64().to_int()
   if gid_i < strike.bdt_start_gid || gid_i > strike.bdt_end_gid {
     return None
@@ -592,9 +592,9 @@ fn bitmap_bdt_glyph(strike : BitmapStrike, gid : GlyphId) -> BitmapGlyph? {
 ///|
 fn bitmap_sbix_strike_glyph(
   sbix : BytesView,
-  strike_off : Int,
-  num_glyphs : Int,
-  ppem : Int,
+  strike_off : Int32,
+  num_glyphs : Int32,
+  ppem : Int32,
   gid : GlyphId,
 ) -> BitmapGlyph? {
   let idx = gid.to_uint64().to_int()
@@ -640,8 +640,8 @@ fn bitmap_sbix_strike_glyph(
   } else {
     Unknown(graphic_type)
   }
-  let mut width : Int? = None
-  let mut height : Int? = None
+  let mut width : Int32? = None
+  let mut height : Int32? = None
   if format is Png {
     if data.length() >= 24 {
       let w = bitmap_read_u32_be_int(data, 16).unwrap_or(-1)

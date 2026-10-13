@@ -18,19 +18,19 @@
 /// Ported from `fontations/skrifa/src/outline/*` (Apache-2.0 OR MIT).
 ///
 /// This package targets API/behavior parity with upstream `skrifa::outline`.
-const TAG_GLYF : UInt = 0x676C7966 // "glyf"
+const TAG_GLYF : UInt32 = 0x676C7966 // "glyf"
 
 ///|
-const TAG_CFF : UInt = 0x43464620 // "CFF "
+const TAG_CFF : UInt32 = 0x43464620 // "CFF "
 
 ///|
-const TAG_CFF2 : UInt = 0x43464632 // "CFF2"
+const TAG_CFF2 : UInt32 = 0x43464632 // "CFF2"
 
 ///|
-const TAG_FPGM : UInt = 0x6670676D // "fpgm"
+const TAG_FPGM : UInt32 = 0x6670676D // "fpgm"
 
 ///|
-const TAG_PREP : UInt = 0x70726570 // "prep"
+const TAG_PREP : UInt32 = 0x70726570 // "prep"
 
 ///|
 /// Source format for an outline glyph.
@@ -280,7 +280,7 @@ pub fn OutlineGlyph::has_hinting(self : OutlineGlyph) -> Bool? {
 pub fn OutlineGlyph::draw_memory_size(
   self : OutlineGlyph,
   hinting : Hinting,
-) -> Int {
+) -> Int32 {
   match self.kind {
     Glyf =>
       glyf_draw_memory_size(self.font, self.glyph_id, hinting).unwrap_or(0)
@@ -455,7 +455,7 @@ pub fn OutlineGlyphCollection::iter(
 /// Returns the number of glyphs addressable by this outline source.
 pub fn OutlineGlyphCollection::glyph_count(
   self : OutlineGlyphCollection,
-) -> Int {
+) -> Int32 {
   match self.kind {
     None => 0
     Some(Glyf) => glyf_glyph_count(self.font).unwrap_or(0)
@@ -498,7 +498,7 @@ pub fn OutlineGlyphCollection::fractional_size_hinting(
 }
 
 ///|
-fn table_is_non_empty(font : @moon_skrifa.FontRef, tag : UInt) -> Bool {
+fn table_is_non_empty(font : @moon_skrifa.FontRef, tag : UInt32) -> Bool {
   match font.table(tag) {
     None => false
     Some(view) => view.length() > 0
@@ -553,7 +553,7 @@ pub(all) enum PathElement {
 
 ///|
 /// Reads a big-endian u16 from a BytesView.
-fn outline_read_u16_be(view : BytesView, offset : Int) -> Int? {
+fn outline_read_u16_be(view : BytesView, offset : Int32) -> Int32? {
   if offset < 0 || offset + 2 > view.length() {
     None
   } else {
@@ -579,7 +579,7 @@ fn outline_units_per_em(font : @moon_skrifa.FontRef) -> UInt16 {
 ///|
 
 ///|
-fn outline_round_ties_even_pos(x : Double) -> Int {
+fn outline_round_ties_even_pos(x : Double) -> Int32 {
   let i = x.to_int()
   let frac = x - i.to_double()
   let diff = frac - 0.5

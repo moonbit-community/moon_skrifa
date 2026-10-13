@@ -17,7 +17,7 @@
 ///
 /// Ported from `fontations/skrifa/src/outline/glyf/hint/engine/outline.rs`
 /// (Apache-2.0 OR MIT).
-fn tt_abs_i(x : Int) -> Int {
+fn tt_abs_i(x : Int32) -> Int32 {
   if x < 0 {
     -x
   } else {
@@ -29,7 +29,7 @@ fn tt_abs_i(x : Int) -> Int {
 fn tt_in_bounds(
   gs : TtGraphicsState,
   zone_ptr : TtZonePointer,
-  p : Int,
+  p : Int32,
 ) -> Bool {
   let zone = match zone_ptr {
     Twilight => gs.twilight
@@ -105,7 +105,7 @@ fn TtEngine::op_fliprgoff(self : TtEngine) -> Result[Unit, HintError] {
 }
 
 ///|
-fn TtEngine::op_shp(self : TtEngine, opcode : Int) -> Result[Unit, HintError] {
+fn TtEngine::op_shp(self : TtEngine, opcode : Int32) -> Result[Unit, HintError] {
   let gs = self.graphics
   let disp = match gs.point_displacement(opcode) {
     Err(e) => return Err(e)
@@ -127,7 +127,7 @@ fn TtEngine::op_shp(self : TtEngine, opcode : Int) -> Result[Unit, HintError] {
 }
 
 ///|
-fn TtEngine::op_shc(self : TtEngine, opcode : Int) -> Result[Unit, HintError] {
+fn TtEngine::op_shc(self : TtEngine, opcode : Int32) -> Result[Unit, HintError] {
   let contour_ix = match self.value_stack.pop_usize() {
     Err(e) => return Err(e)
     Ok(v) => v
@@ -169,7 +169,7 @@ fn TtEngine::op_shc(self : TtEngine, opcode : Int) -> Result[Unit, HintError] {
 }
 
 ///|
-fn TtEngine::op_shz(self : TtEngine, opcode : Int) -> Result[Unit, HintError] {
+fn TtEngine::op_shz(self : TtEngine, opcode : Int32) -> Result[Unit, HintError] {
   let e = match self.value_stack.pop() {
     Err(e) => return Err(e)
     Ok(v) => v
@@ -249,7 +249,10 @@ fn TtEngine::op_shpix(self : TtEngine) -> Result[Unit, HintError] {
 }
 
 ///|
-fn TtEngine::op_msirp(self : TtEngine, opcode : Int) -> Result[Unit, HintError] {
+fn TtEngine::op_msirp(
+  self : TtEngine,
+  opcode : Int32,
+) -> Result[Unit, HintError] {
   let gs = self.graphics
   let distance = match self.value_stack.pop() {
     Err(e) => return Err(e)
@@ -314,7 +317,10 @@ fn TtEngine::op_msirp(self : TtEngine, opcode : Int) -> Result[Unit, HintError] 
 }
 
 ///|
-fn TtEngine::op_mdap(self : TtEngine, opcode : Int) -> Result[Unit, HintError] {
+fn TtEngine::op_mdap(
+  self : TtEngine,
+  opcode : Int32,
+) -> Result[Unit, HintError] {
   let p = match self.value_stack.pop_usize() {
     Err(e) => return Err(e)
     Ok(v) => v
@@ -347,7 +353,10 @@ fn TtEngine::op_mdap(self : TtEngine, opcode : Int) -> Result[Unit, HintError] {
 }
 
 ///|
-fn TtEngine::op_miap(self : TtEngine, opcode : Int) -> Result[Unit, HintError] {
+fn TtEngine::op_miap(
+  self : TtEngine,
+  opcode : Int32,
+) -> Result[Unit, HintError] {
   let cvt_entry = match self.value_stack.pop_usize() {
     Err(e) => return Err(e)
     Ok(v) => v
@@ -402,7 +411,10 @@ fn TtEngine::op_miap(self : TtEngine, opcode : Int) -> Result[Unit, HintError] {
 }
 
 ///|
-fn TtEngine::op_mdrp(self : TtEngine, opcode : Int) -> Result[Unit, HintError] {
+fn TtEngine::op_mdrp(
+  self : TtEngine,
+  opcode : Int32,
+) -> Result[Unit, HintError] {
   let p = match self.value_stack.pop_usize() {
     Err(e) => return Err(e)
     Ok(v) => v
@@ -480,7 +492,10 @@ fn TtEngine::op_mdrp(self : TtEngine, opcode : Int) -> Result[Unit, HintError] {
 }
 
 ///|
-fn TtEngine::op_mirp(self : TtEngine, opcode : Int) -> Result[Unit, HintError] {
+fn TtEngine::op_mirp(
+  self : TtEngine,
+  opcode : Int32,
+) -> Result[Unit, HintError] {
   let n = match self.value_stack.pop() {
     Err(e) => return Err(e)
     Ok(v) => v + 1
@@ -716,7 +731,7 @@ fn TtEngine::op_alignpts(self : TtEngine) -> Result[Unit, HintError] {
 }
 
 ///|
-fn tt_mul_div26(a : Int, b : Int, c : Int) -> Int {
+fn tt_mul_div26(a : Int32, b : Int32, c : Int32) -> Int32 {
   tt_mul_div_round(a, b, c)
 }
 
@@ -812,7 +827,7 @@ fn TtEngine::op_ip(self : TtEngine) -> Result[Unit, HintError] {
 }
 
 ///|
-fn TtEngine::op_iup(self : TtEngine, opcode : Int) -> Result[Unit, HintError] {
+fn TtEngine::op_iup(self : TtEngine, opcode : Int32) -> Result[Unit, HintError] {
   let axis = if (opcode & 1) != 0 { TtAxis::X } else { Y }
   let mut run = true
   if self.graphics.backward_compatibility {

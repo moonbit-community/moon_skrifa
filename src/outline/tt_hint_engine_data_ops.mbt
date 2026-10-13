@@ -17,14 +17,14 @@
 ///
 /// Ported from `fontations/skrifa/src/outline/glyf/hint/engine/data.rs`
 /// (Apache-2.0 OR MIT).
-fn tt_scale_unscaled_to_pixels(gs : TtGraphicsState, dist : Int) -> Int {
+fn tt_scale_unscaled_to_pixels(gs : TtGraphicsState, dist : Int32) -> Int32 {
   // dist (font units) * scale_bits (16.16, includes *64) => 26.6
   // Match fontations `math::mul` sign-aware rounding.
   tt_hint_mul_16_16(dist, gs.unscaled_to_pixels())
 }
 
 ///|
-fn tt_in_bounds_zone(zone : TtZone, p : Int) -> Bool {
+fn tt_in_bounds_zone(zone : TtZone, p : Int32) -> Bool {
   p >= 0 && p < zone.points.length()
 }
 
@@ -34,7 +34,7 @@ fn TtEngine::op_mps(self : TtEngine) -> Result[Unit, HintError] {
 }
 
 ///|
-fn TtEngine::op_gc(self : TtEngine, opcode : Int) -> Result[Unit, HintError] {
+fn TtEngine::op_gc(self : TtEngine, opcode : Int32) -> Result[Unit, HintError] {
   let p = match self.value_stack.pop_usize() {
     Err(e) => return Err(e)
     Ok(v) => v
@@ -97,7 +97,7 @@ fn TtEngine::op_scfs(self : TtEngine) -> Result[Unit, HintError] {
 }
 
 ///|
-fn TtEngine::op_md(self : TtEngine, opcode : Int) -> Result[Unit, HintError] {
+fn TtEngine::op_md(self : TtEngine, opcode : Int32) -> Result[Unit, HintError] {
   let p1 = match self.value_stack.pop_usize() {
     Err(e) => return Err(e)
     Ok(v) => v

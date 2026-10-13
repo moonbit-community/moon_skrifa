@@ -18,13 +18,13 @@
 /// Ported from `fontations/skrifa/src/outline/glyf/hint/value_stack.rs`
 /// (Apache-2.0 OR MIT).
 priv struct TtValueStack {
-  buf : Array[Int]
-  mut len : Int
+  buf : Array[Int32]
+  mut len : Int32
   mut check : Bool
 }
 
 ///|
-fn TtValueStack::TtValueStack(buf : Array[Int], check : Bool) -> TtValueStack {
+fn TtValueStack::TtValueStack(buf : Array[Int32], check : Bool) -> TtValueStack {
   { buf, len: 0, check, }
 }
 
@@ -34,14 +34,14 @@ fn TtValueStack::clear(self : TtValueStack) -> Unit {
 }
 
 ///|
-fn TtValueStack::length(self : TtValueStack) -> Int {
+fn TtValueStack::length(self : TtValueStack) -> Int32 {
   self.len
 }
 
 ///|
 fn TtValueStack::push(
   self : TtValueStack,
-  value : Int,
+  value : Int32,
 ) -> Result[Unit, HintError] {
   if self.len >= self.buf.length() {
     if self.check {
@@ -57,7 +57,7 @@ fn TtValueStack::push(
 }
 
 ///|
-fn TtValueStack::pop(self : TtValueStack) -> Result[Int, HintError] {
+fn TtValueStack::pop(self : TtValueStack) -> Result[Int32, HintError] {
   if self.len <= 0 {
     if self.check {
       Err(ValueStackUnderflow)
@@ -72,7 +72,7 @@ fn TtValueStack::pop(self : TtValueStack) -> Result[Int, HintError] {
 
 ///|
 /// Pops a stack value and validates it as a point index (>= 0).
-fn TtValueStack::pop_usize(self : TtValueStack) -> Result[Int, HintError] {
+fn TtValueStack::pop_usize(self : TtValueStack) -> Result[Int32, HintError] {
   let v = match self.pop() {
     Err(e) => return Err(e)
     Ok(v) => v
@@ -87,8 +87,8 @@ fn TtValueStack::pop_usize(self : TtValueStack) -> Result[Int, HintError] {
 ///|
 fn TtValueStack::peek(
   self : TtValueStack,
-  depth_from_top : Int,
-) -> Result[Int, HintError] {
+  depth_from_top : Int32,
+) -> Result[Int32, HintError] {
   // depth_from_top: 0 == top
   if depth_from_top < 0 {
     return Err(InvalidStackValue(depth_from_top))

@@ -18,34 +18,34 @@
 /// Ported from `fontations/skrifa/src/outline/glyf/hint/math.rs` (Apache-2.0 OR MIT).
 
 ///|
-fn tt_hint_floor_26(x : Int) -> Int {
+fn tt_hint_floor_26(x : Int32) -> Int32 {
   x & -64
 }
 
 ///|
-fn tt_hint_round_26(x : Int) -> Int {
+fn tt_hint_round_26(x : Int32) -> Int32 {
   tt_hint_floor_26(x + 32)
 }
 
 ///|
-fn tt_hint_ceil_26(x : Int) -> Int {
+fn tt_hint_ceil_26(x : Int32) -> Int32 {
   tt_hint_floor_26(x + 63)
 }
 
 ///|
-fn tt_hint_floor_pad(x : Int, n : Int) -> Int {
+fn tt_hint_floor_pad(x : Int32, n : Int32) -> Int32 {
   // `n` is always a power of two in our uses (matches fontations).
   x & -n
 }
 
 ///|
-fn tt_hint_round_pad(x : Int, n : Int) -> Int {
+fn tt_hint_round_pad(x : Int32, n : Int32) -> Int32 {
   tt_hint_floor_pad(x + n / 2, n)
 }
 
 ///|
 /// 16.16 fixed multiply with FreeType-style rounding.
-fn tt_hint_mul_16_16(a : Int, b : Int) -> Int {
+fn tt_hint_mul_16_16(a : Int32, b : Int32) -> Int32 {
   let ab = a.to_int64() * b.to_int64()
   let adj = 0x8000 - (if ab < 0 { 1 } else { 0 })
   ((ab + adj.to_int64()) >> 16).to_int()
@@ -53,7 +53,7 @@ fn tt_hint_mul_16_16(a : Int, b : Int) -> Int {
 
 ///|
 /// 16.16 fixed division with FreeType-style rounding.
-fn tt_hint_div_16_16(a0 : Int, b0 : Int) -> Int {
+fn tt_hint_div_16_16(a0 : Int32, b0 : Int32) -> Int32 {
   let mut sign = 1
   let mut a = a0
   let mut b = b0
@@ -65,7 +65,7 @@ fn tt_hint_div_16_16(a0 : Int, b0 : Int) -> Int {
     b = -b
     sign = -sign
   }
-  let q : Int = if b == 0 {
+  let q : Int32 = if b == 0 {
     0x7FFFFFFF
   } else {
     let num = (a.to_int64() << 16) + (b.to_int64() >> 1)
@@ -80,22 +80,22 @@ fn tt_hint_div_16_16(a0 : Int, b0 : Int) -> Int {
 
 ///|
 /// 16.16 fixed multiply and divide: a * b / c.
-fn tt_hint_mul_div_16_16(a : Int, b : Int, c : Int) -> Int {
+fn tt_hint_mul_div_16_16(a : Int32, b : Int32, c : Int32) -> Int32 {
   // Matches font-types Fixed::mul_div() behavior.
   let mut sign = 1
-  let mut au : UInt = a.reinterpret_as_uint()
-  let mut bu : UInt = b.reinterpret_as_uint()
-  let mut cu : UInt = c.reinterpret_as_uint()
+  let mut au : UInt32 = a.reinterpret_as_uint()
+  let mut bu : UInt32 = b.reinterpret_as_uint()
+  let mut cu : UInt32 = c.reinterpret_as_uint()
   if a < 0 {
-    au = (0 : UInt) - au
+    au = (0 : UInt32) - au
     sign = -sign
   }
   if b < 0 {
-    bu = (0 : UInt) - bu
+    bu = (0 : UInt32) - bu
     sign = -sign
   }
   if c < 0 {
-    cu = (0 : UInt) - cu
+    cu = (0 : UInt32) - cu
     sign = -sign
   }
   let res_u : UInt64 = if cu.to_uint64() > 0 {
@@ -103,7 +103,7 @@ fn tt_hint_mul_div_16_16(a : Int, b : Int, c : Int) -> Int {
   } else {
     0x7FFFFFFF
   }
-  let res_i : Int = res_u.to_int()
+  let res_i : Int32 = res_u.to_int()
   if sign < 0 {
     -res_i
   } else {
@@ -115,7 +115,7 @@ fn tt_hint_mul_div_16_16(a : Int, b : Int, c : Int) -> Int {
 /// Fixed point multiply and divide without rounding: a * b / c.
 ///
 /// Port of `FT_MulDiv_NoRound`.
-fn tt_hint_mul_div_no_round(a0 : Int, b0 : Int, c0 : Int) -> Int {
+fn tt_hint_mul_div_no_round(a0 : Int32, b0 : Int32, c0 : Int32) -> Int32 {
   let mut a = a0
   let mut b = b0
   let mut c = c0
@@ -147,20 +147,20 @@ fn tt_hint_mul_div_no_round(a0 : Int, b0 : Int, c0 : Int) -> Int {
 
 ///|
 /// Multiplication for 2.14 fixed point.
-fn tt_hint_mul14(a : Int, b : Int) -> Int {
+fn tt_hint_mul14(a : Int32, b : Int32) -> Int32 {
   let mut v = a.to_int64() * b.to_int64()
   v = v + 0x2000 + (v >> 63)
   (v >> 14).to_int()
 }
 
 ///|
-fn tt_hint_u32_leading_zeros(x0 : UInt) -> Int {
+fn tt_hint_u32_leading_zeros(x0 : UInt32) -> Int32 {
   let x = x0
   if x == 0 {
     return 32
   }
   let mut n = 0
-  let mut bit : UInt = 0x80000000
+  let mut bit : UInt32 = 0x80000000
   while bit != 0 && (x & bit) == 0 {
     n = n + 1
     bit = bit >> 1
@@ -172,19 +172,19 @@ fn tt_hint_u32_leading_zeros(x0 : UInt) -> Int {
 /// Normalize a vector in 2.14 fixed point.
 ///
 /// Ported from FreeType's fixed point normalize routine (via fontations).
-fn tt_hint_normalize14(x0 : Int, y0 : Int) -> (Int, Int) {
+fn tt_hint_normalize14(x0 : Int32, y0 : Int32) -> (Int32, Int32) {
   // Port of fontations `math::normalize14` (FreeType fixed-point implementation).
   // Returns a normalized vector in 2.14 fixed point.
   let mut sx = 1
   let mut sy = 1
-  let mut ux : UInt = x0.reinterpret_as_uint()
-  let mut uy : UInt = y0.reinterpret_as_uint()
+  let mut ux : UInt32 = x0.reinterpret_as_uint()
+  let mut uy : UInt32 = y0.reinterpret_as_uint()
   if x0 < 0 {
-    ux = (0 : UInt) - ux
+    ux = (0 : UInt32) - ux
     sx = -sx
   }
   if y0 < 0 {
-    uy = (0 : UInt) - uy
+    uy = (0 : UInt32) - uy
     sy = -sy
   }
   if ux == 0 {
@@ -193,10 +193,10 @@ fn tt_hint_normalize14(x0 : Int, y0 : Int) -> (Int, Int) {
   if uy == 0 {
     return (if ux > 0 { sx * 0x10000 / 4 } else { 0 }, 0)
   }
-  let mut len : UInt = if ux > uy { ux + (uy >> 1) } else { uy + (ux >> 1) }
+  let mut len : UInt32 = if ux > uy { ux + (uy >> 1) } else { uy + (ux >> 1) }
   let mut shift = tt_hint_u32_leading_zeros(len)
   // len is non-zero here, so shift is in 0..31.
-  let extra = if len >= (0xAAAAAAAA : UInt) >> shift { 1 } else { 0 }
+  let extra = if len >= (0xAAAAAAAA : UInt32) >> shift { 1 } else { 0 }
   shift = shift - 15 - extra
   if shift > 0 {
     ux = ux << shift
@@ -210,14 +210,14 @@ fn tt_hint_normalize14(x0 : Int, y0 : Int) -> (Int, Int) {
   }
   let x = ux.reinterpret_as_int()
   let y = uy.reinterpret_as_int()
-  let mut b : Int = 0x10000 - len.reinterpret_as_int()
+  let mut b : Int32 = 0x10000 - len.reinterpret_as_int()
   let mut out_x = 0
   let mut out_y = 0
   while true {
-    let u : UInt = (x + ((x * b) >> 16)).reinterpret_as_uint()
-    let v : UInt = (y + ((y * b) >> 16)).reinterpret_as_uint()
-    let sum : UInt = u * u + v * v
-    let mut z : Int = -sum.reinterpret_as_int() / 0x200
+    let u : UInt32 = (x + ((x * b) >> 16)).reinterpret_as_uint()
+    let v : UInt32 = (y + ((y * b) >> 16)).reinterpret_as_uint()
+    let sum : UInt32 = u * u + v * v
+    let mut z : Int32 = -sum.reinterpret_as_int() / 0x200
     z = z * ((0x10000 + b) >> 8) / 0x10000
     b = b + z
     if z <= 0 {

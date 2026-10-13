@@ -68,7 +68,7 @@ test "tt_hint: delta DELTAP" {
   let raw_adjustment = 7
 
   // (ppem_bias, opcode)
-  let cases : Array[(Int, Int)] = Array::from_fixed_array([
+  let cases : Array[(Int32, Int32)] = Array::from_fixed_array([
       (0, 0x5D), // DELTAP1
       (16, 0x71), // DELTAP2
       (32, 0x72),
@@ -103,7 +103,7 @@ test "tt_hint: delta DELTAC" {
   let raw_adjustment = 7
 
   // (ppem_bias, opcode)
-  let cases : Array[(Int, Int)] = Array::from_fixed_array([
+  let cases : Array[(Int32, Int32)] = Array::from_fixed_array([
       (0, 0x73), // DELTAC1
       (16, 0x74), // DELTAC2
       (32, 0x75),
@@ -138,7 +138,7 @@ test "tt_hint: delta negative count does not hang (DELTAP/DELTAC)" {
   engine.value_stack.check = false
 
   // Non-pedantic mode: n=-1 results in a no-op.
-  let stack : FixedArray[Int] = [0, 0, -1]
+  let stack : FixedArray[Int32] = [0, 0, -1]
   for v in stack {
     engine.value_stack.push(v).unwrap() |> ignore
   }

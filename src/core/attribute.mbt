@@ -16,28 +16,28 @@
 /// Primary attributes typically used for font classification and selection.
 ///
 /// Ported from `fontations/skrifa/src/attribute.rs` (Apache-2.0 OR MIT).
-const TAG_HEAD : UInt = 0x68656164 // "head"
+const TAG_HEAD : UInt32 = 0x68656164 // "head"
 
 ///|
-const TAG_OS2 : UInt = 0x4F532F32 // "OS/2"
+const TAG_OS2 : UInt32 = 0x4F532F32 // "OS/2"
 
 ///|
-const TAG_POST : UInt = 0x706F7374 // "post"
+const TAG_POST : UInt32 = 0x706F7374 // "post"
 
 ///|
-const MACSTYLE_BOLD : Int = 0x0001
+const MACSTYLE_BOLD : Int32 = 0x0001
 
 ///|
-const MACSTYLE_ITALIC : Int = 0x0002
+const MACSTYLE_ITALIC : Int32 = 0x0002
 
 ///|
-const FSSELECTION_ITALIC : Int = 0x0001
+const FSSELECTION_ITALIC : Int32 = 0x0001
 
 ///|
-const FSSELECTION_OBLIQUE : Int = 0x0200
+const FSSELECTION_OBLIQUE : Int32 = 0x0200
 
 ///|
-fn attr_read_u16_be(view : BytesView, offset : Int) -> Int? {
+fn attr_read_u16_be(view : BytesView, offset : Int32) -> Int32? {
   if offset < 0 || offset + 2 > view.length() {
     None
   } else {
@@ -48,7 +48,7 @@ fn attr_read_u16_be(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn attr_read_u32_be(view : BytesView, offset : Int) -> UInt? {
+fn attr_read_u32_be(view : BytesView, offset : Int32) -> UInt32? {
   if offset < 0 || offset + 4 > view.length() {
     None
   } else {
@@ -61,7 +61,7 @@ fn attr_read_u32_be(view : BytesView, offset : Int) -> UInt? {
 }
 
 ///|
-fn attr_read_i32_be(view : BytesView, offset : Int) -> Int? {
+fn attr_read_i32_be(view : BytesView, offset : Int32) -> Int32? {
   match attr_read_u32_be(view, offset) {
     None => None
     Some(u) => Some(u.reinterpret_as_int())
@@ -167,7 +167,7 @@ pub fn Stretch::percentage(self : Stretch) -> Double {
 }
 
 ///|
-fn Stretch::from_width_class(width_class : Int) -> Stretch {
+fn Stretch::from_width_class(width_class : Int32) -> Stretch {
   match width_class {
     0 | 1 => Stretch::ultra_condensed()
     2 => Stretch::extra_condensed()

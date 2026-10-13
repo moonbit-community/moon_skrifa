@@ -22,24 +22,24 @@ pub(all) suberror HintError {
   Unsupported
   UnexpectedEndOfBytecode
   /// Execution stopped on an opcode that this port does not yet implement.
-  UnhandledOpcode(Int, Int)
+  UnhandledOpcode(Int32, Int32)
   DefinitionInGlyphProgram
   NestedDefinition
   DefinitionTooLarge
   TooManyDefinitions
-  InvalidDefinition(Int)
+  InvalidDefinition(Int32)
   ValueStackOverflow
   ValueStackUnderflow
   CallStackOverflow
   CallStackUnderflow
-  InvalidStackValue(Int)
-  InvalidPointIndex(Int)
-  InvalidPointRange(Int, Int)
-  InvalidContourIndex(Int)
-  InvalidCvtIndex(Int)
-  InvalidStorageIndex(Int)
+  InvalidStackValue(Int32)
+  InvalidPointIndex(Int32)
+  InvalidPointRange(Int32, Int32)
+  InvalidContourIndex(Int32)
+  InvalidCvtIndex(Int32)
+  InvalidStorageIndex(Int32)
   DivideByZero
-  InvalidZoneIndex(Int)
+  InvalidZoneIndex(Int32)
   NegativeLoopCounter
   InvalidJump
   ExceededExecutionBudget
@@ -251,10 +251,10 @@ priv struct AutoHintInstance {
 }
 
 ///|
-const AUTOHINT_TAG_POST : UInt = 0x706F7374 // "post"
+const AUTOHINT_TAG_POST : UInt32 = 0x706F7374 // "post"
 
 ///|
-fn autohint_read_u32_be(view : BytesView, offset : Int) -> UInt? {
+fn autohint_read_u32_be(view : BytesView, offset : Int32) -> UInt32? {
   if offset < 0 || offset + 4 > view.length() {
     None
   } else {
@@ -301,14 +301,14 @@ fn AutoHintInstance::AutoHintInstance(
 
 ///|
 priv struct AutoHintEdgeMetrics {
-  left_opos : Int
-  left_pos : Int
-  right_opos : Int
-  right_pos : Int
+  left_opos : Int32
+  left_pos : Int32
+  right_opos : Int32
+  right_pos : Int32
 }
 
 ///|
-fn hint_round_ppem(scale_bits : Int, upem : Int) -> Int {
+fn hint_round_ppem(scale_bits : Int32, upem : Int32) -> Int32 {
   let v = scale_bits.to_int64() * upem.to_int64()
   let ppem_26_6 = (v + (0x8000).to_int64()) >> 16
   ((ppem_26_6 + (32).to_int64()) >> 6).to_int()
@@ -436,7 +436,7 @@ pub fn HintingInstance::reconfigure(
 }
 
 ///|
-fn tt_bits_to_double(bits : Int) -> Double {
+fn tt_bits_to_double(bits : Int32) -> Double {
   bits.to_double() / 64.0
 }
 
@@ -444,9 +444,9 @@ fn tt_bits_to_double(bits : Int) -> Double {
 fn tt_zone_emit_contour_freetype(
   out : Array[PathElement],
   zone : TtZone,
-  start : Int,
-  end : Int,
-  x_shift : Int,
+  start : Int32,
+  end : Int32,
+  x_shift : Int32,
 ) -> Unit {
   let n = end - start + 1
   if n <= 0 {
@@ -468,7 +468,7 @@ fn tt_zone_emit_contour_freetype(
     )
   }
   out.push(MoveTo(tt_bits_to_double(sx), tt_bits_to_double(sy)))
-  let mut control : (Int, Int)? = None
+  let mut control : (Int32, Int32)? = None
   if start_idx == -1 {
     for i in start..<(end + 1) {
       let p = zone.points.at(i)
@@ -590,13 +590,13 @@ fn tt_zone_to_path_freetype(zone : TtZone) -> Array[PathElement] {
 }
 
 ///|
-const TAG_HDMX_TT_HINT : UInt = 0x68646D78 // "hdmx"
+const TAG_HDMX_TT_HINT : UInt32 = 0x68646D78 // "hdmx"
 
 ///|
-const TAG_MAXP_TT_HINT : UInt = 0x6D617870 // "maxp"
+const TAG_MAXP_TT_HINT : UInt32 = 0x6D617870 // "maxp"
 
 ///|
-fn hint_read_u16_be(view : BytesView, offset : Int) -> Int? {
+fn hint_read_u16_be(view : BytesView, offset : Int32) -> Int32? {
   if offset < 0 || offset + 2 > view.length() {
     None
   } else {
@@ -607,7 +607,7 @@ fn hint_read_u16_be(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn hint_read_u32_be(view : BytesView, offset : Int) -> UInt? {
+fn hint_read_u32_be(view : BytesView, offset : Int32) -> UInt32? {
   if offset < 0 || offset + 4 > view.length() {
     None
   } else {
@@ -622,9 +622,9 @@ fn hint_read_u32_be(view : BytesView, offset : Int) -> UInt? {
 ///|
 fn hint_hdmx_width(
   font : @moon_skrifa.FontRef,
-  ppem : Int,
+  ppem : Int32,
   gid : @moon_skrifa.GlyphId,
-) -> Int? {
+) -> Int32? {
   let hdmx = match font.table(TAG_HDMX_TT_HINT) {
     None => return None
     Some(v) => v
@@ -869,10 +869,10 @@ fn AutoHintInstance::hinted_path(
   let gm = glyph.font.glyph_metrics(@moon_skrifa.Size::unscaled(), location)
   let h_advance0 = gm.advance_width(glyph.glyph_id).unwrap_or(0.0)
   let h_advance = h_advance0.round().to_int()
-  let mut digit_advance : Int? = None
+  let mut digit_advance : Int32? = None
   let mut digits_have_same_width = true
   for d in 0x30..<0x3A {
-    match glyph.font.charmap().map(d |> Int::reinterpret_as_uint) {
+    match glyph.font.charmap().map(d |> Int32::reinterpret_as_uint) {
       None => ()
       Some(gid) =>
         match gm.advance_width(gid) {
@@ -1002,7 +1002,7 @@ fn HintingInstance::hinted_glyf_path(
   }
   let phantom0 = zone.points.at(num_points)
   let phantom1 = zone.points.at(num_points + 1)
-  let mut hdmx : Int? = None
+  let mut hdmx : Int32? = None
   if !tt.backward_compatibility() {
     match self.size.ppem() {
       None => ()

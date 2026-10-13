@@ -18,24 +18,24 @@
 /// Ported from `fontations/skrifa/src/outline/cff/hint.rs`.
 
 ///|
-const CFF_FIXED_ONE_BITS : Int = 0x0001_0000
+const CFF_FIXED_ONE_BITS : Int32 = 0x0001_0000
 
 ///|
-const CFF_FIXED_ZERO_BITS : Int = 0
+const CFF_FIXED_ZERO_BITS : Int32 = 0
 
 ///|
-const CFF_FIXED_MAX_BITS : Int = 0x7FFF_FFFF
+const CFF_FIXED_MAX_BITS : Int32 = 0x7FFF_FFFF
 
 ///|
-const CFF_FIXED_INT_MASK : Int = 0xFFFF_0000
+const CFF_FIXED_INT_MASK : Int32 = 0xFFFF_0000
 
 ///|
 priv struct CffFixed {
-  bits : Int
+  bits : Int32
 }
 
 ///|
-fn CffFixed::from_bits(bits : Int) -> CffFixed {
+fn CffFixed::from_bits(bits : Int32) -> CffFixed {
   { bits, }
 }
 
@@ -55,7 +55,7 @@ fn CffFixed::max() -> CffFixed {
 }
 
 ///|
-fn CffFixed::from_i32(v : Int) -> CffFixed {
+fn CffFixed::from_i32(v : Int32) -> CffFixed {
   CffFixed::from_bits(v << 16)
 }
 
@@ -122,7 +122,7 @@ fn CffFixed::neg(self : CffFixed) -> CffFixed {
 }
 
 ///|
-fn cff_fixed_mul_bits(a_bits : Int, b_bits : Int) -> Int {
+fn cff_fixed_mul_bits(a_bits : Int32, b_bits : Int32) -> Int32 {
   // Match fontations `Fixed` multiplication:
   //   ((ab + 0x8000 - (ab < 0)) >> 16)
   //
@@ -227,7 +227,7 @@ fn CffFixed::fract(self : CffFixed) -> CffFixed {
 
 ///|
 fn cff_hint_trunc(value : CffFixed) -> CffFixed {
-  CffFixed::from_bits(value.bits & (0x3FF |> Int::lnot))
+  CffFixed::from_bits(value.bits & (0x3FF |> Int32::lnot))
 }
 
 ///|
@@ -247,32 +247,32 @@ fn cff_hint_midpoint(a : CffFixed, b : CffFixed) -> CffFixed {
 }
 
 ///|
-const CFF_HINT_ICF_TOP_BITS : Int = 880 << 16
+const CFF_HINT_ICF_TOP_BITS : Int32 = 880 << 16
 
 ///|
-const CFF_HINT_ICF_BOTTOM_BITS : Int = -120 << 16
+const CFF_HINT_ICF_BOTTOM_BITS : Int32 = -120 << 16
 
 ///|
-const CFF_HINT_MAX_BLUES : Int = 7
+const CFF_HINT_MAX_BLUES : Int32 = 7
 
 ///|
-const CFF_HINT_MAX_OTHER_BLUES : Int = 5
+const CFF_HINT_MAX_OTHER_BLUES : Int32 = 5
 
 ///|
-const CFF_HINT_MAX_BLUE_ZONES : Int = CFF_HINT_MAX_BLUES +
+const CFF_HINT_MAX_BLUE_ZONES : Int32 = CFF_HINT_MAX_BLUES +
   CFF_HINT_MAX_OTHER_BLUES
 
 ///|
-const CFF_HINT_MAX_HINTS : Int = 96
+const CFF_HINT_MAX_HINTS : Int32 = 96
 
 ///|
-const CFF_HINT_MASK_SIZE : Int = (CFF_HINT_MAX_HINTS + 7) / 8
+const CFF_HINT_MASK_SIZE : Int32 = (CFF_HINT_MAX_HINTS + 7) / 8
 
 ///|
-const CFF_HINT_MIN_COUNTER_BITS : Int = 0x8000
+const CFF_HINT_MIN_COUNTER_BITS : Int32 = 0x8000
 
 ///|
-const CFF_HINT_EPSILON_BITS : Int = 1
+const CFF_HINT_EPSILON_BITS : Int32 = 1
 
 ///|
 priv struct CffBlues {
@@ -310,7 +310,7 @@ priv struct HintParams {
   mut blue_scale : CffFixed
   mut blue_shift : CffFixed
   mut blue_fuzz : CffFixed
-  mut language_group : Int
+  mut language_group : Int32
 }
 
 ///|
@@ -353,13 +353,13 @@ priv struct HintState {
   mut blue_scale : CffFixed
   mut blue_shift : CffFixed
   mut blue_fuzz : CffFixed
-  mut language_group : Int
+  mut language_group : Int32
   mut suppress_overshoot : Bool
   mut do_em_box_hints : Bool
   mut boost : CffFixed
   mut darken_y : CffFixed
   mut zones : Array[BlueZone]
-  mut zone_count : Int
+  mut zone_count : Int32
 }
 
 ///|
@@ -552,22 +552,22 @@ fn HintState::build_zones(self : HintState, params : HintParams) -> Unit {
 
 ///|
 // Hint flags
-const CFF_HINT_GHOST_BOTTOM : Int = 0x1
+const CFF_HINT_GHOST_BOTTOM : Int32 = 0x1
 
 ///|
-const CFF_HINT_GHOST_TOP : Int = 0x2
+const CFF_HINT_GHOST_TOP : Int32 = 0x2
 
 ///|
-const CFF_HINT_PAIR_BOTTOM : Int = 0x4
+const CFF_HINT_PAIR_BOTTOM : Int32 = 0x4
 
 ///|
-const CFF_HINT_PAIR_TOP : Int = 0x8
+const CFF_HINT_PAIR_TOP : Int32 = 0x8
 
 ///|
-const CFF_HINT_LOCKED : Int = 0x10
+const CFF_HINT_LOCKED : Int32 = 0x10
 
 ///|
-const CFF_HINT_SYNTHETIC : Int = 0x20
+const CFF_HINT_SYNTHETIC : Int32 = 0x20
 
 ///|
 priv struct StemHint {
@@ -591,8 +591,8 @@ fn StemHint::default() -> StemHint {
 
 ///|
 priv struct Hint {
-  mut flags : Int
-  mut index : Int
+  mut flags : Int32
+  mut index : Int32
   mut cs_coord : CffFixed
   mut ds_coord : CffFixed
   mut scale : CffFixed
@@ -653,7 +653,7 @@ fn Hint::lock(self : Hint) -> Unit {
 fn Hint::setup(
   self : Hint,
   stem : StemHint,
-  index : Int,
+  index : Int32,
   origin : CffFixed,
   scale : CffFixed,
   darken_y : CffFixed,
@@ -769,7 +769,7 @@ fn HintState::capture(
 ///|
 priv struct HintMap {
   edges : Array[Hint]
-  mut len : Int
+  mut len : Int32
   mut is_valid : Bool
   scale : CffFixed
 }
@@ -901,7 +901,7 @@ fn HintMap::insert(
 
 ///|
 fn HintMap::adjust(self : HintMap) -> Unit {
-  let saved : Array[(Int, CffFixed)] = []
+  let saved : Array[(Int32, CffFixed)] = []
   for _ in 0..<CFF_HINT_MAX_HINTS {
     saved.push((0, CffFixed::zero()))
   }
@@ -1033,7 +1033,7 @@ fn HintMask::all() -> HintMask {
 }
 
 ///|
-fn cff_hint_msb_mask(bit : Int) -> Int {
+fn cff_hint_msb_mask(bit : Int32) -> Int32 {
   1 << (7 - (bit & 0x7))
 }
 
@@ -1062,14 +1062,14 @@ fn HintMask::copy(self : HintMask) -> HintMask {
 }
 
 ///|
-fn HintMask::clear(self : HintMask, bit : Int) -> Unit {
+fn HintMask::clear(self : HintMask, bit : Int32) -> Unit {
   let ix = bit >> 3
   let m = cff_hint_msb_mask(bit)
-  self.mask.set(ix, (self.mask.at(ix).to_int() & (m |> Int::lnot)).to_byte())
+  self.mask.set(ix, (self.mask.at(ix).to_int() & (m |> Int32::lnot)).to_byte())
 }
 
 ///|
-fn HintMask::get(self : HintMask, bit : Int) -> Bool {
+fn HintMask::get(self : HintMask, bit : Int32) -> Bool {
   let ix = bit >> 3
   let m = cff_hint_msb_mask(bit)
   (self.mask.at(ix).to_int() & m) != 0
@@ -1082,7 +1082,7 @@ fn HintMap::build(
   mask0 : HintMask?,
   initial_map_opt : HintMap?,
   stems : Array[StemHint],
-  stem_count : Int,
+  stem_count : Int32,
   origin : CffFixed,
   is_initial : Bool,
 ) -> Unit {
@@ -1224,7 +1224,7 @@ priv struct CffHintingSink {
   state : HintState
   out : Array[PathElement]
   stem_hints : Array[StemHint]
-  mut stem_count : Int
+  mut stem_count : Int32
   mut mask : HintMask
   initial_map : HintMap
   map : HintMap

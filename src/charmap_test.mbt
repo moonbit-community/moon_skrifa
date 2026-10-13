@@ -14,22 +14,22 @@
 
 ///|
 /// Charmap tests using synthetic SFNT bytes (format 4 / 12 / 14).
-fn cmap_test_push_u16_be(out : Array[Byte], v : Int) -> Unit {
+fn cmap_test_push_u16_be(out : Array[Byte], v : Int32) -> Unit {
   let u = v.reinterpret_as_uint()
-  let mask = 255 |> Int::reinterpret_as_uint
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((u >> 8) & mask).to_byte())
   out.push((u & mask).to_byte())
 }
 
 ///|
-fn cmap_test_push_i16_be(out : Array[Byte], v : Int) -> Unit {
+fn cmap_test_push_i16_be(out : Array[Byte], v : Int32) -> Unit {
   let u = (v & 0xFFFF).reinterpret_as_uint()
   cmap_test_push_u16_be(out, u.to_uint64().to_int())
 }
 
 ///|
-fn cmap_test_push_u32_be(out : Array[Byte], v : UInt) -> Unit {
-  let mask = 255 |> Int::reinterpret_as_uint
+fn cmap_test_push_u32_be(out : Array[Byte], v : UInt32) -> Unit {
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((v >> 24) & mask).to_byte())
   out.push(((v >> 16) & mask).to_byte())
   out.push(((v >> 8) & mask).to_byte())
@@ -37,21 +37,21 @@ fn cmap_test_push_u32_be(out : Array[Byte], v : UInt) -> Unit {
 }
 
 ///|
-fn cmap_test_u32(x : Int) -> UInt {
+fn cmap_test_u32(x : Int32) -> UInt32 {
   x.reinterpret_as_uint()
 }
 
 ///|
-fn cmap_test_push_u24_be(out : Array[Byte], v : Int) -> Unit {
+fn cmap_test_push_u24_be(out : Array[Byte], v : Int32) -> Unit {
   let u = v.reinterpret_as_uint()
-  let mask = 255 |> Int::reinterpret_as_uint
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((u >> 16) & mask).to_byte())
   out.push(((u >> 8) & mask).to_byte())
   out.push((u & mask).to_byte())
 }
 
 ///|
-fn make_sfnt_with_table(tag : UInt, table : Bytes) -> Bytes {
+fn make_sfnt_with_table(tag : UInt32, table : Bytes) -> Bytes {
   let out : Array[Byte] = []
   // sfnt version
   cmap_test_push_u32_be(out, cmap_test_u32(0x00010000))
@@ -72,7 +72,7 @@ fn make_sfnt_with_table(tag : UInt, table : Bytes) -> Bytes {
 }
 
 ///|
-fn make_cmap_table(records : Array[(Int, Int, Bytes)]) -> Bytes {
+fn make_cmap_table(records : Array[(Int32, Int32, Bytes)]) -> Bytes {
   // cmap header + encoding records + subtables
   let out : Array[Byte] = []
   let num_tables = records.length()
@@ -98,9 +98,9 @@ fn make_cmap_table(records : Array[(Int, Int, Bytes)]) -> Bytes {
 
 ///|
 fn make_cmap_subtable_format4_delta(
-  start_code : Int,
-  end_code : Int,
-  start_gid : Int,
+  start_code : Int32,
+  end_code : Int32,
+  start_gid : Int32,
 ) -> Bytes {
   // Map [start_code..end_code] to [start_gid..] via idDelta; include required
   // 0xFFFF sentinel segment.
@@ -137,9 +137,9 @@ fn make_cmap_subtable_format4_delta(
 
 ///|
 fn make_cmap_subtable_format12_single(
-  start_cp : Int,
-  end_cp : Int,
-  start_gid : Int,
+  start_cp : Int32,
+  end_cp : Int32,
+  start_gid : Int32,
 ) -> Bytes {
   let fmt12_len = 28
   let out : Array[Byte] = []
@@ -157,9 +157,9 @@ fn make_cmap_subtable_format12_single(
 
 ///|
 fn make_cmap_subtable_format14(
-  selector : Int,
-  default_ranges : Array[(Int, Int)], // (start, end)
-  non_default : Array[(Int, Int)], // (codepoint, glyph_id)
+  selector : Int32,
+  default_ranges : Array[(Int32, Int32)], // (start, end)
+  non_default : Array[(Int32, Int32)], // (codepoint, glyph_id)
 ) -> Bytes {
   // Format 14: one selector record with optional default + non-default tables.
   let out : Array[Byte] = []
@@ -208,7 +208,7 @@ fn make_cmap_subtable_format14(
 }
 
 ///|
-const TAG_CMAP : UInt = 0x636D6170 // "cmap"
+const TAG_CMAP : UInt32 = 0x636D6170 // "cmap"
 
 ///|
 test "charmap: choose format 12 over 4" {
@@ -222,7 +222,9 @@ test "charmap: choose format 12 over 4" {
       (3, 10, fmt12),
     ]),
   )
-  let font = FontRef::from_bytes(make_sfnt_with_table(TAG_CMAP, cmap_table)).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(
+    make_sfnt_with_table(TAG_CMAP, cmap_table),
+  ).unwrap()
   let cmap = font.charmap()
   inspect(cmap.has_map(), content="true")
   debug_inspect(cmap.map(0x1F600), content="Some(100)")
@@ -232,7 +234,9 @@ test "charmap: choose format 12 over 4" {
 test "charmap: choose format 4 when only BMP mapping" {
   let fmt4 = make_cmap_subtable_format4_delta(0x0041, 0x0041, 5)
   let cmap_table = make_cmap_table(Array::from_fixed_array([(3, 1, fmt4)]))
-  let font = FontRef::from_bytes(make_sfnt_with_table(TAG_CMAP, cmap_table)).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(
+    make_sfnt_with_table(TAG_CMAP, cmap_table),
+  ).unwrap()
   let cmap = font.charmap()
   debug_inspect(cmap.map(0x41), content="Some(5)")
   debug_inspect(cmap.map(0x1F600), content="None")
@@ -247,7 +251,9 @@ test "charmap: symbol mapping duplicates 0..FF into F000..F0FF" {
     Array::from_fixed_array([(3, 10, fmt12), (3, 0, fmt4)], // symbol
     ),
   )
-  let font = FontRef::from_bytes(make_sfnt_with_table(TAG_CMAP, cmap_table)).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(
+    make_sfnt_with_table(TAG_CMAP, cmap_table),
+  ).unwrap()
   let cmap = font.charmap()
   inspect(cmap.is_symbol(), content="true")
   debug_inspect(cmap.map(0xF001), content="Some(1)")
@@ -271,7 +277,9 @@ test "charmap: format 14 map_variant + variant_mappings" {
   let cmap_table = make_cmap_table(
     Array::from_fixed_array([(3, 1, fmt4), (0, 5, fmt14)]),
   )
-  let font = FontRef::from_bytes(make_sfnt_with_table(TAG_CMAP, cmap_table)).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(
+    make_sfnt_with_table(TAG_CMAP, cmap_table),
+  ).unwrap()
   let cmap = font.charmap()
   inspect(cmap.has_variant_map(), content="true")
   let v0 = cmap.map_variant(0x4E00, selector.reinterpret_as_uint())
@@ -301,7 +309,9 @@ test "charmap: format 14 map_variant + variant_mappings" {
 test "charmap: mappings are consistent with map()" {
   let fmt4 = make_cmap_subtable_format4_delta(0x0041, 0x0043, 1)
   let cmap_table = make_cmap_table(Array::from_fixed_array([(3, 1, fmt4)]))
-  let font = FontRef::from_bytes(make_sfnt_with_table(TAG_CMAP, cmap_table)).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(
+    make_sfnt_with_table(TAG_CMAP, cmap_table),
+  ).unwrap()
   let cmap = font.charmap()
   for m in cmap.mappings() {
     let (cp, gid) = m

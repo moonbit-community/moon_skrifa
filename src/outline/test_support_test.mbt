@@ -13,6 +13,6 @@
 // limitations under the License.
 
 ///|
-fn outline_test_gid(n : Int) -> @moon_skrifa.GlyphId {
+fn outline_test_gid(n : Int32) -> @moon_skrifa.GlyphId {
   GlyphId(n.to_uint16())
 }

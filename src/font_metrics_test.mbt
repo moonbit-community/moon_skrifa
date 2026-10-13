@@ -13,16 +13,16 @@
 // limitations under the License.
 
 ///|
-fn fm_test_push_u16_be(out : Array[Byte], v : Int) -> Unit {
+fn fm_test_push_u16_be(out : Array[Byte], v : Int32) -> Unit {
   let u = v.reinterpret_as_uint()
-  let mask = 255 |> Int::reinterpret_as_uint
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((u >> 8) & mask).to_byte())
   out.push((u & mask).to_byte())
 }
 
 ///|
-fn fm_test_push_u32_be(out : Array[Byte], v : UInt) -> Unit {
-  let mask = 255 |> Int::reinterpret_as_uint
+fn fm_test_push_u32_be(out : Array[Byte], v : UInt32) -> Unit {
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((v >> 24) & mask).to_byte())
   out.push(((v >> 16) & mask).to_byte())
   out.push(((v >> 8) & mask).to_byte())
@@ -30,26 +30,26 @@ fn fm_test_push_u32_be(out : Array[Byte], v : UInt) -> Unit {
 }
 
 ///|
-fn fm_test_u32(x : Int) -> UInt {
+fn fm_test_u32(x : Int32) -> UInt32 {
   x.reinterpret_as_uint()
 }
 
 ///|
-fn fm_test_write_u16_be(buf : Array[Byte], pos : Int, v : Int) -> Unit {
+fn fm_test_write_u16_be(buf : Array[Byte], pos : Int32, v : Int32) -> Unit {
   let u = v.reinterpret_as_uint()
-  let mask = 255 |> Int::reinterpret_as_uint
+  let mask = 255 |> Int32::reinterpret_as_uint
   buf.set(pos, ((u >> 8) & mask).to_byte())
   buf.set(pos + 1, (u & mask).to_byte())
 }
 
 ///|
-fn fm_test_write_i16_be(buf : Array[Byte], pos : Int, v : Int) -> Unit {
+fn fm_test_write_i16_be(buf : Array[Byte], pos : Int32, v : Int32) -> Unit {
   fm_test_write_u16_be(buf, pos, v & 0xFFFF)
 }
 
 ///|
-fn fm_test_write_u32_be(buf : Array[Byte], pos : Int, v : UInt) -> Unit {
-  let mask = 255 |> Int::reinterpret_as_uint
+fn fm_test_write_u32_be(buf : Array[Byte], pos : Int32, v : UInt32) -> Unit {
+  let mask = 255 |> Int32::reinterpret_as_uint
   buf.set(pos, ((v >> 24) & mask).to_byte())
   buf.set(pos + 1, ((v >> 16) & mask).to_byte())
   buf.set(pos + 2, ((v >> 8) & mask).to_byte())
@@ -57,7 +57,7 @@ fn fm_test_write_u32_be(buf : Array[Byte], pos : Int, v : UInt) -> Unit {
 }
 
 ///|
-fn fm_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
+fn fm_test_build_sfnt(tables : Array[(UInt32, Bytes)]) -> Bytes {
   let num_tables = tables.length()
   let header_len = 12 + num_tables * 16
   let out : Array[Byte] = []
@@ -85,34 +85,34 @@ fn fm_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
 }
 
 ///|
-const FM_TAG_HEAD : UInt = 0x68656164 // "head"
+const FM_TAG_HEAD : UInt32 = 0x68656164 // "head"
 
 ///|
-const FM_TAG_HHEA : UInt = 0x68686561 // "hhea"
+const FM_TAG_HHEA : UInt32 = 0x68686561 // "hhea"
 
 ///|
-const FM_TAG_OS2 : UInt = 0x4F532F32 // "OS/2"
+const FM_TAG_OS2 : UInt32 = 0x4F532F32 // "OS/2"
 
 ///|
-const FM_TAG_POST : UInt = 0x706F7374 // "post"
+const FM_TAG_POST : UInt32 = 0x706F7374 // "post"
 
 ///|
-fn fm_test_build_head(units_per_em : Int) -> Bytes {
+fn fm_test_build_head(units_per_em : Int32) -> Bytes {
   // head needs unitsPerEm at offset 18 (u16).
-  let buf : Array[Byte] = Array::make(54, 0 |> Int::to_byte)
+  let buf : Array[Byte] = Array::make(54, 0 |> Int32::to_byte)
   fm_test_write_u16_be(buf, 18, units_per_em)
   Bytes::from_array(buf[:])
 }
 
 ///|
 fn fm_test_build_head_with_bbox(
-  units_per_em : Int,
-  x_min : Int,
-  y_min : Int,
-  x_max : Int,
-  y_max : Int,
+  units_per_em : Int32,
+  x_min : Int32,
+  y_min : Int32,
+  x_max : Int32,
+  y_max : Int32,
 ) -> Bytes {
-  let buf : Array[Byte] = Array::make(54, 0 |> Int::to_byte)
+  let buf : Array[Byte] = Array::make(54, 0 |> Int32::to_byte)
   fm_test_write_u16_be(buf, 18, units_per_em)
   fm_test_write_i16_be(buf, 36, x_min)
   fm_test_write_i16_be(buf, 38, y_min)
@@ -122,9 +122,13 @@ fn fm_test_build_head_with_bbox(
 }
 
 ///|
-fn fm_test_build_hhea(ascent : Int, descent : Int, line_gap : Int) -> Bytes {
+fn fm_test_build_hhea(
+  ascent : Int32,
+  descent : Int32,
+  line_gap : Int32,
+) -> Bytes {
   // hhea: ascender at 4, descender at 6, lineGap at 8.
-  let buf : Array[Byte] = Array::make(36, 0 |> Int::to_byte)
+  let buf : Array[Byte] = Array::make(36, 0 |> Int32::to_byte)
   fm_test_write_i16_be(buf, 4, ascent)
   fm_test_write_i16_be(buf, 6, descent)
   fm_test_write_i16_be(buf, 8, line_gap)
@@ -133,12 +137,12 @@ fn fm_test_build_hhea(ascent : Int, descent : Int, line_gap : Int) -> Bytes {
 
 ///|
 fn fm_test_build_hhea_with_max_width(
-  ascent : Int,
-  descent : Int,
-  line_gap : Int,
-  max_width : Int,
+  ascent : Int32,
+  descent : Int32,
+  line_gap : Int32,
+  max_width : Int32,
 ) -> Bytes {
-  let buf : Array[Byte] = Array::make(36, 0 |> Int::to_byte)
+  let buf : Array[Byte] = Array::make(36, 0 |> Int32::to_byte)
   fm_test_write_i16_be(buf, 4, ascent)
   fm_test_write_i16_be(buf, 6, descent)
   fm_test_write_i16_be(buf, 8, line_gap)
@@ -149,11 +153,11 @@ fn fm_test_build_hhea_with_max_width(
 ///|
 fn fm_test_build_post(
   is_fixed_pitch : Bool,
-  ul_pos : Int,
-  ul_thick : Int,
+  ul_pos : Int32,
+  ul_thick : Int32,
 ) -> Bytes {
   // post: italicAngle fixed at 4 (use 0), underline pos/thickness at 8/10, isFixedPitch u32 at 12.
-  let buf : Array[Byte] = Array::make(16, 0 |> Int::to_byte)
+  let buf : Array[Byte] = Array::make(16, 0 |> Int32::to_byte)
   // version 3.0 at 0
   fm_test_write_u32_be(buf, 0, fm_test_u32(0x00030000))
   // italicAngle 0
@@ -167,12 +171,12 @@ fn fm_test_build_post(
 ///|
 fn fm_test_build_os2(
   use_typo : Bool,
-  typo_a : Int,
-  typo_d : Int,
-  typo_gap : Int,
+  typo_a : Int32,
+  typo_d : Int32,
+  typo_gap : Int32,
 ) -> Bytes {
   // Only fields we care about: fsSelection at 62, typo asc/desc/gap at 68/70/72.
-  let buf : Array[Byte] = Array::make(78, 0 |> Int::to_byte)
+  let buf : Array[Byte] = Array::make(78, 0 |> Int32::to_byte)
   fm_test_write_u16_be(buf, 62, if use_typo { 0x0080 } else { 0 })
   fm_test_write_i16_be(buf, 68, typo_a)
   fm_test_write_i16_be(buf, 70, typo_d)
@@ -181,8 +185,8 @@ fn fm_test_build_os2(
 }
 
 ///|
-fn fm_test_build_maxp(num_glyphs : Int) -> Bytes {
-  let buf : Array[Byte] = Array::make(6, 0 |> Int::to_byte)
+fn fm_test_build_maxp(num_glyphs : Int32) -> Bytes {
+  let buf : Array[Byte] = Array::make(6, 0 |> Int32::to_byte)
   fm_test_write_u32_be(buf, 0, fm_test_u32(0x00010000))
   fm_test_write_u16_be(buf, 4, num_glyphs)
   Bytes::from_array(buf[:])
@@ -202,8 +206,8 @@ test "FontMetrics prefers OS/2 typo metrics when flag set" {
       (FM_TAG_POST, post),
     ]),
   )
-  let font = FontRef::from_bytes(sfnt).unwrap()
-  let m = font.font_metrics(Size::unscaled())
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
+  let m = font.font_metrics(@moon_skrifa.Size::unscaled())
   inspect(m.units_per_em().to_int(), content="1000")
   inspect(m.ascent(), content="900")
   inspect(m.descent(), content="-250")
@@ -218,7 +222,7 @@ test "FontMetrics: additional fields (bbox/count/widths/heights)" {
   let head = fm_test_build_head_with_bbox(1000, -10, -20, 110, 220)
   let hhea = fm_test_build_hhea_with_max_width(800, -200, 0, 1234)
   let maxp = fm_test_build_maxp(42)
-  let os2_buf : Array[Byte] = Array::make(90, 0 |> Int::to_byte)
+  let os2_buf : Array[Byte] = Array::make(90, 0 |> Int32::to_byte)
   // fsSelection unset, line metrics come from hhea.
   fm_test_write_u16_be(os2_buf, 62, 0)
   // xAvgCharWidth (i16) at 2
@@ -240,8 +244,8 @@ test "FontMetrics: additional fields (bbox/count/widths/heights)" {
       (FM_TAG_POST, post),
     ]),
   )
-  let font = FontRef::from_bytes(sfnt).unwrap()
-  let m = font.font_metrics(Size::unscaled())
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
+  let m = font.font_metrics(@moon_skrifa.Size::unscaled())
   inspect(m.glyph_count().to_int(), content="42")
   inspect(m.average_width().unwrap(), content="321")
   inspect(m.max_width().unwrap(), content="1234")

@@ -13,16 +13,16 @@
 // limitations under the License.
 
 ///|
-fn bitmap_test_push_u16_be(out : Array[Byte], v : Int) -> Unit {
+fn bitmap_test_push_u16_be(out : Array[Byte], v : Int32) -> Unit {
   let u = v.reinterpret_as_uint()
-  let mask = 255 |> Int::reinterpret_as_uint
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((u >> 8) & mask).to_byte())
   out.push((u & mask).to_byte())
 }
 
 ///|
-fn bitmap_test_push_u32_be(out : Array[Byte], v : UInt) -> Unit {
-  let mask = 255 |> Int::reinterpret_as_uint
+fn bitmap_test_push_u32_be(out : Array[Byte], v : UInt32) -> Unit {
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((v >> 24) & mask).to_byte())
   out.push(((v >> 16) & mask).to_byte())
   out.push(((v >> 8) & mask).to_byte())
@@ -30,12 +30,12 @@ fn bitmap_test_push_u32_be(out : Array[Byte], v : UInt) -> Unit {
 }
 
 ///|
-fn bitmap_test_u32(x : Int) -> UInt {
+fn bitmap_test_u32(x : Int32) -> UInt32 {
   x.reinterpret_as_uint()
 }
 
 ///|
-fn bitmap_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
+fn bitmap_test_build_sfnt(tables : Array[(UInt32, Bytes)]) -> Bytes {
   let num_tables = tables.length()
   let header_len = 12 + num_tables * 16
   let out : Array[Byte] = []
@@ -63,25 +63,25 @@ fn bitmap_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
 }
 
 ///|
-const BITMAP_TEST_TAG_MAXP : UInt = 0x6D617870 // "maxp"
+const BITMAP_TEST_TAG_MAXP : UInt32 = 0x6D617870 // "maxp"
 
 ///|
-const TAG_SBIX : UInt = 0x73626978 // "sbix"
+const TAG_SBIX : UInt32 = 0x73626978 // "sbix"
 
 ///|
-const TAG_CBLC : UInt = 0x43424C43 // "CBLC"
+const TAG_CBLC : UInt32 = 0x43424C43 // "CBLC"
 
 ///|
-const TAG_CBDT : UInt = 0x43424454 // "CBDT"
+const TAG_CBDT : UInt32 = 0x43424454 // "CBDT"
 
 ///|
-const TAG_EBLC : UInt = 0x45424C43 // "EBLC"
+const TAG_EBLC : UInt32 = 0x45424C43 // "EBLC"
 
 ///|
-const TAG_EBDT : UInt = 0x45424454 // "EBDT"
+const TAG_EBDT : UInt32 = 0x45424454 // "EBDT"
 
 ///|
-fn bitmap_test_build_sbix(ppem : Int) -> Bytes {
+fn bitmap_test_build_sbix(ppem : Int32) -> Bytes {
   let out : Array[Byte] = []
   bitmap_test_push_u16_be(out, 1) // version
   bitmap_test_push_u16_be(out, 0) // flags
@@ -93,7 +93,7 @@ fn bitmap_test_build_sbix(ppem : Int) -> Bytes {
 }
 
 ///|
-fn bitmap_test_build_maxp(num_glyphs : Int) -> Bytes {
+fn bitmap_test_build_maxp(num_glyphs : Int32) -> Bytes {
   let out : Array[Byte] = []
   // version 1.0
   bitmap_test_push_u32_be(out, bitmap_test_u32(0x00010000))
@@ -103,10 +103,10 @@ fn bitmap_test_build_maxp(num_glyphs : Int) -> Bytes {
 
 ///|
 fn bitmap_test_build_sbix_with_glyph(
-  ppem : Int,
-  origin_x : Int,
-  origin_y : Int,
-  graphic_type : UInt,
+  ppem : Int32,
+  origin_x : Int32,
+  origin_y : Int32,
+  graphic_type : UInt32,
   payload : Bytes,
 ) -> Bytes {
   let data_len = payload.length()
@@ -137,10 +137,10 @@ fn bitmap_test_build_sbix_with_glyph(
 
 ///|
 fn bitmap_test_build_sbix_multi_with_glyph(
-  ppems : Array[Int],
-  origin_x : Int,
-  origin_y : Int,
-  graphic_type : UInt,
+  ppems : Array[Int32],
+  origin_x : Int32,
+  origin_y : Int32,
+  graphic_type : UInt32,
   payload : Bytes,
 ) -> Bytes {
   let num_strikes = ppems.length()
@@ -174,14 +174,14 @@ fn bitmap_test_build_sbix_multi_with_glyph(
 
 ///|
 fn bitmap_test_build_cblc_index1(
-  ppem_x : Int,
-  ppem_y : Int,
-  glyph_id : Int,
-  image_format : Int,
-  image_data_offset : Int,
-  glyph_data_len : Int,
-  bit_depth : Int,
-  major : Int,
+  ppem_x : Int32,
+  ppem_y : Int32,
+  glyph_id : Int32,
+  image_format : Int32,
+  image_data_offset : Int32,
+  glyph_data_len : Int32,
+  bit_depth : Int32,
+  major : Int32,
 ) -> Bytes {
   let out : Array[Byte] = []
   // major/minor
@@ -200,17 +200,17 @@ fn bitmap_test_build_cblc_index1(
   bitmap_test_push_u32_be(out, bitmap_test_u32(0))
   // hori + vert sbitLineMetrics (24 bytes)
   for _ in 0..<24 {
-    out.push(0 |> Int::to_byte)
+    out.push(0 |> Int32::to_byte)
   }
   // startGlyphIndex/endGlyphIndex
   bitmap_test_push_u16_be(out, glyph_id)
   bitmap_test_push_u16_be(out, glyph_id)
   // ppemX/Y
-  out.push(ppem_x |> Int::to_byte)
-  out.push(ppem_y |> Int::to_byte)
+  out.push(ppem_x |> Int32::to_byte)
+  out.push(ppem_y |> Int32::to_byte)
   // bitDepth, flags
-  out.push(bit_depth |> Int::to_byte)
-  out.push(0 |> Int::to_byte)
+  out.push(bit_depth |> Int32::to_byte)
+  out.push(0 |> Int32::to_byte)
   // IndexSubTableArray at offset 56
   bitmap_test_push_u16_be(out, glyph_id)
   bitmap_test_push_u16_be(out, glyph_id)
@@ -228,24 +228,24 @@ fn bitmap_test_build_cblc_index1(
 
 ///|
 fn bitmap_test_build_cbdt_format17(
-  width : Int,
-  height : Int,
-  bearing_x : Int,
-  bearing_y : Int,
-  advance : Int,
+  width : Int32,
+  height : Int32,
+  bearing_x : Int32,
+  bearing_y : Int32,
+  advance : Int32,
   png : Bytes,
-  major : Int,
+  major : Int32,
 ) -> Bytes {
   let out : Array[Byte] = []
   // major/minor
   bitmap_test_push_u16_be(out, major)
   bitmap_test_push_u16_be(out, 0)
   // small metrics (5 bytes)
-  out.push(height |> Int::to_byte)
-  out.push(width |> Int::to_byte)
-  out.push(bearing_x |> Int::to_byte)
-  out.push(bearing_y |> Int::to_byte)
-  out.push(advance |> Int::to_byte)
+  out.push(height |> Int32::to_byte)
+  out.push(width |> Int32::to_byte)
+  out.push(bearing_x |> Int32::to_byte)
+  out.push(bearing_y |> Int32::to_byte)
+  out.push(advance |> Int32::to_byte)
   // png length + bytes
   bitmap_test_push_u32_be(out, bitmap_test_u32(png.length()))
   for b in png.iter() {
@@ -255,19 +255,19 @@ fn bitmap_test_build_cbdt_format17(
 }
 
 ///|
-fn bitmap_test_build_loc(ppem_x : Int, ppem_y : Int) -> Bytes {
+fn bitmap_test_build_loc(ppem_x : Int32, ppem_y : Int32) -> Bytes {
   let out : Array[Byte] = []
   bitmap_test_push_u16_be(out, 3) // major
   bitmap_test_push_u16_be(out, 0) // minor
   bitmap_test_push_u32_be(out, bitmap_test_u32(1)) // numSizes
   // BitmapSizeTable (48 bytes), ppemX/Y at offsets 44/45.
   for _ in 0..<44 {
-    out.push(0 |> Int::to_byte)
+    out.push(0 |> Int32::to_byte)
   }
-  out.push(ppem_x |> Int::to_byte)
-  out.push(ppem_y |> Int::to_byte)
-  out.push(0 |> Int::to_byte)
-  out.push(0 |> Int::to_byte)
+  out.push(ppem_x |> Int32::to_byte)
+  out.push(ppem_y |> Int32::to_byte)
+  out.push(0 |> Int32::to_byte)
+  out.push(0 |> Int32::to_byte)
   Bytes::from_array(out[:])
 }
 
@@ -275,7 +275,7 @@ fn bitmap_test_build_loc(ppem_x : Int, ppem_y : Int) -> Bytes {
 test "bitmap strikes sbix" {
   let sbix = bitmap_test_build_sbix(16)
   let sfnt = bitmap_test_build_sfnt(Array::from_fixed_array([(TAG_SBIX, sbix)]))
-  let font = FontRef::from_bytes(sfnt).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
   let strikes = font.bitmap_strikes()
   inspect(strikes.len(), content="1")
   let strike = strikes.get(0).unwrap()
@@ -291,7 +291,7 @@ test "bitmap strikes cblc/cbdt" {
   let sfnt = bitmap_test_build_sfnt(
     Array::from_fixed_array([(TAG_CBLC, cblc), (TAG_CBDT, cbdt)]),
   )
-  let font = FontRef::from_bytes(sfnt).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
   let strikes = font.bitmap_strikes()
   let ok = if strikes.format() is Some(Cbdt) { true } else { false }
   inspect(ok, content="true")
@@ -306,7 +306,7 @@ test "bitmap strikes eblc/ebdt" {
   let sfnt = bitmap_test_build_sfnt(
     Array::from_fixed_array([(TAG_EBLC, eblc), (TAG_EBDT, ebdt)]),
   )
-  let font = FontRef::from_bytes(sfnt).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
   let strikes = font.bitmap_strikes()
   let ok = if strikes.format() is Some(Ebdt) { true } else { false }
   inspect(ok, content="true")
@@ -319,30 +319,30 @@ test "bitmap sbix glyph png" {
   // Minimal PNG header with IHDR width/height at bytes 16/20.
   let png_bytes = Bytes::from_array(
     Array::from_fixed_array([
-      0x89 |> Int::to_byte,
-      0x50 |> Int::to_byte,
-      0x4E |> Int::to_byte,
-      0x47 |> Int::to_byte,
-      0x0D |> Int::to_byte,
-      0x0A |> Int::to_byte,
-      0x1A |> Int::to_byte,
-      0x0A |> Int::to_byte,
-      0x00 |> Int::to_byte,
-      0x00 |> Int::to_byte,
-      0x00 |> Int::to_byte,
-      0x0D |> Int::to_byte,
-      0x49 |> Int::to_byte,
-      0x48 |> Int::to_byte,
-      0x44 |> Int::to_byte,
-      0x52 |> Int::to_byte,
-      0x00 |> Int::to_byte,
-      0x00 |> Int::to_byte,
-      0x00 |> Int::to_byte,
-      0x02 |> Int::to_byte,
-      0x00 |> Int::to_byte,
-      0x00 |> Int::to_byte,
-      0x00 |> Int::to_byte,
-      0x03 |> Int::to_byte,
+      0x89 |> Int32::to_byte,
+      0x50 |> Int32::to_byte,
+      0x4E |> Int32::to_byte,
+      0x47 |> Int32::to_byte,
+      0x0D |> Int32::to_byte,
+      0x0A |> Int32::to_byte,
+      0x1A |> Int32::to_byte,
+      0x0A |> Int32::to_byte,
+      0x00 |> Int32::to_byte,
+      0x00 |> Int32::to_byte,
+      0x00 |> Int32::to_byte,
+      0x0D |> Int32::to_byte,
+      0x49 |> Int32::to_byte,
+      0x48 |> Int32::to_byte,
+      0x44 |> Int32::to_byte,
+      0x52 |> Int32::to_byte,
+      0x00 |> Int32::to_byte,
+      0x00 |> Int32::to_byte,
+      0x00 |> Int32::to_byte,
+      0x02 |> Int32::to_byte,
+      0x00 |> Int32::to_byte,
+      0x00 |> Int32::to_byte,
+      0x00 |> Int32::to_byte,
+      0x03 |> Int32::to_byte,
     ])[:],
   )
   let sbix = bitmap_test_build_sbix_with_glyph(
@@ -355,7 +355,7 @@ test "bitmap sbix glyph png" {
       (TAG_SBIX, sbix),
     ]),
   )
-  let font = FontRef::from_bytes(sfnt).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
   let strikes = font.bitmap_strikes()
   let strike = strikes.get(0).unwrap()
   let glyph = strike.get(GlyphId((0).to_uint16())).unwrap()
@@ -373,10 +373,10 @@ test "bitmap sbix glyph png" {
 test "bitmap sbix glyph jpg" {
   let jpg_bytes = Bytes::from_array(
     Array::from_fixed_array([
-      0xFF |> Int::to_byte,
-      0xD8 |> Int::to_byte,
-      0xFF |> Int::to_byte,
-      0xD9 |> Int::to_byte,
+      0xFF |> Int32::to_byte,
+      0xD8 |> Int32::to_byte,
+      0xFF |> Int32::to_byte,
+      0xD9 |> Int32::to_byte,
     ])[:],
   )
   let sbix = bitmap_test_build_sbix_with_glyph(
@@ -389,7 +389,7 @@ test "bitmap sbix glyph jpg" {
       (TAG_SBIX, sbix),
     ]),
   )
-  let font = FontRef::from_bytes(sfnt).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
   let strike = font.bitmap_strikes().get(0).unwrap()
   let glyph = strike.get(GlyphId((0).to_uint16())).unwrap()
   let ok = if glyph.format() is Jpeg { true } else { false }
@@ -404,30 +404,30 @@ test "bitmap cbdt/cblc glyph png (format 17 + indexSubTable1)" {
   // Minimal PNG header (24 bytes).
   let png = Bytes::from_array(
     Array::from_fixed_array([
-      0x89 |> Int::to_byte,
-      0x50 |> Int::to_byte,
-      0x4E |> Int::to_byte,
-      0x47 |> Int::to_byte,
-      0x0D |> Int::to_byte,
-      0x0A |> Int::to_byte,
-      0x1A |> Int::to_byte,
-      0x0A |> Int::to_byte,
-      0x00 |> Int::to_byte,
-      0x00 |> Int::to_byte,
-      0x00 |> Int::to_byte,
-      0x0D |> Int::to_byte,
-      0x49 |> Int::to_byte,
-      0x48 |> Int::to_byte,
-      0x44 |> Int::to_byte,
-      0x52 |> Int::to_byte,
-      0x00 |> Int::to_byte,
-      0x00 |> Int::to_byte,
-      0x00 |> Int::to_byte,
-      0x02 |> Int::to_byte,
-      0x00 |> Int::to_byte,
-      0x00 |> Int::to_byte,
-      0x00 |> Int::to_byte,
-      0x03 |> Int::to_byte,
+      0x89 |> Int32::to_byte,
+      0x50 |> Int32::to_byte,
+      0x4E |> Int32::to_byte,
+      0x47 |> Int32::to_byte,
+      0x0D |> Int32::to_byte,
+      0x0A |> Int32::to_byte,
+      0x1A |> Int32::to_byte,
+      0x0A |> Int32::to_byte,
+      0x00 |> Int32::to_byte,
+      0x00 |> Int32::to_byte,
+      0x00 |> Int32::to_byte,
+      0x0D |> Int32::to_byte,
+      0x49 |> Int32::to_byte,
+      0x48 |> Int32::to_byte,
+      0x44 |> Int32::to_byte,
+      0x52 |> Int32::to_byte,
+      0x00 |> Int32::to_byte,
+      0x00 |> Int32::to_byte,
+      0x00 |> Int32::to_byte,
+      0x02 |> Int32::to_byte,
+      0x00 |> Int32::to_byte,
+      0x00 |> Int32::to_byte,
+      0x00 |> Int32::to_byte,
+      0x03 |> Int32::to_byte,
     ])[:],
   )
   let cbdt = bitmap_test_build_cbdt_format17(2, 3, 1, 2, 0, png, 3)
@@ -441,7 +441,7 @@ test "bitmap cbdt/cblc glyph png (format 17 + indexSubTable1)" {
       (TAG_CBDT, cbdt),
     ]),
   )
-  let font = FontRef::from_bytes(sfnt).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
   let strikes = font.bitmap_strikes()
   let ok = if strikes.format() is Some(Cbdt) { true } else { false }
   inspect(ok, content="true")
@@ -465,12 +465,12 @@ test "bitmap ebdt/eblc glyph (format 1 + indexSubTable1)" {
   let ebdt_out : Array[Byte] = []
   bitmap_test_push_u16_be(ebdt_out, 2)
   bitmap_test_push_u16_be(ebdt_out, 0)
-  ebdt_out.push(1 |> Int::to_byte)
-  ebdt_out.push(8 |> Int::to_byte)
-  ebdt_out.push(0xFF |> Int::to_byte) // -1
-  ebdt_out.push(2 |> Int::to_byte)
-  ebdt_out.push(0 |> Int::to_byte)
-  ebdt_out.push(0xAA |> Int::to_byte)
+  ebdt_out.push(1 |> Int32::to_byte)
+  ebdt_out.push(8 |> Int32::to_byte)
+  ebdt_out.push(0xFF |> Int32::to_byte) // -1
+  ebdt_out.push(2 |> Int32::to_byte)
+  ebdt_out.push(0 |> Int32::to_byte)
+  ebdt_out.push(0xAA |> Int32::to_byte)
   let ebdt = Bytes::from_array(ebdt_out[:])
   let glyph_len = 5 + 1
   let eblc = bitmap_test_build_cblc_index1(12, 12, 0, 1, 4, glyph_len, 1, 2)
@@ -481,7 +481,7 @@ test "bitmap ebdt/eblc glyph (format 1 + indexSubTable1)" {
       (TAG_EBDT, ebdt),
     ]),
   )
-  let font = FontRef::from_bytes(sfnt).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
   let strikes = font.bitmap_strikes()
   let ok = if strikes.format() is Some(Ebdt) { true } else { false }
   inspect(ok, content="true")
@@ -497,10 +497,10 @@ test "bitmap ebdt/eblc glyph (format 1 + indexSubTable1)" {
 test "bitmap strikes iter and glyph_for_size" {
   let jpg_bytes = Bytes::from_array(
     Array::from_fixed_array([
-      0xFF |> Int::to_byte,
-      0xD8 |> Int::to_byte,
-      0xFF |> Int::to_byte,
-      0xD9 |> Int::to_byte,
+      0xFF |> Int32::to_byte,
+      0xD8 |> Int32::to_byte,
+      0xFF |> Int32::to_byte,
+      0xD9 |> Int32::to_byte,
     ])[:],
   )
   let sbix = bitmap_test_build_sbix_multi_with_glyph(
@@ -516,13 +516,13 @@ test "bitmap strikes iter and glyph_for_size" {
       (TAG_SBIX, sbix),
     ]),
   )
-  let font = FontRef::from_bytes(sfnt).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
   let strikes = font.bitmap_strikes()
   let iter = strikes.iter()
   inspect(iter.length(), content="2")
   inspect(iter.at(0).ppem_y(), content="12")
   inspect(iter.at(1).ppem_y(), content="20")
-  let gid = GlyphId::GlyphId((0).to_uint16())
+  let gid = @moon_skrifa.GlyphId::GlyphId((0).to_uint16())
   inspect(
     strikes.glyph_for_size(Size(12.0), gid).unwrap().ppem_y(),
     content="12",
@@ -536,7 +536,7 @@ test "bitmap strikes iter and glyph_for_size" {
     content="20",
   )
   inspect(
-    strikes.glyph_for_size(Size::unscaled(), gid).unwrap().ppem_y(),
+    strikes.glyph_for_size(@moon_skrifa.Size::unscaled(), gid).unwrap().ppem_y(),
     content="20",
   )
 }

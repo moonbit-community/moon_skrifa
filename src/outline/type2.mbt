@@ -18,7 +18,7 @@
 /// Ported from `read-fonts` CFF/CFF2 charstring evaluator logic.
 
 ///|
-fn type2_read_u16_be(view : BytesView, offset : Int) -> Int? {
+fn type2_read_u16_be(view : BytesView, offset : Int32) -> Int32? {
   if offset < 0 || offset + 2 > view.length() {
     None
   } else {
@@ -29,7 +29,7 @@ fn type2_read_u16_be(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn type2_read_i16_be(view : BytesView, offset : Int) -> Int? {
+fn type2_read_i16_be(view : BytesView, offset : Int32) -> Int32? {
   match type2_read_u16_be(view, offset) {
     None => None
     Some(u) => if u >= 0x8000 { Some(u - 0x10000) } else { Some(u) }
@@ -37,7 +37,7 @@ fn type2_read_i16_be(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn type2_read_i32_be(view : BytesView, offset : Int) -> Int? {
+fn type2_read_i32_be(view : BytesView, offset : Int32) -> Int32? {
   if offset < 0 || offset + 4 > view.length() {
     None
   } else {
@@ -54,7 +54,11 @@ fn type2_read_i32_be(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn type2_parse_number(data : BytesView, pos : Int, b0 : Int) -> (Double, Int)? {
+fn type2_parse_number(
+  data : BytesView,
+  pos : Int32,
+  b0 : Int32,
+) -> (Double, Int32)? {
   // Returns (value, new_pos).
   match b0 {
     28 =>
@@ -68,15 +72,15 @@ fn type2_parse_number(data : BytesView, pos : Int, b0 : Int) -> (Double, Int)? {
         None => None
         Some(bits) => Some((bits.to_double() / 65536.0, pos + 4))
       }
-    32..=246 => Some(((b0 - 139).to_double(), pos))
-    247..=250 =>
+    32..<=246 => Some(((b0 - 139).to_double(), pos))
+    247..<=250 =>
       if pos >= data.length() {
         None
       } else {
         let b1 = data.at(pos).to_int()
         Some((((b0 - 247) * 256 + b1 + 108).to_double(), pos + 1))
       }
-    251..=254 =>
+    251..<=254 =>
       if pos >= data.length() {
         None
       } else {
@@ -88,7 +92,7 @@ fn type2_parse_number(data : BytesView, pos : Int, b0 : Int) -> (Double, Int)? {
 }
 
 ///|
-fn type2_subr_bias(count : Int) -> Int {
+fn type2_subr_bias(count : Int32) -> Int32 {
   if count < 1240 {
     107
   } else if count < 33900 {
@@ -101,11 +105,11 @@ fn type2_subr_bias(count : Int) -> Int {
 ///|
 priv struct Type2Index {
   data : BytesView
-  count : Int
-  off_size : Int
-  offsets_base : Int
-  objects_base : Int
-  bias : Int
+  count : Int32
+  off_size : Int32
+  offsets_base : Int32
+  objects_base : Int32
+  bias : Int32
 }
 
 ///|
@@ -196,7 +200,7 @@ fn type2_index2_read(data : BytesView) -> Type2Index? {
 }
 
 ///|
-fn type2_index_read_offset(ix : Type2Index, index : Int) -> Int? {
+fn type2_index_read_offset(ix : Type2Index, index : Int32) -> Int32? {
   if ix.count == 0 {
     if index == 0 {
       Some(0)
@@ -221,7 +225,7 @@ fn type2_index_read_offset(ix : Type2Index, index : Int) -> Int? {
 }
 
 ///|
-fn type2_index_get(ix : Type2Index, index : Int) -> BytesView? {
+fn type2_index_get(ix : Type2Index, index : Int32) -> BytesView? {
   if index < 0 || index >= ix.count {
     return None
   }
@@ -243,7 +247,7 @@ fn type2_index_get(ix : Type2Index, index : Int) -> BytesView? {
 }
 
 ///|
-fn type2_index_subr(ix : Type2Index, subr_number : Int) -> BytesView? {
+fn type2_index_subr(ix : Type2Index, subr_number : Int32) -> BytesView? {
   let idx = subr_number + ix.bias
   type2_index_get(ix, idx)
 }
@@ -252,7 +256,7 @@ fn type2_index_subr(ix : Type2Index, subr_number : Int) -> BytesView? {
 const TYPE2_F2DOT14_SCALE : Double = 16384.0
 
 ///|
-fn type2_read_u32_be_int(view : BytesView, offset : Int) -> Int? {
+fn type2_read_u32_be_int(view : BytesView, offset : Int32) -> Int32? {
   if offset < 0 || offset + 4 > view.length() {
     None
   } else {
@@ -268,16 +272,16 @@ fn type2_read_u32_be_int(view : BytesView, offset : Int) -> Int? {
 /// Parsed view of an ItemVariationStore (used by CFF2 `vsindex`/`blend`).
 priv struct Type2IvsCtx {
   store : BytesView
-  store_off : Int
-  axis_count : Int
-  region_count : Int
-  region_list_off : Int
-  data_count : Int
-  data_offsets_off : Int
+  store_off : Int32
+  axis_count : Int32
+  region_count : Int32
+  region_list_off : Int32
+  data_count : Int32
+  data_offsets_off : Int32
 }
 
 ///|
-fn type2_ivs_ctx(store : BytesView, store_off : Int) -> Type2IvsCtx? {
+fn type2_ivs_ctx(store : BytesView, store_off : Int32) -> Type2IvsCtx? {
   // ItemVariationStore header:
   // u16 format, u32 regionListOff, u16 dataCount, u32[dataCount] dataOffsets
   let format = type2_read_u16_be(store, store_off).unwrap_or(-1)
@@ -325,8 +329,8 @@ fn type2_ivs_ctx(store : BytesView, store_off : Int) -> Type2IvsCtx? {
 ///|
 fn type2_ivs_item_region_indices(
   ctx : Type2IvsCtx,
-  store_index : Int,
-) -> Array[Int]? {
+  store_index : Int32,
+) -> Array[Int32]? {
   if store_index < 0 || store_index >= ctx.data_count {
     return None
   }
@@ -354,7 +358,7 @@ fn type2_ivs_item_region_indices(
   if need < region_indexes_off || need > ctx.store.length() {
     return None
   }
-  let out : Array[Int] = []
+  let out : Array[Int32] = []
   for i in 0..<region_index_count {
     out.push(
       type2_read_u16_be(ctx.store, region_indexes_off + i * 2).unwrap_or(-1),
@@ -366,7 +370,7 @@ fn type2_ivs_item_region_indices(
 ///|
 fn type2_ivs_region_scalar(
   ctx : Type2IvsCtx,
-  region_index : Int,
+  region_index : Int32,
   coords : ArrayView[@moon_skrifa.NormalizedCoord],
 ) -> Double {
   if region_index < 0 || region_index >= ctx.region_count {
@@ -416,8 +420,8 @@ fn type2_ivs_region_scalar(
 priv struct Type2BlendState {
   ctx : Type2IvsCtx
   coords : ArrayView[@moon_skrifa.NormalizedCoord]
-  mut store_index : Int
-  mut region_indices : Array[Int]
+  mut store_index : Int32
+  mut region_indices : Array[Int32]
   mut scalars : Array[Double]
 }
 
@@ -425,7 +429,7 @@ priv struct Type2BlendState {
 fn Type2BlendState::from_store(
   ctx : Type2IvsCtx,
   coords : ArrayView[@moon_skrifa.NormalizedCoord],
-  store_index : Int,
+  store_index : Int32,
 ) -> Type2BlendState? {
   let s = Type2BlendState::{
     ctx,
@@ -444,7 +448,7 @@ fn Type2BlendState::from_store(
 ///|
 fn Type2BlendState::set_store_index(
   self : Type2BlendState,
-  store_index : Int,
+  store_index : Int32,
 ) -> Bool {
   if self.store_index == store_index && !self.region_indices.is_empty() {
     return true
@@ -464,14 +468,14 @@ fn Type2BlendState::set_store_index(
 }
 
 ///|
-fn Type2BlendState::region_count(self : Type2BlendState) -> Int {
+fn Type2BlendState::region_count(self : Type2BlendState) -> Int32 {
   self.region_indices.length()
 }
 
 ///|
 fn type2_blend_state_new(
   store : BytesView,
-  store_off : Int,
+  store_off : Int32,
   coords : ArrayView[@moon_skrifa.NormalizedCoord],
 ) -> Type2BlendState? {
   match type2_ivs_ctx(store, store_off) {
@@ -489,11 +493,11 @@ priv struct Type2Eval {
   out : Array[PathElement]
   mut is_open : Bool
   mut have_read_width : Bool
-  mut stem_count : Int
+  mut stem_count : Int32
   mut x : Double
   mut y : Double
   stack : Array[Double]
-  mut stack_ix : Int
+  mut stack_ix : Int32
 }
 
 ///|
@@ -525,7 +529,7 @@ fn Type2Eval::reset_stack(self : Type2Eval) -> Unit {
 }
 
 ///|
-fn type2_number_to_int(v : Double) -> Int? {
+fn type2_number_to_int(v : Double) -> Int32? {
   // Charstring stack values are typically integers; reject non-integral values
   // for operators that require integer operands (e.g. subr indices).
   let r = v.round()
@@ -537,7 +541,7 @@ fn type2_number_to_int(v : Double) -> Int? {
 }
 
 ///|
-fn Type2Eval::pop_int(self : Type2Eval) -> Int? {
+fn Type2Eval::pop_int(self : Type2Eval) -> Int32? {
   if self.stack.length() <= 0 {
     return None
   }
@@ -547,7 +551,7 @@ fn Type2Eval::pop_int(self : Type2Eval) -> Int? {
 }
 
 ///|
-fn Type2Eval::coords_remaining(self : Type2Eval) -> Int {
+fn Type2Eval::coords_remaining(self : Type2Eval) -> Int32 {
   let len = self.stack.length()
   let ix = self.stack_ix
   if len < ix {
@@ -765,9 +769,9 @@ fn Type2Eval::emit_curves(
 ///|
 fn Type2Eval::read_operator(
   data : BytesView,
-  pos : Int,
-  b0 : Int,
-) -> (Int, Int)? {
+  pos : Int32,
+  b0 : Int32,
+) -> (Int32, Int32)? {
   // Returns (operator_code, new_pos). For escaped operators, returns 1200+op2.
   if b0 == 12 {
     if pos >= data.length() {
@@ -782,7 +786,7 @@ fn Type2Eval::read_operator(
 }
 
 ///|
-fn Type2Eval::eval(self : Type2Eval, data : BytesView, depth : Int) -> Bool {
+fn Type2Eval::eval(self : Type2Eval, data : BytesView, depth : Int32) -> Bool {
   if depth > 10 {
     return false
   }
@@ -832,10 +836,10 @@ fn Type2Eval::eval(self : Type2Eval, data : BytesView, depth : Int) -> Bool {
 fn Type2Eval::eval_operator(
   self : Type2Eval,
   data : BytesView,
-  op : Int,
-  pos : Int,
-  depth : Int,
-) -> (Bool, Int)? {
+  op : Int32,
+  pos : Int32,
+  depth : Int32,
+) -> (Bool, Int32)? {
   // Returns (continue, new_pos).
   let mut new_pos = pos
   // Two-byte ops are represented as 1200+op2.
@@ -1019,7 +1023,7 @@ fn Type2Eval::eval_operator(
     // hvcurveto/vhcurveto
     31 | 30 => {
       let count1 = self.stack.length()
-      let count = count1 & (2 |> Int::lnot)
+      let count = count1 & (2 |> Int32::lnot)
       let mut is_horizontal = op == 31
       self.stack_ix = count1 - count
       while self.stack_ix < count {

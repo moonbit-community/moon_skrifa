@@ -22,14 +22,14 @@ fn approx_eq(a : Double, b : Double) -> Bool {
 
 ///|
 test "Transform default is identity" {
-  let t = Transform::default()
+  let t = @moon_skrifa.Transform::default()
   let (x, y) = t.apply(1.0, 2.0)
   inspect(approx_eq(x, 1.0) && approx_eq(y, 2.0), content="true")
 }
 
 ///|
 test "Transform mul composes transforms" {
-  let translate = Transform::{
+  let translate = @moon_skrifa.Transform::{
     xx: 1.0,
     yx: 0.0,
     xy: 0.0,
@@ -37,7 +37,7 @@ test "Transform mul composes transforms" {
     dx: 3.0,
     dy: 5.0,
   }
-  let scale = Transform::{
+  let scale = @moon_skrifa.Transform::{
     xx: 2.0,
     yx: 0.0,
     xy: 0.0,

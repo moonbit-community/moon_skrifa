@@ -27,12 +27,12 @@ priv enum DecyclerError {
 ///|
 priv struct Decycler[T] {
   node_ids : FixedArray[T]
-  depth : Int
-  max_depth : Int
+  depth : Int32
+  max_depth : Int32
 }
 
 ///|
-fn[T : Default] Decycler::Decycler(max_depth : Int) -> Decycler[T] {
+fn[T : Default] Decycler::Decycler(max_depth : Int32) -> Decycler[T] {
   { node_ids: FixedArray::make(max_depth, T::default()), depth: 0, max_depth, }
 }
 
@@ -71,7 +71,7 @@ test "graph_with_cycles" {
   nodes.push(Node([]))
   nodes.push(Node(Array::from_fixed_array([0, 1])))
   let tree = Tree::{ nodes, }
-  let decycler : Decycler[Int] = Decycler(MAX_DEPTH)
+  let decycler : Decycler[Int32] = Decycler(MAX_DEPTH)
   let ok = match tree.traverse(decycler) {
     Err(CycleDetected) => true
     _ => false
@@ -87,7 +87,7 @@ test "exceeds_max_depth" {
   }
   nodes.push(Node([]))
   let tree = Tree::{ nodes, }
-  let decycler : Decycler[Int] = Decycler(MAX_DEPTH)
+  let decycler : Decycler[Int32] = Decycler(MAX_DEPTH)
   let ok = match tree.traverse(decycler) {
     Err(DepthLimitExceeded) => true
     _ => false
@@ -103,7 +103,7 @@ test "well_formed_tree" {
   }
   nodes.push(Node([]))
   let tree = Tree::{ nodes, }
-  let decycler : Decycler[Int] = Decycler(MAX_DEPTH)
+  let decycler : Decycler[Int32] = Decycler(MAX_DEPTH)
   let ok = match tree.traverse(decycler) {
     Ok(_) => true
     _ => false
@@ -112,15 +112,15 @@ test "well_formed_tree" {
 }
 
 ///|
-const MAX_DEPTH : Int = 64
+const MAX_DEPTH : Int32 = 64
 
 ///|
 priv struct Node {
-  child_ids : Array[Int]
+  child_ids : Array[Int32]
 }
 
 ///|
-fn Node::Node(child_ids : Array[Int]) -> Node {
+fn Node::Node(child_ids : Array[Int32]) -> Node {
   { child_ids, }
 }
 
@@ -132,7 +132,7 @@ priv struct Tree {
 ///|
 fn Tree::traverse(
   self : Tree,
-  decycler : Decycler[Int],
+  decycler : Decycler[Int32],
 ) -> Result[Unit, DecyclerError] {
   match self.traverse_impl(decycler, 0) {
     Ok(_d) => Ok(())
@@ -143,9 +143,9 @@ fn Tree::traverse(
 ///|
 fn Tree::traverse_impl(
   self : Tree,
-  decycler : Decycler[Int],
-  node_id : Int,
-) -> Result[Decycler[Int], DecyclerError] {
+  decycler : Decycler[Int32],
+  node_id : Int32,
+) -> Result[Decycler[Int32], DecyclerError] {
   match decycler.enter(node_id) {
     Err(e) => Err(e)
     Ok(d1) => {

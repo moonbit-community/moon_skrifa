@@ -16,16 +16,16 @@
 /// Support for accessing glyph names.
 ///
 /// Ported from `fontations/skrifa/src/glyph_name.rs` (Apache-2.0 OR MIT).
-const GLYPH_TAG_MAXP : UInt = 0x6D617870 // "maxp"
+const GLYPH_TAG_MAXP : UInt32 = 0x6D617870 // "maxp"
 
 ///|
-const GLYPH_TAG_POST : UInt = 0x706F7374 // "post"
+const GLYPH_TAG_POST : UInt32 = 0x706F7374 // "post"
 
 ///|
-const GLYPH_TAG_CFF : UInt = 0x43464620 // "CFF "
+const GLYPH_TAG_CFF : UInt32 = 0x43464620 // "CFF "
 
 ///|
-const MAX_GLYPH_NAME_LEN : Int = 63
+const MAX_GLYPH_NAME_LEN : Int32 = 63
 
 ///|
 pub(all) enum GlyphNameSource {
@@ -81,7 +81,7 @@ fn glyph_name_synthesize(gid : GlyphId) -> GlyphName {
 }
 
 ///|
-fn glyph_name_read_u16_be(view : BytesView, offset : Int) -> Int? {
+fn glyph_name_read_u16_be(view : BytesView, offset : Int32) -> Int32? {
   if offset < 0 || offset + 2 > view.length() {
     None
   } else {
@@ -92,7 +92,7 @@ fn glyph_name_read_u16_be(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn glyph_name_read_u32_be(view : BytesView, offset : Int) -> UInt? {
+fn glyph_name_read_u32_be(view : BytesView, offset : Int32) -> UInt32? {
   if offset < 0 || offset + 4 > view.length() {
     None
   } else {
@@ -105,7 +105,7 @@ fn glyph_name_read_u32_be(view : BytesView, offset : Int) -> UInt? {
 }
 
 ///|
-fn glyph_name_read_u8(view : BytesView, offset : Int) -> Int? {
+fn glyph_name_read_u8(view : BytesView, offset : Int32) -> Int32? {
   if offset < 0 || offset + 1 > view.length() {
     None
   } else {
@@ -114,7 +114,7 @@ fn glyph_name_read_u8(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn glyph_name_read_maxp_num_glyphs(font : FontRef) -> Int {
+fn glyph_name_read_maxp_num_glyphs(font : FontRef) -> Int32 {
   match font.table(GLYPH_TAG_MAXP) {
     None => 0
     Some(maxp) => glyph_name_read_u16_be(maxp, 4).unwrap_or(0)
@@ -122,7 +122,7 @@ fn glyph_name_read_maxp_num_glyphs(font : FontRef) -> Int {
 }
 
 ///|
-fn glyph_name_post_v2_get(post : BytesView, gid : Int) -> String? {
+fn glyph_name_post_v2_get(post : BytesView, gid : Int32) -> String? {
   let version = glyph_name_read_u32_be(post, 0).unwrap_or(0)
   if version == 0x00010000 {
     if gid < 0 || gid >= glyph_name_post_standard_names.length() {
@@ -173,10 +173,10 @@ fn glyph_name_post_v2_get(post : BytesView, gid : Int) -> String? {
 ///|
 priv struct CffIndex1 {
   data : BytesView
-  count : Int
-  off_size : Int
-  offsets_base : Int
-  objects_base : Int
+  count : Int32
+  off_size : Int32
+  offsets_base : Int32
+  objects_base : Int32
 }
 
 ///|
@@ -205,7 +205,7 @@ fn cff_index1_read(data : BytesView) -> CffIndex1? {
 }
 
 ///|
-fn cff_index1_offset(ix : CffIndex1, index : Int) -> Int? {
+fn cff_index1_offset(ix : CffIndex1, index : Int32) -> Int32? {
   if ix.count == 0 {
     if index == 0 {
       Some(0)
@@ -229,7 +229,7 @@ fn cff_index1_offset(ix : CffIndex1, index : Int) -> Int? {
 }
 
 ///|
-fn cff_index1_total_size(ix : CffIndex1) -> Int? {
+fn cff_index1_total_size(ix : CffIndex1) -> Int32? {
   if ix.count == 0 {
     Some(2)
   } else {
@@ -241,7 +241,7 @@ fn cff_index1_total_size(ix : CffIndex1) -> Int? {
 }
 
 ///|
-fn cff_index1_get(ix : CffIndex1, index : Int) -> BytesView? {
+fn cff_index1_get(ix : CffIndex1, index : Int32) -> BytesView? {
   if index < 0 || index >= ix.count {
     return None
   }
@@ -258,21 +258,21 @@ fn cff_index1_get(ix : CffIndex1, index : Int) -> BytesView? {
 
 ///|
 priv struct CffDictOffsets {
-  mut charset_offset : Int?
-  mut charstrings_offset : Int?
+  mut charset_offset : Int32?
+  mut charstrings_offset : Int32?
 }
 
 ///|
 fn cff_dict_parse_offsets(data : BytesView) -> CffDictOffsets {
   // Minimal DICT parsing: only integer operands and ops 15 (charset), 17 (charstrings).
   let info = CffDictOffsets::{ charset_offset: None, charstrings_offset: None, }
-  let stack : Array[Int] = []
+  let stack : Array[Int32] = []
   let mut pos = 0
   while pos < data.length() {
     let b0 = data.at(pos).to_int()
     pos = pos + 1
     if b0 == 28 || b0 == 29 || (b0 >= 32 && b0 <= 254) {
-      let parsed : (Int, Int)? = match b0 {
+      let parsed : (Int32, Int32)? = match b0 {
         28 =>
           match glyph_name_read_u16_be(data, pos) {
             None => None
@@ -284,15 +284,15 @@ fn cff_dict_parse_offsets(data : BytesView) -> CffDictOffsets {
             None => None
             Some(u) => Some((u.reinterpret_as_int(), pos + 4))
           }
-        32..=246 => Some((b0 - 139, pos))
-        247..=250 =>
+        32..<=246 => Some((b0 - 139, pos))
+        247..<=250 =>
           if pos >= data.length() {
             None
           } else {
             let b1 = data.at(pos).to_int()
             Some(((b0 - 247) * 256 + b1 + 108, pos + 1))
           }
-        251..=254 =>
+        251..<=254 =>
           if pos >= data.length() {
             None
           } else {
@@ -337,7 +337,11 @@ fn cff_dict_parse_offsets(data : BytesView) -> CffDictOffsets {
 }
 
 ///|
-fn glyph_name_cff_sid(cff : BytesView, charset_off : Int, gid : Int) -> Int? {
+fn glyph_name_cff_sid(
+  cff : BytesView,
+  charset_off : Int32,
+  gid : Int32,
+) -> Int32? {
   if gid < 0 || charset_off < 0 || charset_off >= cff.length() {
     return None
   }
@@ -391,7 +395,7 @@ fn glyph_name_cff_sid(cff : BytesView, charset_off : Int, gid : Int) -> Int? {
 }
 
 ///|
-fn glyph_name_cff_get(cff : BytesView, gid : Int) -> String? {
+fn glyph_name_cff_get(cff : BytesView, gid : Int32) -> String? {
   if cff.length() < 4 {
     return None
   }
@@ -477,9 +481,9 @@ fn glyph_name_cff_get(cff : BytesView, gid : Int) -> String? {
 
 ///|
 priv enum GlyphNamesInner {
-  Post(BytesView, Int)
-  Cff(BytesView, Int)
-  Synthesized(Int)
+  Post(BytesView, Int32)
+  Cff(BytesView, Int32)
+  Synthesized(Int32)
 }
 
 ///|
@@ -518,7 +522,7 @@ pub fn GlyphNames::source(self : GlyphNames) -> GlyphNameSource {
 }
 
 ///|
-pub fn GlyphNames::num_glyphs(self : GlyphNames) -> Int {
+pub fn GlyphNames::num_glyphs(self : GlyphNames) -> Int32 {
   match self.inner {
     Post(_, n) | Cff(_, n) | Synthesized(n) => n
   }

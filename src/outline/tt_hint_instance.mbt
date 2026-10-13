@@ -17,19 +17,19 @@
 ///
 /// Ported from `fontations/skrifa/src/outline/glyf/hint/instance.rs`
 /// (Apache-2.0 OR MIT).
-const TAG_MAXP_TT : UInt = 0x6D617870 // "maxp"
+const TAG_MAXP_TT : UInt32 = 0x6D617870 // "maxp"
 
 ///|
-const TAG_FPGM_TT : UInt = 0x6670676D // "fpgm"
+const TAG_FPGM_TT : UInt32 = 0x6670676D // "fpgm"
 
 ///|
-const TAG_PREP_TT : UInt = 0x70726570 // "prep"
+const TAG_PREP_TT : UInt32 = 0x70726570 // "prep"
 
 ///|
-const TAG_CVT_TT : UInt = 0x63767420 // "cvt "
+const TAG_CVT_TT : UInt32 = 0x63767420 // "cvt "
 
 ///|
-const TAG_FVAR_TT : UInt = 0x66766172 // "fvar"
+const TAG_FVAR_TT : UInt32 = 0x66766172 // "fvar"
 
 ///|
 let tt_empty_bytes : Bytes = Bytes::from_array([][:])
@@ -40,7 +40,7 @@ fn tt_empty_bytes_view() -> BytesView {
 }
 
 ///|
-fn tt_read_u16_be(view : BytesView, offset : Int) -> Int? {
+fn tt_read_u16_be(view : BytesView, offset : Int32) -> Int32? {
   if offset < 0 || offset + 2 > view.length() {
     None
   } else {
@@ -51,7 +51,7 @@ fn tt_read_u16_be(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn tt_read_i16_be(view : BytesView, offset : Int) -> Int? {
+fn tt_read_i16_be(view : BytesView, offset : Int32) -> Int32? {
   match tt_read_u16_be(view, offset) {
     None => None
     Some(u) => Some(if u >= 0x8000 { u - 0x10000 } else { u })
@@ -62,16 +62,16 @@ fn tt_read_i16_be(view : BytesView, offset : Int) -> Int? {
 priv struct TtHintInstance {
   mut functions : TtDefinitionSet
   mut instructions : TtDefinitionSet
-  mut cvt : Array[Int]
-  mut storage : Array[Int]
+  mut cvt : Array[Int32]
+  mut storage : Array[Int32]
   mut retained : TtRetainedGraphicsState
   mut twilight_points : Array[TtPoint]
   mut twilight_original : Array[TtPoint]
-  mut twilight_flags : Array[Int]
-  mut max_stack : Int
-  max_call_depth : Int
-  mut max_function_defs : Int
-  mut max_instruction_defs : Int
+  mut twilight_flags : Array[Int32]
+  mut max_stack : Int32
+  max_call_depth : Int32
+  mut max_function_defs : Int32
+  mut max_instruction_defs : Int32
 }
 
 ///|
@@ -109,7 +109,9 @@ fn TtHintInstance::backward_compatibility(self : TtHintInstance) -> Bool {
 }
 
 ///|
-fn tt_parse_maxp_limits(maxp : BytesView) -> (Int, Int, Int, Int, Int) {
+fn tt_parse_maxp_limits(
+  maxp : BytesView,
+) -> (Int32, Int32, Int32, Int32, Int32) {
   // Returns (max_function_defs, max_instruction_defs, max_twilight_points, max_stack, max_storage).
   let max_function_defs = tt_read_u16_be(maxp, 20).unwrap_or(0)
   let max_instruction_defs = tt_read_u16_be(maxp, 22).unwrap_or(0)
@@ -122,12 +124,12 @@ fn tt_parse_maxp_limits(maxp : BytesView) -> (Int, Int, Int, Int, Int) {
 }
 
 ///|
-fn tt_load_cvt(font : @moon_skrifa.FontRef) -> Array[Int] {
+fn tt_load_cvt(font : @moon_skrifa.FontRef) -> Array[Int32] {
   match font.table(TAG_CVT_TT) {
     None => []
     Some(cvt) => {
       let n = cvt.length() / 2
-      let out : Array[Int] = []
+      let out : Array[Int32] = []
       for i in 0..<n {
         let v = tt_read_i16_be(cvt, i * 2).unwrap_or(0)
         out.push(v * 64)
@@ -138,10 +140,13 @@ fn tt_load_cvt(font : @moon_skrifa.FontRef) -> Array[Int] {
 }
 
 ///|
-fn tt_scale_cvt_for_size(cvt : Array[Int], scale_bits : Int) -> Array[Int] {
+fn tt_scale_cvt_for_size(
+  cvt : Array[Int32],
+  scale_bits : Int32,
+) -> Array[Int32] {
   // CVT values are already in 26.6; scale by (scale_bits >> 6) (16.16).
   let s = scale_bits >> 6
-  let out : Array[Int] = []
+  let out : Array[Int32] = []
   for v in cvt.iter() {
     let vv = v.to_int64() * s.to_int64()
     let adj = 0x8000 - (if vv < 0 { 1 } else { 0 })
@@ -151,7 +156,7 @@ fn tt_scale_cvt_for_size(cvt : Array[Int], scale_bits : Int) -> Array[Int] {
 }
 
 ///|
-fn tt_fvar_axis_count(font : @moon_skrifa.FontRef) -> Int {
+fn tt_fvar_axis_count(font : @moon_skrifa.FontRef) -> Int32 {
   match font.table(TAG_FVAR_TT) {
     None => 0
     Some(fvar) => tt_read_u16_be(fvar, 8).unwrap_or(0)
@@ -159,11 +164,11 @@ fn tt_fvar_axis_count(font : @moon_skrifa.FontRef) -> Int {
 }
 
 ///|
-fn tt_make_twilight_zone(point_count : Int) -> TtZone {
+fn tt_make_twilight_zone(point_count : Int32) -> TtZone {
   let pts : Array[TtPoint] = Array::make(point_count, { x: 0, y: 0, })
   let orig : Array[TtPoint] = Array::make(point_count, { x: 0, y: 0, })
-  let flags : Array[Int] = Array::make(point_count, 0)
-  let contours : Array[Int] = Array::from_fixed_array([point_count])
+  let flags : Array[Int32] = Array::make(point_count, 0)
+  let contours : Array[Int32] = Array::from_fixed_array([point_count])
   { unscaled: [], original: orig, points: pts, flags, contours, }
 }
 
@@ -176,8 +181,8 @@ fn tt_make_empty_glyph_zone() -> TtZone {
 fn TtHintInstance::reconfigure(
   self : TtHintInstance,
   font : @moon_skrifa.FontRef,
-  scale_bits : Int,
-  rounded_ppem : Int,
+  scale_bits : Int32,
+  rounded_ppem : Int32,
   target : Target,
   coords : ArrayView[@moon_skrifa.NormalizedCoord],
 ) -> Result[Unit, HintError] {
@@ -205,7 +210,7 @@ fn TtHintInstance::reconfigure(
     cvar_deltas_fixed16_16(font, axis_count, coords, base_cvt.length()) {
     None => base_cvt
     Some(deltas_bits) => {
-      let out : Array[Int] = []
+      let out : Array[Int32] = []
       for i in 0..<base_cvt.length() {
         out.push(base_cvt.at(i) + cvar_fixed16_16_to_f26_6(deltas_bits.at(i)))
       }
@@ -269,7 +274,7 @@ fn TtHintInstance::hint_glyph(
   glyph_zone : TtZone,
   is_composite : Bool,
   is_pedantic : Bool,
-  axis_count : Int,
+  axis_count : Int32,
   coords : ArrayView[@moon_skrifa.NormalizedCoord],
 ) -> Result[TtZone, HintError] {
   // Clone mutable state per glyph (matches upstream's copy-on-write behavior).

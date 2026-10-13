@@ -25,12 +25,12 @@ priv enum AutoHintScriptGroup {
 }
 
 ///|
-fn autohint_derived_constant(units_per_em : Int, value : Int) -> Int {
+fn autohint_derived_constant(units_per_em : Int32, value : Int32) -> Int32 {
   value * units_per_em / 2048
 }
 
 ///|
-fn autohint_fixed_div(a : Int, b : Int) -> Int {
+fn autohint_fixed_div(a : Int32, b : Int32) -> Int32 {
   let mut sign = 1
   let mut aa = a.to_int64()
   let mut bb = b.to_int64()
@@ -56,7 +56,7 @@ fn autohint_fixed_div(a : Int, b : Int) -> Int {
 }
 
 ///|
-fn autohint_fixed_mul(a : Int, b : Int) -> Int {
+fn autohint_fixed_mul(a : Int32, b : Int32) -> Int32 {
   let prod = a.to_int64() * b.to_int64()
   let round : Int64 = (0x8000 - (if prod < 0 { 1 } else { 0 })).to_int64()
   ((prod + round) >> 16).to_int()
@@ -65,14 +65,14 @@ fn autohint_fixed_mul(a : Int, b : Int) -> Int {
 // Bounds for score, position and coordinate values.
 
 ///|
-const AUTOHINT_SEG_MAX_SCORE : Int = 32000
+const AUTOHINT_SEG_MAX_SCORE : Int32 = 32000
 
 ///|
-const AUTOHINT_SEG_MIN_SCORE : Int = -32000
+const AUTOHINT_SEG_MIN_SCORE : Int32 = -32000
 
 ///|
 priv struct AutoHintAxis {
-  mut dim : Int
+  mut dim : Int32
   mut major_dir : AutoHintDirection
   segments : Array[AutoHintSegment]
   edges : Array[AutoHintEdge]
@@ -84,15 +84,15 @@ fn AutoHintAxis::default() -> AutoHintAxis {
 }
 
 ///|
-const AUTOHINT_DIM_HORIZONTAL : Int = 0
+const AUTOHINT_DIM_HORIZONTAL : Int32 = 0
 
 ///|
-const AUTOHINT_DIM_VERTICAL : Int = 1
+const AUTOHINT_DIM_VERTICAL : Int32 = 1
 
 ///|
 fn AutoHintAxis::reset(
   self : AutoHintAxis,
-  dim : Int,
+  dim : Int32,
   orientation : AutoHintOrientation?,
 ) -> Unit {
   self.dim = dim
@@ -109,21 +109,21 @@ fn AutoHintAxis::reset(
 
 ///|
 priv struct AutoHintSegment {
-  mut flags : Int
+  mut flags : Int32
   mut dir : AutoHintDirection
-  mut pos : Int
-  mut delta : Int
-  mut min_coord : Int
-  mut max_coord : Int
-  mut height : Int
-  mut score : Int
-  mut len : Int
-  mut link_ix : Int?
-  mut serif_ix : Int?
-  mut first_ix : Int
-  mut last_ix : Int
-  mut edge_ix : Int?
-  mut edge_next_ix : Int?
+  mut pos : Int32
+  mut delta : Int32
+  mut min_coord : Int32
+  mut max_coord : Int32
+  mut height : Int32
+  mut score : Int32
+  mut len : Int32
+  mut link_ix : Int32?
+  mut serif_ix : Int32?
+  mut first_ix : Int32
+  mut last_ix : Int32
+  mut edge_ix : Int32?
+  mut edge_next_ix : Int32?
 }
 
 ///|
@@ -166,8 +166,8 @@ fn AutoHintSegment::last_point(
 ///|
 fn autohint_segment_make(
   dir : AutoHintDirection,
-  first_ix : Int,
-  last_ix : Int,
+  first_ix : Int32,
+  last_ix : Int32,
 ) -> AutoHintSegment {
   let seg = AutoHintSegment::default()
   seg.dir = dir
@@ -179,14 +179,14 @@ fn autohint_segment_make(
 
 ///|
 priv struct AutoHintSegmentState {
-  mut min_pos : Int
-  mut max_pos : Int
-  mut min_coord : Int
-  mut max_coord : Int
+  mut min_pos : Int32
+  mut max_pos : Int32
+  mut min_coord : Int32
+  mut max_coord : Int32
   mut min_flags : AutoHintPointFlags
   mut max_flags : AutoHintPointFlags
-  mut min_on_coord : Int
-  mut max_on_coord : Int
+  mut min_on_coord : Int32
+  mut max_on_coord : Int32
 }
 
 ///|
@@ -222,7 +222,7 @@ fn autohint_segment_state_copy(
 fn AutoHintSegmentState::apply_to_segment(
   self : AutoHintSegmentState,
   segment : AutoHintSegment,
-  flat_threshold : Int,
+  flat_threshold : Int32,
 ) -> Unit {
   segment.pos = (self.min_pos + self.max_pos) >> 1
   segment.delta = (self.max_pos - self.min_pos) >> 1
@@ -236,7 +236,7 @@ fn AutoHintSegmentState::apply_to_segment(
 }
 
 ///|
-fn autohint_assign_point_uvs(outline : AutoHintOutline, dim : Int) -> Unit {
+fn autohint_assign_point_uvs(outline : AutoHintOutline, dim : Int32) -> Unit {
   if dim == AUTOHINT_DIM_HORIZONTAL {
     for i in 0..<outline.points.length() {
       let p = outline.points.at(i)
@@ -269,7 +269,7 @@ fn autohint_build_segments(
     let mut last_ix = contour.prev(point_ix)
     let state = AutoHintSegmentState::default()
     let prev_state = AutoHintSegmentState::default()
-    let mut prev_segment_ix : Int? = None
+    let mut prev_segment_ix : Int32? = None
     let mut segment_ix = 0
     // Check if we're starting on an edge and if so, find the starting point.
     if outline.points.at(point_ix).out_dir.is_same_axis(major_dir) &&
@@ -477,7 +477,7 @@ fn autohint_compute_segments(
 fn autohint_link_segments_default(
   outline : AutoHintOutline,
   axis : AutoHintAxis,
-  max_width : Int,
+  max_width : Int32,
 ) -> Unit {
   // Heuristic value to set up a minimum for overlapping.
   let len_threshold = autohint_derived_constant(outline.units_per_em, 8).max(1)
@@ -551,7 +551,7 @@ fn autohint_link_segments_default(
 fn autohint_link_segments_cjk(
   outline : AutoHintOutline,
   axis : AutoHintAxis,
-  scale : Int,
+  scale : Int32,
 ) -> Unit {
   // Heuristic value to set up a minimum for overlapping.
   let len_threshold = autohint_derived_constant(outline.units_per_em, 8)
@@ -675,9 +675,9 @@ fn autohint_link_segments_cjk(
 fn autohint_link_segments(
   outline : AutoHintOutline,
   axis : AutoHintAxis,
-  scale : Int,
+  scale : Int32,
   group : AutoHintScriptGroup,
-  max_width : Int?,
+  max_width : Int32?,
 ) -> Unit {
   // Silence unused_constructor warnings until the full autohinter integration
   // is in place.
@@ -690,6 +690,10 @@ fn autohint_link_segments(
 }
 
 ///|
-fn autohint_check_seg_cjk(dist : Int, len : Int, seg : AutoHintSegment) -> Bool {
+fn autohint_check_seg_cjk(
+  dist : Int32,
+  len : Int32,
+  seg : AutoHintSegment,
+) -> Bool {
   dist * 8 < seg.score * 9 && (dist * 8 < seg.score * 7 || seg.len < len)
 }

@@ -14,22 +14,22 @@
 
 ///|
 test "OutlineGlyphCollection basic" {
-  fn push_u16_be(out : Array[Byte], v : Int) -> Unit {
+  fn push_u16_be(out : Array[Byte], v : Int32) -> Unit {
     let u = v.reinterpret_as_uint()
-    let mask = 255 |> Int::reinterpret_as_uint
+    let mask = 255 |> Int32::reinterpret_as_uint
     out.push(((u >> 8) & mask).to_byte())
     out.push((u & mask).to_byte())
   }
 
-  fn push_u32_be(out : Array[Byte], v : UInt) -> Unit {
-    let mask = 255 |> Int::reinterpret_as_uint
+  fn push_u32_be(out : Array[Byte], v : UInt32) -> Unit {
+    let mask = 255 |> Int32::reinterpret_as_uint
     out.push(((v >> 24) & mask).to_byte())
     out.push(((v >> 16) & mask).to_byte())
     out.push(((v >> 8) & mask).to_byte())
     out.push((v & mask).to_byte())
   }
 
-  fn u32(x : Int) -> UInt {
+  fn u32(x : Int32) -> UInt32 {
     x.reinterpret_as_uint()
   }
   // Minimal SFNT with no tables (valid enough for FontRef table lookups).
@@ -40,6 +40,6 @@ test "OutlineGlyphCollection basic" {
   push_u16_be(out, 0)
   push_u16_be(out, 0)
   let font = @moon_skrifa.FontRef::from_bytes(Bytes::from_array(out[:])).unwrap()
-  let c = OutlineGlyphCollection::OutlineGlyphCollection(font)
+  let c = @outline.OutlineGlyphCollection::OutlineGlyphCollection(font)
   inspect(c.format() is None, content="true")
 }

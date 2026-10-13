@@ -14,21 +14,21 @@
 
 ///|
 /// gvar outline tests using synthetic SFNT bytes.
-fn gvar_test_push_u16_be(out : Array[Byte], v : Int) -> Unit {
+fn gvar_test_push_u16_be(out : Array[Byte], v : Int32) -> Unit {
   let u = v.reinterpret_as_uint()
-  let mask = 255 |> Int::reinterpret_as_uint
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((u >> 8) & mask).to_byte())
   out.push((u & mask).to_byte())
 }
 
 ///|
-fn gvar_test_push_i16_be(out : Array[Byte], v : Int) -> Unit {
+fn gvar_test_push_i16_be(out : Array[Byte], v : Int32) -> Unit {
   gvar_test_push_u16_be(out, v)
 }
 
 ///|
-fn gvar_test_push_u32_be(out : Array[Byte], v : UInt) -> Unit {
-  let mask = 255 |> Int::reinterpret_as_uint
+fn gvar_test_push_u32_be(out : Array[Byte], v : UInt32) -> Unit {
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((v >> 24) & mask).to_byte())
   out.push(((v >> 16) & mask).to_byte())
   out.push(((v >> 8) & mask).to_byte())
@@ -36,12 +36,12 @@ fn gvar_test_push_u32_be(out : Array[Byte], v : UInt) -> Unit {
 }
 
 ///|
-fn gvar_test_u32(x : Int) -> UInt {
+fn gvar_test_u32(x : Int32) -> UInt32 {
   x.reinterpret_as_uint()
 }
 
 ///|
-fn gvar_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
+fn gvar_test_build_sfnt(tables : Array[(UInt32, Bytes)]) -> Bytes {
   let num_tables = tables.length()
   let header_len = 12 + num_tables * 16
   let out : Array[Byte] = []
@@ -69,7 +69,7 @@ fn gvar_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
 }
 
 ///|
-fn gvar_test_make_maxp(num_glyphs : Int) -> Bytes {
+fn gvar_test_make_maxp(num_glyphs : Int32) -> Bytes {
   let out : Array[Byte] = []
   gvar_test_push_u32_be(out, gvar_test_u32(0x00010000))
   gvar_test_push_u16_be(out, num_glyphs)
@@ -77,19 +77,19 @@ fn gvar_test_make_maxp(num_glyphs : Int) -> Bytes {
 }
 
 ///|
-fn gvar_test_make_head(upem : Int) -> Bytes {
-  let out : Array[Byte] = Array::make(54, 0 |> Int::to_byte)
+fn gvar_test_make_head(upem : Int32) -> Bytes {
+  let out : Array[Byte] = Array::make(54, 0 |> Int32::to_byte)
   // head.unitsPerEm at offset 18.
   out.set(18, ((upem >> 8) & 0xFF).to_byte())
   out.set(19, (upem & 0xFF).to_byte())
   // head.indexToLocFormat at offset 50: 1 => long offsets.
-  out.set(50, 0 |> Int::to_byte)
-  out.set(51, 1 |> Int::to_byte)
+  out.set(50, 0 |> Int32::to_byte)
+  out.set(51, 1 |> Int32::to_byte)
   Bytes::from_array(out[:])
 }
 
 ///|
-fn gvar_test_make_loca_long(offsets : Array[Int]) -> Bytes {
+fn gvar_test_make_loca_long(offsets : Array[Int32]) -> Bytes {
   let out : Array[Byte] = []
   for off in offsets {
     gvar_test_push_u32_be(out, gvar_test_u32(off))
@@ -109,15 +109,15 @@ fn gvar_test_glyph_simple_quad() -> Bytes {
   gvar_test_push_i16_be(out, 100)
   gvar_test_push_u16_be(out, 2) // endPts[0]
   gvar_test_push_u16_be(out, 0) // instructionLength
-  out.push(0x31 |> Int::to_byte)
-  out.push(0x36 |> Int::to_byte)
-  out.push(0x17 |> Int::to_byte)
+  out.push(0x31 |> Int32::to_byte)
+  out.push(0x36 |> Int32::to_byte)
+  out.push(0x17 |> Int32::to_byte)
   // x bytes: 50, 50
-  out.push(50 |> Int::to_byte)
-  out.push(50 |> Int::to_byte)
+  out.push(50 |> Int32::to_byte)
+  out.push(50 |> Int32::to_byte)
   // y bytes: 100, 100 (second is negative)
-  out.push(100 |> Int::to_byte)
-  out.push(100 |> Int::to_byte)
+  out.push(100 |> Int32::to_byte)
+  out.push(100 |> Int32::to_byte)
   Bytes::from_array(out[:])
 }
 
@@ -146,12 +146,12 @@ fn gvar_test_make_gvar_one_tuple_sparse_point() -> Bytes {
   gvar_test_push_u16_be(out, 0x8000) // tupleIndex: embedded peak
   gvar_test_push_i16_be(out, 0x4000) // peak = 1.0 (F2Dot14)
   // tuple data (6 bytes): points=[1], dx=[10], dy=[0]
-  out.push(1 |> Int::to_byte) // point count
-  out.push(0 |> Int::to_byte) // run ctrl (1 byte)
-  out.push(1 |> Int::to_byte) // delta to point 1
-  out.push(0 |> Int::to_byte) // x deltas ctrl (1 byte, i8)
-  out.push(10 |> Int::to_byte) // dx=10
-  out.push(0x80 |> Int::to_byte) // y deltas ctrl: zeros run_len=1
+  out.push(1 |> Int32::to_byte) // point count
+  out.push(0 |> Int32::to_byte) // run ctrl (1 byte)
+  out.push(1 |> Int32::to_byte) // delta to point 1
+  out.push(0 |> Int32::to_byte) // x deltas ctrl (1 byte, i8)
+  out.push(10 |> Int32::to_byte) // dx=10
+  out.push(0x80 |> Int32::to_byte) // y deltas ctrl: zeros run_len=1
   Bytes::from_array(out[:])
 }
 
@@ -182,12 +182,14 @@ test "gvar applies sparse tuple + IUP shift for single delta point" {
     ]),
   )
   let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
-  let c = OutlineGlyphCollection::from_font(font)
+  let c = @outline.OutlineGlyphCollection::from_font(font)
 
   // Default coords => base outline.
-  let base = c.path(GlyphId((1).to_uint16()), DrawSettings::default()).unwrap()
+  let base = c
+    .path(GlyphId((1).to_uint16()), @outline.DrawSettings::default())
+    .unwrap()
   let expected_base = Array::from_fixed_array([
-    PathElement::MoveTo(0.0, 0.0),
+    @outline.PathElement::MoveTo(0.0, 0.0),
     QuadTo(50.0, 100.0, 100.0, 0.0),
     Close,
   ])
@@ -197,13 +199,13 @@ test "gvar applies sparse tuple + IUP shift for single delta point" {
   let coords : Array[@moon_skrifa.NormalizedCoord] = Array::from_fixed_array([
     8192,
   ])
-  let settings = DrawSettings::unhinted(
+  let settings = @outline.DrawSettings::unhinted(
     @moon_skrifa.Size::unscaled(),
     LocationRef(coords[:]),
   )
   let varied = c.path(GlyphId((1).to_uint16()), settings).unwrap()
   let expected_varied = Array::from_fixed_array([
-    PathElement::MoveTo(5.0, 0.0),
+    @outline.PathElement::MoveTo(5.0, 0.0),
     QuadTo(55.0, 100.0, 105.0, 0.0),
     Close,
   ])

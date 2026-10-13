@@ -16,16 +16,16 @@
 /// Axes of variation in a variable font.
 ///
 /// Ported from `fontations/skrifa/src/variation.rs` (Apache-2.0 OR MIT).
-const TAG_FVAR : UInt = 0x66766172 // "fvar"
+const TAG_FVAR : UInt32 = 0x66766172 // "fvar"
 
 ///|
-const TAG_AVAR : UInt = 0x61766172 // "avar"
+const TAG_AVAR : UInt32 = 0x61766172 // "avar"
 
 ///|
 const F2DOT14_SCALE : Double = 16384.0
 
 ///|
-fn variation_read_u16_be(view : BytesView, offset : Int) -> Int? {
+fn variation_read_u16_be(view : BytesView, offset : Int32) -> Int32? {
   if offset < 0 || offset + 2 > view.length() {
     None
   } else {
@@ -36,7 +36,7 @@ fn variation_read_u16_be(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn variation_read_i16_be(view : BytesView, offset : Int) -> Int? {
+fn variation_read_i16_be(view : BytesView, offset : Int32) -> Int32? {
   match variation_read_u16_be(view, offset) {
     None => None
     Some(u) => if u >= 0x8000 { Some(u - 0x10000) } else { Some(u) }
@@ -44,7 +44,7 @@ fn variation_read_i16_be(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn variation_read_u32_be(view : BytesView, offset : Int) -> UInt? {
+fn variation_read_u32_be(view : BytesView, offset : Int32) -> UInt32? {
   if offset < 0 || offset + 4 > view.length() {
     None
   } else {
@@ -57,7 +57,7 @@ fn variation_read_u32_be(view : BytesView, offset : Int) -> UInt? {
 }
 
 ///|
-fn variation_read_i32_be(view : BytesView, offset : Int) -> Int? {
+fn variation_read_i32_be(view : BytesView, offset : Int32) -> Int32? {
   match variation_read_u32_be(view, offset) {
     None => None
     Some(u) => Some(u.reinterpret_as_int())
@@ -65,7 +65,7 @@ fn variation_read_i32_be(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn variation_read_fixed_16_16(view : BytesView, offset : Int) -> Double? {
+fn variation_read_fixed_16_16(view : BytesView, offset : Int32) -> Double? {
   match variation_read_i32_be(view, offset) {
     None => None
     Some(bits) => Some(bits.to_double() / 65536.0)
@@ -119,13 +119,13 @@ priv struct AxisRecord {
   min_value : Double
   default_value : Double
   max_value : Double
-  flags : Int
+  flags : Int32
   name_id : StringId
 }
 
 ///|
 pub struct Axis {
-  priv index : Int
+  priv index : Int32
   priv record : AxisRecord
 }
 
@@ -135,7 +135,7 @@ pub fn Axis::tag(self : Axis) -> Tag {
 }
 
 ///|
-pub fn Axis::index(self : Axis) -> Int {
+pub fn Axis::index(self : Axis) -> Int32 {
   self.index
 }
 
@@ -177,8 +177,8 @@ pub fn Axis::normalize(self : Axis, coord : Double) -> NormalizedCoord {
 
 ///|
 priv struct AvarAxisMap {
-  from_coords : Array[Int]
-  to_coords : Array[Int]
+  from_coords : Array[Int32]
+  to_coords : Array[Int32]
 }
 
 ///|
@@ -187,7 +187,7 @@ priv struct AvarData {
 }
 
 ///|
-fn avar_apply(map : AvarAxisMap, coord : Int) -> Int {
+fn avar_apply(map : AvarAxisMap, coord : Int32) -> Int32 {
   let n = map.from_coords.length()
   if n <= 0 || map.to_coords.length() != n {
     return coord
@@ -220,7 +220,7 @@ fn avar_apply(map : AvarAxisMap, coord : Int) -> Int {
 }
 
 ///|
-fn avar_parse(table : BytesView, axis_count : Int) -> AvarData? {
+fn avar_parse(table : BytesView, axis_count : Int32) -> AvarData? {
   // avar header: major u16, minor u16, axisCount u16, reserved u16
   if table.length() < 8 {
     return None
@@ -245,8 +245,8 @@ fn avar_parse(table : BytesView, axis_count : Int) -> AvarData? {
     if map_count <= 0 {
       return None
     }
-    let from_coords : Array[Int] = []
-    let to_coords : Array[Int] = []
+    let from_coords : Array[Int32] = []
+    let to_coords : Array[Int32] = []
     for _ in 0..<map_count {
       let from = variation_read_i16_be(table, off).unwrap_or(0)
       let to = variation_read_i16_be(table, off + 2).unwrap_or(0)
@@ -375,7 +375,7 @@ pub fn AxisCollection::AxisCollection(font : FontRef) -> AxisCollection {
 }
 
 ///|
-pub fn AxisCollection::len(self : AxisCollection) -> Int {
+pub fn AxisCollection::len(self : AxisCollection) -> Int32 {
   self.axes.length()
 }
 
@@ -385,7 +385,7 @@ pub fn AxisCollection::is_empty(self : AxisCollection) -> Bool {
 }
 
 ///|
-pub fn AxisCollection::get(self : AxisCollection, index : Int) -> Axis? {
+pub fn AxisCollection::get(self : AxisCollection, index : Int32) -> Axis? {
   match self.axes.get(index) {
     None => None
     Some(r) => Some({ index, record: r, })
@@ -505,7 +505,7 @@ pub fn NamedInstanceCollection::NamedInstanceCollection(
 }
 
 ///|
-pub fn NamedInstanceCollection::len(self : NamedInstanceCollection) -> Int {
+pub fn NamedInstanceCollection::len(self : NamedInstanceCollection) -> Int32 {
   self.axes.instances.length()
 }
 
@@ -519,7 +519,7 @@ pub fn NamedInstanceCollection::is_empty(
 ///|
 pub fn NamedInstanceCollection::get(
   self : NamedInstanceCollection,
-  index : Int,
+  index : Int32,
 ) -> NamedInstance? {
   match self.axes.instances.get(index) {
     None => None

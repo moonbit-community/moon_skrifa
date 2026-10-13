@@ -14,16 +14,16 @@
 
 ///|
 /// Attributes tests using synthetic SFNT bytes.
-fn attr_test_push_u16_be(out : Array[Byte], v : Int) -> Unit {
+fn attr_test_push_u16_be(out : Array[Byte], v : Int32) -> Unit {
   let u = v.reinterpret_as_uint()
-  let mask = 255 |> Int::reinterpret_as_uint
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((u >> 8) & mask).to_byte())
   out.push((u & mask).to_byte())
 }
 
 ///|
-fn attr_test_push_u32_be(out : Array[Byte], v : UInt) -> Unit {
-  let mask = 255 |> Int::reinterpret_as_uint
+fn attr_test_push_u32_be(out : Array[Byte], v : UInt32) -> Unit {
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((v >> 24) & mask).to_byte())
   out.push(((v >> 16) & mask).to_byte())
   out.push(((v >> 8) & mask).to_byte())
@@ -31,22 +31,22 @@ fn attr_test_push_u32_be(out : Array[Byte], v : UInt) -> Unit {
 }
 
 ///|
-fn attr_test_u32(x : Int) -> UInt {
+fn attr_test_u32(x : Int32) -> UInt32 {
   x.reinterpret_as_uint()
 }
 
 ///|
-fn attr_test_set_u16_be(buf : Array[Byte], offset : Int, v : Int) -> Unit {
+fn attr_test_set_u16_be(buf : Array[Byte], offset : Int32, v : Int32) -> Unit {
   let u = v.reinterpret_as_uint()
-  let mask = 255 |> Int::reinterpret_as_uint
+  let mask = 255 |> Int32::reinterpret_as_uint
   buf.set(offset, ((u >> 8) & mask).to_byte())
   buf.set(offset + 1, (u & mask).to_byte())
 }
 
 ///|
-fn attr_test_set_i32_be(buf : Array[Byte], offset : Int, v : Int) -> Unit {
+fn attr_test_set_i32_be(buf : Array[Byte], offset : Int32, v : Int32) -> Unit {
   let u = v.reinterpret_as_uint()
-  let mask = 255 |> Int::reinterpret_as_uint
+  let mask = 255 |> Int32::reinterpret_as_uint
   buf.set(offset, ((u >> 24) & mask).to_byte())
   buf.set(offset + 1, ((u >> 16) & mask).to_byte())
   buf.set(offset + 2, ((u >> 8) & mask).to_byte())
@@ -54,7 +54,7 @@ fn attr_test_set_i32_be(buf : Array[Byte], offset : Int, v : Int) -> Unit {
 }
 
 ///|
-fn attr_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
+fn attr_test_build_sfnt(tables : Array[(UInt32, Bytes)]) -> Bytes {
   let num_tables = tables.length()
   let header_len = 12 + num_tables * 16
   let out : Array[Byte] = []
@@ -82,23 +82,23 @@ fn attr_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
 }
 
 ///|
-const TAG_HEAD : UInt = 0x68656164 // "head"
+const TAG_HEAD : UInt32 = 0x68656164 // "head"
 
 ///|
-const TAG_OS2 : UInt = 0x4F532F32 // "OS/2"
+const TAG_OS2 : UInt32 = 0x4F532F32 // "OS/2"
 
 ///|
-const TAG_POST : UInt = 0x706F7374 // "post"
+const TAG_POST : UInt32 = 0x706F7374 // "post"
 
 ///|
 test "missing_os2 uses head.macStyle italic+bold" {
-  let head : Array[Byte] = Array::make(46, 0 |> Int::to_byte)
+  let head : Array[Byte] = Array::make(46, 0 |> Int32::to_byte)
   // macStyle at offset 44.
   attr_test_set_u16_be(head, 44, 0x0001 | 0x0002)
   let sfnt = attr_test_build_sfnt(
     Array::from_fixed_array([(TAG_HEAD, Bytes::from_array(head[:]))]),
   )
-  let font = FontRef::from_bytes(sfnt).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
   let attrs = font.attributes()
   inspect(attrs.stretch().ratio(), content="1")
   let style_ok = match attrs.style() {
@@ -111,14 +111,14 @@ test "missing_os2 uses head.macStyle italic+bold" {
 
 ///|
 test "so_stylish uses OS/2 + post italicAngle" {
-  let os2 : Array[Byte] = Array::make(64, 0 |> Int::to_byte)
+  let os2 : Array[Byte] = Array::make(64, 0 |> Int32::to_byte)
   // usWeightClass (offset 4) = 800
   attr_test_set_u16_be(os2, 4, 800)
   // usWidthClass (offset 6) = 4 (semi-condensed)
   attr_test_set_u16_be(os2, 6, 4)
   // fsSelection (offset 62): OBLIQUE bit 9 (0x0200)
   attr_test_set_u16_be(os2, 62, 0x0200)
-  let post : Array[Byte] = Array::make(8, 0 |> Int::to_byte)
+  let post : Array[Byte] = Array::make(8, 0 |> Int32::to_byte)
   // version (ignored here)
   attr_test_set_i32_be(post, 0, 0x00030000)
   // italicAngle Fixed 16.16 at offset 4: -14.0 -> -14 * 65536
@@ -129,7 +129,7 @@ test "so_stylish uses OS/2 + post italicAngle" {
       (TAG_POST, Bytes::from_array(post[:])),
     ]),
   )
-  let font = FontRef::from_bytes(sfnt).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
   let attrs = font.attributes()
   inspect(attrs.stretch().ratio(), content="0.875")
   let style_ok = match attrs.style() {

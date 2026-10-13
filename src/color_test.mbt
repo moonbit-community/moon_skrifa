@@ -13,16 +13,16 @@
 // limitations under the License.
 
 ///|
-fn color_test_push_u16_be(out : Array[Byte], v : Int) -> Unit {
+fn color_test_push_u16_be(out : Array[Byte], v : Int32) -> Unit {
   let u = v.reinterpret_as_uint()
-  let mask = 255 |> Int::reinterpret_as_uint
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((u >> 8) & mask).to_byte())
   out.push((u & mask).to_byte())
 }
 
 ///|
-fn color_test_push_u32_be(out : Array[Byte], v : UInt) -> Unit {
-  let mask = 255 |> Int::reinterpret_as_uint
+fn color_test_push_u32_be(out : Array[Byte], v : UInt32) -> Unit {
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((v >> 24) & mask).to_byte())
   out.push(((v >> 16) & mask).to_byte())
   out.push(((v >> 8) & mask).to_byte())
@@ -30,12 +30,12 @@ fn color_test_push_u32_be(out : Array[Byte], v : UInt) -> Unit {
 }
 
 ///|
-fn color_test_u32(x : Int) -> UInt {
+fn color_test_u32(x : Int32) -> UInt32 {
   x.reinterpret_as_uint()
 }
 
 ///|
-fn color_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
+fn color_test_build_sfnt(tables : Array[(UInt32, Bytes)]) -> Bytes {
   let num_tables = tables.length()
   let header_len = 12 + num_tables * 16
   let out : Array[Byte] = []
@@ -63,7 +63,7 @@ fn color_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
 }
 
 ///|
-const TAG_CPAL : UInt = 0x4350414C // "CPAL"
+const TAG_CPAL : UInt32 = 0x4350414C // "CPAL"
 
 ///|
 fn color_test_build_cpal() -> Bytes {
@@ -81,15 +81,15 @@ fn color_test_build_cpal() -> Bytes {
   // colorRecordIndices[0] = 0
   color_test_push_u16_be(out, 0)
   // ColorRecord[0] = red (BGRA)
-  out.push(0 |> Int::to_byte) // B
-  out.push(0 |> Int::to_byte) // G
-  out.push(255 |> Int::to_byte) // R
-  out.push(255 |> Int::to_byte) // A
+  out.push(0 |> Int32::to_byte) // B
+  out.push(0 |> Int32::to_byte) // G
+  out.push(255 |> Int32::to_byte) // R
+  out.push(255 |> Int32::to_byte) // A
   // ColorRecord[1] = green
-  out.push(0 |> Int::to_byte)
-  out.push(255 |> Int::to_byte)
-  out.push(0 |> Int::to_byte)
-  out.push(255 |> Int::to_byte)
+  out.push(0 |> Int32::to_byte)
+  out.push(255 |> Int32::to_byte)
+  out.push(0 |> Int32::to_byte)
+  out.push(255 |> Int32::to_byte)
   Bytes::from_array(out[:])
 }
 
@@ -117,23 +117,23 @@ fn color_test_build_cpal_v1() -> Bytes {
   color_test_push_u16_be(out, 2)
   // Color records (BGRA)
   // palette 0
-  out.push(0 |> Int::to_byte)
-  out.push(0 |> Int::to_byte)
-  out.push(255 |> Int::to_byte)
-  out.push(255 |> Int::to_byte)
-  out.push(0 |> Int::to_byte)
-  out.push(255 |> Int::to_byte)
-  out.push(0 |> Int::to_byte)
-  out.push(255 |> Int::to_byte)
+  out.push(0 |> Int32::to_byte)
+  out.push(0 |> Int32::to_byte)
+  out.push(255 |> Int32::to_byte)
+  out.push(255 |> Int32::to_byte)
+  out.push(0 |> Int32::to_byte)
+  out.push(255 |> Int32::to_byte)
+  out.push(0 |> Int32::to_byte)
+  out.push(255 |> Int32::to_byte)
   // palette 1
-  out.push(255 |> Int::to_byte)
-  out.push(0 |> Int::to_byte)
-  out.push(0 |> Int::to_byte)
-  out.push(255 |> Int::to_byte)
-  out.push(255 |> Int::to_byte)
-  out.push(255 |> Int::to_byte)
-  out.push(255 |> Int::to_byte)
-  out.push(255 |> Int::to_byte)
+  out.push(255 |> Int32::to_byte)
+  out.push(0 |> Int32::to_byte)
+  out.push(0 |> Int32::to_byte)
+  out.push(255 |> Int32::to_byte)
+  out.push(255 |> Int32::to_byte)
+  out.push(255 |> Int32::to_byte)
+  out.push(255 |> Int32::to_byte)
+  out.push(255 |> Int32::to_byte)
   // palette type array
   color_test_push_u32_be(out, color_test_u32(1))
   color_test_push_u32_be(out, color_test_u32(2))
@@ -150,7 +150,7 @@ fn color_test_build_cpal_v1() -> Bytes {
 test "CPAL palettes basic" {
   let cpal = color_test_build_cpal()
   let sfnt = color_test_build_sfnt(Array::from_fixed_array([(TAG_CPAL, cpal)]))
-  let font = FontRef::from_bytes(sfnt).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
   let palettes = font.color_palettes()
   inspect(palettes.len(), content="1")
   inspect(palettes.entries_per_palette(), content="2")
@@ -168,7 +168,7 @@ test "CPAL palettes basic" {
 test "CPAL v1 palette metadata APIs" {
   let cpal = color_test_build_cpal_v1()
   let sfnt = color_test_build_sfnt(Array::from_fixed_array([(TAG_CPAL, cpal)]))
-  let font = FontRef::from_bytes(sfnt).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
   let palettes = font.color_palettes()
   inspect(palettes.len(), content="2")
   inspect(palettes.is_empty(), content="false")

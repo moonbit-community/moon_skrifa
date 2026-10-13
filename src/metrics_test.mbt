@@ -14,21 +14,21 @@
 
 ///|
 /// Minimal metrics tests using synthetic SFNT bytes.
-fn metrics_test_push_u16_be(out : Array[Byte], v : Int) -> Unit {
+fn metrics_test_push_u16_be(out : Array[Byte], v : Int32) -> Unit {
   let u = v.reinterpret_as_uint()
-  let mask = 255 |> Int::reinterpret_as_uint
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((u >> 8) & mask).to_byte())
   out.push((u & mask).to_byte())
 }
 
 ///|
-fn metrics_test_push_i16_be(out : Array[Byte], v : Int) -> Unit {
+fn metrics_test_push_i16_be(out : Array[Byte], v : Int32) -> Unit {
   metrics_test_push_u16_be(out, v & 0xFFFF)
 }
 
 ///|
-fn metrics_test_push_u32_be(out : Array[Byte], v : UInt) -> Unit {
-  let mask = 255 |> Int::reinterpret_as_uint
+fn metrics_test_push_u32_be(out : Array[Byte], v : UInt32) -> Unit {
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((v >> 24) & mask).to_byte())
   out.push(((v >> 16) & mask).to_byte())
   out.push(((v >> 8) & mask).to_byte())
@@ -36,12 +36,12 @@ fn metrics_test_push_u32_be(out : Array[Byte], v : UInt) -> Unit {
 }
 
 ///|
-fn metrics_test_u32(x : Int) -> UInt {
+fn metrics_test_u32(x : Int32) -> UInt32 {
   x.reinterpret_as_uint()
 }
 
 ///|
-fn metrics_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
+fn metrics_test_build_sfnt(tables : Array[(UInt32, Bytes)]) -> Bytes {
   let num_tables = tables.length()
   let header_len = 12 + num_tables * 16
   let out : Array[Byte] = []
@@ -72,7 +72,7 @@ fn metrics_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
 }
 
 ///|
-fn metrics_test_make_maxp(num_glyphs : Int) -> Bytes {
+fn metrics_test_make_maxp(num_glyphs : Int32) -> Bytes {
   let out : Array[Byte] = []
   // version 1.0
   metrics_test_push_u32_be(out, metrics_test_u32(0x00010000))
@@ -81,11 +81,11 @@ fn metrics_test_make_maxp(num_glyphs : Int) -> Bytes {
 }
 
 ///|
-fn metrics_test_make_hhea(num_hmetrics : Int) -> Bytes {
+fn metrics_test_make_hhea(num_hmetrics : Int32) -> Bytes {
   // numberOfHMetrics at offset 34.
-  let out : Array[Byte] = Array::make(36, 0 |> Int::to_byte)
-  let hi = ((num_hmetrics >> 8) & 0xFF) |> Int::to_byte
-  let lo = (num_hmetrics & 0xFF) |> Int::to_byte
+  let out : Array[Byte] = Array::make(36, 0 |> Int32::to_byte)
+  let hi = ((num_hmetrics >> 8) & 0xFF) |> Int32::to_byte
+  let lo = (num_hmetrics & 0xFF) |> Int32::to_byte
   out.set(34, hi)
   out.set(35, lo)
   Bytes::from_array(out[:])
@@ -107,13 +107,13 @@ fn metrics_test_make_hmtx() -> Bytes {
 }
 
 ///|
-const TAG_MAXP : UInt = 0x6D617870 // "maxp"
+const TAG_MAXP : UInt32 = 0x6D617870 // "maxp"
 
 ///|
-const TAG_HHEA : UInt = 0x68686561 // "hhea"
+const TAG_HHEA : UInt32 = 0x68686561 // "hhea"
 
 ///|
-const TAG_HMTX : UInt = 0x686D7478 // "hmtx"
+const TAG_HMTX : UInt32 = 0x686D7478 // "hmtx"
 
 ///|
 test "Metrics basic accessors and lookup" {
@@ -124,8 +124,8 @@ test "Metrics basic accessors and lookup" {
       (TAG_HMTX, metrics_test_make_hmtx()),
     ]),
   )
-  let font = FontRef::from_bytes(sfnt).unwrap()
-  let m = HmtxMetrics::from_font(font).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
+  let m = @moon_skrifa.HmtxMetrics::from_font(font).unwrap()
   inspect(m.num_glyphs(), content="3")
   inspect(m.number_of_hmetrics(), content="2")
   debug_inspect(m.advance_width(GlyphId((0).to_uint16())), content="Some(500)")
@@ -146,17 +146,17 @@ test "Metrics out of range glyph id" {
         TAG_HMTX,
         Bytes::from_array(
           Array::from_fixed_array([
-            0 |> Int::to_byte,
-            10 |> Int::to_byte,
-            0 |> Int::to_byte,
-            0 |> Int::to_byte,
+            0 |> Int32::to_byte,
+            10 |> Int32::to_byte,
+            0 |> Int32::to_byte,
+            0 |> Int32::to_byte,
           ])[:],
         ),
       ),
     ]),
   )
-  let font = FontRef::from_bytes(sfnt).unwrap()
-  let m = HmtxMetrics::from_font(font).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
+  let m = @moon_skrifa.HmtxMetrics::from_font(font).unwrap()
   debug_inspect(m.advance_width(GlyphId((1).to_uint16())), content="None")
   debug_inspect(m.lsb(GlyphId((1).to_uint16())), content="None")
 }
@@ -169,8 +169,8 @@ test "Metrics::new returns None when table missing" {
       (TAG_HHEA, metrics_test_make_hhea(1)),
     ]),
   )
-  let font = FontRef::from_bytes(sfnt).unwrap()
-  let ok = match HmtxMetrics::from_font(font) {
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
+  let ok = match @moon_skrifa.HmtxMetrics::from_font(font) {
     None => true
     Some(_) => false
   }

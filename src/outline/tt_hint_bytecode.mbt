@@ -26,15 +26,15 @@ priv enum TtProgram {
 
 ///|
 priv struct TtInstruction {
-  pc : Int
-  opcode : Int
-  inline_operands : Array[Int]
+  pc : Int32
+  opcode : Int32
+  inline_operands : Array[Int32]
 }
 
 ///|
 priv struct TtDecoder {
   code : BytesView
-  mut pc : Int
+  mut pc : Int32
 }
 
 ///|
@@ -54,7 +54,7 @@ fn TtDecoder::decode(self : TtDecoder) -> Result[TtInstruction?, HintError] {
   let start = self.pc
   let op = self.code.at(self.pc).to_int()
   self.pc = self.pc + 1
-  let operands : Array[Int] = []
+  let operands : Array[Int32] = []
   // PUSHB[1..8] 0xB0..0xB7
   if op >= 0xB0 && op <= 0xB7 {
     let n = op - 0xB0 + 1

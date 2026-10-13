@@ -13,7 +13,7 @@
 // limitations under the License.
 
 ///|
-fn tt_make_mock_gs(fv_x : Int, fv_y : Int) -> TtGraphicsState {
+fn tt_make_mock_gs(fv_x : Int32, fv_y : Int32) -> TtGraphicsState {
   let points = Array::from_fixed_array([
     TtPoint::{ x: -5, y: -20, },
     { x: 10, y: 10, },

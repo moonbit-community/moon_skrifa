@@ -13,16 +13,16 @@
 // limitations under the License.
 
 ///|
-fn colr_test_push_u16_be(out : Array[Byte], v : Int) -> Unit {
+fn colr_test_push_u16_be(out : Array[Byte], v : Int32) -> Unit {
   let u = v.reinterpret_as_uint()
-  let mask = 255 |> Int::reinterpret_as_uint
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((u >> 8) & mask).to_byte())
   out.push((u & mask).to_byte())
 }
 
 ///|
-fn colr_test_push_u32_be(out : Array[Byte], v : UInt) -> Unit {
-  let mask = 255 |> Int::reinterpret_as_uint
+fn colr_test_push_u32_be(out : Array[Byte], v : UInt32) -> Unit {
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((v >> 24) & mask).to_byte())
   out.push(((v >> 16) & mask).to_byte())
   out.push(((v >> 8) & mask).to_byte())
@@ -30,12 +30,12 @@ fn colr_test_push_u32_be(out : Array[Byte], v : UInt) -> Unit {
 }
 
 ///|
-fn colr_test_u32(x : Int) -> UInt {
+fn colr_test_u32(x : Int32) -> UInt32 {
   x.reinterpret_as_uint()
 }
 
 ///|
-fn colr_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
+fn colr_test_build_sfnt(tables : Array[(UInt32, Bytes)]) -> Bytes {
   let num_tables = tables.length()
   let header_len = 12 + num_tables * 16
   let out : Array[Byte] = []
@@ -63,7 +63,7 @@ fn colr_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
 }
 
 ///|
-const TAG_COLR : UInt = 0x434F4C52 // "COLR"
+const TAG_COLR : UInt32 = 0x434F4C52 // "COLR"
 
 ///|
 fn colr_test_build_colr() -> Bytes {
@@ -110,7 +110,7 @@ fn colr_test_build_colr_v1_empty() -> Bytes {
 }
 
 ///|
-fn colr_test_build_colr_v1_with_base_glyph(gid : Int) -> Bytes {
+fn colr_test_build_colr_v1_with_base_glyph(gid : Int32) -> Bytes {
   let out : Array[Byte] = []
   // header:
   // version=1, no v0 records
@@ -133,7 +133,7 @@ fn colr_test_build_colr_v1_with_base_glyph(gid : Int) -> Bytes {
   colr_test_push_u16_be(out, gid)
   colr_test_push_u32_be(out, colr_test_u32(10))
   // PaintSolid (format 2): paletteIndex=3, alpha=1.0
-  out.push(2 |> Int::to_byte)
+  out.push(2 |> Int32::to_byte)
   colr_test_push_u16_be(out, 3)
   colr_test_push_u16_be(out, 0x4000)
   Bytes::from_array(out[:])
@@ -141,7 +141,7 @@ fn colr_test_build_colr_v1_with_base_glyph(gid : Int) -> Bytes {
 
 ///|
 struct ColrTestPainter {
-  fills : Array[(Int, Int)]
+  fills : Array[(Int32, Int32)]
 }
 
 ///|
@@ -205,7 +205,7 @@ impl ColorPainter for ColrTestPainter with fn pop_layer_with_mode(_p, _mode) {
 test "COLR v0 layers basic" {
   let colr = colr_test_build_colr()
   let sfnt = colr_test_build_sfnt(Array::from_fixed_array([(TAG_COLR, colr)]))
-  let font = FontRef::from_bytes(sfnt).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
   let cg = font.color_glyphs()
   let layers = cg.layers(GlyphId((5).to_uint16())).unwrap()
   inspect(layers.length(), content="2")
@@ -219,7 +219,7 @@ test "COLR v0 layers basic" {
 test "COLR v1: header detection" {
   let colr = colr_test_build_colr_v1_empty()
   let sfnt = colr_test_build_sfnt(Array::from_fixed_array([(TAG_COLR, colr)]))
-  let font = FontRef::from_bytes(sfnt).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
   let cg = font.color_glyphs()
   inspect(cg.version(), content="1")
   inspect(cg.has_colr_v1(), content="true")
@@ -230,7 +230,7 @@ test "COLR v1: header detection" {
 test "COLR get_with_format/get APIs" {
   let colr = colr_test_build_colr()
   let sfnt = colr_test_build_sfnt(Array::from_fixed_array([(TAG_COLR, colr)]))
-  let font = FontRef::from_bytes(sfnt).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
   let collection = font.color_glyphs()
   let glyph = collection
     .get_with_format(GlyphId((5).to_uint16()), ColrV0)
@@ -238,7 +238,7 @@ test "COLR get_with_format/get APIs" {
   inspect(glyph.format() is ColrV0, content="true")
   inspect(glyph.layers().unwrap().length(), content="2")
   let painter = ColrTestPainter::{ fills: [], }
-  match glyph.paint(LocationRef::default(), painter) {
+  match glyph.paint(@moon_skrifa.LocationRef::default(), painter) {
     Err(_) => inspect("err", content="ok")
     Ok(_) => {
       inspect(painter.fills.length(), content="2")
@@ -256,9 +256,9 @@ test "COLR get_with_format/get APIs" {
 test "COLR v1 get_with_format/get APIs" {
   let colr = colr_test_build_colr_v1_with_base_glyph(8)
   let sfnt = colr_test_build_sfnt(Array::from_fixed_array([(TAG_COLR, colr)]))
-  let font = FontRef::from_bytes(sfnt).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
   let collection = font.color_glyphs()
-  let gid = GlyphId::GlyphId((8).to_uint16())
+  let gid = @moon_skrifa.GlyphId::GlyphId((8).to_uint16())
   let glyph = collection.get_with_format(gid, ColrV1).unwrap()
   inspect(glyph.format() is ColrV1, content="true")
   inspect(collection.get(gid).unwrap().format() is ColrV1, content="true")

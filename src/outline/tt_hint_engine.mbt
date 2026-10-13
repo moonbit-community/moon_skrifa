@@ -20,29 +20,29 @@
 
 ///|
 /// Maximum number of executed instructions in a single run.
-const TT_MAX_RUN_INSTRUCTIONS : Int = 1_000_000
+const TT_MAX_RUN_INSTRUCTIONS : Int32 = 1_000_000
 
 ///|
 /// Maximum number of bytes in a function/instruction definition.
 ///
 /// This matches upstream's `u16::MAX` limit, and is only enforced in pedantic
 /// mode.
-const TT_MAX_DEFINITION_SIZE : Int = 0xFFFF
+const TT_MAX_DEFINITION_SIZE : Int32 = 0xFFFF
 
 ///|
 /// Tracks budgets for loops to limit execution time.
 ///
 /// Ported from `fontations/skrifa/src/outline/glyf/hint/engine/mod.rs`.
 priv struct TtLoopBudget {
-  limit : Int
-  mut backward_jumps : Int
-  mut loop_calls : Int
+  limit : Int32
+  mut backward_jumps : Int32
+  mut loop_calls : Int32
 }
 
 ///|
 fn TtLoopBudget::TtLoopBudget(
-  cvt_len : Int,
-  point_count : Int?,
+  cvt_len : Int32,
+  point_count : Int32?,
 ) -> TtLoopBudget {
   // Compute limits for loop calls and backward jumps.
   // See FreeType's ttinterp.c "neg_jump_counter_max/loopcall_counter_max".
@@ -78,7 +78,7 @@ fn TtLoopBudget::doing_backward_jump(
 ///|
 fn TtLoopBudget::doing_loop_call(
   self : TtLoopBudget,
-  count : Int,
+  count : Int32,
 ) -> Result[Unit, HintError] {
   self.loop_calls = self.loop_calls + count
   if self.loop_calls > self.limit {
@@ -95,10 +95,10 @@ priv struct TtEngine {
   mut functions : TtDefinitionSet
   mut instructions : TtDefinitionSet
   graphics : TtGraphicsState
-  cvt : Array[Int]
-  storage : Array[Int]
+  cvt : Array[Int32]
+  storage : Array[Int32]
   loop_budget : TtLoopBudget
-  axis_count : Int
+  axis_count : Int32
   coords : ArrayView[@moon_skrifa.NormalizedCoord]
 }
 
@@ -108,15 +108,15 @@ fn TtEngine::TtEngine(
   prep_code : BytesView,
   glyph_code : BytesView,
   retained : TtRetainedGraphicsState,
-  cvt : Array[Int],
-  storage : Array[Int],
-  point_count : Int?,
-  axis_count : Int,
+  cvt : Array[Int32],
+  storage : Array[Int32],
+  point_count : Int32?,
+  axis_count : Int32,
   coords : ArrayView[@moon_skrifa.NormalizedCoord],
-  max_stack : Int,
-  max_call_depth : Int,
-  max_function_defs : Int,
-  max_instruction_defs : Int,
+  max_stack : Int32,
+  max_call_depth : Int32,
+  max_function_defs : Int32,
+  max_instruction_defs : Int32,
 ) -> TtEngine {
   let stack_buf = Array::make(max_stack, 0)
   let graphics = TtGraphicsState::default()
@@ -245,8 +245,8 @@ fn TtEngine::run(self : TtEngine) -> Result[Unit, HintError] {
 ///|
 fn TtEngine::op_unknown(
   self : TtEngine,
-  op : Int,
-  pc : Int,
+  op : Int32,
+  pc : Int32,
 ) -> Result[Unit, HintError] {
   match self.instructions.get(op) {
     None => Err(UnhandledOpcode(op, pc))
@@ -517,7 +517,7 @@ fn TtEngine::op_mppem(self : TtEngine) -> Result[Unit, HintError] {
 }
 
 ///|
-fn tt_bool_i32(v : Bool) -> Int {
+fn tt_bool_i32(v : Bool) -> Int32 {
   if v {
     1
   } else {
@@ -820,7 +820,7 @@ fn TtEngine::op_if(self : TtEngine) -> Result[Unit, HintError] {
 }
 
 ///|
-fn TtEngine::op_else(self : TtEngine, _pc : Int) -> Result[Unit, HintError] {
+fn TtEngine::op_else(self : TtEngine, _pc : Int32) -> Result[Unit, HintError] {
   // We executed the true-branch and hit ELSE: skip to matching EIF.
   let mut nest_depth = 1
   while nest_depth != 0 {
@@ -839,13 +839,13 @@ fn TtEngine::op_else(self : TtEngine, _pc : Int) -> Result[Unit, HintError] {
 }
 
 ///|
-fn TtEngine::op_eif(_self : TtEngine, _pc : Int) -> Result[Unit, HintError] {
+fn TtEngine::op_eif(_self : TtEngine, _pc : Int32) -> Result[Unit, HintError] {
   // No-op: handled by skip logic.
   Ok(())
 }
 
 ///|
-fn TtEngine::op_jmpr(self : TtEngine, _pc : Int) -> Result[Unit, HintError] {
+fn TtEngine::op_jmpr(self : TtEngine, _pc : Int32) -> Result[Unit, HintError] {
   let off = match self.value_stack.pop() {
     Err(e) => return Err(e)
     Ok(v) => v
@@ -869,7 +869,7 @@ fn TtEngine::op_jmpr(self : TtEngine, _pc : Int) -> Result[Unit, HintError] {
 }
 
 ///|
-fn TtEngine::op_jrot(self : TtEngine, pc : Int) -> Result[Unit, HintError] {
+fn TtEngine::op_jrot(self : TtEngine, pc : Int32) -> Result[Unit, HintError] {
   pc |> ignore
   let cond = match self.value_stack.pop() {
     Err(e) => return Err(e)
@@ -898,7 +898,7 @@ fn TtEngine::op_jrot(self : TtEngine, pc : Int) -> Result[Unit, HintError] {
 }
 
 ///|
-fn TtEngine::op_jrof(self : TtEngine, pc : Int) -> Result[Unit, HintError] {
+fn TtEngine::op_jrof(self : TtEngine, pc : Int32) -> Result[Unit, HintError] {
   pc |> ignore
   let cond = match self.value_stack.pop() {
     Err(e) => return Err(e)
@@ -929,7 +929,10 @@ fn TtEngine::op_jrof(self : TtEngine, pc : Int) -> Result[Unit, HintError] {
 // Definitions & calls
 
 ///|
-fn tt_engine_find_endf(code : BytesView, start : Int) -> Result[Int, HintError] {
+fn tt_engine_find_endf(
+  code : BytesView,
+  start : Int32,
+) -> Result[Int32, HintError] {
   let dec = TtDecoder::{ code, pc: start, }
   while true {
     let ins = match dec.decode() {
@@ -948,7 +951,7 @@ fn tt_engine_find_endf(code : BytesView, start : Int) -> Result[Int, HintError] 
 }
 
 ///|
-fn TtEngine::op_fdef(self : TtEngine, pc : Int) -> Result[Unit, HintError] {
+fn TtEngine::op_fdef(self : TtEngine, pc : Int32) -> Result[Unit, HintError] {
   if self.program.current is Glyph {
     return Err(DefinitionInGlyphProgram)
   }
@@ -982,7 +985,7 @@ fn TtEngine::op_fdef(self : TtEngine, pc : Int) -> Result[Unit, HintError] {
 }
 
 ///|
-fn TtEngine::op_idef(self : TtEngine, pc : Int) -> Result[Unit, HintError] {
+fn TtEngine::op_idef(self : TtEngine, pc : Int32) -> Result[Unit, HintError] {
   if self.program.current is Glyph {
     return Err(DefinitionInGlyphProgram)
   }
@@ -1014,14 +1017,14 @@ fn TtEngine::op_idef(self : TtEngine, pc : Int) -> Result[Unit, HintError] {
 }
 
 ///|
-fn TtEngine::op_endf(self : TtEngine, pc : Int) -> Result[Unit, HintError] {
+fn TtEngine::op_endf(self : TtEngine, pc : Int32) -> Result[Unit, HintError] {
   // Returning from a call: pop call frame.
   pc |> ignore
   self.program.pop_frame()
 }
 
 ///|
-fn TtEngine::op_call(self : TtEngine, _pc : Int) -> Result[Unit, HintError] {
+fn TtEngine::op_call(self : TtEngine, _pc : Int32) -> Result[Unit, HintError] {
   let fn_id = match self.value_stack.pop() {
     Err(e) => return Err(e)
     Ok(v) => v
@@ -1040,7 +1043,10 @@ fn TtEngine::op_call(self : TtEngine, _pc : Int) -> Result[Unit, HintError] {
 }
 
 ///|
-fn TtEngine::op_loopcall(self : TtEngine, _pc : Int) -> Result[Unit, HintError] {
+fn TtEngine::op_loopcall(
+  self : TtEngine,
+  _pc : Int32,
+) -> Result[Unit, HintError] {
   // Stack order: f (top), count (next).
   let fn_id = match self.value_stack.pop() {
     Err(e) => return Err(e)

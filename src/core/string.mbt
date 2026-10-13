@@ -16,7 +16,7 @@
 /// Localized strings (OpenType `name` table).
 ///
 /// Ported from `fontations/skrifa/src/string.rs` (Apache-2.0 OR MIT).
-const TAG_NAME : UInt = 0x6E616D65 // "name"
+const TAG_NAME : UInt32 = 0x6E616D65 // "name"
 
 ///|
 /// OpenType name identifier (NameID).
@@ -162,7 +162,7 @@ pub fn string_id_predefined() -> Array[StringId] {
 }
 
 ///|
-fn string_read_u16_be(view : BytesView, offset : Int) -> Int? {
+fn string_read_u16_be(view : BytesView, offset : Int32) -> Int32? {
   if offset < 0 || offset + 2 > view.length() {
     None
   } else {
@@ -212,7 +212,7 @@ fn string_decode_utf16be(view : BytesView) -> String? {
 }
 
 ///|
-fn string_mac_roman_code_point(b : Int) -> Int {
+fn string_mac_roman_code_point(b : Int32) -> Int32 {
   if b >= 0 && b <= 0x7F {
     b
   } else {
@@ -362,8 +362,8 @@ fn string_decode_bytes_mac_roman(view : BytesView) -> String {
 
 ///|
 fn string_decode_name_string(
-  platform_id : Int,
-  encoding_id : Int,
+  platform_id : Int32,
+  encoding_id : Int32,
   view : BytesView,
 ) -> String? {
   match platform_id {
@@ -393,7 +393,7 @@ fn string_is_ascii(s : String) -> Bool {
 }
 
 ///|
-fn string_language_id_to_bcp47(language_id : Int) -> String? {
+fn string_language_id_to_bcp47(language_id : Int32) -> String? {
   // Borrowed from Skia (`SkOTTable_name.cpp`) via skrifa-reference.
   match language_id {
     0x0000 => Some("en")
@@ -833,7 +833,7 @@ pub fn FontRef::localized_strings(
   if records_end < records_base || records_end > name.length() {
     return { id, strings: [], }
   }
-  let lang_tags : Array[(Int, Int)] = []
+  let lang_tags : Array[(Int32, Int32)] = []
   if format == 1 {
     if records_end + 2 > name.length() {
       return { id, strings: [], }

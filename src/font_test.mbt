@@ -14,16 +14,16 @@
 
 ///|
 /// Minimal FontRef tests (SFNT/TTC + table lookup).
-fn push_u16_be(out : Array[Byte], v : Int) -> Unit {
+fn push_u16_be(out : Array[Byte], v : Int32) -> Unit {
   let u = v.reinterpret_as_uint()
-  let mask = 255 |> Int::reinterpret_as_uint
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((u >> 8) & mask).to_byte())
   out.push((u & mask).to_byte())
 }
 
 ///|
-fn push_u32_be(out : Array[Byte], v : UInt) -> Unit {
-  let mask = 255 |> Int::reinterpret_as_uint
+fn push_u32_be(out : Array[Byte], v : UInt32) -> Unit {
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((v >> 24) & mask).to_byte())
   out.push(((v >> 16) & mask).to_byte())
   out.push(((v >> 8) & mask).to_byte())
@@ -31,18 +31,18 @@ fn push_u32_be(out : Array[Byte], v : UInt) -> Unit {
 }
 
 ///|
-const TAG_TTCF : UInt = 0x74746366 // "ttcf"
+const TAG_TTCF : UInt32 = 0x74746366 // "ttcf"
 
 ///|
-const TAG_TEST : UInt = 0x74657374 // "test"
+const TAG_TEST : UInt32 = 0x74657374 // "test"
 
 ///|
-fn u32(x : Int) -> UInt {
+fn u32(x : Int32) -> UInt32 {
   x.reinterpret_as_uint()
 }
 
 ///|
-fn make_min_sfnt_with_table_offset(table_offset : Int) -> Bytes {
+fn make_min_sfnt_with_table_offset(table_offset : Int32) -> Bytes {
   let out = []
   // sfnt version: 0x00010000
   push_u32_be(out, u32(0x00010000))
@@ -57,10 +57,10 @@ fn make_min_sfnt_with_table_offset(table_offset : Int) -> Bytes {
   push_u32_be(out, u32(table_offset))
   push_u32_be(out, u32(4)) // length
   // table bytes: "abcd"
-  out.push(0x61 |> Int::to_byte)
-  out.push(0x62 |> Int::to_byte)
-  out.push(0x63 |> Int::to_byte)
-  out.push(0x64 |> Int::to_byte)
+  out.push(0x61 |> Int32::to_byte)
+  out.push(0x62 |> Int32::to_byte)
+  out.push(0x63 |> Int32::to_byte)
+  out.push(0x64 |> Int32::to_byte)
   Bytes::from_array(out[:])
 }
 
@@ -89,7 +89,7 @@ fn make_min_ttc() -> Bytes {
 ///|
 test "FontRef::from_bytes sfnt + table()" {
   let data = make_min_sfnt()
-  let font = FontRef::from_bytes(data).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(data).unwrap()
   inspect(font.index(), content="0")
   let t = font.table(TAG_TEST).unwrap()
   inspect(t.to_owned(), content="b\"abcd\"")
@@ -98,7 +98,7 @@ test "FontRef::from_bytes sfnt + table()" {
 ///|
 test "FontRef::from_bytes ttc + table()" {
   let data = make_min_ttc()
-  let font = FontRef::from_bytes(data).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(data).unwrap()
   inspect(font.index(), content="0")
   let t = font.table(TAG_TEST).unwrap()
   inspect(t.to_owned(), content="b\"abcd\"")
@@ -107,7 +107,7 @@ test "FontRef::from_bytes ttc + table()" {
 ///|
 test "FontRef::from_index bounds" {
   let data = make_min_ttc()
-  let ok = match FontRef::from_index(data, 1) {
+  let ok = match @moon_skrifa.FontRef::from_index(data, 1) {
     None => true
     Some(_) => false
   }
@@ -116,7 +116,7 @@ test "FontRef::from_index bounds" {
 
 ///|
 test "GlyphId helpers" {
-  let gid : GlyphId = GlyphId(5)
+  let gid : @moon_skrifa.GlyphId = GlyphId(5)
   inspect(gid.to_u16().to_int(), content="5")
-  inspect(GlyphId::notdef().to_u16().to_int(), content="0")
+  inspect(@moon_skrifa.GlyphId::notdef().to_u16().to_int(), content="0")
 }

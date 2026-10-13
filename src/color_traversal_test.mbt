@@ -13,31 +13,31 @@
 // limitations under the License.
 
 ///|
-fn color_trav_test_push_u8(out : Array[Byte], v : Int) -> Unit {
+fn color_trav_test_push_u8(out : Array[Byte], v : Int32) -> Unit {
   out.push(v.to_byte())
 }
 
 ///|
-fn color_trav_test_push_u16_be(out : Array[Byte], v : Int) -> Unit {
+fn color_trav_test_push_u16_be(out : Array[Byte], v : Int32) -> Unit {
   let u = v.reinterpret_as_uint()
-  let mask = 255 |> Int::reinterpret_as_uint
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((u >> 8) & mask).to_byte())
   out.push((u & mask).to_byte())
 }
 
 ///|
-fn color_trav_test_push_u24_be(out : Array[Byte], v : Int) -> Unit {
+fn color_trav_test_push_u24_be(out : Array[Byte], v : Int32) -> Unit {
   let u = v.reinterpret_as_uint()
-  let mask = 255 |> Int::reinterpret_as_uint
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((u >> 16) & mask).to_byte())
   out.push(((u >> 8) & mask).to_byte())
   out.push((u & mask).to_byte())
 }
 
 ///|
-fn color_trav_test_push_u32_be(out : Array[Byte], v : Int) -> Unit {
+fn color_trav_test_push_u32_be(out : Array[Byte], v : Int32) -> Unit {
   let u = v.reinterpret_as_uint()
-  let mask = 255 |> Int::reinterpret_as_uint
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((u >> 24) & mask).to_byte())
   out.push(((u >> 16) & mask).to_byte())
   out.push(((u >> 8) & mask).to_byte())
@@ -45,9 +45,9 @@ fn color_trav_test_push_u32_be(out : Array[Byte], v : Int) -> Unit {
 }
 
 ///|
-fn color_trav_test_push_i16_be(out : Array[Byte], v : Int) -> Unit {
+fn color_trav_test_push_i16_be(out : Array[Byte], v : Int32) -> Unit {
   let u = v.reinterpret_as_uint()
-  let mask = 255 |> Int::reinterpret_as_uint
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((u >> 8) & mask).to_byte())
   out.push((u & mask).to_byte())
 }
@@ -65,7 +65,7 @@ fn color_trav_test_push_f2dot14(out : Array[Byte], v : Double) -> Unit {
 }
 
 ///|
-fn color_trav_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
+fn color_trav_test_build_sfnt(tables : Array[(UInt32, Bytes)]) -> Bytes {
   let num_tables = tables.length()
   let header_len = 12 + num_tables * 16
   let out : Array[Byte] = []
@@ -93,7 +93,7 @@ fn color_trav_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
 }
 
 ///|
-const COLOR_TRAV_TEST_TAG_COLR : UInt = 0x434F4C52 // "COLR"
+const COLOR_TRAV_TEST_TAG_COLR : UInt32 = 0x434F4C52 // "COLR"
 
 ///|
 fn color_trav_test_build_colr_v1_layers() -> Bytes {
@@ -477,7 +477,7 @@ impl ColorPainter for ColorTravTestPainter with fn fill(p, brush) {
 ///|
 impl ColorPainter for ColorTravTestPainter with fn fill_glyph(p, gid, _t, brush) {
   p.ops.push("fill_glyph " + gid.to_string())
-  ColorPainter::fill(p, brush)
+  @moon_skrifa.ColorPainter::fill(p, brush)
 }
 
 ///|
@@ -505,12 +505,13 @@ impl ColorPainter for ColorTravTestPainter with fn pop_layer_with_mode(p, mode) 
 
 ///|
 test "COLRv1 traversal: layers + glyph + solid" {
-  ColorStop::{ offset: 0.0, palette_index: 0, alpha: 1.0, } |> ignore
+  @moon_skrifa.ColorStop::{ offset: 0.0, palette_index: 0, alpha: 1.0, }
+  |> ignore
   let colr = color_trav_test_build_colr_v1_layers()
   let sfnt = color_trav_test_build_sfnt(
     Array::from_fixed_array([(COLOR_TRAV_TEST_TAG_COLR, colr)]),
   )
-  let font = FontRef::from_bytes(sfnt).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
   let painter = ColorTravTestPainter()
   match font.paint_colr_v1(GlyphId((5).to_uint16()), painter) {
     Err(_) => inspect("err", content="ok")
@@ -528,7 +529,7 @@ test "COLRv1 traversal: transform" {
   let sfnt = color_trav_test_build_sfnt(
     Array::from_fixed_array([(COLOR_TRAV_TEST_TAG_COLR, colr)]),
   )
-  let font = FontRef::from_bytes(sfnt).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
   let painter = ColorTravTestPainter()
   match font.paint_colr_v1(GlyphId((7).to_uint16()), painter) {
     Err(_) => inspect("err", content="ok")
@@ -546,7 +547,7 @@ test "COLRv1 traversal: composite layering order" {
   let sfnt = color_trav_test_build_sfnt(
     Array::from_fixed_array([(COLOR_TRAV_TEST_TAG_COLR, colr)]),
   )
-  let font = FontRef::from_bytes(sfnt).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
   let painter = ColorTravTestPainter()
   match font.paint_colr_v1(GlyphId((12).to_uint16()), painter) {
     Err(_) => inspect("err", content="ok")
@@ -564,7 +565,7 @@ test "COLRv1 traversal: paint cycle detection" {
   let sfnt = color_trav_test_build_sfnt(
     Array::from_fixed_array([(COLOR_TRAV_TEST_TAG_COLR, colr)]),
   )
-  let font = FontRef::from_bytes(sfnt).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
   let painter = ColorTravTestPainter()
   let ok = match font.paint_colr_v1(GlyphId((100).to_uint16()), painter) {
     Err(PaintCycleDetected) => true
@@ -579,7 +580,7 @@ test "COLRv1 traversal: linear gradient + clip box" {
   let sfnt = color_trav_test_build_sfnt(
     Array::from_fixed_array([(COLOR_TRAV_TEST_TAG_COLR, colr)]),
   )
-  let font = FontRef::from_bytes(sfnt).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
   let painter = ColorTravTestPainter()
   match font.paint_colr_v1(GlyphId((1).to_uint16()), painter) {
     Err(_) => inspect("err", content="ok")
@@ -597,7 +598,7 @@ test "COLRv1 traversal: var solid alpha delta" {
   let sfnt = color_trav_test_build_sfnt(
     Array::from_fixed_array([(COLOR_TRAV_TEST_TAG_COLR, colr)]),
   )
-  let font = FontRef::from_bytes(sfnt).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
   let painter0 = ColorTravTestPainter()
   match font.paint_colr_v1(GlyphId((2).to_uint16()), painter0) {
     Err(_) => inspect("err", content="ok")

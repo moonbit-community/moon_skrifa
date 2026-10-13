@@ -17,8 +17,8 @@
 ///
 /// Ported from `fontations/skrifa/src/outline/glyf/hint/zone.rs` (Apache-2.0 OR MIT).
 priv struct TtPoint {
-  x : Int
-  y : Int
+  x : Int32
+  y : Int32
 }
 
 ///|
@@ -47,7 +47,7 @@ fn TtZonePointer::is_twilight(self : TtZonePointer) -> Bool {
 }
 
 ///|
-fn tt_zone_pointer_from_i32(value : Int) -> Result[TtZonePointer, HintError] {
+fn tt_zone_pointer_from_i32(value : Int32) -> Result[TtZonePointer, HintError] {
   match value {
     0 => Ok(Twilight)
     1 => Ok(Glyph)
@@ -56,13 +56,13 @@ fn tt_zone_pointer_from_i32(value : Int) -> Result[TtZonePointer, HintError] {
 }
 
 ///|
-const TT_POINT_ON_CURVE : Int = 1
+const TT_POINT_ON_CURVE : Int32 = 1
 
 ///|
-const TT_POINT_TOUCHED_X : Int = 2
+const TT_POINT_TOUCHED_X : Int32 = 2
 
 ///|
-const TT_POINT_TOUCHED_Y : Int = 4
+const TT_POINT_TOUCHED_Y : Int32 = 4
 
 ///|
 priv enum TtAxis {
@@ -71,7 +71,7 @@ priv enum TtAxis {
 }
 
 ///|
-fn TtAxis::touched_mask(self : TtAxis) -> Int {
+fn TtAxis::touched_mask(self : TtAxis) -> Int32 {
   match self {
     X => TT_POINT_TOUCHED_X
     Y => TT_POINT_TOUCHED_Y
@@ -86,8 +86,8 @@ priv struct TtZone {
   original : Array[TtPoint]
   /// Current scaled outline points.
   points : Array[TtPoint]
-  flags : Array[Int]
-  contours : Array[Int]
+  flags : Array[Int32]
+  contours : Array[Int32]
 }
 
 ///|
@@ -96,7 +96,7 @@ fn TtZone::default() -> TtZone {
 }
 
 ///|
-fn TtZone::point(self : TtZone, index : Int) -> Result[TtPoint, HintError] {
+fn TtZone::point(self : TtZone, index : Int32) -> Result[TtPoint, HintError] {
   if index < 0 || index >= self.points.length() {
     Err(InvalidPointIndex(index))
   } else {
@@ -107,7 +107,7 @@ fn TtZone::point(self : TtZone, index : Int) -> Result[TtPoint, HintError] {
 ///|
 fn TtZone::set_point(
   self : TtZone,
-  index : Int,
+  index : Int32,
   p : TtPoint,
 ) -> Result[Unit, HintError] {
   if index < 0 || index >= self.points.length() {
@@ -121,7 +121,7 @@ fn TtZone::set_point(
 ///|
 fn TtZone::original_point(
   self : TtZone,
-  index : Int,
+  index : Int32,
 ) -> Result[TtPoint, HintError] {
   if index < 0 || index >= self.original.length() {
     Err(InvalidPointIndex(index))
@@ -133,7 +133,7 @@ fn TtZone::original_point(
 ///|
 fn TtZone::set_original_point(
   self : TtZone,
-  index : Int,
+  index : Int32,
   p : TtPoint,
 ) -> Result[Unit, HintError] {
   if index < 0 || index >= self.original.length() {
@@ -145,7 +145,7 @@ fn TtZone::set_original_point(
 }
 
 ///|
-fn TtZone::unscaled_point(self : TtZone, index : Int) -> TtPoint {
+fn TtZone::unscaled_point(self : TtZone, index : Int32) -> TtPoint {
   if index < 0 || index >= self.unscaled.length() {
     // Twilight unscaled points default to (0,0).
     { x: 0, y: 0, }
@@ -155,7 +155,10 @@ fn TtZone::unscaled_point(self : TtZone, index : Int) -> TtPoint {
 }
 
 ///|
-fn TtZone::contour_end(self : TtZone, index : Int) -> Result[Int, HintError] {
+fn TtZone::contour_end(
+  self : TtZone,
+  index : Int32,
+) -> Result[Int32, HintError] {
   if index < 0 || index >= self.contours.length() {
     Err(InvalidStackValue(index))
   } else {
@@ -166,7 +169,7 @@ fn TtZone::contour_end(self : TtZone, index : Int) -> Result[Int, HintError] {
 ///|
 fn TtZone::touch(
   self : TtZone,
-  index : Int,
+  index : Int32,
   axis : TtAxis,
 ) -> Result[Unit, HintError] {
   if index < 0 || index >= self.flags.length() {
@@ -181,7 +184,7 @@ fn TtZone::touch(
 ///|
 fn TtZone::is_touched(
   self : TtZone,
-  index : Int,
+  index : Int32,
   axis : TtAxis,
 ) -> Result[Bool, HintError] {
   if index < 0 || index >= self.flags.length() {
@@ -194,7 +197,7 @@ fn TtZone::is_touched(
 ///|
 fn TtZone::untouch(
   self : TtZone,
-  index : Int,
+  index : Int32,
   axis : TtAxis,
 ) -> Result[Unit, HintError] {
   if index < 0 || index >= self.flags.length() {
@@ -205,7 +208,10 @@ fn TtZone::untouch(
 }
 
 ///|
-fn TtZone::flip_on_curve(self : TtZone, index : Int) -> Result[Unit, HintError] {
+fn TtZone::flip_on_curve(
+  self : TtZone,
+  index : Int32,
+) -> Result[Unit, HintError] {
   if index < 0 || index >= self.flags.length() {
     return Err(InvalidPointIndex(index))
   }
@@ -216,8 +222,8 @@ fn TtZone::flip_on_curve(self : TtZone, index : Int) -> Result[Unit, HintError] 
 ///|
 fn TtZone::set_on_curve(
   self : TtZone,
-  start : Int,
-  end_ : Int,
+  start : Int32,
+  end_ : Int32,
   on : Bool,
 ) -> Result[Unit, HintError] {
   if start < 0 || end_ < start || end_ > self.flags.length() {
@@ -319,9 +325,9 @@ fn TtZone::iup(self : TtZone, axis : TtAxis) -> Result[Unit, HintError] {
 fn TtZone::iup_shift(
   self : TtZone,
   axis : TtAxis,
-  p1 : Int,
-  p2 : Int,
-  p : Int,
+  p1 : Int32,
+  p2 : Int32,
+  p : Int32,
 ) -> Result[Unit, HintError] {
   if p1 > p2 || p1 > p || p > p2 {
     return Ok(())
@@ -358,7 +364,7 @@ fn TtZone::iup_shift(
 }
 
 ///|
-fn tt_zone_axis_coord(p : TtPoint, axis : TtAxis) -> Int {
+fn tt_zone_axis_coord(p : TtPoint, axis : TtAxis) -> Int32 {
   match axis {
     X => p.x
     Y => p.y
@@ -366,7 +372,7 @@ fn tt_zone_axis_coord(p : TtPoint, axis : TtAxis) -> Int {
 }
 
 ///|
-fn tt_zone_set_axis_coord(p : TtPoint, axis : TtAxis, v : Int) -> TtPoint {
+fn tt_zone_set_axis_coord(p : TtPoint, axis : TtAxis, v : Int32) -> TtPoint {
   match axis {
     X => { x: v, y: p.y, }
     Y => { x: p.x, y: v, }
@@ -377,10 +383,10 @@ fn tt_zone_set_axis_coord(p : TtPoint, axis : TtAxis, v : Int) -> TtPoint {
 fn TtZone::iup_interpolate(
   self : TtZone,
   axis : TtAxis,
-  p1 : Int,
-  p2 : Int,
-  ref1_0 : Int,
-  ref2_0 : Int,
+  p1 : Int32,
+  p2 : Int32,
+  ref1_0 : Int32,
+  ref2_0 : Int32,
 ) -> Result[Unit, HintError] {
   if p1 > p2 {
     return Ok(())

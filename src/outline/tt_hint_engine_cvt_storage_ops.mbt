@@ -17,7 +17,7 @@
 ///
 /// Ported from `fontations/skrifa/src/outline/glyf/hint/engine/{storage.rs,cvt.rs,delta.rs}`
 /// (Apache-2.0 OR MIT).
-fn tt_scale_funits_to_26_6(value : Int, scale_bits : Int) -> Int {
+fn tt_scale_funits_to_26_6(value : Int32, scale_bits : Int32) -> Int32 {
   // value (font units) * scale_bits (16.16, includes *64) => 26.6
   let v = value.to_int64() * scale_bits.to_int64()
   let adj = 0x8000 - (if v < 0 { 1 } else { 0 })
@@ -129,7 +129,7 @@ fn TtEngine::op_rcvt(self : TtEngine) -> Result[Unit, HintError] {
 }
 
 ///|
-fn tt_delta_adjust(gs : TtGraphicsState, b0 : Int) -> Int {
+fn tt_delta_adjust(gs : TtGraphicsState, b0 : Int32) -> Int32 {
   // See FreeType packing scheme.
   let mut b = (b0 & 0xF) - 8
   if b >= 0 {
@@ -141,7 +141,7 @@ fn tt_delta_adjust(gs : TtGraphicsState, b0 : Int) -> Int {
 ///|
 fn TtEngine::op_deltap(
   self : TtEngine,
-  opcode : Int,
+  opcode : Int32,
 ) -> Result[Unit, HintError] {
   let ppem_u = self.graphics.retained.ppem.reinterpret_as_uint()
   let point_count = self.graphics.zp0_zone().points.length()
@@ -158,7 +158,7 @@ fn TtEngine::op_deltap(
   }
   // Each entry consumes 2 stack values.
   let n = n0.min(self.value_stack.length() / 2)
-  let bias0 : UInt = (match opcode {
+  let bias0 : UInt32 = (match opcode {
     0x71 => 16
     0x72 => 32
     _ => 0
@@ -178,7 +178,7 @@ fn TtEngine::op_deltap(
     if point_ix < 0 || point_ix >= point_count {
       continue
     }
-    let c : UInt = ((b0.reinterpret_as_uint() & 0xF0) >> 4) + bias
+    let c : UInt32 = ((b0.reinterpret_as_uint() & 0xF0) >> 4) + bias
     if ppem_u == c {
       let adj = tt_delta_adjust(self.graphics, b0)
       if back_compat {
@@ -210,7 +210,7 @@ fn TtEngine::op_deltap(
 ///|
 fn TtEngine::op_deltac(
   self : TtEngine,
-  opcode : Int,
+  opcode : Int32,
 ) -> Result[Unit, HintError] {
   let ppem_u = self.graphics.retained.ppem.reinterpret_as_uint()
   let n0 = match self.value_stack.pop() {
@@ -225,7 +225,7 @@ fn TtEngine::op_deltac(
     }
   }
   let n = n0.min(self.value_stack.length() / 2)
-  let bias0 : UInt = (match opcode {
+  let bias0 : UInt32 = (match opcode {
     0x74 => 16
     0x75 => 32
     _ => 0
@@ -240,7 +240,7 @@ fn TtEngine::op_deltac(
       Err(e) => return Err(e)
       Ok(v) => v
     }
-    let c : UInt = ((b0.reinterpret_as_uint() & 0xF0) >> 4) + bias
+    let c : UInt32 = ((b0.reinterpret_as_uint() & 0xF0) >> 4) + bias
     if ppem_u == c {
       if cvt_ix < 0 || cvt_ix >= self.cvt.length() {
         if self.graphics.is_pedantic {

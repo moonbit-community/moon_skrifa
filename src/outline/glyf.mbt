@@ -16,52 +16,52 @@
 /// TrueType outlines from the `glyf` table (MVP).
 ///
 /// This only supports simple glyphs (contour streams) for now.
-const TAG_HEAD : UInt = 0x68656164 // "head"
+const TAG_HEAD : UInt32 = 0x68656164 // "head"
 
 ///|
-const TAG_LOCA : UInt = 0x6C6F6361 // "loca"
+const TAG_LOCA : UInt32 = 0x6C6F6361 // "loca"
 
 ///|
-const TAG_MAXP : UInt = 0x6D617870 // "maxp"
+const TAG_MAXP : UInt32 = 0x6D617870 // "maxp"
 
 ///|
-const COMPOSITE_ARG_1_AND_2_ARE_WORDS : Int = 0x0001
+const COMPOSITE_ARG_1_AND_2_ARE_WORDS : Int32 = 0x0001
 
 ///|
-const COMPOSITE_ARGS_ARE_XY_VALUES : Int = 0x0002
+const COMPOSITE_ARGS_ARE_XY_VALUES : Int32 = 0x0002
 
 ///|
-const COMPOSITE_ROUND_XY_TO_GRID : Int = 0x0004
+const COMPOSITE_ROUND_XY_TO_GRID : Int32 = 0x0004
 
 ///|
-const COMPOSITE_WE_HAVE_A_SCALE : Int = 0x0008
+const COMPOSITE_WE_HAVE_A_SCALE : Int32 = 0x0008
 
 ///|
-const COMPOSITE_MORE_COMPONENTS : Int = 0x0020
+const COMPOSITE_MORE_COMPONENTS : Int32 = 0x0020
 
 ///|
-const COMPOSITE_WE_HAVE_AN_X_AND_Y_SCALE : Int = 0x0040
+const COMPOSITE_WE_HAVE_AN_X_AND_Y_SCALE : Int32 = 0x0040
 
 ///|
-const COMPOSITE_WE_HAVE_A_TWO_BY_TWO : Int = 0x0080
+const COMPOSITE_WE_HAVE_A_TWO_BY_TWO : Int32 = 0x0080
 
 ///|
-const COMPOSITE_WE_HAVE_INSTRUCTIONS : Int = 0x0100
+const COMPOSITE_WE_HAVE_INSTRUCTIONS : Int32 = 0x0100
 
 ///|
-const COMPOSITE_OVERLAP_COMPOUND : Int = 0x0400
+const COMPOSITE_OVERLAP_COMPOUND : Int32 = 0x0400
 
 ///|
-const COMPOSITE_SCALED_COMPONENT_OFFSET : Int = 0x0800
+const COMPOSITE_SCALED_COMPONENT_OFFSET : Int32 = 0x0800
 
 ///|
-const COMPOSITE_UNSCALED_COMPONENT_OFFSET : Int = 0x1000
+const COMPOSITE_UNSCALED_COMPONENT_OFFSET : Int32 = 0x1000
 
 ///|
-const SIMPLE_OVERLAP_FLAG : Int = 0x40
+const SIMPLE_OVERLAP_FLAG : Int32 = 0x40
 
 ///|
-fn glyf_read_u16_be(view : BytesView, offset : Int) -> Int? {
+fn glyf_read_u16_be(view : BytesView, offset : Int32) -> Int32? {
   if offset < 0 || offset + 2 > view.length() {
     None
   } else {
@@ -72,7 +72,7 @@ fn glyf_read_u16_be(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn glyf_read_i16_be(view : BytesView, offset : Int) -> Int? {
+fn glyf_read_i16_be(view : BytesView, offset : Int32) -> Int32? {
   match glyf_read_u16_be(view, offset) {
     None => None
     Some(u) => if u >= 0x8000 { Some(u - 0x10000) } else { Some(u) }
@@ -80,7 +80,7 @@ fn glyf_read_i16_be(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn glyf_read_u32_be(view : BytesView, offset : Int) -> UInt? {
+fn glyf_read_u32_be(view : BytesView, offset : Int32) -> UInt32? {
   if offset < 0 || offset + 4 > view.length() {
     None
   } else {
@@ -93,7 +93,7 @@ fn glyf_read_u32_be(view : BytesView, offset : Int) -> UInt? {
 }
 
 ///|
-fn glyf_read_f2dot14(view : BytesView, offset : Int) -> Double? {
+fn glyf_read_f2dot14(view : BytesView, offset : Int32) -> Double? {
   match glyf_read_i16_be(view, offset) {
     None => None
     Some(v) => Some(v.to_double() / 16384.0)
@@ -116,7 +116,7 @@ fn glyf_units_per_em(font : @moon_skrifa.FontRef) -> UInt16 {
 fn glyf_compute_scale_bits(
   size : @moon_skrifa.Size,
   upem : UInt16,
-) -> (Bool, Int) {
+) -> (Bool, Int32) {
   match size.ppem() {
     None => (false, 0x10000)
     Some(ppem) => {
@@ -135,21 +135,21 @@ fn glyf_compute_scale_bits(
 }
 
 ///|
-fn glyf_mul_16_16(v : Int, scale_bits : Int) -> Int {
+fn glyf_mul_16_16(v : Int32, scale_bits : Int32) -> Int32 {
   glyf_round_half_away_from_zero(
     v.to_double() * scale_bits.to_double() / 65536.0,
   )
 }
 
 ///|
-fn glyf_mul_16_16_f(v : Double, scale_bits : Int) -> Int {
+fn glyf_mul_16_16_f(v : Double, scale_bits : Int32) -> Int32 {
   glyf_round_half_away_from_zero(v * scale_bits.to_double() / 65536.0)
 }
 
 ///|
 /// Matches font-types fixed-point mul rounding on 16.16 products:
 /// .5 ties are rounded away from zero.
-fn glyf_round_half_away_from_zero(v : Double) -> Int {
+fn glyf_round_half_away_from_zero(v : Double) -> Int32 {
   if v >= 0.0 {
     (v + 0.5).to_int()
   } else {
@@ -158,7 +158,7 @@ fn glyf_round_half_away_from_zero(v : Double) -> Int {
 }
 
 ///|
-fn glyf_f26dot6_bits_to_double(bits : Int) -> Double {
+fn glyf_f26dot6_bits_to_double(bits : Int32) -> Double {
   bits.to_double() / 64.0
 }
 
@@ -184,7 +184,7 @@ fn glyf_shift_path_x(path : Array[PathElement], x_shift : Double) -> Unit {
 }
 
 ///|
-fn glyf_midpoint_i32(a : Int, b : Int) -> Int {
+fn glyf_midpoint_i32(a : Int32, b : Int32) -> Int32 {
   // Matches read-fonts midpoint_i32: a.wrapping_add(b) / 2.
   (a + b) / 2
 }
@@ -201,11 +201,11 @@ priv struct GlyfTransform {
 
 ///|
 priv struct GlyfCompositeComp {
-  flags : Int
-  gid : Int
+  flags : Int32
+  gid : Int32
   args_xy : Bool
-  base_point_ix : Int
-  component_point_ix : Int
+  base_point_ix : Int32
+  component_point_ix : Int32
   dx : Double
   dy : Double
   a : Double
@@ -295,8 +295,8 @@ fn glyf_path_points(path : Array[PathElement]) -> Array[(Double, Double)] {
 fn glyf_composite_point_offset(
   base_path : Array[PathElement],
   component_path : Array[PathElement],
-  base_point_ix : Int,
-  component_point_ix : Int,
+  base_point_ix : Int32,
+  component_point_ix : Int32,
 ) -> (Double, Double) {
   if base_point_ix < 0 || component_point_ix < 0 {
     return (0.0, 0.0)
@@ -314,8 +314,8 @@ fn glyf_composite_point_offset(
 
 ///|
 priv struct GlyfPoint {
-  x : Int
-  y : Int
+  x : Int32
+  y : Int32
   on : Bool
 }
 
@@ -328,8 +328,8 @@ priv struct GlyfPointF {
 
 ///|
 priv struct GlyfPointFT {
-  x : Int
-  y : Int
+  x : Int32
+  y : Int32
   on : Bool
 }
 
@@ -337,8 +337,8 @@ priv struct GlyfPointFT {
 fn glyf_emit_contour_harfbuzz(
   out : Array[PathElement],
   points : ArrayView[GlyfPointF],
-  start : Int,
-  end : Int,
+  start : Int32,
+  end : Int32,
   path_style : PathStyle,
 ) -> Unit {
   let n = end - start + 1
@@ -436,8 +436,8 @@ fn glyf_emit_contour_harfbuzz(
 fn glyf_emit_contour_freetype(
   out : Array[PathElement],
   points : ArrayView[GlyfPointFT],
-  start : Int,
-  end : Int,
+  start : Int32,
+  end : Int32,
 ) -> Unit {
   let n = end - start + 1
   if n <= 0 {
@@ -455,7 +455,7 @@ fn glyf_emit_contour_freetype(
   out.push(
     MoveTo(glyf_f26dot6_bits_to_double(sx), glyf_f26dot6_bits_to_double(sy)),
   )
-  let mut control : (Int, Int)? = None
+  let mut control : (Int32, Int32)? = None
   if start_idx == -1 {
     for i in start..<(end + 1) {
       let p = points.at(i)
@@ -580,7 +580,7 @@ fn glyf_simple_path(
   }
   // Skip bbox (xMin..yMax).
   let mut off = 10
-  let end_pts : Array[Int] = []
+  let end_pts : Array[Int32] = []
   for _ in 0..<number_of_contours {
     let v = match glyf_read_u16_be(glyph, off) {
       None => return None
@@ -605,7 +605,7 @@ fn glyf_simple_path(
   }
 
   // Flags stream.
-  let flags : Array[Int] = []
+  let flags : Array[Int32] = []
   while flags.length() < num_points {
     if off >= glyph.length() {
       return None
@@ -630,7 +630,7 @@ fn glyf_simple_path(
   let mut x = 0
   let mut y = 0
   // x deltas
-  let dxs : Array[Int] = []
+  let dxs : Array[Int32] = []
   for i in 0..<num_points {
     let f = flags.at(i)
     let short = (f & 0x02) != 0
@@ -654,7 +654,7 @@ fn glyf_simple_path(
     }
   }
   // y deltas
-  let dys : Array[Int] = []
+  let dys : Array[Int32] = []
   for i in 0..<num_points {
     let f = flags.at(i)
     let short = (f & 0x04) != 0
@@ -759,17 +759,17 @@ priv struct GlyfCtx {
   font : @moon_skrifa.FontRef
   glyf : BytesView
   loca : BytesView
-  num_glyphs : Int
-  index_to_loc_format : Int
+  num_glyphs : Int32
+  index_to_loc_format : Int32
   coords : ArrayView[@moon_skrifa.NormalizedCoord]
   is_scaled : Bool
   is_hinted : Bool
-  scale_bits : Int
+  scale_bits : Int32
   hb_scale : Double
 }
 
 ///|
-fn glyf_glyph_slice(ctx : GlyfCtx, idx : Int) -> BytesView? {
+fn glyf_glyph_slice(ctx : GlyfCtx, idx : Int32) -> BytesView? {
   if idx < 0 || idx >= ctx.num_glyphs {
     return None
   }
@@ -1083,7 +1083,7 @@ fn glyf_composite_path(
 ///|
 fn glyf_outline_path_idx(
   ctx : GlyfCtx,
-  idx : Int,
+  idx : Int32,
   visited : Array[Bool],
   path_style : PathStyle,
 ) -> Array[PathElement]? {
@@ -1234,7 +1234,7 @@ fn glyf_outline_path(
 }
 
 ///|
-fn glyf_glyph_count(font : @moon_skrifa.FontRef) -> Int? {
+fn glyf_glyph_count(font : @moon_skrifa.FontRef) -> Int32? {
   let maxp = match font.table(TAG_MAXP) {
     None => return None
     Some(v) => v
@@ -1301,7 +1301,7 @@ fn glyf_outline_info_from_glyph(glyph : BytesView) -> (Bool, Bool)? {
   }
   // Simple: scan flags for overlap bit; hinting if instruction length > 0.
   let mut off = 10
-  let end_pts : Array[Int] = []
+  let end_pts : Array[Int32] = []
   for _ in 0..<number_of_contours {
     let v = match glyf_read_u16_be(glyph, off) {
       None => return None
@@ -1326,7 +1326,7 @@ fn glyf_outline_info_from_glyph(glyph : BytesView) -> (Bool, Bool)? {
     return Some((false, has_hinting))
   }
   let mut has_overlaps = false
-  let flags : Array[Int] = []
+  let flags : Array[Int32] = []
   while flags.length() < num_points {
     if off >= glyph.length() {
       return None
@@ -1425,48 +1425,48 @@ fn glyf_has_hinting(
 }
 
 ///|
-const GLYF_MEM_PHANTOM_POINT_COUNT : Int = 4
+const GLYF_MEM_PHANTOM_POINT_COUNT : Int32 = 4
 
 ///|
-const GLYF_MEM_TAG_GVAR : UInt = 0x67766172 // "gvar"
+const GLYF_MEM_TAG_GVAR : UInt32 = 0x67766172 // "gvar"
 
 ///|
-const GLYF_MEM_TAG_CVT : UInt = 0x63767420 // "cvt "
+const GLYF_MEM_TAG_CVT : UInt32 = 0x63767420 // "cvt "
 
 ///|
-const GLYF_MEM_COMPOSITE_RECURSION_LIMIT : Int = 32
+const GLYF_MEM_COMPOSITE_RECURSION_LIMIT : Int32 = 32
 
 ///|
 // These sizes match upstream read-fonts layouts:
 // Point<T> => 2x i32 = 8 bytes, PointFlags => u8 = 1 byte.
-const GLYF_MEM_SIZE_POINT : Int = 8
+const GLYF_MEM_SIZE_POINT : Int32 = 8
 
 ///|
-const GLYF_MEM_SIZE_POINT_FLAGS : Int = 1
+const GLYF_MEM_SIZE_POINT_FLAGS : Int32 = 1
 
 ///|
-const GLYF_MEM_SIZE_U16 : Int = 2
+const GLYF_MEM_SIZE_U16 : Int32 = 2
 
 ///|
-const GLYF_MEM_SIZE_I32 : Int = 4
+const GLYF_MEM_SIZE_I32 : Int32 = 4
 
 ///|
-const GLYF_MEM_SIZE_ALIGN_I32 : Int = 4
+const GLYF_MEM_SIZE_ALIGN_I32 : Int32 = 4
 
 ///|
 priv struct GlyfDrawMemorySummary {
-  mut points : Int
-  mut contours : Int
-  mut max_simple_points : Int
-  mut max_other_points : Int
-  mut max_component_delta_stack : Int
+  mut points : Int32
+  mut contours : Int32
+  mut max_simple_points : Int32
+  mut max_other_points : Int32
+  mut max_component_delta_stack : Int32
   mut has_hinting : Bool
   mut has_overlaps : Bool
   has_variations : Bool
-  max_stack : Int
-  cvt_count : Int
-  storage_count : Int
-  max_twilight_points : Int
+  max_stack : Int32
+  cvt_count : Int32
+  storage_count : Int32
+  max_twilight_points : Int32
 }
 
 ///|
@@ -1493,10 +1493,10 @@ fn glyf_draw_memory_summary_default(
 ///|
 fn glyf_draw_memory_summary_with_limits(
   font : @moon_skrifa.FontRef,
-  max_stack : Int,
-  cvt_count : Int,
-  storage_count : Int,
-  max_twilight_points : Int,
+  max_stack : Int32,
+  cvt_count : Int32,
+  storage_count : Int32,
+  max_twilight_points : Int32,
 ) -> GlyfDrawMemorySummary {
   let base = glyf_draw_memory_summary_default(font)
   {
@@ -1519,7 +1519,7 @@ fn glyf_draw_memory_summary_with_limits(
 fn glyf_draw_memory_required_size(
   sum : GlyfDrawMemorySummary,
   hinting : Hinting,
-) -> Int {
+) -> Int32 {
   let hinted = sum.has_hinting && hinting is Embedded
   let mut size = 0
   // Scaled points.
@@ -1553,11 +1553,11 @@ fn glyf_draw_memory_required_size(
 ///|
 fn glyf_draw_memory_summary_rec(
   ctx : GlyfCtx,
-  idx : Int,
+  idx : Int32,
   visited : Array[Bool],
   sum : GlyfDrawMemorySummary,
-  component_depth : Int,
-  recurse_depth : Int,
+  component_depth : Int32,
+  recurse_depth : Int32,
 ) -> Bool {
   if recurse_depth > GLYF_MEM_COMPOSITE_RECURSION_LIMIT {
     return false
@@ -1668,7 +1668,7 @@ fn glyf_draw_memory_summary_rec(
   // Composite glyph.
   let mut off = 10
   let point_base = sum.points
-  let comp_ids : Array[Int] = []
+  let comp_ids : Array[Int32] = []
   let mut flags = 0
   let mut component_count = 0
   while true {
@@ -1752,7 +1752,7 @@ fn glyf_draw_memory_size(
   font : @moon_skrifa.FontRef,
   gid : @moon_skrifa.GlyphId,
   hinting : Hinting,
-) -> Int? {
+) -> Int32? {
   // Build a context for slice access.
   let glyf = match font.table(TAG_GLYF) {
     None => return None

@@ -19,14 +19,14 @@
 /// (Apache-2.0 OR MIT).
 priv struct TtCallFrame {
   decoder : TtDecoder
-  return_pc : Int
+  return_pc : Int32
   kind : TtCallFrameKind
 }
 
 ///|
 priv enum TtCallFrameKind {
   ReturnOnly
-  LoopCall(BytesView, Int)
+  LoopCall(BytesView, Int32)
 }
 
 ///|
@@ -37,7 +37,7 @@ priv struct TtProgramState {
   mut current : TtProgram
   mut decoder : TtDecoder
   call_stack : Array[TtCallFrame]
-  max_call_depth : Int
+  max_call_depth : Int32
 }
 
 ///|
@@ -46,7 +46,7 @@ fn TtProgramState::TtProgramState(
   prep : BytesView,
   glyph : BytesView,
   current : TtProgram,
-  max_call_depth : Int,
+  max_call_depth : Int32,
 ) -> TtProgramState {
   let code = match current {
     Font => font
@@ -88,8 +88,8 @@ fn TtProgramState::set_glyph_code(
 fn TtProgramState::push_frame(
   self : TtProgramState,
   callee : BytesView,
-  start_pc : Int,
-  return_pc : Int,
+  start_pc : Int32,
+  return_pc : Int32,
 ) -> Result[Unit, HintError] {
   if self.call_stack.length() >= self.max_call_depth {
     return Err(CallStackOverflow)
@@ -105,9 +105,9 @@ fn TtProgramState::push_frame(
 fn TtProgramState::push_loopcall_frame(
   self : TtProgramState,
   callee : BytesView,
-  remaining : Int,
-  start_pc : Int,
-  return_pc : Int,
+  remaining : Int32,
+  start_pc : Int32,
+  return_pc : Int32,
 ) -> Result[Unit, HintError] {
   if self.call_stack.length() >= self.max_call_depth {
     return Err(CallStackOverflow)

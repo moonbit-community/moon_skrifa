@@ -19,36 +19,36 @@
 /// (Apache-2.0 OR MIT).
 
 ///|
-const AUTOHINT_FLAG_NORMAL : Int = 0
+const AUTOHINT_FLAG_NORMAL : Int32 = 0
 
 ///|
-const AUTOHINT_FLAG_ROUND : Int = 1
+const AUTOHINT_FLAG_ROUND : Int32 = 1
 
 ///|
-const AUTOHINT_FLAG_SERIF : Int = 2
+const AUTOHINT_FLAG_SERIF : Int32 = 2
 
 ///|
-const AUTOHINT_FLAG_DONE : Int = 4
+const AUTOHINT_FLAG_DONE : Int32 = 4
 
 ///|
-const AUTOHINT_FLAG_NEUTRAL : Int = 8
+const AUTOHINT_FLAG_NEUTRAL : Int32 = 8
 
 ///|
-const EDGE_DISTANCE_THRESHOLD_MAX : Int = 64 / 4
+const EDGE_DISTANCE_THRESHOLD_MAX : Int32 = 64 / 4
 
 ///|
 priv struct AutoHintEdge {
-  mut fpos : Int
-  mut opos : Int
-  mut pos : Int
-  mut flags : Int
+  mut fpos : Int32
+  mut opos : Int32
+  mut pos : Int32
+  mut flags : Int32
   mut dir : AutoHintDirection
   mut blue_edge : AutoHintScaledWidth?
-  mut link_ix : Int?
-  mut serif_ix : Int?
-  mut scale : Int
-  mut first_ix : Int
-  mut last_ix : Int
+  mut link_ix : Int32?
+  mut serif_ix : Int32?
+  mut scale : Int32
+  mut first_ix : Int32
+  mut last_ix : Int32
 }
 
 ///|
@@ -154,7 +154,7 @@ fn autohint_compute_blue_edges(
 }
 
 ///|
-fn autohint_abs_i32(v : Int) -> Int {
+fn autohint_abs_i32(v : Int32) -> Int32 {
   if v < 0 {
     -v
   } else {
@@ -208,8 +208,8 @@ fn AutoHintAxis::insert_edge(
 ///|
 fn AutoHintAxis::append_segment_to_edge(
   self : AutoHintAxis,
-  segment_ix : Int,
-  edge_ix : Int,
+  segment_ix : Int32,
+  edge_ix : Int32,
 ) -> Unit {
   let edge = self.edges.at(edge_ix)
   let first_ix = edge.first_ix
@@ -330,10 +330,10 @@ fn autohint_compute_edge_properties(axis : AutoHintAxis) -> Unit {
 ///|
 fn autohint_compute_edges(
   axis : AutoHintAxis,
-  initial_edge_distance_threshold : Int,
+  initial_edge_distance_threshold : Int32,
   top_to_bottom_hinting : Bool,
-  y_scale : Int,
-  scale : Int,
+  y_scale : Int32,
+  scale : Int32,
   group : AutoHintScriptGroup,
 ) -> Unit {
   axis.edges.clear()
@@ -389,7 +389,7 @@ fn autohint_compute_edges(
     }
     // Look for a corresponding edge for this segment.
     let mut best_dist = AUTOHINT_SEG_MAX_SCORE
-    let mut best_edge_ix : Int? = None
+    let mut best_edge_ix : Int32? = None
     for edge_ix in 0..<axis.edges.length() {
       let edge = axis.edges.at(edge_ix)
       let dist = autohint_abs_i32(segment.pos - edge.fpos)
@@ -462,7 +462,7 @@ fn autohint_compute_edges(
         continue
       }
       // Try to find an edge that coincides with this segment within the threshold.
-      let mut found_edge_ix : Int? = None
+      let mut found_edge_ix : Int32? = None
       for edge_ix in 0..<axis.edges.length() {
         let edge = axis.edges.at(edge_ix)
         if autohint_abs_i32(segment.pos - edge.fpos) < edge_distance_threshold {

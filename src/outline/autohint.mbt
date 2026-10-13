@@ -29,37 +29,37 @@ pub struct GlyphStyles {
 priv struct GlyphStyleMap {
   styles : Array[GlyphStyle]
   metrics_map : Array[Byte]
-  mut metrics_count : Int
+  mut metrics_count : Int32
 }
 
 ///|
 priv struct GlyphStyle {
-  bits : Int
+  bits : Int32
 }
 
 ///|
-const AUTOHINT_STYLE_INDEX_MASK : Int = 0xFF
+const AUTOHINT_STYLE_INDEX_MASK : Int32 = 0xFF
 
 ///|
-const AUTOHINT_STYLE_INDEX_KEEP_MASK : Int = -1 - AUTOHINT_STYLE_INDEX_MASK
+const AUTOHINT_STYLE_INDEX_KEEP_MASK : Int32 = -1 - AUTOHINT_STYLE_INDEX_MASK
 
 ///|
-const AUTOHINT_STYLE_UNASSIGNED : Int = AUTOHINT_STYLE_INDEX_MASK
+const AUTOHINT_STYLE_UNASSIGNED : Int32 = AUTOHINT_STYLE_INDEX_MASK
 
 ///|
-const AUTOHINT_STYLE_NON_BASE : Int = 0x100
+const AUTOHINT_STYLE_NON_BASE : Int32 = 0x100
 
 ///|
-const AUTOHINT_STYLE_DIGIT : Int = 0x200
+const AUTOHINT_STYLE_DIGIT : Int32 = 0x200
 
 ///|
-const AUTOHINT_STYLE_LATN : Int = 60
+const AUTOHINT_STYLE_LATN : Int32 = 60
 
 ///|
-const AUTOHINT_STYLE_HANI : Int = 89
+const AUTOHINT_STYLE_HANI : Int32 = 89
 
 ///|
-const AUTOHINT_MAX_STYLES : Int = 90
+const AUTOHINT_MAX_STYLES : Int32 = 90
 
 ///|
 fn GlyphStyle::default() -> GlyphStyle {
@@ -82,7 +82,7 @@ fn GlyphStyle::is_non_base(self : GlyphStyle) -> Bool {
 }
 
 ///|
-fn GlyphStyle::style_index(self : GlyphStyle) -> Int? {
+fn GlyphStyle::style_index(self : GlyphStyle) -> Int32? {
   let ix = self.bits & AUTOHINT_STYLE_INDEX_MASK
   if ix == AUTOHINT_STYLE_UNASSIGNED {
     None
@@ -92,12 +92,12 @@ fn GlyphStyle::style_index(self : GlyphStyle) -> Int? {
 }
 
 ///|
-fn GlyphStyle::with_style_index(style_index : Int) -> GlyphStyle {
+fn GlyphStyle::with_style_index(style_index : Int32) -> GlyphStyle {
   { bits: style_index & AUTOHINT_STYLE_INDEX_MASK, }
 }
 
 ///|
-fn GlyphStyle::with_style_index_non_base(style_index : Int) -> GlyphStyle {
+fn GlyphStyle::with_style_index_non_base(style_index : Int32) -> GlyphStyle {
   { bits: (style_index & AUTOHINT_STYLE_INDEX_MASK) | AUTOHINT_STYLE_NON_BASE, }
 }
 
@@ -135,7 +135,7 @@ fn GlyphStyleMap::default() -> GlyphStyleMap {
 }
 
 ///|
-fn GlyphStyleMap::use_style(self : GlyphStyleMap, style_ix : Int) -> Unit {
+fn GlyphStyleMap::use_style(self : GlyphStyleMap, style_ix : Int32) -> Unit {
   if style_ix < 0 || style_ix >= self.metrics_map.length() {
     return
   }
@@ -147,7 +147,7 @@ fn GlyphStyleMap::use_style(self : GlyphStyleMap, style_ix : Int) -> Unit {
 }
 
 ///|
-fn autohint_read_u16_be(view : BytesView, offset : Int) -> Int? {
+fn autohint_read_u16_be(view : BytesView, offset : Int32) -> Int32? {
   if offset < 0 || offset + 2 > view.length() {
     None
   } else {
@@ -158,10 +158,10 @@ fn autohint_read_u16_be(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-const AUTOHINT_TAG_MAXP : UInt = 0x6D617870 // "maxp"
+const AUTOHINT_TAG_MAXP : UInt32 = 0x6D617870 // "maxp"
 
 ///|
-fn autohint_num_glyphs(font : @moon_skrifa.FontRef) -> Int {
+fn autohint_num_glyphs(font : @moon_skrifa.FontRef) -> Int32 {
   match font.table(AUTOHINT_TAG_MAXP) {
     None => 0
     Some(maxp) => autohint_read_u16_be(maxp, 4).unwrap_or(0)
@@ -171,8 +171,8 @@ fn autohint_num_glyphs(font : @moon_skrifa.FontRef) -> Int {
 ///|
 fn autohint_style_for_codepoint(
   ranges : ArrayView[AutoHintStyleRange],
-  cp : UInt,
-) -> (Int, Int, GlyphStyle)? {
+  cp : UInt32,
+) -> (Int32, Int32, GlyphStyle)? {
   let ch = cp.to_uint64().to_int()
   match autohint_style_range_for_codepoint(ch, ranges) {
     None => None
@@ -190,7 +190,7 @@ fn autohint_style_for_codepoint(
 
 ///|
 fn GlyphStyleMap::GlyphStyleMap(
-  glyph_count : Int,
+  glyph_count : Int32,
   font : @moon_skrifa.FontRef,
 ) -> GlyphStyleMap {
   let map = GlyphStyleMap::default()
@@ -198,7 +198,7 @@ fn GlyphStyleMap::GlyphStyleMap(
   for _ in 0..<glyph_count {
     map.styles.push(GlyphStyle::default())
   }
-  let mut last_range : (Int, Int, GlyphStyle)? = None
+  let mut last_range : (Int32, Int32, GlyphStyle)? = None
   // Step 2: compute styles for glyphs contained in the cmap.
   for pair in font.charmap().mappings().iter() {
     let (cp, gid) = pair
@@ -244,7 +244,7 @@ fn GlyphStyleMap::GlyphStyleMap(
   }
   // Step 5: mark ASCII digits.
   for digit in 0x30..<0x3A {
-    match font.charmap().map(digit |> Int::reinterpret_as_uint) {
+    match font.charmap().map(digit |> Int32::reinterpret_as_uint) {
       None => ()
       Some(gid) => {
         let gi = gid.to_uint64().to_int()
@@ -279,7 +279,7 @@ pub fn GlyphStyles::GlyphStyles(
 pub fn GlyphStyles::style_index(
   self : GlyphStyles,
   gid : @moon_skrifa.GlyphId,
-) -> Int? {
+) -> Int32? {
   let gi = gid.to_uint64().to_int()
   if gi < 0 || gi >= self.map.styles.length() {
     None

@@ -14,22 +14,22 @@
 
 ///|
 /// TrueType `glyf` outline tests using synthetic SFNT bytes.
-fn glyf_outline_test_push_u16_be(out : Array[Byte], v : Int) -> Unit {
+fn glyf_outline_test_push_u16_be(out : Array[Byte], v : Int32) -> Unit {
   let u = v.reinterpret_as_uint()
-  let mask = 255 |> Int::reinterpret_as_uint
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((u >> 8) & mask).to_byte())
   out.push((u & mask).to_byte())
 }
 
 ///|
-fn glyf_outline_test_push_i16_be(out : Array[Byte], v : Int) -> Unit {
+fn glyf_outline_test_push_i16_be(out : Array[Byte], v : Int32) -> Unit {
   // Encode low 16 bits in big-endian.
   glyf_outline_test_push_u16_be(out, v)
 }
 
 ///|
-fn glyf_outline_test_push_u32_be(out : Array[Byte], v : UInt) -> Unit {
-  let mask = 255 |> Int::reinterpret_as_uint
+fn glyf_outline_test_push_u32_be(out : Array[Byte], v : UInt32) -> Unit {
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((v >> 24) & mask).to_byte())
   out.push(((v >> 16) & mask).to_byte())
   out.push(((v >> 8) & mask).to_byte())
@@ -37,12 +37,12 @@ fn glyf_outline_test_push_u32_be(out : Array[Byte], v : UInt) -> Unit {
 }
 
 ///|
-fn glyf_outline_test_u32(x : Int) -> UInt {
+fn glyf_outline_test_u32(x : Int32) -> UInt32 {
   x.reinterpret_as_uint()
 }
 
 ///|
-fn glyf_outline_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
+fn glyf_outline_test_build_sfnt(tables : Array[(UInt32, Bytes)]) -> Bytes {
   let num_tables = tables.length()
   let header_len = 12 + num_tables * 16
   let out : Array[Byte] = []
@@ -70,7 +70,7 @@ fn glyf_outline_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
 }
 
 ///|
-fn glyf_outline_test_make_maxp(num_glyphs : Int) -> Bytes {
+fn glyf_outline_test_make_maxp(num_glyphs : Int32) -> Bytes {
   let out : Array[Byte] = []
   glyf_outline_test_push_u32_be(out, glyf_outline_test_u32(0x00010000))
   glyf_outline_test_push_u16_be(out, num_glyphs)
@@ -79,29 +79,29 @@ fn glyf_outline_test_make_maxp(num_glyphs : Int) -> Bytes {
 
 ///|
 fn glyf_outline_test_make_head_long_loca() -> Bytes {
-  let out : Array[Byte] = Array::make(54, 0 |> Int::to_byte)
+  let out : Array[Byte] = Array::make(54, 0 |> Int32::to_byte)
   // head.indexToLocFormat at offset 50: 1 => long offsets.
-  out.set(50, 0 |> Int::to_byte)
-  out.set(51, 1 |> Int::to_byte)
+  out.set(50, 0 |> Int32::to_byte)
+  out.set(51, 1 |> Int32::to_byte)
   Bytes::from_array(out[:])
 }
 
 ///|
-fn glyf_outline_test_make_head_long_loca_with_upem(upem : Int) -> Bytes {
-  let out : Array[Byte] = Array::make(54, 0 |> Int::to_byte)
+fn glyf_outline_test_make_head_long_loca_with_upem(upem : Int32) -> Bytes {
+  let out : Array[Byte] = Array::make(54, 0 |> Int32::to_byte)
   // head.unitsPerEm at offset 18.
   out.set(18, ((upem >> 8) & 0xFF).to_byte())
   out.set(19, (upem & 0xFF).to_byte())
   // head.indexToLocFormat at offset 50: 1 => long offsets.
-  out.set(50, 0 |> Int::to_byte)
-  out.set(51, 1 |> Int::to_byte)
+  out.set(50, 0 |> Int32::to_byte)
+  out.set(51, 1 |> Int32::to_byte)
   Bytes::from_array(out[:])
 }
 
 ///|
-fn glyf_outline_test_make_hhea(num_hmetrics : Int) -> Bytes {
+fn glyf_outline_test_make_hhea(num_hmetrics : Int32) -> Bytes {
   // hhea table needs at least 36 bytes; numberOfHMetrics is u16 at offset 34.
-  let out : Array[Byte] = Array::make(36, 0 |> Int::to_byte)
+  let out : Array[Byte] = Array::make(36, 0 |> Int32::to_byte)
   out.set(34, ((num_hmetrics >> 8) & 0xFF).to_byte())
   out.set(35, (num_hmetrics & 0xFF).to_byte())
   Bytes::from_array(out[:])
@@ -109,8 +109,8 @@ fn glyf_outline_test_make_hhea(num_hmetrics : Int) -> Bytes {
 
 ///|
 fn glyf_outline_test_make_hmtx(
-  advances : Array[Int],
-  lsbs : Array[Int],
+  advances : Array[Int32],
+  lsbs : Array[Int32],
 ) -> Bytes {
   let out : Array[Byte] = []
   let n = advances.length()
@@ -124,7 +124,7 @@ fn glyf_outline_test_make_hmtx(
 }
 
 ///|
-fn glyf_outline_test_make_loca_long(offsets : Array[Int]) -> Bytes {
+fn glyf_outline_test_make_loca_long(offsets : Array[Int32]) -> Bytes {
   let out : Array[Byte] = []
   for off in offsets {
     glyf_outline_test_push_u32_be(out, glyf_outline_test_u32(off))
@@ -134,7 +134,7 @@ fn glyf_outline_test_make_loca_long(offsets : Array[Int]) -> Bytes {
 
 ///|
 fn glyf_outline_test_make_font(glyphs : Array[Bytes]) -> @moon_skrifa.FontRef {
-  let offsets : Array[Int] = []
+  let offsets : Array[Int32] = []
   let glyf_out : Array[Byte] = []
   let mut off = 0
   offsets.push(off)
@@ -164,7 +164,7 @@ fn glyf_outline_test_make_font_with_head(
   head : Bytes,
   glyphs : Array[Bytes],
 ) -> @moon_skrifa.FontRef {
-  let offsets : Array[Int] = []
+  let offsets : Array[Int32] = []
   let glyf_out : Array[Byte] = []
   let mut off = 0
   offsets.push(off)
@@ -201,15 +201,15 @@ fn glyf_outline_test_glyph_simple_quad() -> Bytes {
   glyf_outline_test_push_i16_be(out, 100)
   glyf_outline_test_push_u16_be(out, 2) // endPts[0]
   glyf_outline_test_push_u16_be(out, 0) // instructionLength
-  out.push(0x31 |> Int::to_byte)
-  out.push(0x36 |> Int::to_byte)
-  out.push(0x17 |> Int::to_byte)
+  out.push(0x31 |> Int32::to_byte)
+  out.push(0x36 |> Int32::to_byte)
+  out.push(0x17 |> Int32::to_byte)
   // x bytes: 50, 50
-  out.push(50 |> Int::to_byte)
-  out.push(50 |> Int::to_byte)
+  out.push(50 |> Int32::to_byte)
+  out.push(50 |> Int32::to_byte)
   // y bytes: 100, 100 (second is negative)
-  out.push(100 |> Int::to_byte)
-  out.push(100 |> Int::to_byte)
+  out.push(100 |> Int32::to_byte)
+  out.push(100 |> Int32::to_byte)
   Bytes::from_array(out[:])
 }
 
@@ -225,16 +225,16 @@ fn glyf_outline_test_glyph_simple_quad_hinted() -> Bytes {
   glyf_outline_test_push_i16_be(out, 100)
   glyf_outline_test_push_u16_be(out, 2) // endPts[0]
   glyf_outline_test_push_u16_be(out, 1) // instructionLength
-  out.push(0 |> Int::to_byte)
-  out.push(0x31 |> Int::to_byte)
-  out.push(0x36 |> Int::to_byte)
-  out.push(0x17 |> Int::to_byte)
+  out.push(0 |> Int32::to_byte)
+  out.push(0x31 |> Int32::to_byte)
+  out.push(0x36 |> Int32::to_byte)
+  out.push(0x17 |> Int32::to_byte)
   // x bytes: 50, 50
-  out.push(50 |> Int::to_byte)
-  out.push(50 |> Int::to_byte)
+  out.push(50 |> Int32::to_byte)
+  out.push(50 |> Int32::to_byte)
   // y bytes: 100, 100 (second is negative)
-  out.push(100 |> Int::to_byte)
-  out.push(100 |> Int::to_byte)
+  out.push(100 |> Int32::to_byte)
+  out.push(100 |> Int32::to_byte)
   Bytes::from_array(out[:])
 }
 
@@ -250,17 +250,17 @@ fn glyf_outline_test_glyph_implied_midpoint() -> Bytes {
   glyf_outline_test_push_i16_be(out, 100)
   glyf_outline_test_push_u16_be(out, 3) // endPts[0]
   glyf_outline_test_push_u16_be(out, 0) // instructionLength
-  out.push(0x31 |> Int::to_byte)
-  out.push(0x36 |> Int::to_byte)
-  out.push(0x32 |> Int::to_byte)
-  out.push(0x17 |> Int::to_byte)
+  out.push(0x31 |> Int32::to_byte)
+  out.push(0x36 |> Int32::to_byte)
+  out.push(0x32 |> Int32::to_byte)
+  out.push(0x17 |> Int32::to_byte)
   // x bytes: 50, 50, 50
-  out.push(50 |> Int::to_byte)
-  out.push(50 |> Int::to_byte)
-  out.push(50 |> Int::to_byte)
+  out.push(50 |> Int32::to_byte)
+  out.push(50 |> Int32::to_byte)
+  out.push(50 |> Int32::to_byte)
   // y bytes: 100, 100 (last is negative)
-  out.push(100 |> Int::to_byte)
-  out.push(100 |> Int::to_byte)
+  out.push(100 |> Int32::to_byte)
+  out.push(100 |> Int32::to_byte)
   Bytes::from_array(out[:])
 }
 
@@ -277,16 +277,16 @@ fn glyf_outline_test_glyph_first_off_second_on() -> Bytes {
   glyf_outline_test_push_u16_be(out, 2) // endPts[0]
   glyf_outline_test_push_u16_be(out, 0) // instructionLength
   // flags: off, on, on
-  out.push(0x36 |> Int::to_byte)
-  out.push(0x17 |> Int::to_byte)
-  out.push(0x23 |> Int::to_byte)
+  out.push(0x36 |> Int32::to_byte)
+  out.push(0x17 |> Int32::to_byte)
+  out.push(0x23 |> Int32::to_byte)
   // x bytes: +50, +50, -100
-  out.push(50 |> Int::to_byte)
-  out.push(50 |> Int::to_byte)
-  out.push(100 |> Int::to_byte)
+  out.push(50 |> Int32::to_byte)
+  out.push(50 |> Int32::to_byte)
+  out.push(100 |> Int32::to_byte)
   // y bytes: +100, -100
-  out.push(100 |> Int::to_byte)
-  out.push(100 |> Int::to_byte)
+  out.push(100 |> Int32::to_byte)
+  out.push(100 |> Int32::to_byte)
   Bytes::from_array(out[:])
 }
 
@@ -303,23 +303,23 @@ fn glyf_outline_test_glyph_negative_tie_quad() -> Bytes {
   glyf_outline_test_push_i16_be(out, 0)
   glyf_outline_test_push_u16_be(out, 2) // endPts[0]
   glyf_outline_test_push_u16_be(out, 0) // instructionLength
-  out.push(0x31 |> Int::to_byte)
-  out.push(0x16 |> Int::to_byte)
-  out.push(0x37 |> Int::to_byte)
+  out.push(0x31 |> Int32::to_byte)
+  out.push(0x16 |> Int32::to_byte)
+  out.push(0x37 |> Int32::to_byte)
   // x bytes: +20, +20
-  out.push(20 |> Int::to_byte)
-  out.push(20 |> Int::to_byte)
+  out.push(20 |> Int32::to_byte)
+  out.push(20 |> Int32::to_byte)
   // y bytes: -24, +24
-  out.push(24 |> Int::to_byte)
-  out.push(24 |> Int::to_byte)
+  out.push(24 |> Int32::to_byte)
+  out.push(24 |> Int32::to_byte)
   Bytes::from_array(out[:])
 }
 
 ///|
 fn glyf_outline_test_glyph_composite_translate(
-  comp_gid : Int,
-  dx : Int,
-  dy : Int,
+  comp_gid : Int32,
+  dx : Int32,
+  dy : Int32,
 ) -> Bytes {
   // Composite glyph with a single component using XY translation.
   let out : Array[Byte] = []
@@ -338,10 +338,10 @@ fn glyf_outline_test_glyph_composite_translate(
 
 ///|
 fn glyf_outline_test_glyph_composite_point_match(
-  first_gid : Int,
-  second_gid : Int,
-  base_point_ix : Int,
-  component_point_ix : Int,
+  first_gid : Int32,
+  second_gid : Int32,
+  base_point_ix : Int32,
+  component_point_ix : Int32,
 ) -> Bytes {
   // Composite with two components:
   // 1) first component with XY offset (0,0)
@@ -375,9 +375,12 @@ test "OutlineGlyphCollection::path empty glyph is empty path" {
       glyf_outline_test_glyph_simple_quad(),
     ]),
   )
-  let c = OutlineGlyphCollection::from_font(font)
+  let c = @outline.OutlineGlyphCollection::from_font(font)
   inspect(
-    c.path(GlyphId((0).to_uint16()), DrawSettings::default()).unwrap().length(),
+    c
+    .path(GlyphId((0).to_uint16()), @outline.DrawSettings::default())
+    .unwrap()
+    .length(),
     content="0",
   )
 }
@@ -390,10 +393,12 @@ test "glyf simple outline uses MoveTo/QuadTo/Close" {
       glyf_outline_test_glyph_simple_quad(),
     ]),
   )
-  let c = OutlineGlyphCollection::from_font(font)
-  let path = c.path(GlyphId((1).to_uint16()), DrawSettings::default()).unwrap()
+  let c = @outline.OutlineGlyphCollection::from_font(font)
+  let path = c
+    .path(GlyphId((1).to_uint16()), @outline.DrawSettings::default())
+    .unwrap()
   let expected = Array::from_fixed_array([
-    PathElement::MoveTo(0.0, 0.0),
+    @outline.PathElement::MoveTo(0.0, 0.0),
     QuadTo(50.0, 100.0, 100.0, 0.0),
     Close,
   ])
@@ -408,10 +413,12 @@ test "glyf consecutive off-curve points insert implied on-curve midpoint" {
       glyf_outline_test_glyph_implied_midpoint(),
     ]),
   )
-  let c = OutlineGlyphCollection::from_font(font)
-  let path = c.path(GlyphId((1).to_uint16()), DrawSettings::default()).unwrap()
+  let c = @outline.OutlineGlyphCollection::from_font(font)
+  let path = c
+    .path(GlyphId((1).to_uint16()), @outline.DrawSettings::default())
+    .unwrap()
   let expected = Array::from_fixed_array([
-    PathElement::MoveTo(0.0, 0.0),
+    @outline.PathElement::MoveTo(0.0, 0.0),
     QuadTo(50.0, 100.0, 75.0, 100.0),
     QuadTo(100.0, 100.0, 150.0, 0.0),
     Close,
@@ -428,10 +435,12 @@ test "glyf composite outline translates component path" {
       glyf_outline_test_glyph_composite_translate(1, 10, 20),
     ]),
   )
-  let c = OutlineGlyphCollection::from_font(font)
-  let path = c.path(GlyphId((2).to_uint16()), DrawSettings::default()).unwrap()
+  let c = @outline.OutlineGlyphCollection::from_font(font)
+  let path = c
+    .path(GlyphId((2).to_uint16()), @outline.DrawSettings::default())
+    .unwrap()
   let expected = Array::from_fixed_array([
-    PathElement::MoveTo(10.0, 20.0),
+    @outline.PathElement::MoveTo(10.0, 20.0),
     QuadTo(60.0, 120.0, 110.0, 20.0),
     Close,
   ])
@@ -447,10 +456,12 @@ test "glyf composite outline supports point matching anchors" {
       glyf_outline_test_glyph_composite_point_match(1, 1, 2, 0),
     ]),
   )
-  let c = OutlineGlyphCollection::from_font(font)
-  let path = c.path(GlyphId((2).to_uint16()), DrawSettings::default()).unwrap()
+  let c = @outline.OutlineGlyphCollection::from_font(font)
+  let path = c
+    .path(GlyphId((2).to_uint16()), @outline.DrawSettings::default())
+    .unwrap()
   let expected = Array::from_fixed_array([
-    PathElement::MoveTo(0.0, 0.0),
+    @outline.PathElement::MoveTo(0.0, 0.0),
     QuadTo(50.0, 100.0, 100.0, 0.0),
     Close,
     MoveTo(100.0, 0.0),
@@ -468,8 +479,9 @@ test "glyf composite recursion is guarded" {
       glyf_outline_test_glyph_composite_translate(1, 0, 0),
     ]),
   )
-  let c = OutlineGlyphCollection::from_font(font)
-  let ok = match c.path(GlyphId((1).to_uint16()), DrawSettings::default()) {
+  let c = @outline.OutlineGlyphCollection::from_font(font)
+  let ok = match
+    c.path(GlyphId((1).to_uint16()), @outline.DrawSettings::default()) {
     None => true
     Some(_) => false
   }
@@ -485,14 +497,14 @@ test "path scales with size when unitsPerEm is available" {
       glyf_outline_test_glyph_simple_quad(),
     ]),
   )
-  let c = OutlineGlyphCollection::from_font(font)
-  let settings = DrawSettings::unhinted(
+  let c = @outline.OutlineGlyphCollection::from_font(font)
+  let settings = @outline.DrawSettings::unhinted(
     Size(16.0),
     @moon_skrifa.LocationRef::default(),
   )
   let path = c.path(GlyphId((1).to_uint16()), settings).unwrap()
   let expected = Array::from_fixed_array([
-    PathElement::MoveTo(0.0, 0.0),
+    @outline.PathElement::MoveTo(0.0, 0.0),
     // FreeType-style scaling quantizes to 1/64 pixels.
     QuadTo(0.796875, 1.59375, 1.59375, 0.0),
     Close,
@@ -509,14 +521,17 @@ test "path scaling keeps negative .5 ties away from zero in FreeType mode" {
       glyf_outline_test_glyph_negative_tie_quad(),
     ]),
   )
-  let c = OutlineGlyphCollection::from_font(font)
+  let c = @outline.OutlineGlyphCollection::from_font(font)
 
   let path_14 = c.path(
     GlyphId((1).to_uint16()),
-    DrawSettings::unhinted(Size(14.0), @moon_skrifa.LocationRef::default()),
+    @outline.DrawSettings::unhinted(
+      Size(14.0),
+      @moon_skrifa.LocationRef::default(),
+    ),
   )
   let expected_14 = Array::from_fixed_array([
-    PathElement::MoveTo(0.0, 0.0),
+    @outline.PathElement::MoveTo(0.0, 0.0),
     QuadTo(0.140625, -0.171875, 0.28125, 0.0),
     Close,
   ])
@@ -527,10 +542,13 @@ test "path scaling keeps negative .5 ties away from zero in FreeType mode" {
 
   let path_18 = c.path(
     GlyphId((1).to_uint16()),
-    DrawSettings::unhinted(Size(18.0), @moon_skrifa.LocationRef::default()),
+    @outline.DrawSettings::unhinted(
+      Size(18.0),
+      @moon_skrifa.LocationRef::default(),
+    ),
   )
   let expected_18 = Array::from_fixed_array([
-    PathElement::MoveTo(0.0, 0.0),
+    @outline.PathElement::MoveTo(0.0, 0.0),
     QuadTo(0.171875, -0.21875, 0.359375, 0.0),
     Close,
   ])
@@ -549,14 +567,14 @@ test "HarfBuzz path_style uses 16.16 fixed-point scaling when size is set" {
       glyf_outline_test_glyph_simple_quad(),
     ]),
   )
-  let c = OutlineGlyphCollection::from_font(font)
-  let settings = DrawSettings::unhinted(
+  let c = @outline.OutlineGlyphCollection::from_font(font)
+  let settings = @outline.DrawSettings::unhinted(
     Size(16.0),
     @moon_skrifa.LocationRef::default(),
   ).with_path_style(HarfBuzz)
   let path = c.path(GlyphId((1).to_uint16()), settings).unwrap()
   let expected = Array::from_fixed_array([
-    PathElement::MoveTo(0.0, 0.0),
+    @outline.PathElement::MoveTo(0.0, 0.0),
     // HarfBuzz-style scaling uses 16.16 fixed-point (multiplied by 65536).
     QuadTo(52428.8, 104857.6, 104857.6, 0.0),
     Close,
@@ -573,11 +591,11 @@ test "glyf draw_memory_size matches upstream sizing" {
       glyf_outline_test_glyph_simple_quad_hinted(),
     ]),
   )
-  let outlines = OutlineGlyphCollection::from_font(font)
+  let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let g1 = outlines.get(GlyphId((1).to_uint16())).unwrap()
   let g2 = outlines.get(GlyphId((2).to_uint16())).unwrap()
   // Computed against fontations-reference formula with Point=8, flags=1, align=4.
-  inspect(g1.draw_memory_size(Hinting::none()), content="125")
+  inspect(g1.draw_memory_size(@outline.Hinting::none()), content="125")
   inspect(g2.draw_memory_size(Embedded), content="377")
 }
 
@@ -615,17 +633,17 @@ test "hinted (disabled instance) rounds advance width to integer pixels" {
     ]),
   )
   let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
-  let outlines0 = OutlineGlyphCollection::from_font(font)
-  let h = HintingInstance::create(
+  let outlines0 = @outline.OutlineGlyphCollection::from_font(font)
+  let h = @outline.HintingInstance::create(
     outlines0,
     Size(17.0),
     @moon_skrifa.LocationRef::default(),
-    HintingOptions::default(),
+    @outline.HintingOptions::default(),
   ).unwrap()
-  let settings = DrawSettings::hinted(h, false)
-  let outlines = OutlineGlyphCollection::from_font(font)
+  let settings = @outline.DrawSettings::hinted(h, false)
+  let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let g = outlines.get(GlyphId((1).to_uint16())).unwrap()
-  let metrics = g.draw(settings, NullPen::NullPen()).unwrap()
+  let metrics = g.draw(settings, @outline.NullPen::NullPen()).unwrap()
   // advance = 500 * (17/1000) = 8.5 => rounded to 9.0
   let ok = (metrics.advance_width.unwrap() - 9.0).abs() <= 0.000001
   inspect(ok, content="true")
@@ -639,20 +657,22 @@ test "path_style affects start point selection when first point is off-curve" {
       glyf_outline_test_glyph_first_off_second_on(),
     ]),
   )
-  let c = OutlineGlyphCollection::from_font(font)
-  let free = c.path(GlyphId((1).to_uint16()), DrawSettings::default()).unwrap()
+  let c = @outline.OutlineGlyphCollection::from_font(font)
+  let free = c
+    .path(GlyphId((1).to_uint16()), @outline.DrawSettings::default())
+    .unwrap()
   let expected_free = Array::from_fixed_array([
-    PathElement::MoveTo(0.0, 0.0),
+    @outline.PathElement::MoveTo(0.0, 0.0),
     QuadTo(50.0, 100.0, 100.0, 0.0),
     Close,
   ])
   inspect(glyf_outline_test_path_eq(free, expected_free), content="true")
   let hb = c.path(
     GlyphId((1).to_uint16()),
-    DrawSettings::default().with_path_style(HarfBuzz),
+    @outline.DrawSettings::default().with_path_style(HarfBuzz),
   )
   let expected_hb = Array::from_fixed_array([
-    PathElement::MoveTo(100.0, 0.0),
+    @outline.PathElement::MoveTo(100.0, 0.0),
     LineTo(0.0, 0.0),
     QuadTo(50.0, 100.0, 100.0, 0.0),
     Close,
@@ -662,8 +682,8 @@ test "path_style affects start point selection when first point is off-curve" {
 
 ///|
 fn glyf_outline_test_path_eq(
-  a : Array[PathElement],
-  b : Array[PathElement],
+  a : Array[@outline.PathElement],
+  b : Array[@outline.PathElement],
 ) -> Bool {
   if a.length() != b.length() {
     return false
@@ -678,7 +698,10 @@ fn glyf_outline_test_path_eq(
 }
 
 ///|
-fn glyf_outline_test_elem_eq(a : PathElement, b : PathElement) -> Bool {
+fn glyf_outline_test_elem_eq(
+  a : @outline.PathElement,
+  b : @outline.PathElement,
+) -> Bool {
   fn feq(a : Double, b : Double) -> Bool {
     (a - b).abs() <= 0.000001
   }

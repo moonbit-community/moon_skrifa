@@ -23,10 +23,10 @@ fn require_interpreter(_font : @moon_skrifa.FontRef) -> Bool {
 }
 
 ///|
-const TAG_CVT : UInt = 0x63767420 // "cvt "
+const TAG_CVT : UInt32 = 0x63767420 // "cvt "
 
 ///|
-const MAX_HINT_RELIANT_NAME_LEN : Int = 18
+const MAX_HINT_RELIANT_NAME_LEN : Int32 = 18
 
 ///|
 fn is_hint_reliant_by_name(font : @moon_skrifa.FontRef) -> Bool {
@@ -104,8 +104,8 @@ let hint_reliant_names : Array[String] = Array::from_fixed_array([
 
 ///|
 priv struct TableId {
-  checksum : UInt
-  len : UInt
+  checksum : UInt32
+  len : UInt32
 }
 
 ///|
@@ -114,9 +114,9 @@ fn TableId::default() -> TableId {
 }
 
 ///|
-fn compute_checksum(data : BytesView) -> UInt {
+fn compute_checksum(data : BytesView) -> UInt32 {
   // OpenType checksum: sum of big-endian u32 values, padding with zeros.
-  let mut sum : UInt = 0
+  let mut sum : UInt32 = 0
   let n = data.length()
   let mut i = 0
   while i < n {
@@ -134,7 +134,7 @@ fn compute_checksum(data : BytesView) -> UInt {
 ///|
 fn TableId::from_font_and_tag(
   font : @moon_skrifa.FontRef,
-  tag : UInt,
+  tag : UInt32,
 ) -> TableId? {
   match font.table(tag) {
     None => None

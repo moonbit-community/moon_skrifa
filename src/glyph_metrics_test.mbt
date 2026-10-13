@@ -13,22 +13,22 @@
 // limitations under the License.
 
 ///|
-fn glyph_metrics_test_push_u16_be(out : Array[Byte], v : Int) -> Unit {
+fn glyph_metrics_test_push_u16_be(out : Array[Byte], v : Int32) -> Unit {
   let u = v.reinterpret_as_uint()
-  let mask = 255 |> Int::reinterpret_as_uint
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((u >> 8) & mask).to_byte())
   out.push((u & mask).to_byte())
 }
 
 ///|
-fn glyph_metrics_test_push_i16_be(out : Array[Byte], v : Int) -> Unit {
+fn glyph_metrics_test_push_i16_be(out : Array[Byte], v : Int32) -> Unit {
   glyph_metrics_test_push_u16_be(out, v & 0xFFFF)
 }
 
 ///|
-fn glyph_metrics_test_push_u32_be(out : Array[Byte], v : Int) -> Unit {
+fn glyph_metrics_test_push_u32_be(out : Array[Byte], v : Int32) -> Unit {
   let u = v.reinterpret_as_uint()
-  let mask = 255 |> Int::reinterpret_as_uint
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((u >> 24) & mask).to_byte())
   out.push(((u >> 16) & mask).to_byte())
   out.push(((u >> 8) & mask).to_byte())
@@ -36,7 +36,7 @@ fn glyph_metrics_test_push_u32_be(out : Array[Byte], v : Int) -> Unit {
 }
 
 ///|
-fn glyph_metrics_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
+fn glyph_metrics_test_build_sfnt(tables : Array[(UInt32, Bytes)]) -> Bytes {
   let num_tables = tables.length()
   let header_len = 12 + num_tables * 16
   let out : Array[Byte] = []
@@ -64,7 +64,7 @@ fn glyph_metrics_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
 }
 
 ///|
-fn glyph_metrics_test_make_maxp(num_glyphs : Int) -> Bytes {
+fn glyph_metrics_test_make_maxp(num_glyphs : Int32) -> Bytes {
   let out : Array[Byte] = []
   glyph_metrics_test_push_u32_be(out, 0x00010000)
   glyph_metrics_test_push_u16_be(out, num_glyphs)
@@ -72,15 +72,15 @@ fn glyph_metrics_test_make_maxp(num_glyphs : Int) -> Bytes {
 }
 
 ///|
-fn glyph_metrics_test_make_hhea(num_hmetrics : Int) -> Bytes {
-  let out : Array[Byte] = Array::make(36, 0 |> Int::to_byte)
+fn glyph_metrics_test_make_hhea(num_hmetrics : Int32) -> Bytes {
+  let out : Array[Byte] = Array::make(36, 0 |> Int32::to_byte)
   out.set(34, ((num_hmetrics >> 8) & 0xFF).to_byte())
   out.set(35, (num_hmetrics & 0xFF).to_byte())
   Bytes::from_array(out[:])
 }
 
 ///|
-fn glyph_metrics_test_make_hmtx(advance : Int, lsb : Int) -> Bytes {
+fn glyph_metrics_test_make_hmtx(advance : Int32, lsb : Int32) -> Bytes {
   let out : Array[Byte] = []
   glyph_metrics_test_push_u16_be(out, advance)
   glyph_metrics_test_push_i16_be(out, lsb)
@@ -88,26 +88,26 @@ fn glyph_metrics_test_make_hmtx(advance : Int, lsb : Int) -> Bytes {
 }
 
 ///|
-fn glyph_metrics_test_make_head(units_per_em : Int) -> Bytes {
-  let out : Array[Byte] = Array::make(20, 0 |> Int::to_byte)
+fn glyph_metrics_test_make_head(units_per_em : Int32) -> Bytes {
+  let out : Array[Byte] = Array::make(20, 0 |> Int32::to_byte)
   out.set(18, ((units_per_em >> 8) & 0xFF).to_byte())
   out.set(19, (units_per_em & 0xFF).to_byte())
   Bytes::from_array(out[:])
 }
 
 ///|
-fn glyph_metrics_test_make_head_long_loca(units_per_em : Int) -> Bytes {
-  let out : Array[Byte] = Array::make(54, 0 |> Int::to_byte)
+fn glyph_metrics_test_make_head_long_loca(units_per_em : Int32) -> Bytes {
+  let out : Array[Byte] = Array::make(54, 0 |> Int32::to_byte)
   out.set(18, ((units_per_em >> 8) & 0xFF).to_byte())
   out.set(19, (units_per_em & 0xFF).to_byte())
   // head.indexToLocFormat at offset 50: 1 => long offsets.
-  out.set(50, 0 |> Int::to_byte)
-  out.set(51, 1 |> Int::to_byte)
+  out.set(50, 0 |> Int32::to_byte)
+  out.set(51, 1 |> Int32::to_byte)
   Bytes::from_array(out[:])
 }
 
 ///|
-fn glyph_metrics_test_make_loca_long(offsets : Array[Int]) -> Bytes {
+fn glyph_metrics_test_make_loca_long(offsets : Array[Int32]) -> Bytes {
   let out : Array[Byte] = []
   for off in offsets {
     glyph_metrics_test_push_u32_be(out, off)
@@ -127,20 +127,23 @@ fn glyph_metrics_test_glyf_simple_quad() -> Bytes {
   glyph_metrics_test_push_i16_be(out, 100)
   glyph_metrics_test_push_u16_be(out, 2) // endPts[0]
   glyph_metrics_test_push_u16_be(out, 0) // instructionLength
-  out.push(0x31 |> Int::to_byte)
-  out.push(0x36 |> Int::to_byte)
-  out.push(0x17 |> Int::to_byte)
+  out.push(0x31 |> Int32::to_byte)
+  out.push(0x36 |> Int32::to_byte)
+  out.push(0x17 |> Int32::to_byte)
   // x bytes: 50, 50
-  out.push(50 |> Int::to_byte)
-  out.push(50 |> Int::to_byte)
+  out.push(50 |> Int32::to_byte)
+  out.push(50 |> Int32::to_byte)
   // y bytes: 100, 100 (second is negative)
-  out.push(100 |> Int::to_byte)
-  out.push(100 |> Int::to_byte)
+  out.push(100 |> Int32::to_byte)
+  out.push(100 |> Int32::to_byte)
   Bytes::from_array(out[:])
 }
 
 ///|
-fn glyph_metrics_test_make_gvar_phantom_deltas(dx0 : Int, dx1 : Int) -> Bytes {
+fn glyph_metrics_test_make_gvar_phantom_deltas(
+  dx0 : Int32,
+  dx1 : Int32,
+) -> Bytes {
   let out : Array[Byte] = []
   // gvar header (axisCount=1, glyphCount=1, long offsets)
   glyph_metrics_test_push_u16_be(out, 1) // major
@@ -164,15 +167,15 @@ fn glyph_metrics_test_make_gvar_phantom_deltas(dx0 : Int, dx1 : Int) -> Bytes {
   // peak tuple: 1.0 in F2Dot14
   glyph_metrics_test_push_i16_be(out, 16384)
   // Tuple data: pointCount=0 (all points)
-  out.push(0 |> Int::to_byte)
+  out.push(0 |> Int32::to_byte)
   // xDeltas: 4 int16 deltas (words run)
-  out.push(0x83 |> Int::to_byte)
+  out.push(0x83 |> Int32::to_byte)
   glyph_metrics_test_push_i16_be(out, dx0)
   glyph_metrics_test_push_i16_be(out, dx1)
   glyph_metrics_test_push_i16_be(out, 0)
   glyph_metrics_test_push_i16_be(out, 0)
   // yDeltas: 4 zeros (zero run)
-  out.push(0x43 |> Int::to_byte)
+  out.push(0x43 |> Int32::to_byte)
   Bytes::from_array(out[:])
 }
 
@@ -224,36 +227,36 @@ fn glyph_metrics_test_make_hvar() -> Bytes {
   glyph_metrics_test_push_i16_be(out, 50)
 
   // DeltaSetIndexMap at offset 52: format 0, entryFormat=0x17 (2 bytes, 8-bit inner), mapCount=1, entry=0
-  out.push(0 |> Int::to_byte)
-  out.push(0x17 |> Int::to_byte)
+  out.push(0 |> Int32::to_byte)
+  out.push(0x17 |> Int32::to_byte)
   glyph_metrics_test_push_u16_be(out, 1)
   glyph_metrics_test_push_u16_be(out, 0)
   Bytes::from_array(out[:])
 }
 
 ///|
-const GM_TAG_MAXP : UInt = 0x6D617870 // "maxp"
+const GM_TAG_MAXP : UInt32 = 0x6D617870 // "maxp"
 
 ///|
-const GM_TAG_HHEA : UInt = 0x68686561 // "hhea"
+const GM_TAG_HHEA : UInt32 = 0x68686561 // "hhea"
 
 ///|
-const GM_TAG_HMTX : UInt = 0x686D7478 // "hmtx"
+const GM_TAG_HMTX : UInt32 = 0x686D7478 // "hmtx"
 
 ///|
-const GM_TAG_HEAD : UInt = 0x68656164 // "head"
+const GM_TAG_HEAD : UInt32 = 0x68656164 // "head"
 
 ///|
-const GM_TAG_HVAR : UInt = 0x48564152 // "HVAR"
+const GM_TAG_HVAR : UInt32 = 0x48564152 // "HVAR"
 
 ///|
-const GM_TAG_GLYF : UInt = 0x676C7966 // "glyf"
+const GM_TAG_GLYF : UInt32 = 0x676C7966 // "glyf"
 
 ///|
-const GM_TAG_LOCA : UInt = 0x6C6F6361 // "loca"
+const GM_TAG_LOCA : UInt32 = 0x6C6F6361 // "loca"
 
 ///|
-const GM_TAG_GVAR : UInt = 0x67564152 // "gvar"
+const GM_TAG_GVAR : UInt32 = 0x67564152 // "gvar"
 
 ///|
 test "GlyphMetrics basic + HVAR deltas" {
@@ -266,8 +269,11 @@ test "GlyphMetrics basic + HVAR deltas" {
       (GM_TAG_HVAR, glyph_metrics_test_make_hvar()),
     ]),
   )
-  let font = FontRef::from_bytes(sfnt).unwrap()
-  let gm0 = font.glyph_metrics(Size::unscaled(), LocationRef::default())
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
+  let gm0 = font.glyph_metrics(
+    @moon_skrifa.Size::unscaled(),
+    @moon_skrifa.LocationRef::default(),
+  )
   inspect(
     gm0.advance_width(GlyphId((0).to_uint16())).unwrap().to_int().to_string(),
     content="500",
@@ -281,7 +287,10 @@ test "GlyphMetrics basic + HVAR deltas" {
     content="10",
   )
   let coords = Array::from_fixed_array([16384])
-  let gm1 = font.glyph_metrics(Size::unscaled(), LocationRef(coords[:]))
+  let gm1 = font.glyph_metrics(
+    @moon_skrifa.Size::unscaled(),
+    LocationRef(coords[:]),
+  )
   inspect(
     gm1.advance_width(GlyphId((0).to_uint16())).unwrap().to_int().to_string(),
     content="550",
@@ -312,8 +321,11 @@ test "GlyphMetrics bounds from outline path" {
       (GM_TAG_GLYF, glyf),
     ]),
   )
-  let font = FontRef::from_bytes(sfnt).unwrap()
-  let gm = font.glyph_metrics(Size::unscaled(), LocationRef::default())
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
+  let gm = font.glyph_metrics(
+    @moon_skrifa.Size::unscaled(),
+    @moon_skrifa.LocationRef::default(),
+  )
   let b = gm.bounds(GlyphId((0).to_uint16())).unwrap()
   inspect(b.x_min().to_int().to_string(), content="0")
   inspect(b.y_min().to_int().to_string(), content="0")
@@ -337,8 +349,11 @@ test "GlyphMetrics gvar phantom deltas fallback" {
       (GM_TAG_GVAR, gvar),
     ]),
   )
-  let font = FontRef::from_bytes(sfnt).unwrap()
-  let gm0 = font.glyph_metrics(Size::unscaled(), LocationRef::default())
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
+  let gm0 = font.glyph_metrics(
+    @moon_skrifa.Size::unscaled(),
+    @moon_skrifa.LocationRef::default(),
+  )
   inspect(
     gm0.advance_width(GlyphId((0).to_uint16())).unwrap().to_int().to_string(),
     content="500",
@@ -352,7 +367,10 @@ test "GlyphMetrics gvar phantom deltas fallback" {
     content="10",
   )
   let coords = Array::from_fixed_array([16384])
-  let gm1 = font.glyph_metrics(Size::unscaled(), LocationRef(coords[:]))
+  let gm1 = font.glyph_metrics(
+    @moon_skrifa.Size::unscaled(),
+    LocationRef(coords[:]),
+  )
   inspect(
     gm1.advance_width(GlyphId((0).to_uint16())).unwrap().to_int().to_string(),
     content="520",

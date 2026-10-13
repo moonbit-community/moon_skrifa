@@ -80,7 +80,7 @@ pub impl OutlinePen for Array[PathElement] with fn close(out) {
 /// Pen that generates SVG style path data.
 pub struct SvgPen {
   priv mut s : String
-  priv precision : Int?
+  priv precision : Int32?
 }
 
 ///|
@@ -91,7 +91,7 @@ pub fn SvgPen::SvgPen() -> SvgPen {
 ///|
 /// Creates a new SVG pen that formats floating point values with the given
 /// precision (the number of digits printed after the decimal point).
-pub fn SvgPen::with_precision(precision : Int) -> SvgPen {
+pub fn SvgPen::with_precision(precision : Int32) -> SvgPen {
   { s: "", precision: Some(precision), }
 }
 
@@ -113,7 +113,7 @@ fn SvgPen::maybe_space(self : SvgPen) -> Unit {
 }
 
 ///|
-fn svg_pen_pow10_int(p : Int) -> Int {
+fn svg_pen_pow10_int(p : Int32) -> Int32 {
   let mut v = 1
   for _ in 0..<p {
     v = v * 10
@@ -125,7 +125,7 @@ fn svg_pen_pow10_int(p : Int) -> Int {
 /// Round-to-nearest with ties-to-even (banker's rounding) for non-negative
 /// values. This matches Rust's float formatting behavior used by upstream
 /// SvgPen when a precision is specified.
-fn svg_pen_round_ties_even_pos(x : Double) -> Int {
+fn svg_pen_round_ties_even_pos(x : Double) -> Int32 {
   let i = x.to_int()
   let frac = x - i.to_double()
   let diff = frac - 0.5
@@ -145,7 +145,7 @@ fn svg_pen_round_ties_even_pos(x : Double) -> Int {
 ///|
 /// Formats a floating point value with a fixed number of digits after the
 /// decimal point, rounding to nearest.
-fn svg_pen_format_fixed(x : Double, precision : Int) -> String {
+fn svg_pen_format_fixed(x : Double, precision : Int32) -> String {
   let sign = if x < 0.0 { "-" } else { "" }
   if precision <= 0 {
     return sign + svg_pen_round_ties_even_pos(x.abs()).to_string()

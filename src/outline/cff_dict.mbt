@@ -19,24 +19,24 @@
 priv struct CffDictNum {
   value : Double
   // Dynamic scaling exponent for FontMatrix parsing (range [-9..0]).
-  scaling : Int
+  scaling : Int32
 }
 
 ///|
 priv struct CffDictInfo {
-  mut charstrings_offset : Int?
-  mut var_store_offset : Int?
-  mut fd_array_offset : Int?
-  mut fd_select_offset : Int?
-  mut private_size : Int?
-  mut private_offset : Int?
-  mut subrs_offset : Int?
+  mut charstrings_offset : Int32?
+  mut var_store_offset : Int32?
+  mut fd_array_offset : Int32?
+  mut fd_select_offset : Int32?
+  mut private_size : Int32?
+  mut private_offset : Int32?
+  mut subrs_offset : Int32?
   mut font_matrix : CffMatrix?
-  mut font_matrix_upem : Int?
+  mut font_matrix_upem : Int32?
 }
 
 ///|
-fn cff_dict_read_i32_be(view : BytesView, offset : Int) -> Int? {
+fn cff_dict_read_i32_be(view : BytesView, offset : Int32) -> Int32? {
   if offset < 0 || offset + 4 > view.length() {
     None
   } else {
@@ -165,7 +165,7 @@ fn cff_dict_parse(data : BytesView) -> CffDictInfo {
 }
 
 ///|
-fn cff_dict_number_to_int(v : Double) -> Int? {
+fn cff_dict_number_to_int(v : Double) -> Int32? {
   let r = v.round()
   if (v - r).abs() <= 0.000001 {
     Some(r.to_int())
@@ -175,7 +175,7 @@ fn cff_dict_number_to_int(v : Double) -> Int? {
 }
 
 ///|
-fn cff_dict_pow10(exp : Int) -> Int {
+fn cff_dict_pow10(exp : Int32) -> Int32 {
   let mut v = 1
   for _ in 0..<exp {
     v = v * 10
@@ -186,8 +186,8 @@ fn cff_dict_pow10(exp : Int) -> Int {
 ///|
 fn cff_dict_parse_real_scaled(
   data : BytesView,
-  pos : Int,
-) -> (Double, Int, Int)? {
+  pos : Int32,
+) -> (Double, Int32, Int32)? {
   // Returns (value, scaling, new_pos). BCD real number per CFF spec.
   //
   // Note: We only need enough of FreeType's dynamic scaling behavior for
@@ -210,7 +210,7 @@ fn cff_dict_parse_real_scaled(
     let nibs = Array::from_fixed_array([b >> 4, b & 0x0F])
     for n in nibs.iter() {
       match n {
-        0..=9 =>
+        0..<=9 =>
           if in_exp {
             exp_val = exp_val * 10 + n
           } else if have_dot {
@@ -256,7 +256,7 @@ fn cff_dict_parse_real_scaled(
 }
 
 ///|
-fn cff_dict_parse_real(data : BytesView, pos : Int) -> (Double, Int)? {
+fn cff_dict_parse_real(data : BytesView, pos : Int32) -> (Double, Int32)? {
   // Returns (value, new_pos). BCD real number per CFF spec.
   let mut i = pos
   let mut sign = 1.0
@@ -274,7 +274,7 @@ fn cff_dict_parse_real(data : BytesView, pos : Int) -> (Double, Int)? {
     let nibs = Array::from_fixed_array([b >> 4, b & 0x0F])
     for n in nibs.iter() {
       match n {
-        0..=9 =>
+        0..<=9 =>
           if in_exp {
             exp_val = exp_val * 10 + n
           } else if have_dot {
@@ -320,9 +320,9 @@ fn cff_dict_parse_real(data : BytesView, pos : Int) -> (Double, Int)? {
 ///|
 fn cff_dict_parse_number(
   data : BytesView,
-  pos : Int,
-  b0 : Int,
-) -> (Double, Int)? {
+  pos : Int32,
+  b0 : Int32,
+) -> (Double, Int32)? {
   match b0 {
     28 =>
       match type2_read_i16_be(data, pos) {
@@ -341,15 +341,15 @@ fn cff_dict_parse_number(
         None => None
         Some(bits) => Some((bits.to_double() / 65536.0, pos + 4))
       }
-    32..=246 => Some(((b0 - 139).to_double(), pos))
-    247..=250 =>
+    32..<=246 => Some(((b0 - 139).to_double(), pos))
+    247..<=250 =>
       if pos >= data.length() {
         None
       } else {
         let b1 = data.at(pos).to_int()
         Some((((b0 - 247) * 256 + b1 + 108).to_double(), pos + 1))
       }
-    251..=254 =>
+    251..<=254 =>
       if pos >= data.length() {
         None
       } else {
@@ -363,9 +363,9 @@ fn cff_dict_parse_number(
 ///|
 fn cff_dict_parse_number_scaled(
   data : BytesView,
-  pos : Int,
-  b0 : Int,
-) -> (Double, Int, Int)? {
+  pos : Int32,
+  b0 : Int32,
+) -> (Double, Int32, Int32)? {
   match b0 {
     30 => cff_dict_parse_real_scaled(data, pos)
     _ =>
@@ -379,8 +379,8 @@ fn cff_dict_parse_number_scaled(
 ///|
 priv struct CffPrivateDictHintInfo {
   hint_params : HintParams
-  mut subrs_offset : Int?
-  mut store_index : Int
+  mut subrs_offset : Int32?
+  mut store_index : Int32
 }
 
 ///|

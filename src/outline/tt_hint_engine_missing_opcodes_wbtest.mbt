@@ -21,8 +21,8 @@ fn tt_bytes(xs : FixedArray[Byte]) -> Bytes {
 test "tt_hint: missing opcodes (getvariation/getdata/odd/even/mps/debug)" {
   let empty = Bytes::from_array([][:])
   let retained = TtRetainedGraphicsState(0x10000, 20, Target::default())
-  let cvt : Array[Int] = []
-  let storage : Array[Int] = []
+  let cvt : Array[Int32] = []
+  let storage : Array[Int32] = []
   let coords0 : Array[@moon_skrifa.NormalizedCoord] = []
 
   // Define IDEF for opcode 0x91 (GETVARIATION) that pushes 123.

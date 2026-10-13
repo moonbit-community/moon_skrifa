@@ -16,7 +16,7 @@
 /// Instance-related types.
 ///
 /// Ported from `fontations/skrifa` (Apache-2.0 OR MIT).
-pub type NormalizedCoord = Int
+pub type NormalizedCoord = Int32
 
 ///|
 pub struct Size {
@@ -61,7 +61,7 @@ pub fn Size::linear_scale(self : Size, units_per_em : UInt16) -> Double {
 ///
 /// This is intended for internal routines that apply the FreeType-style
 /// `mul_div(value, scale, 64)` pattern.
-pub fn Size::fixed_linear_scale(self : Size, units_per_em : UInt16) -> Int {
+pub fn Size::fixed_linear_scale(self : Size, units_per_em : UInt16) -> Int32 {
   match self.ppem {
     Some(ppem) => {
       let upem = units_per_em.to_int()
@@ -87,7 +87,7 @@ pub fn Size::value(self : Size) -> Double {
 
 ///|
 /// Maximum number of coords to store inline in a `Location` object.
-const MAX_INLINE_COORDS : Int = 8
+const MAX_INLINE_COORDS : Int32 = 8
 
 ///|
 /// Reference to an ordered sequence of normalized variation coordinates.
@@ -142,7 +142,7 @@ pub struct Location {
 }
 
 ///|
-pub fn Location::Location(len : Int) -> Location {
+pub fn Location::Location(len : Int32) -> Location {
   { coords: SmallVec::with_len(len, 0, MAX_INLINE_COORDS), }
 }
 

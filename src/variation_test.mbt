@@ -13,16 +13,16 @@
 // limitations under the License.
 
 ///|
-fn variation_test_push_u16_be(out : Array[Byte], v : Int) -> Unit {
+fn variation_test_push_u16_be(out : Array[Byte], v : Int32) -> Unit {
   let u = v.reinterpret_as_uint()
-  let mask = 255 |> Int::reinterpret_as_uint
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((u >> 8) & mask).to_byte())
   out.push((u & mask).to_byte())
 }
 
 ///|
-fn variation_test_push_u32_be(out : Array[Byte], v : UInt) -> Unit {
-  let mask = 255 |> Int::reinterpret_as_uint
+fn variation_test_push_u32_be(out : Array[Byte], v : UInt32) -> Unit {
+  let mask = 255 |> Int32::reinterpret_as_uint
   out.push(((v >> 24) & mask).to_byte())
   out.push(((v >> 16) & mask).to_byte())
   out.push(((v >> 8) & mask).to_byte())
@@ -30,17 +30,17 @@ fn variation_test_push_u32_be(out : Array[Byte], v : UInt) -> Unit {
 }
 
 ///|
-fn variation_test_u32(x : Int) -> UInt {
+fn variation_test_u32(x : Int32) -> UInt32 {
   x.reinterpret_as_uint()
 }
 
 ///|
-fn variation_test_fixed_16_16(x : Double) -> UInt {
+fn variation_test_fixed_16_16(x : Double) -> UInt32 {
   (x * 65536.0).round().to_int().reinterpret_as_uint()
 }
 
 ///|
-const TAG_FVAR : UInt = 0x66766172 // "fvar"
+const TAG_FVAR : UInt32 = 0x66766172 // "fvar"
 
 ///|
 fn variation_test_build_fvar_table() -> Bytes {
@@ -76,7 +76,7 @@ fn variation_test_build_fvar_table() -> Bytes {
 }
 
 ///|
-fn variation_test_build_sfnt(tables : Array[(UInt, Bytes)]) -> Bytes {
+fn variation_test_build_sfnt(tables : Array[(UInt32, Bytes)]) -> Bytes {
   let num_tables = tables.length()
   let header_len = 12 + num_tables * 16
   let out : Array[Byte] = []
@@ -109,7 +109,7 @@ test "variation axis + named instance basic" {
   let sfnt = variation_test_build_sfnt(
     Array::from_fixed_array([(TAG_FVAR, fvar)]),
   )
-  let font = FontRef::from_bytes(sfnt).unwrap()
+  let font = @moon_skrifa.FontRef::from_bytes(sfnt).unwrap()
   let axes = font.axes()
   inspect(axes.len(), content="1")
   let axis = axes.get(0).unwrap()

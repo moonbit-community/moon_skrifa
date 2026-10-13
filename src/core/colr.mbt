@@ -16,10 +16,10 @@
 /// Color glyph layers (OpenType `COLR` v0) MVP.
 ///
 /// Ported from `fontations/skrifa/src/color/*` (Apache-2.0 OR MIT).
-const COLR_TAG_COLR : UInt = 0x434F4C52 // "COLR"
+const COLR_TAG_COLR : UInt32 = 0x434F4C52 // "COLR"
 
 ///|
-fn colr_read_u16_be(view : BytesView, offset : Int) -> Int? {
+fn colr_read_u16_be(view : BytesView, offset : Int32) -> Int32? {
   if offset < 0 || offset + 2 > view.length() {
     None
   } else {
@@ -30,7 +30,7 @@ fn colr_read_u16_be(view : BytesView, offset : Int) -> Int? {
 }
 
 ///|
-fn colr_read_u32_be(view : BytesView, offset : Int) -> UInt? {
+fn colr_read_u32_be(view : BytesView, offset : Int32) -> UInt32? {
   if offset < 0 || offset + 4 > view.length() {
     None
   } else {
@@ -43,7 +43,7 @@ fn colr_read_u32_be(view : BytesView, offset : Int) -> UInt? {
 }
 
 ///|
-fn colr_read_u32_be_int(view : BytesView, offset : Int) -> Int? {
+fn colr_read_u32_be_int(view : BytesView, offset : Int32) -> Int32? {
   match colr_read_u32_be(view, offset) {
     None => None
     Some(u) => Some(u.to_uint64().to_int())
@@ -53,7 +53,7 @@ fn colr_read_u32_be_int(view : BytesView, offset : Int) -> Int? {
 ///|
 pub struct ColorLayer {
   glyph_id : GlyphId
-  palette_index : Int
+  palette_index : Int32
 }
 
 ///|
@@ -62,7 +62,7 @@ pub fn ColorLayer::glyph_id(self : ColorLayer) -> GlyphId {
 }
 
 ///|
-pub fn ColorLayer::palette_index(self : ColorLayer) -> Int {
+pub fn ColorLayer::palette_index(self : ColorLayer) -> Int32 {
   self.palette_index
 }
 
@@ -125,16 +125,16 @@ pub fn[P : ColorPainter] ColorGlyph::paint(
 pub struct ColorGlyphCollection {
   priv font : FontRef?
   priv colr : BytesView?
-  priv version : Int
-  priv base_off : Int
-  priv layer_off : Int
-  priv num_base : Int
-  priv num_layers : Int
-  priv _v1_base_glyph_list_off : Int?
-  priv _v1_layer_list_off : Int?
-  priv _v1_clip_list_off : Int?
-  priv _v1_var_index_map_off : Int?
-  priv _v1_item_variation_store_off : Int?
+  priv version : Int32
+  priv base_off : Int32
+  priv layer_off : Int32
+  priv num_base : Int32
+  priv num_layers : Int32
+  priv _v1_base_glyph_list_off : Int32?
+  priv _v1_layer_list_off : Int32?
+  priv _v1_clip_list_off : Int32?
+  priv _v1_var_index_map_off : Int32?
+  priv _v1_item_variation_store_off : Int32?
 }
 
 ///|
@@ -170,11 +170,11 @@ pub fn ColorGlyphCollection::ColorGlyphCollection(
   if layers_end < layer_off || layers_end > colr.length() {
     return ColorGlyphCollection::empty(Some(font))
   }
-  let mut _v1_base_glyph_list_off : Int? = None
-  let mut _v1_layer_list_off : Int? = None
-  let mut _v1_clip_list_off : Int? = None
-  let mut _v1_var_index_map_off : Int? = None
-  let mut _v1_item_variation_store_off : Int? = None
+  let mut _v1_base_glyph_list_off : Int32? = None
+  let mut _v1_layer_list_off : Int32? = None
+  let mut _v1_clip_list_off : Int32? = None
+  let mut _v1_var_index_map_off : Int32? = None
+  let mut _v1_item_variation_store_off : Int32? = None
   if version == 1 {
     let bg = colr_read_u32_be_int(colr, 14).unwrap_or(-1)
     let ll = colr_read_u32_be_int(colr, 18).unwrap_or(-1)
@@ -233,7 +233,7 @@ fn ColorGlyphCollection::empty(font : FontRef?) -> ColorGlyphCollection {
 }
 
 ///|
-pub fn ColorGlyphCollection::version(self : ColorGlyphCollection) -> Int {
+pub fn ColorGlyphCollection::version(self : ColorGlyphCollection) -> Int32 {
   self.version
 }
 

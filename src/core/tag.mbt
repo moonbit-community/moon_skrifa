@@ -17,11 +17,11 @@
 ///
 /// Ported from `read-fonts::types::Tag` usage in `fontations/skrifa`.
 pub struct Tag {
-  priv value : UInt
+  priv value : UInt32
 }
 
 ///|
-pub fn Tag::from_uint(value : UInt) -> Tag {
+pub fn Tag::from_uint(value : UInt32) -> Tag {
   { value, }
 }
 
@@ -31,7 +31,7 @@ pub fn Tag::default() -> Tag {
 }
 
 ///|
-pub fn Tag::to_uint(self : Tag) -> UInt {
+pub fn Tag::to_uint(self : Tag) -> UInt32 {
   self.value
 }
 
@@ -50,7 +50,7 @@ pub fn Tag::Tag(bytes : Bytes) -> Tag {
 }
 
 ///|
-pub fn Tag::from_u8s(b0 : Int, b1 : Int, b2 : Int, b3 : Int) -> Tag? {
+pub fn Tag::from_u8s(b0 : Int32, b1 : Int32, b2 : Int32, b3 : Int32) -> Tag? {
   if b0 < 0 ||
     b0 > 255 ||
     b1 < 0 ||
@@ -92,7 +92,7 @@ pub fn Tag::from_str_or_default(s : String) -> Tag {
 ///|
 pub fn Tag::to_string(self : Tag) -> String {
   let u = self.value
-  let mask = 255 |> Int::reinterpret_as_uint
+  let mask = 255 |> Int32::reinterpret_as_uint
   let b0 = ((u >> 24) & mask).reinterpret_as_int()
   let b1 = ((u >> 16) & mask).reinterpret_as_int()
   let b2 = ((u >> 8) & mask).reinterpret_as_int()

@@ -14,7 +14,7 @@
 
 ///|
 test "LocationRef effective_coords" {
-  let loc = Location::Location(2)
+  let loc = @moon_skrifa.Location::Location(2)
   let r = loc.as_ref()
   inspect(r.is_default(), content="true")
   inspect(r.coords().length(), content="2")
@@ -23,8 +23,8 @@ test "LocationRef effective_coords" {
 
 ///|
 test "LocationRef effective_coords non-default" {
-  let arr : Array[NormalizedCoord] = Array::from_fixed_array([0, 1])
-  let r = LocationRef::LocationRef(arr[:])
+  let arr : Array[@moon_skrifa.NormalizedCoord] = Array::from_fixed_array([0, 1])
+  let r = @moon_skrifa.LocationRef::LocationRef(arr[:])
   inspect(r.is_default(), content="false")
   inspect(r.effective_coords().length(), content="2")
 }

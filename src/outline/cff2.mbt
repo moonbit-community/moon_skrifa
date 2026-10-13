@@ -21,16 +21,16 @@
 /// - Variation operators (vsindex/blend) are supported when VarStore is present.
 
 ///|
-fn cff2_read_u16_be(view : BytesView, offset : Int) -> Int? {
+fn cff2_read_u16_be(view : BytesView, offset : Int32) -> Int32? {
   type2_read_u16_be(view, offset)
 }
 
 ///|
 fn cff2_fdselect_index(
   data : BytesView,
-  offset : Int,
-  glyph_index : Int,
-) -> Int? {
+  offset : Int32,
+  glyph_index : Int32,
+) -> Int32? {
   if offset < 0 || offset >= data.length() {
     return None
   }
@@ -171,8 +171,8 @@ fn cff2_outline_path_hinted(
   }
 
   // Resolve private dict from FDArray/FDSelect if present, else use top dict.
-  let mut private_size : Int? = dict.private_size
-  let mut private_off : Int? = dict.private_offset
+  let mut private_size : Int32? = dict.private_size
+  let mut private_off : Int32? = dict.private_offset
   if dict.fd_array_offset is Some(fd_array_off) {
     let fd_ix = match type2_index2_read(cff2[fd_array_off:cff2.length()]) {
       None => return None
@@ -193,7 +193,7 @@ fn cff2_outline_path_hinted(
   }
   // Private DICT + local Subrs (optional). Note: Private DICT may be present
   // with size==0 (valid; means all defaults).
-  let mut poff : Int? = None
+  let mut poff : Int32? = None
   let mut priv_info = CffPrivateDictHintInfo::default()
   match (private_size, private_off) {
     (Some(psize), Some(poff0)) => {
@@ -314,7 +314,7 @@ fn cff2_outline_path(
 }
 
 ///|
-fn cff2_glyph_count(font : @moon_skrifa.FontRef) -> Int? {
+fn cff2_glyph_count(font : @moon_skrifa.FontRef) -> Int32? {
   let cff2 = match font.table(TAG_CFF2) {
     None => return None
     Some(v) => v

@@ -95,7 +95,7 @@ test "tt_hint: logical compare ops" {
 test "tt_hint: logical parity ops (odd/even)" {
   let engine = tt_make_engine_for_logical()
   // These operate on 26.6 so values are multiple of 64, but also include a non-grid case.
-  let cases : Array[(Int, Bool)] = Array::from_fixed_array([
+  let cases : Array[(Int32, Bool)] = Array::from_fixed_array([
     (0, true),
     (64, false),
     (128, true),
