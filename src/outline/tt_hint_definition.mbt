@@ -116,13 +116,13 @@ fn TtDefinitionSet::set_definition(
   code : BytesView,
   start : Int32,
   end_ : Int32,
-) -> Result[Unit, HintError] {
+) -> Unit raise HintError {
   if start < 0 || end_ < start || end_ > code.length() {
-    return Err(InvalidDefinition(index))
+    raise InvalidDefinition(index)
   }
   let n = self.defs.length()
   if n == 0 {
-    return Err(TooManyDefinitions)
+    raise TooManyDefinitions
   }
   let mut chosen : Int32? = None
   if index >= 0 && index < n {
@@ -148,12 +148,12 @@ fn TtDefinitionSet::set_definition(
     chosen = last_inactive
   }
   match chosen {
-    None => return Err(TooManyDefinitions)
+    None => raise TooManyDefinitions
     Some(ix) => {
       let d = self.defs.at(ix)
       d.set(code, start, end_, index)
       self.defs.set(ix, d)
     }
   }
-  Ok(())
+  ()
 }

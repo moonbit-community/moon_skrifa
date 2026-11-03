@@ -29,16 +29,13 @@ fn tt_in_bounds_zone(zone : TtZone, p : Int32) -> Bool {
 }
 
 ///|
-fn TtEngine::op_mps(self : TtEngine) -> Result[Unit, HintError] {
+fn TtEngine::op_mps(self : TtEngine) -> Unit raise HintError {
   self.value_stack.push(self.graphics.retained.ppem * 64)
 }
 
 ///|
-fn TtEngine::op_gc(self : TtEngine, opcode : Int32) -> Result[Unit, HintError] {
-  let p = match self.value_stack.pop_usize() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+fn TtEngine::op_gc(self : TtEngine, opcode : Int32) -> Unit raise HintError {
+  let p = self.value_stack.pop_usize()
   let gs = self.graphics
   let zone = gs.zp2_zone()
   if !gs.is_pedantic && !tt_in_bounds_zone(zone, p) {
@@ -46,66 +43,36 @@ fn TtEngine::op_gc(self : TtEngine, opcode : Int32) -> Result[Unit, HintError] {
   }
   let value = if (opcode & 1) != 0 {
     // original scaled
-    let op = match zone.original_point(p) {
-      Err(e) => return Err(e)
-      Ok(v) => v
-    }
+    let op = zone.original_point(p)
     gs.dual_project(op, { x: 0, y: 0, })
   } else {
-    let cp = match zone.point(p) {
-      Err(e) => return Err(e)
-      Ok(v) => v
-    }
+    let cp = zone.point(p)
     gs.project(cp, { x: 0, y: 0, })
   }
   self.value_stack.push(value)
 }
 
 ///|
-fn TtEngine::op_scfs(self : TtEngine) -> Result[Unit, HintError] {
-  let value = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
-  let p = match self.value_stack.pop_usize() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+fn TtEngine::op_scfs(self : TtEngine) -> Unit raise HintError {
+  let value = self.value_stack.pop()
+  let p = self.value_stack.pop_usize()
   let gs = self.graphics
-  let cur = match gs.zp2_zone().point(p) {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+  let cur = gs.zp2_zone().point(p)
   let projection = gs.project(cur, { x: 0, y: 0, })
-  match gs.move_point(gs.zp2, p, value - projection) {
-    Err(e) => return Err(e)
-    Ok(_) => ()
-  }
+  gs.move_point(gs.zp2, p, value - projection)
   // If moving a twilight point, also update its original position.
   if gs.zp2 is Twilight {
     let twilight = gs.twilight
-    let tp = match twilight.point(p) {
-      Err(e) => return Err(e)
-      Ok(v) => v
-    }
-    match twilight.set_original_point(p, tp) {
-      Err(e) => return Err(e)
-      Ok(_) => ()
-    }
+    let tp = twilight.point(p)
+    twilight.set_original_point(p, tp)
   }
-  Ok(())
+  ()
 }
 
 ///|
-fn TtEngine::op_md(self : TtEngine, opcode : Int32) -> Result[Unit, HintError] {
-  let p1 = match self.value_stack.pop_usize() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
-  let p2 = match self.value_stack.pop_usize() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+fn TtEngine::op_md(self : TtEngine, opcode : Int32) -> Unit raise HintError {
+  let p1 = self.value_stack.pop_usize()
+  let p2 = self.value_stack.pop_usize()
   let gs = self.graphics
   let z0 = gs.zp0_zone()
   let z1 = gs.zp1_zone()
@@ -115,24 +82,12 @@ fn TtEngine::op_md(self : TtEngine, opcode : Int32) -> Result[Unit, HintError] {
   }
   let distance = if (opcode & 1) != 0 {
     // measure in grid fitted outline
-    let a = match z0.point(p2) {
-      Err(e) => return Err(e)
-      Ok(v) => v
-    }
-    let b = match z1.point(p1) {
-      Err(e) => return Err(e)
-      Ok(v) => v
-    }
+    let a = z0.point(p2)
+    let b = z1.point(p1)
     gs.project(a, b)
   } else if gs.zp0 is Twilight || gs.zp1 is Twilight {
-    let a = match z0.original_point(p2) {
-      Err(e) => return Err(e)
-      Ok(v) => v
-    }
-    let b = match z1.original_point(p1) {
-      Err(e) => return Err(e)
-      Ok(v) => v
-    }
+    let a = z0.original_point(p2)
+    let b = z1.original_point(p1)
     gs.dual_project(a, b)
   } else {
     let a = z0.unscaled_point(p2)

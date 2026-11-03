@@ -639,11 +639,11 @@ test "hinted (disabled instance) rounds advance width to integer pixels" {
     Size(17.0),
     @moon_skrifa.LocationRef::default(),
     @outline.HintingOptions::default(),
-  ).unwrap()
+  )
   let settings = @outline.DrawSettings::hinted(h, false)
   let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let g = outlines.get(GlyphId((1).to_uint16())).unwrap()
-  let metrics = g.draw(settings, @outline.NullPen::NullPen()).unwrap()
+  let metrics = g.draw(settings, @outline.NullPen::NullPen())
   // advance = 500 * (17/1000) = 8.5 => rounded to 9.0
   let ok = (metrics.advance_width.unwrap() - 9.0).abs() <= 0.000001
   inspect(ok, content="true")

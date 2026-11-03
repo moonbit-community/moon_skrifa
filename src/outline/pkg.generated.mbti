@@ -25,24 +25,24 @@ pub(all) suberror DrawError {
 pub(all) suberror HintError {
   Unsupported
   UnexpectedEndOfBytecode
-  UnhandledOpcode(Int, Int)
+  UnhandledOpcode(Int32, Int32)
   DefinitionInGlyphProgram
   NestedDefinition
   DefinitionTooLarge
   TooManyDefinitions
-  InvalidDefinition(Int)
+  InvalidDefinition(Int32)
   ValueStackOverflow
   ValueStackUnderflow
   CallStackOverflow
   CallStackUnderflow
-  InvalidStackValue(Int)
-  InvalidPointIndex(Int)
-  InvalidPointRange(Int, Int)
-  InvalidContourIndex(Int)
-  InvalidCvtIndex(Int)
-  InvalidStorageIndex(Int)
+  InvalidStackValue(Int32)
+  InvalidPointIndex(Int32)
+  InvalidPointRange(Int32, Int32)
+  InvalidContourIndex(Int32)
+  InvalidCvtIndex(Int32)
+  InvalidStorageIndex(Int32)
   DivideByZero
-  InvalidZoneIndex(Int)
+  InvalidZoneIndex(Int32)
   NegativeLoopCounter
   InvalidJump
   ExceededExecutionBudget
@@ -87,7 +87,7 @@ pub struct GlyphStyles {
 }
 pub fn GlyphStyles::GlyphStyles(OutlineGlyphCollection) -> Self
 pub fn GlyphStyles::is_digit(Self, @core.GlyphId) -> Bool
-pub fn GlyphStyles::style_index(Self, @core.GlyphId) -> Int?
+pub fn GlyphStyles::style_index(Self, @core.GlyphId) -> Int32?
 
 pub(all) enum Hinting {
   None_
@@ -99,10 +99,10 @@ pub fn Hinting::none() -> Self
 pub struct HintingInstance {
   // private fields
 }
-pub fn HintingInstance::create(OutlineGlyphCollection, @core.Size, @core.LocationRef, HintingOptions) -> Result[Self, DrawError]
+pub fn HintingInstance::create(OutlineGlyphCollection, @core.Size, @core.LocationRef, HintingOptions) -> Self raise DrawError
 pub fn HintingInstance::is_enabled(Self) -> Bool
 pub fn HintingInstance::location(Self) -> @core.LocationRef
-pub fn HintingInstance::reconfigure(Self, OutlineGlyphCollection, @core.Size, @core.LocationRef, HintingOptions) -> Result[Unit, DrawError]
+pub fn HintingInstance::reconfigure(Self, OutlineGlyphCollection, @core.Size, @core.LocationRef, HintingOptions) -> Unit raise DrawError
 pub fn HintingInstance::size(Self) -> @core.Size
 pub fn HintingInstance::target(Self) -> Target
 
@@ -138,13 +138,13 @@ pub impl OutlinePen for NullPen
 pub struct OutlineGlyph {
   // private fields
 }
-pub fn[P : OutlinePen] OutlineGlyph::draw(Self, DrawSettings, P) -> Result[AdjustedMetrics, DrawError]
-pub fn OutlineGlyph::draw_memory_size(Self, Hinting) -> Int
+pub fn[P : OutlinePen] OutlineGlyph::draw(Self, DrawSettings, P) -> AdjustedMetrics raise DrawError
+pub fn OutlineGlyph::draw_memory_size(Self, Hinting) -> Int32
 pub fn OutlineGlyph::format(Self) -> OutlineGlyphFormat
 pub fn OutlineGlyph::glyph_id(Self) -> @core.GlyphId
 pub fn OutlineGlyph::has_hinting(Self) -> Bool?
 pub fn OutlineGlyph::has_overlaps(Self) -> Bool?
-pub fn OutlineGlyph::path(Self, DrawSettings) -> Result[Array[PathElement], DrawError]
+pub fn OutlineGlyph::path(Self, DrawSettings) -> Array[PathElement] raise DrawError
 
 pub struct OutlineGlyphCollection {
   // private fields
@@ -156,7 +156,7 @@ pub fn OutlineGlyphCollection::format(Self) -> OutlineGlyphFormat?
 pub fn OutlineGlyphCollection::fractional_size_hinting(Self) -> Bool
 pub fn OutlineGlyphCollection::from_font(@core.FontRef) -> Self
 pub fn OutlineGlyphCollection::get(Self, @core.GlyphId) -> OutlineGlyph?
-pub fn OutlineGlyphCollection::glyph_count(Self) -> Int
+pub fn OutlineGlyphCollection::glyph_count(Self) -> Int32
 pub fn OutlineGlyphCollection::iter(Self) -> Array[(@core.GlyphId, OutlineGlyph)]
 pub fn OutlineGlyphCollection::path(Self, @core.GlyphId, DrawSettings) -> Array[PathElement]?
 pub fn OutlineGlyphCollection::path_unscaled(Self, @core.GlyphId) -> Array[PathElement]?
@@ -205,7 +205,7 @@ pub fn SvgPen::line_to(Self, Double, Double) -> Unit
 pub fn SvgPen::move_to(Self, Double, Double) -> Unit
 pub fn SvgPen::quad_to(Self, Double, Double, Double, Double) -> Unit
 pub fn SvgPen::to_string(Self) -> String
-pub fn SvgPen::with_precision(Int) -> Self
+pub fn SvgPen::with_precision(Int32) -> Self
 pub impl OutlinePen for SvgPen
 
 pub(all) enum Target {

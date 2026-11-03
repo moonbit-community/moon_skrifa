@@ -84,15 +84,15 @@ fn tt_set_point_for_outline(
 test "tt_hint: outline FLIPPT" {
   let engine = tt_make_engine_for_outline()
   let count = 5
-  engine.value_stack.push(count).unwrap() |> ignore
-  engine.op_sloop().unwrap() |> ignore
+  engine.value_stack.push(count) |> ignore
+  engine.op_sloop() |> ignore
   for i in 1..<10 {
     if (i & 1) != 0 {
-      engine.value_stack.push(i).unwrap() |> ignore
+      engine.value_stack.push(i) |> ignore
     }
   }
   inspect(engine.value_stack.length() == count, content="true")
-  engine.op_flippt().unwrap() |> ignore
+  engine.op_flippt() |> ignore
   for i in 0..<10 {
     let on_curve = (engine.graphics.glyph.flags.at(i) & 1) != 0
     inspect(on_curve == ((i & 1) != 0), content="true")
@@ -103,17 +103,17 @@ test "tt_hint: outline FLIPPT" {
 test "tt_hint: outline backward compat + IUP prevents FLIPPT" {
   let engine = tt_make_engine_for_outline()
   let count = 5
-  engine.value_stack.push(count).unwrap() |> ignore
-  engine.op_sloop().unwrap() |> ignore
+  engine.value_stack.push(count) |> ignore
+  engine.op_sloop() |> ignore
   for i in 1..<10 {
     if (i & 1) != 0 {
-      engine.value_stack.push(i).unwrap() |> ignore
+      engine.value_stack.push(i) |> ignore
     }
   }
   engine.graphics.backward_compatibility = true
   engine.graphics.did_iup_x = true
   engine.graphics.did_iup_y = true
-  engine.op_flippt().unwrap() |> ignore
+  engine.op_flippt() |> ignore
   for i in 0..<10 {
     let on_curve = (engine.graphics.glyph.flags.at(i) & 1) != 0
     inspect(!on_curve, content="true")
@@ -124,17 +124,17 @@ test "tt_hint: outline backward compat + IUP prevents FLIPPT" {
 test "tt_hint: outline FLIPRGON/FLIPRGOFF" {
   let engine = tt_make_engine_for_outline()
   // Flip 10..=20 on.
-  engine.value_stack.push(10).unwrap() |> ignore
-  engine.value_stack.push(20).unwrap() |> ignore
-  engine.op_fliprgon().unwrap() |> ignore
+  engine.value_stack.push(10) |> ignore
+  engine.value_stack.push(20) |> ignore
+  engine.op_fliprgon() |> ignore
   for i in 0..<engine.graphics.glyph.flags.length() {
     let on_curve = (engine.graphics.glyph.flags.at(i) & 1) != 0
     inspect(on_curve == (i >= 10 && i <= 20), content="true")
   }
   // Flip 12..=15 off.
-  engine.value_stack.push(12).unwrap() |> ignore
-  engine.value_stack.push(15).unwrap() |> ignore
-  engine.op_fliprgoff().unwrap() |> ignore
+  engine.value_stack.push(12) |> ignore
+  engine.value_stack.push(15) |> ignore
+  engine.op_fliprgoff() |> ignore
   for i in 0..<engine.graphics.glyph.flags.length() {
     let on_curve = (engine.graphics.glyph.flags.at(i) & 1) != 0
     inspect(
@@ -150,9 +150,9 @@ test "tt_hint: outline backward compat + IUP prevents FLIPRGON/FLIPRGOFF" {
   engine.graphics.backward_compatibility = true
   engine.graphics.did_iup_x = true
   engine.graphics.did_iup_y = true
-  engine.value_stack.push(10).unwrap() |> ignore
-  engine.value_stack.push(20).unwrap() |> ignore
-  engine.op_fliprgon().unwrap() |> ignore
+  engine.value_stack.push(10) |> ignore
+  engine.value_stack.push(20) |> ignore
+  engine.op_fliprgon() |> ignore
   for i in 0..<engine.graphics.glyph.flags.length() {
     let on_curve = (engine.graphics.glyph.flags.at(i) & 1) != 0
     inspect(!on_curve, content="true")
@@ -162,9 +162,9 @@ test "tt_hint: outline backward compat + IUP prevents FLIPRGON/FLIPRGOFF" {
   for i in 0..<engine.graphics.glyph.flags.length() {
     engine.graphics.glyph.flags.set(i, engine.graphics.glyph.flags.at(i) | 1)
   }
-  engine.value_stack.push(12).unwrap() |> ignore
-  engine.value_stack.push(15).unwrap() |> ignore
-  engine.op_fliprgoff().unwrap() |> ignore
+  engine.value_stack.push(12) |> ignore
+  engine.value_stack.push(15) |> ignore
+  engine.op_fliprgoff() |> ignore
   for i in 0..<engine.graphics.glyph.flags.length() {
     let on_curve = (engine.graphics.glyph.flags.at(i) & 1) != 0
     inspect(on_curve, content="true")
@@ -176,32 +176,32 @@ test "tt_hint: outline UTP untouch uses freedom vector axes" {
   let engine = tt_make_engine_for_outline()
   let count = engine.graphics.glyph.points.length()
   for i in 0..<count {
-    engine.graphics.glyph.touch(i, X).unwrap() |> ignore
-    engine.graphics.glyph.touch(i, Y).unwrap() |> ignore
+    engine.graphics.glyph.touch(i, X) |> ignore
+    engine.graphics.glyph.touch(i, Y) |> ignore
   }
 
   // Untouch x
-  inspect(engine.graphics.glyph.is_touched(0, X).unwrap(), content="true")
+  inspect(engine.graphics.glyph.is_touched(0, X), content="true")
   engine.graphics.freedom_vector = { x: 1, y: 0, }
-  engine.value_stack.push(0).unwrap() |> ignore
-  engine.op_utp().unwrap() |> ignore
-  inspect(!engine.graphics.glyph.is_touched(0, X).unwrap(), content="true")
-  inspect(engine.graphics.glyph.is_touched(0, Y).unwrap(), content="true")
+  engine.value_stack.push(0) |> ignore
+  engine.op_utp() |> ignore
+  inspect(!engine.graphics.glyph.is_touched(0, X), content="true")
+  inspect(engine.graphics.glyph.is_touched(0, Y), content="true")
 
   // Untouch y
-  inspect(engine.graphics.glyph.is_touched(1, Y).unwrap(), content="true")
+  inspect(engine.graphics.glyph.is_touched(1, Y), content="true")
   engine.graphics.freedom_vector = { x: 0, y: 1, }
-  engine.value_stack.push(1).unwrap() |> ignore
-  engine.op_utp().unwrap() |> ignore
-  inspect(engine.graphics.glyph.is_touched(1, X).unwrap(), content="true")
-  inspect(!engine.graphics.glyph.is_touched(1, Y).unwrap(), content="true")
+  engine.value_stack.push(1) |> ignore
+  engine.op_utp() |> ignore
+  inspect(engine.graphics.glyph.is_touched(1, X), content="true")
+  inspect(!engine.graphics.glyph.is_touched(1, Y), content="true")
 
   // Untouch both
   engine.graphics.freedom_vector = { x: 1, y: 1, }
-  engine.value_stack.push(2).unwrap() |> ignore
-  engine.op_utp().unwrap() |> ignore
-  inspect(!engine.graphics.glyph.is_touched(2, X).unwrap(), content="true")
-  inspect(!engine.graphics.glyph.is_touched(2, Y).unwrap(), content="true")
+  engine.value_stack.push(2) |> ignore
+  engine.op_utp() |> ignore
+  inspect(!engine.graphics.glyph.is_touched(2, X), content="true")
+  inspect(!engine.graphics.glyph.is_touched(2, Y), content="true")
 }
 
 ///|
@@ -213,9 +213,9 @@ test "tt_hint: outline SHP" {
   engine.graphics.zp2 = Glyph
   engine.graphics.rp2 = 1
   tt_set_point_for_outline(engine, 1, 132, -256)
-  engine.value_stack.push(1).unwrap() |> ignore
-  engine.op_shp(0).unwrap() |> ignore
-  let p = engine.graphics.glyph.point(1).unwrap()
+  engine.value_stack.push(1) |> ignore
+  engine.op_shp(0) |> ignore
+  let p = engine.graphics.glyph.point(1)
   inspect(p.x == 136 && p.y == -254, content="true")
 }
 
@@ -228,11 +228,11 @@ test "tt_hint: outline SHC" {
   engine.graphics.zp2 = Glyph
   engine.graphics.rp2 = 1
   tt_set_point_for_outline(engine, 1, 132, -256)
-  engine.value_stack.push(0).unwrap() |> ignore
-  engine.op_shc(0).unwrap() |> ignore
-  let p0 = engine.graphics.glyph.point(0).unwrap()
-  let p1 = engine.graphics.glyph.point(1).unwrap()
-  let p2 = engine.graphics.glyph.point(2).unwrap()
+  engine.value_stack.push(0) |> ignore
+  engine.op_shc(0) |> ignore
+  let p0 = engine.graphics.glyph.point(0)
+  let p1 = engine.graphics.glyph.point(1)
+  let p2 = engine.graphics.glyph.point(2)
   inspect(p0.x == 4 && p0.y == 2, content="true")
   inspect(p1.x == 132 && p1.y == -256, content="true")
   inspect(p2.x == 4 && p2.y == 2, content="true")
@@ -247,11 +247,11 @@ test "tt_hint: outline SHZ" {
   engine.graphics.zp2 = Glyph
   engine.graphics.rp2 = 1
   tt_set_point_for_outline(engine, 1, 132, -256)
-  engine.value_stack.push(0).unwrap() |> ignore
-  engine.op_shz(0).unwrap() |> ignore
-  let q0 = engine.graphics.glyph.point(0).unwrap()
-  let q1 = engine.graphics.glyph.point(1).unwrap()
-  let q2 = engine.graphics.glyph.point(2).unwrap()
+  engine.value_stack.push(0) |> ignore
+  engine.op_shz(0) |> ignore
+  let q0 = engine.graphics.glyph.point(0)
+  let q1 = engine.graphics.glyph.point(1)
+  let q2 = engine.graphics.glyph.point(2)
   inspect(q0.x == 4 && q0.y == 2, content="true")
   inspect(q1.x == 132 && q1.y == -256, content="true")
   inspect(q2.x == 4 && q2.y == 2, content="true")
@@ -264,10 +264,10 @@ test "tt_hint: outline SHPIX" {
   engine.graphics.backward_compatibility = false
   engine.graphics.zp2 = Glyph
   tt_set_point_for_outline(engine, 1, 132, -256)
-  engine.value_stack.push(1).unwrap() |> ignore
-  engine.value_stack.push(42).unwrap() |> ignore
-  engine.op_shpix().unwrap() |> ignore
-  let r = engine.graphics.glyph.point(1).unwrap()
+  engine.value_stack.push(1) |> ignore
+  engine.value_stack.push(42) |> ignore
+  engine.op_shpix() |> ignore
+  let r = engine.graphics.glyph.point(1)
   inspect(r.x == 170 && r.y == -237, content="true")
 }
 
@@ -279,15 +279,15 @@ test "tt_hint: outline MSIRP" {
   engine.graphics.zp0 = Glyph
   engine.graphics.zp1 = Glyph
   tt_set_point_for_outline(engine, 1, 132, -256)
-  engine.value_stack.push(1).unwrap() |> ignore
-  engine.value_stack.push(-42).unwrap() |> ignore
-  engine.op_msirp(0).unwrap() |> ignore
-  let p = engine.graphics.glyph.point(1).unwrap()
+  engine.value_stack.push(1) |> ignore
+  engine.value_stack.push(-42) |> ignore
+  engine.op_msirp(0) |> ignore
+  let p = engine.graphics.glyph.point(1)
   inspect(p.x == 91 && p.y == -277, content="true")
   inspect(engine.graphics.rp0 == 0, content="true")
-  engine.value_stack.push(4).unwrap() |> ignore
-  engine.value_stack.push(0).unwrap() |> ignore
-  engine.op_msirp(1).unwrap() |> ignore
+  engine.value_stack.push(4) |> ignore
+  engine.value_stack.push(0) |> ignore
+  engine.op_msirp(1) |> ignore
   inspect(engine.graphics.rp0 == 4, content="true")
 }
 
@@ -300,16 +300,16 @@ test "tt_hint: outline MDAP" {
 
   // with rounding
   tt_set_point_for_outline(engine, 1, 132, -256)
-  engine.value_stack.push(1).unwrap() |> ignore
-  engine.op_mdap(1).unwrap() |> ignore
-  let q = engine.graphics.glyph.point(1).unwrap()
+  engine.value_stack.push(1) |> ignore
+  engine.op_mdap(1) |> ignore
+  let q = engine.graphics.glyph.point(1)
   inspect(q.x == 128 && q.y == -258, content="true")
 
   // without rounding
   tt_set_point_for_outline(engine, 2, 132, -256)
-  engine.value_stack.push(2).unwrap() |> ignore
-  engine.op_mdap(0).unwrap() |> ignore
-  let q2 = engine.graphics.glyph.point(2).unwrap()
+  engine.value_stack.push(2) |> ignore
+  engine.op_mdap(0) |> ignore
+  let q2 = engine.graphics.glyph.point(2)
   inspect(q2.x == 132 && q2.y == -256, content="true")
 }
 
@@ -325,18 +325,18 @@ test "tt_hint: outline MIAP" {
 
   // with rounding
   tt_set_point_for_outline(engine, 1, 132, -256)
-  engine.value_stack.push(1).unwrap() |> ignore
-  engine.value_stack.push(1).unwrap() |> ignore
-  engine.op_miap(1).unwrap() |> ignore
-  let m = engine.graphics.glyph.point(1).unwrap()
+  engine.value_stack.push(1) |> ignore
+  engine.value_stack.push(1) |> ignore
+  engine.op_miap(1) |> ignore
+  let m = engine.graphics.glyph.point(1)
   inspect(m.x == 186 && m.y == -229, content="true")
 
   // without rounding
   tt_set_point_for_outline(engine, 2, 132, -256)
-  engine.value_stack.push(2).unwrap() |> ignore
-  engine.value_stack.push(1).unwrap() |> ignore
-  engine.op_miap(0).unwrap() |> ignore
-  let m2 = engine.graphics.glyph.point(2).unwrap()
+  engine.value_stack.push(2) |> ignore
+  engine.value_stack.push(1) |> ignore
+  engine.op_miap(0) |> ignore
+  let m2 = engine.graphics.glyph.point(2)
   inspect(m2.x == 171 && m2.y == -236, content="true")
 }
 
@@ -346,13 +346,13 @@ test "tt_hint: outline MDRP rp0 bit" {
   engine.graphics.rp0 = 0
 
   // Don't change rp0
-  engine.value_stack.push(1).unwrap() |> ignore
-  engine.op_mdrp(0xC0).unwrap() |> ignore
+  engine.value_stack.push(1) |> ignore
+  engine.op_mdrp(0xC0) |> ignore
   inspect(engine.graphics.rp0 == 0, content="true")
 
   // Change rp0
-  engine.value_stack.push(1).unwrap() |> ignore
-  engine.op_mdrp(0xD0).unwrap() |> ignore
+  engine.value_stack.push(1) |> ignore
+  engine.op_mdrp(0xD0) |> ignore
   inspect(engine.graphics.rp0 == 1, content="true")
 }
 
@@ -365,16 +365,16 @@ test "tt_hint: outline MDRP mindist bit" {
 
   // without min distance check
   tt_set_point_for_outline(engine, 1, 132, -256)
-  engine.value_stack.push(1).unwrap() |> ignore
-  engine.op_mdrp(0xC0).unwrap() |> ignore
-  let p1 = engine.graphics.glyph.point(1).unwrap()
+  engine.value_stack.push(1) |> ignore
+  engine.op_mdrp(0xC0) |> ignore
+  let p1 = engine.graphics.glyph.point(1)
   inspect(p1.x == 128 && p1.y == -258, content="true")
 
   // with min distance check
   tt_set_point_for_outline(engine, 2, 132, -256)
-  engine.value_stack.push(2).unwrap() |> ignore
-  engine.op_mdrp(0xC8).unwrap() |> ignore
-  let p2 = engine.graphics.glyph.point(2).unwrap()
+  engine.value_stack.push(2) |> ignore
+  engine.op_mdrp(0xC8) |> ignore
+  let p2 = engine.graphics.glyph.point(2)
   inspect(p2.x == 186 && p2.y == -229, content="true")
 }
 
@@ -384,20 +384,20 @@ test "tt_hint: outline MDRP round bit" {
   tt_set_test_vectors_for_outline(engine)
   engine.graphics.backward_compatibility = false
   engine.graphics.zp0 = Glyph
-  engine.op_rthg().unwrap() |> ignore
+  engine.op_rthg() |> ignore
 
   // without rounding
   tt_set_point_for_outline(engine, 1, 132, -231)
-  engine.value_stack.push(1).unwrap() |> ignore
-  engine.op_mdrp(0xC0).unwrap() |> ignore
-  let p3 = engine.graphics.glyph.point(1).unwrap()
+  engine.value_stack.push(1) |> ignore
+  engine.op_mdrp(0xC0) |> ignore
+  let p3 = engine.graphics.glyph.point(1)
   inspect(p3.x == 119 && p3.y == -238, content="true")
 
   // with rounding
   tt_set_point_for_outline(engine, 2, 132, -231)
-  engine.value_stack.push(2).unwrap() |> ignore
-  engine.op_mdrp(0xC4).unwrap() |> ignore
-  let p4 = engine.graphics.glyph.point(2).unwrap()
+  engine.value_stack.push(2) |> ignore
+  engine.op_mdrp(0xC4) |> ignore
+  let p4 = engine.graphics.glyph.point(2)
   inspect(p4.x == 147 && p4.y == -223, content="true")
 }
 
@@ -407,15 +407,15 @@ test "tt_hint: outline MIRP rp0 bit" {
   engine.graphics.rp0 = 0
 
   // Don't change rp0
-  engine.value_stack.push(1).unwrap() |> ignore // point
-  engine.value_stack.push(1).unwrap() |> ignore // cvt entry number
-  engine.op_mirp(0xE0).unwrap() |> ignore
+  engine.value_stack.push(1) |> ignore // point
+  engine.value_stack.push(1) |> ignore // cvt entry number
+  engine.op_mirp(0xE0) |> ignore
   inspect(engine.graphics.rp0 == 0, content="true")
 
   // Change rp0
-  engine.value_stack.push(1).unwrap() |> ignore
-  engine.value_stack.push(1).unwrap() |> ignore
-  engine.op_mirp(0xF0).unwrap() |> ignore
+  engine.value_stack.push(1) |> ignore
+  engine.value_stack.push(1) |> ignore
+  engine.op_mirp(0xF0) |> ignore
   inspect(engine.graphics.rp0 == 1, content="true")
 }
 
@@ -430,18 +430,18 @@ test "tt_hint: outline MIRP mindist bit" {
 
   // without min distance check
   tt_set_point_for_outline(engine, 1, 132, -256)
-  engine.value_stack.push(1).unwrap() |> ignore
-  engine.value_stack.push(1).unwrap() |> ignore
-  engine.op_mirp(0xE0).unwrap() |> ignore
-  let p1 = engine.graphics.glyph.point(1).unwrap()
+  engine.value_stack.push(1) |> ignore
+  engine.value_stack.push(1) |> ignore
+  engine.op_mirp(0xE0) |> ignore
+  let p1 = engine.graphics.glyph.point(1)
   inspect(p1.x == 171 && p1.y == -236, content="true")
 
   // with min distance check
   tt_set_point_for_outline(engine, 2, 132, -256)
-  engine.value_stack.push(2).unwrap() |> ignore
-  engine.value_stack.push(1).unwrap() |> ignore
-  engine.op_mirp(0xE8).unwrap() |> ignore
-  let p2 = engine.graphics.glyph.point(2).unwrap()
+  engine.value_stack.push(2) |> ignore
+  engine.value_stack.push(1) |> ignore
+  engine.op_mirp(0xE8) |> ignore
+  let p2 = engine.graphics.glyph.point(2)
   inspect(p2.x == 186 && p2.y == -229, content="true")
 }
 
@@ -453,22 +453,22 @@ test "tt_hint: outline MIRP round bit" {
   engine.graphics.zp0 = Glyph
   // set CVT[1] = 0.75px
   engine.cvt.set(1, 48)
-  engine.op_rthg().unwrap() |> ignore
+  engine.op_rthg() |> ignore
 
   // without rounding
   tt_set_point_for_outline(engine, 1, 132, -231)
-  engine.value_stack.push(1).unwrap() |> ignore
-  engine.value_stack.push(1).unwrap() |> ignore
-  engine.op_mirp(0xE0).unwrap() |> ignore
-  let p3 = engine.graphics.glyph.point(1).unwrap()
+  engine.value_stack.push(1) |> ignore
+  engine.value_stack.push(1) |> ignore
+  engine.op_mirp(0xE0) |> ignore
+  let p3 = engine.graphics.glyph.point(1)
   inspect(p3.x == 162 && p3.y == -216, content="true")
 
   // with rounding
   tt_set_point_for_outline(engine, 2, 132, -231)
-  engine.value_stack.push(2).unwrap() |> ignore
-  engine.value_stack.push(1).unwrap() |> ignore
-  engine.op_mirp(0xE4).unwrap() |> ignore
-  let p4 = engine.graphics.glyph.point(2).unwrap()
+  engine.value_stack.push(2) |> ignore
+  engine.value_stack.push(1) |> ignore
+  engine.op_mirp(0xE4) |> ignore
+  let p4 = engine.graphics.glyph.point(2)
   inspect(p4.x == 147 && p4.y == -223, content="true")
 }
 
@@ -482,9 +482,9 @@ test "tt_hint: outline ALIGNRP" {
   engine.graphics.rp0 = 0
   tt_set_point_for_outline(engine, 0, 132, -231)
   tt_set_point_for_outline(engine, 1, -72, 109)
-  engine.value_stack.push(1).unwrap() |> ignore
-  engine.op_alignrp().unwrap() |> ignore
-  let ar = engine.graphics.glyph.point(1).unwrap()
+  engine.value_stack.push(1) |> ignore
+  engine.op_alignrp() |> ignore
+  let ar = engine.graphics.glyph.point(1)
   inspect(ar.x == -45 && ar.y == 122, content="true")
 }
 
@@ -503,10 +503,10 @@ test "tt_hint: outline ISECT" {
   tt_set_point_for_outline(engine, 3, 100, 0)
   // Push point numbers: first is the point where the intersection should be stored.
   for ix in [4, 0, 1, 2, 3] {
-    engine.value_stack.push(ix).unwrap() |> ignore
+    engine.value_stack.push(ix) |> ignore
   }
-  engine.op_isect().unwrap() |> ignore
-  let ipt = engine.graphics.glyph.point(4).unwrap()
+  engine.op_isect() |> ignore
+  let ipt = engine.graphics.glyph.point(4)
   inspect(ipt.x == 50 && ipt.y == 50, content="true")
 }
 
@@ -519,11 +519,11 @@ test "tt_hint: outline ALIGNPTS" {
   engine.graphics.zp1 = Glyph
   tt_set_point_for_outline(engine, 0, 132, -231)
   tt_set_point_for_outline(engine, 1, -72, 109)
-  engine.value_stack.push(0).unwrap() |> ignore
-  engine.value_stack.push(1).unwrap() |> ignore
-  engine.op_alignpts().unwrap() |> ignore
-  let ap0 = engine.graphics.glyph.point(0).unwrap()
-  let ap1 = engine.graphics.glyph.point(1).unwrap()
+  engine.value_stack.push(0) |> ignore
+  engine.value_stack.push(1) |> ignore
+  engine.op_alignpts() |> ignore
+  let ap0 = engine.graphics.glyph.point(0)
+  let ap1 = engine.graphics.glyph.point(1)
   inspect(ap0.x == 119 && ap0.y == -238, content="true")
   inspect(ap1.x == -59 && ap1.y == 116, content="true")
 }
@@ -540,9 +540,9 @@ test "tt_hint: outline IP" {
   engine.graphics.rp2 = 3
   tt_set_point_for_outline(engine, 2, 72, -109)
   tt_set_point_for_outline(engine, 1, 132, -231)
-  engine.value_stack.push(1).unwrap() |> ignore
-  engine.op_ip().unwrap() |> ignore
-  let ip_p = engine.graphics.glyph.point(1).unwrap()
+  engine.value_stack.push(1) |> ignore
+  engine.op_ip() |> ignore
+  let ip_p = engine.graphics.glyph.point(1)
   inspect(ip_p.x == 147 && ip_p.y == -223, content="true")
 }
 
@@ -553,12 +553,12 @@ test "tt_hint: outline IUP flags" {
   inspect(!engine.graphics.did_iup_y, content="true")
 
   // IUP[y]
-  engine.op_iup(0).unwrap() |> ignore
+  engine.op_iup(0) |> ignore
   inspect(!engine.graphics.did_iup_x, content="true")
   inspect(engine.graphics.did_iup_y, content="true")
 
   // IUP[x]
-  engine.op_iup(1).unwrap() |> ignore
+  engine.op_iup(1) |> ignore
   inspect(engine.graphics.did_iup_x, content="true")
   inspect(engine.graphics.did_iup_y, content="true")
 }
@@ -566,7 +566,12 @@ test "tt_hint: outline IUP flags" {
 ///|
 test "tt_hint: outline FLIP region avoid overflow" {
   let engine = tt_make_engine_for_outline()
-  engine.value_stack.push(1).unwrap() |> ignore
-  engine.value_stack.push(-1).unwrap() |> ignore
-  engine.set_on_curve_for_range(true) |> ignore
+  engine.value_stack.push(1) |> ignore
+  engine.value_stack.push(-1) |> ignore
+  try engine.set_on_curve_for_range(true) catch {
+    InvalidStackValue(-1) => ()
+    _ => fail("expected InvalidStackValue(-1)")
+  } noraise {
+    _ => fail("expected InvalidStackValue(-1)")
+  }
 }

@@ -401,7 +401,7 @@ fn tt_mul_div_round(a : Int32, b : Int32, c : Int32) -> Int32 {
 fn TtGraphicsState::point_displacement(
   self : TtGraphicsState,
   opcode : Int32,
-) -> Result[TtPointDisplacement, HintError] {
+) -> TtPointDisplacement raise HintError {
   let (zone_ptr, point_ix) = if (opcode & 1) != 0 {
     (self.zp0, self.rp1)
   } else {
@@ -411,19 +411,13 @@ fn TtGraphicsState::point_displacement(
     Twilight => self.twilight
     Glyph => self.glyph
   }
-  let point = match zone.point(point_ix) {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
-  let original = match zone.original_point(point_ix) {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+  let point = zone.point(point_ix)
+  let original = zone.original_point(point_ix)
   let dist = self.project(point, original)
   let fv = self.freedom_vector
   let dx = tt_mul_div_round(dist, fv.x, self.fdotp)
   let dy = tt_mul_div_round(dist, fv.y, self.fdotp)
-  Ok({ zone: zone_ptr, point_ix, dx, dy, })
+  { zone: zone_ptr, point_ix, dx, dy, }
 }
 
 ///|
@@ -434,7 +428,7 @@ fn TtGraphicsState::move_zp2_point(
   dx : Int32,
   dy : Int32,
   touch : Bool,
-) -> Result[Unit, HintError] {
+) -> Unit raise HintError {
   // Backward compatibility behavior matches fontations/FreeType:
   // - Never adjust x in back-compat mode.
   // - Never adjust y in back-compat mode after IUP has been applied in both
@@ -445,41 +439,23 @@ fn TtGraphicsState::move_zp2_point(
   let zone = self.zp2_zone()
   if fv.x != 0 {
     if !back_compat {
-      let p = match zone.point(index) {
-        Err(e) => return Err(e)
-        Ok(v) => v
-      }
-      match zone.set_point(index, { x: p.x + dx, y: p.y, }) {
-        Err(e) => return Err(e)
-        Ok(_) => ()
-      }
+      let p = zone.point(index)
+      zone.set_point(index, { x: p.x + dx, y: p.y, })
     }
     if touch {
-      match zone.touch(index, X) {
-        Err(e) => return Err(e)
-        Ok(_) => ()
-      }
+      zone.touch(index, X)
     }
   }
   if fv.y != 0 {
     if !back_compat_and_did_iup {
-      let p = match zone.point(index) {
-        Err(e) => return Err(e)
-        Ok(v) => v
-      }
-      match zone.set_point(index, { x: p.x, y: p.y + dy, }) {
-        Err(e) => return Err(e)
-        Ok(_) => ()
-      }
+      let p = zone.point(index)
+      zone.set_point(index, { x: p.x, y: p.y + dy, })
     }
     if touch {
-      match zone.touch(index, Y) {
-        Err(e) => return Err(e)
-        Ok(_) => ()
-      }
+      zone.touch(index, Y)
     }
   }
-  Ok(())
+  ()
 }
 
 ///|
@@ -489,7 +465,7 @@ fn TtGraphicsState::move_point(
   zone_ptr : TtZonePointer,
   index : Int32,
   distance_bits : Int32,
-) -> Result[Unit, HintError] {
+) -> Unit raise HintError {
   let back_compat = self.backward_compatibility
   let back_compat_and_did_iup = back_compat && self.did_iup_x && self.did_iup_y
   let fv = self.freedom_vector
@@ -501,72 +477,36 @@ fn TtGraphicsState::move_point(
   match self.freedom_axis {
     X => {
       if !back_compat {
-        let p = match zone.point(index) {
-          Err(e) => return Err(e)
-          Ok(v) => v
-        }
-        match zone.set_point(index, { x: p.x + distance_bits, y: p.y, }) {
-          Err(e) => return Err(e)
-          Ok(_) => ()
-        }
+        let p = zone.point(index)
+        zone.set_point(index, { x: p.x + distance_bits, y: p.y, })
       }
-      match zone.touch(index, X) {
-        Err(e) => return Err(e)
-        Ok(_) => ()
-      }
+      zone.touch(index, X)
     }
     Y => {
       if !back_compat_and_did_iup {
-        let p = match zone.point(index) {
-          Err(e) => return Err(e)
-          Ok(v) => v
-        }
-        match zone.set_point(index, { x: p.x, y: p.y + distance_bits, }) {
-          Err(e) => return Err(e)
-          Ok(_) => ()
-        }
+        let p = zone.point(index)
+        zone.set_point(index, { x: p.x, y: p.y + distance_bits, })
       }
-      match zone.touch(index, Y) {
-        Err(e) => return Err(e)
-        Ok(_) => ()
-      }
+      zone.touch(index, Y)
     }
     Both => {
       if fv.x != 0 {
         if !back_compat {
           let dx = tt_mul_div_round(distance_bits, fv.x, fdotp)
-          let p = match zone.point(index) {
-            Err(e) => return Err(e)
-            Ok(v) => v
-          }
-          match zone.set_point(index, { x: p.x + dx, y: p.y, }) {
-            Err(e) => return Err(e)
-            Ok(_) => ()
-          }
+          let p = zone.point(index)
+          zone.set_point(index, { x: p.x + dx, y: p.y, })
         }
-        match zone.touch(index, X) {
-          Err(e) => return Err(e)
-          Ok(_) => ()
-        }
+        zone.touch(index, X)
       }
       if fv.y != 0 {
         if !back_compat_and_did_iup {
           let dy = tt_mul_div_round(distance_bits, fv.y, fdotp)
-          let p = match zone.point(index) {
-            Err(e) => return Err(e)
-            Ok(v) => v
-          }
-          match zone.set_point(index, { x: p.x, y: p.y + dy, }) {
-            Err(e) => return Err(e)
-            Ok(_) => ()
-          }
+          let p = zone.point(index)
+          zone.set_point(index, { x: p.x, y: p.y + dy, })
         }
-        match zone.touch(index, Y) {
-          Err(e) => return Err(e)
-          Ok(_) => ()
-        }
+        zone.touch(index, Y)
       }
     }
   }
-  Ok(())
+  ()
 }

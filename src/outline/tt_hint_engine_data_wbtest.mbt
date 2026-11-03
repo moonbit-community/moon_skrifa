@@ -79,10 +79,10 @@ test "tt_hint: data MPPEM/MPS" {
     ppem,
     engine.graphics.retained.target,
   )
-  engine.op_mppem().unwrap() |> ignore
-  inspect(engine.value_stack.pop().unwrap() == ppem, content="true")
-  engine.op_mps().unwrap() |> ignore
-  inspect(engine.value_stack.pop().unwrap() == ppem * 64, content="true")
+  engine.op_mppem() |> ignore
+  inspect(engine.value_stack.pop() == ppem, content="true")
+  engine.op_mps() |> ignore
+  inspect(engine.value_stack.pop() == ppem * 64, content="true")
 }
 
 ///|
@@ -93,15 +93,15 @@ test "tt_hint: data GC" {
 
   // current point projected coord
   engine.graphics.glyph.points.set(1, { x: 132, y: -256, })
-  engine.value_stack.push(1).unwrap() |> ignore
-  engine.op_gc(0).unwrap() |> ignore
-  inspect(engine.value_stack.pop().unwrap() == 4, content="true")
+  engine.value_stack.push(1) |> ignore
+  engine.op_gc(0) |> ignore
+  inspect(engine.value_stack.pop() == 4, content="true")
 
   // original point projected coord
   engine.graphics.glyph.original.set(1, { x: -64, y: 521, })
-  engine.value_stack.push(1).unwrap() |> ignore
-  engine.op_gc(1).unwrap() |> ignore
-  inspect(engine.value_stack.pop().unwrap() == 176, content="true")
+  engine.value_stack.push(1) |> ignore
+  engine.op_gc(1) |> ignore
+  inspect(engine.value_stack.pop() == 176, content="true")
 }
 
 ///|
@@ -115,17 +115,17 @@ test "tt_hint: data SCFS updates twilight original" {
   engine.graphics.did_iup_y = true
   engine.graphics.zp2 = Twilight
   engine.graphics.twilight.points.set(1, { x: 132, y: -256, })
-  let p0 = engine.graphics.twilight.point(1).unwrap()
-  let o0 = engine.graphics.twilight.original_point(1).unwrap()
+  let p0 = engine.graphics.twilight.point(1)
+  let o0 = engine.graphics.twilight.original_point(1)
   inspect(!(p0.x == o0.x && p0.y == o0.y), content="true")
 
   // push point number, then value to match
-  engine.value_stack.push(1).unwrap() |> ignore
-  engine.value_stack.push(42).unwrap() |> ignore
-  engine.op_scfs().unwrap() |> ignore
-  let p = engine.graphics.twilight.point(1).unwrap()
+  engine.value_stack.push(1) |> ignore
+  engine.value_stack.push(42) |> ignore
+  engine.op_scfs() |> ignore
+  let p = engine.graphics.twilight.point(1)
   inspect(p.x == 166 && p.y == -239, content="true")
-  let o = engine.graphics.twilight.original_point(1).unwrap()
+  let o = engine.graphics.twilight.original_point(1)
   inspect(p.x == o.x && p.y == o.y, content="true")
 }
 
@@ -137,10 +137,10 @@ test "tt_hint: data MD scaled" {
   engine.graphics.zp1 = Glyph
   engine.graphics.glyph.points.set(1, { x: 132, y: -256, })
   engine.graphics.glyph.points.set(3, { x: -64, y: 100, })
-  engine.value_stack.push(1).unwrap() |> ignore
-  engine.value_stack.push(3).unwrap() |> ignore
-  engine.op_md(1).unwrap() |> ignore
-  inspect(engine.value_stack.pop().unwrap() == 16, content="true")
+  engine.value_stack.push(1) |> ignore
+  engine.value_stack.push(3) |> ignore
+  engine.op_md(1) |> ignore
+  inspect(engine.value_stack.pop() == 16, content="true")
 }
 
 ///|
@@ -154,10 +154,10 @@ test "tt_hint: data MD unscaled" {
   )
   engine.graphics.zp0 = Glyph
   engine.graphics.zp1 = Glyph
-  engine.value_stack.push(1).unwrap() |> ignore
-  engine.value_stack.push(3).unwrap() |> ignore
-  engine.op_md(0).unwrap() |> ignore
-  inspect(engine.value_stack.pop().unwrap() == 11, content="true")
+  engine.value_stack.push(1) |> ignore
+  engine.value_stack.push(3) |> ignore
+  engine.op_md(0) |> ignore
+  inspect(engine.value_stack.pop() == 11, content="true")
 }
 
 ///|
@@ -168,8 +168,8 @@ test "tt_hint: data MD twilight (original outline)" {
   engine.graphics.zp1 = Twilight
   engine.graphics.twilight.original.set(1, { x: 132, y: -256, })
   engine.graphics.twilight.original.set(3, { x: -64, y: 100, })
-  engine.value_stack.push(1).unwrap() |> ignore
-  engine.value_stack.push(3).unwrap() |> ignore
-  engine.op_md(0).unwrap() |> ignore
-  inspect(engine.value_stack.pop().unwrap() == 16, content="true")
+  engine.value_stack.push(1) |> ignore
+  engine.value_stack.push(3) |> ignore
+  engine.op_md(0) |> ignore
+  inspect(engine.value_stack.pop() == 16, content="true")
 }

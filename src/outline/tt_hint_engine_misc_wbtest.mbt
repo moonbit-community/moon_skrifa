@@ -102,14 +102,14 @@ test "tt_hint: misc GETINFO" {
   let engine = tt_make_engine_for_misc(retained0, 0, coords0)
 
   // version
-  engine.value_stack.push(VERSION_SELECTOR_BIT).unwrap() |> ignore
-  engine.op_getinfo().unwrap() |> ignore
-  inspect(engine.value_stack.pop().unwrap() == 40, content="true")
+  engine.value_stack.push(VERSION_SELECTOR_BIT) |> ignore
+  engine.op_getinfo() |> ignore
+  inspect(engine.value_stack.pop() == 40, content="true")
 
   // not rotated
-  engine.value_stack.push(GLYPH_ROTATED_SELECTOR_BIT).unwrap() |> ignore
-  engine.op_getinfo().unwrap() |> ignore
-  inspect(engine.value_stack.pop().unwrap() == 0, content="true")
+  engine.value_stack.push(GLYPH_ROTATED_SELECTOR_BIT) |> ignore
+  engine.op_getinfo() |> ignore
+  inspect(engine.value_stack.pop() == 0, content="true")
   // rotated (new engine with rotated flag set)
   let retained_rot = TtRetainedGraphicsState::new_with_flags(
     0x10000,
@@ -119,17 +119,17 @@ test "tt_hint: misc GETINFO" {
     false,
   )
   let engine_rot = tt_make_engine_for_misc(retained_rot, 0, coords0)
-  engine_rot.value_stack.push(GLYPH_ROTATED_SELECTOR_BIT).unwrap() |> ignore
-  engine_rot.op_getinfo().unwrap() |> ignore
+  engine_rot.value_stack.push(GLYPH_ROTATED_SELECTOR_BIT) |> ignore
+  engine_rot.op_getinfo() |> ignore
   inspect(
-    engine_rot.value_stack.pop().unwrap() == GLYPH_ROTATED_RESULT_BIT,
+    engine_rot.value_stack.pop() == GLYPH_ROTATED_RESULT_BIT,
     content="true",
   )
 
   // not stretched
-  engine.value_stack.push(GLYPH_STRETCHED_SELECTOR_BIT).unwrap() |> ignore
-  engine.op_getinfo().unwrap() |> ignore
-  inspect(engine.value_stack.pop().unwrap() == 0, content="true")
+  engine.value_stack.push(GLYPH_STRETCHED_SELECTOR_BIT) |> ignore
+  engine.op_getinfo() |> ignore
+  inspect(engine.value_stack.pop() == 0, content="true")
   // stretched (new engine with stretched flag set)
   let retained_str = TtRetainedGraphicsState::new_with_flags(
     0x10000,
@@ -139,10 +139,10 @@ test "tt_hint: misc GETINFO" {
     true,
   )
   let engine_str = tt_make_engine_for_misc(retained_str, 0, coords0)
-  engine_str.value_stack.push(GLYPH_STRETCHED_SELECTOR_BIT).unwrap() |> ignore
-  engine_str.op_getinfo().unwrap() |> ignore
+  engine_str.value_stack.push(GLYPH_STRETCHED_SELECTOR_BIT) |> ignore
+  engine_str.op_getinfo() |> ignore
   inspect(
-    engine_str.value_stack.pop().unwrap() == GLYPH_STRETCHED_RESULT_BIT,
+    engine_str.value_stack.pop() == GLYPH_STRETCHED_RESULT_BIT,
     content="true",
   )
 
@@ -155,28 +155,28 @@ test "tt_hint: misc GETINFO" {
     true,
   )
   let engine_both = tt_make_engine_for_misc(retained_both, 0, coords0)
-  engine_both.value_stack
-  .push(GLYPH_ROTATED_SELECTOR_BIT | GLYPH_STRETCHED_SELECTOR_BIT)
-  .unwrap()
+  engine_both.value_stack.push(
+    GLYPH_ROTATED_SELECTOR_BIT | GLYPH_STRETCHED_SELECTOR_BIT,
+  )
   |> ignore
-  engine_both.op_getinfo().unwrap() |> ignore
+  engine_both.op_getinfo() |> ignore
   inspect(
-    engine_both.value_stack.pop().unwrap() ==
+    engine_both.value_stack.pop() ==
     (GLYPH_ROTATED_RESULT_BIT | GLYPH_STRETCHED_RESULT_BIT),
     content="true",
   )
 
   // not variable
-  engine.value_stack.push(FONT_VARIATIONS_SELECTOR_BIT).unwrap() |> ignore
-  engine.op_getinfo().unwrap() |> ignore
-  inspect(engine.value_stack.pop().unwrap() == 0, content="true")
+  engine.value_stack.push(FONT_VARIATIONS_SELECTOR_BIT) |> ignore
+  engine.op_getinfo() |> ignore
+  inspect(engine.value_stack.pop() == 0, content="true")
 
   // variable: use a separate engine with axis_count=1.
   let engine_var = tt_make_engine_for_misc(retained0, 1, coords0)
-  engine_var.value_stack.push(FONT_VARIATIONS_SELECTOR_BIT).unwrap() |> ignore
-  engine_var.op_getinfo().unwrap() |> ignore
+  engine_var.value_stack.push(FONT_VARIATIONS_SELECTOR_BIT) |> ignore
+  engine_var.op_getinfo() |> ignore
   inspect(
-    engine_var.value_stack.pop().unwrap() == FONT_VARIATIONS_RESULT_BIT,
+    engine_var.value_stack.pop() == FONT_VARIATIONS_RESULT_BIT,
     content="true",
   )
 
@@ -197,9 +197,9 @@ test "tt_hint: misc GETINFO" {
       SYMMETRICAL_SMOOTHING_SELECTOR_BIT,
       GRAYSCALE_CLEARTYPE_SELECTOR_BIT,
     ] {
-    engine_mono.value_stack.push(selector).unwrap() |> ignore
-    engine_mono.op_getinfo().unwrap() |> ignore
-    inspect(engine_mono.value_stack.pop().unwrap() == 0, content="true")
+    engine_mono.value_stack.push(selector) |> ignore
+    engine_mono.op_getinfo() |> ignore
+    inspect(engine_mono.value_stack.pop() == 0, content="true")
   }
 
   // smooth mode bits
@@ -211,9 +211,9 @@ test "tt_hint: misc GETINFO" {
   ])
   for entry in smooth_bits.iter() {
     let (selector, result) = entry
-    engine_smooth.value_stack.push(selector).unwrap() |> ignore
-    engine_smooth.op_getinfo().unwrap() |> ignore
-    inspect(engine_smooth.value_stack.pop().unwrap() == result, content="true")
+    engine_smooth.value_stack.push(selector) |> ignore
+    engine_smooth.op_getinfo() |> ignore
+    inspect(engine_smooth.value_stack.pop() == result, content="true")
   }
 
   // vertical lcd: enables VERTICAL_LCD, disables grayscale cleartype + symmetric smoothing.
@@ -225,27 +225,24 @@ test "tt_hint: misc GETINFO" {
     false,
   )
   let engine_vlcd = tt_make_engine_for_misc(retained_vlcd, 0, coords0)
-  engine_vlcd.value_stack.push(VERTICAL_LCD_SELECTOR_BIT).unwrap() |> ignore
-  engine_vlcd.op_getinfo().unwrap() |> ignore
+  engine_vlcd.value_stack.push(VERTICAL_LCD_SELECTOR_BIT) |> ignore
+  engine_vlcd.op_getinfo() |> ignore
   inspect(
-    engine_vlcd.value_stack.pop().unwrap() == VERTICAL_LCD_RESULT_BIT,
+    engine_vlcd.value_stack.pop() == VERTICAL_LCD_RESULT_BIT,
     content="true",
   )
-  engine_vlcd.value_stack.push(SYMMETRICAL_SMOOTHING_SELECTOR_BIT).unwrap()
-  |> ignore
-  engine_vlcd.op_getinfo().unwrap() |> ignore
-  inspect(engine_vlcd.value_stack.pop().unwrap() == 0, content="true")
-  engine_vlcd.value_stack.push(GRAYSCALE_CLEARTYPE_SELECTOR_BIT).unwrap()
-  |> ignore
-  engine_vlcd.op_getinfo().unwrap() |> ignore
-  inspect(engine_vlcd.value_stack.pop().unwrap() == 0, content="true")
+  engine_vlcd.value_stack.push(SYMMETRICAL_SMOOTHING_SELECTOR_BIT) |> ignore
+  engine_vlcd.op_getinfo() |> ignore
+  inspect(engine_vlcd.value_stack.pop() == 0, content="true")
+  engine_vlcd.value_stack.push(GRAYSCALE_CLEARTYPE_SELECTOR_BIT) |> ignore
+  engine_vlcd.op_getinfo() |> ignore
+  inspect(engine_vlcd.value_stack.pop() == 0, content="true")
 
   // reset to default: symmetric smoothing enabled.
-  engine_smooth.value_stack.push(SYMMETRICAL_SMOOTHING_SELECTOR_BIT).unwrap()
-  |> ignore
-  engine_smooth.op_getinfo().unwrap() |> ignore
+  engine_smooth.value_stack.push(SYMMETRICAL_SMOOTHING_SELECTOR_BIT) |> ignore
+  engine_smooth.op_getinfo() |> ignore
   inspect(
-    engine_smooth.value_stack.pop().unwrap() == SYMMETRICAL_SMOOTHING_RESULT_BIT,
+    engine_smooth.value_stack.pop() == SYMMETRICAL_SMOOTHING_RESULT_BIT,
     content="true",
   )
 }
@@ -261,15 +258,17 @@ test "tt_hint: misc GETVARIATION pads/truncates and GETDATA returns 17" {
     false,
   )
   let engine0 = tt_make_engine_for_misc(retained0, 0, empty_coords)
-  match engine0.op_getvariation(0) {
-    Err(UnhandledOpcode(0x91, 0)) => ()
-    Ok(_) => fail("expected UnhandledOpcode(GETVARIATION)")
-    Err(_) => fail("expected UnhandledOpcode(GETVARIATION)")
+  try engine0.op_getvariation(0) catch {
+    UnhandledOpcode(0x91, 0) => ()
+    _ => fail("expected UnhandledOpcode(GETVARIATION)")
+  } noraise {
+    _ => fail("expected UnhandledOpcode(GETVARIATION)")
   }
-  match engine0.op_getdata(0) {
-    Err(UnhandledOpcode(0x92, 0)) => ()
-    Ok(_) => fail("expected UnhandledOpcode(GETDATA)")
-    Err(_) => fail("expected UnhandledOpcode(GETDATA)")
+  try engine0.op_getdata(0) catch {
+    UnhandledOpcode(0x92, 0) => ()
+    _ => fail("expected UnhandledOpcode(GETDATA)")
+  } noraise {
+    _ => fail("expected UnhandledOpcode(GETDATA)")
   }
   let coords : Array[@moon_skrifa.NormalizedCoord] = Array::from_fixed_array([
     -16384, 8192, 16384,
@@ -280,18 +279,18 @@ test "tt_hint: misc GETVARIATION pads/truncates and GETDATA returns 17" {
     coords.at(0),
   ])
   let engine1 = tt_make_engine_for_misc(retained0, 2, coords_1)
-  engine1.op_getvariation(0).unwrap() |> ignore
-  inspect(engine1.value_stack.pop().unwrap() == 0, content="true")
-  inspect(engine1.value_stack.pop().unwrap() == coords.at(0), content="true")
+  engine1.op_getvariation(0) |> ignore
+  inspect(engine1.value_stack.pop() == 0, content="true")
+  inspect(engine1.value_stack.pop() == coords.at(0), content="true")
 
   // too many, truncate
   let engine2 = tt_make_engine_for_misc(retained0, 2, coords)
-  engine2.op_getvariation(0).unwrap() |> ignore
-  inspect(engine2.value_stack.pop().unwrap() == coords.at(1), content="true")
-  inspect(engine2.value_stack.pop().unwrap() == coords.at(0), content="true")
+  engine2.op_getvariation(0) |> ignore
+  inspect(engine2.value_stack.pop() == coords.at(1), content="true")
+  inspect(engine2.value_stack.pop() == coords.at(0), content="true")
 
   // getdata: variable font returns 17
   let engine3 = tt_make_engine_for_misc(retained0, 1, coords)
-  engine3.op_getdata(0).unwrap() |> ignore
-  inspect(engine3.value_stack.pop().unwrap() == 17, content="true")
+  engine3.op_getdata(0) |> ignore
+  inspect(engine3.value_stack.pop() == 17, content="true")
 }

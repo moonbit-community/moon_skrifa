@@ -366,9 +366,8 @@ fn autohint_load_outline_for_metrics(
 ) -> AutoHintOutline? {
   let font = outlines.font
   let outline = AutoHintOutline::from_path([])
-  match outline.fill_glyf(font, gid) {
-    Ok(_) => if outline.is_empty() { None } else { Some(outline) }
-    Err(_) => {
+  try outline.fill_glyf(font, gid) catch {
+    _ => {
       let glyph = match outlines.get(gid) {
         None => return None
         Some(g) => g
@@ -377,9 +376,10 @@ fn autohint_load_outline_for_metrics(
         @moon_skrifa.Size::unscaled(),
         @moon_skrifa.LocationRef::default(),
       ).with_path_style(FreeType)
-      let path = match glyph.path(settings) {
-        Err(_) => return None
-        Ok(p) => p
+      let path = try glyph.path(settings) catch {
+        _ => return None
+      } noraise {
+        p => p
       }
       let o = AutoHintOutline::from_path(path)
       if o.is_empty() {
@@ -388,6 +388,8 @@ fn autohint_load_outline_for_metrics(
         Some(o)
       }
     }
+  } noraise {
+    _ => if outline.is_empty() { None } else { Some(outline) }
   }
 }
 

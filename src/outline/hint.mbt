@@ -320,17 +320,15 @@ pub fn HintingInstance::create(
   size : @moon_skrifa.Size,
   location : @moon_skrifa.LocationRef,
   options : HintingOptions,
-) -> Result[HintingInstance, DrawError] {
+) -> HintingInstance raise DrawError {
   let h = HintingInstance::{
     size: @moon_skrifa.Size::unscaled(),
     coords: [],
     target: options.target,
     kind: None_,
   }
-  match h.reconfigure(outlines, size, location, options) {
-    Err(e) => Err(e)
-    Ok(_) => Ok(h)
-  }
+  let _ = h.reconfigure(outlines, size, location, options)
+  h
 }
 
 ///|
@@ -367,7 +365,7 @@ pub fn HintingInstance::reconfigure(
   size : @moon_skrifa.Size,
   location : @moon_skrifa.LocationRef,
   options : HintingOptions,
-) -> Result[Unit, DrawError] {
+) -> Unit raise DrawError {
   self.size = size
   self.coords.clear()
   for c in location.effective_coords().iter() {
@@ -408,16 +406,18 @@ pub fn HintingInstance::reconfigure(
             upem.to_uint16(),
           )
           let rounded_ppem = hint_round_ppem(scale_bits, upem)
-          match
+          try
             tt.reconfigure(
               outlines.font,
               scale_bits,
               rounded_ppem,
               self.target,
               self.coords[:],
-            ) {
-            Err(e) => return Err(HintingFailed(e))
-            Ok(_) => ()
+            )
+          catch {
+            e => raise HintingFailed(e)
+          } noraise {
+            _ => ()
           }
           self.kind = Glyf(tt)
         }
@@ -432,7 +432,7 @@ pub fn HintingInstance::reconfigure(
       }
     _ => ()
   }
-  Ok(())
+  ()
 }
 
 ///|
@@ -674,9 +674,9 @@ fn HintingInstance::hinted_path(
   glyph : OutlineGlyph,
   is_pedantic : Bool,
   path_style : PathStyle,
-) -> Result[(AdjustedMetrics, Array[PathElement]), DrawError] {
+) -> (AdjustedMetrics, Array[PathElement]) raise DrawError {
   match self.kind {
-    None_ => Err(NoSources)
+    None_ => raise NoSources
     Auto(a) =>
       a.hinted_path(
         glyph,
@@ -687,17 +687,14 @@ fn HintingInstance::hinted_path(
       )
     Glyf(tt) => {
       if path_style is HarfBuzz {
-        return Err(HarfBuzzHintingUnsupported)
+        raise HarfBuzzHintingUnsupported
       }
       if !tt.is_enabled() {
         let settings = DrawSettings::unhinted(
           self.size,
           LocationRef(self.coords[:]),
         ).with_path_style(path_style)
-        let metrics0 = match glyph.draw(settings, NullPen()) {
-          Err(e) => return Err(e)
-          Ok(m) => m
-        }
+        let metrics0 = glyph.draw(settings, NullPen())
         let metrics = AdjustedMetrics::{
           has_overlaps: metrics0.has_overlaps,
           lsb: metrics0.lsb,
@@ -706,17 +703,14 @@ fn HintingInstance::hinted_path(
             Some(v) => Some(v.round())
           },
         }
-        let path = match glyph.path(settings) {
-          Err(e) => return Err(e)
-          Ok(p) => p
-        }
-        return Ok((metrics, path))
+        let path = glyph.path(settings)
+        return (metrics, path)
       }
       self.hinted_glyf_path(glyph, is_pedantic)
     }
     Cff(is_cff2) => {
       if path_style is HarfBuzz {
-        return Err(HarfBuzzHintingUnsupported)
+        raise HarfBuzzHintingUnsupported
       }
       let location = @moon_skrifa.LocationRef::LocationRef(self.coords[:])
       let path = if is_cff2 {
@@ -730,8 +724,8 @@ fn HintingInstance::hinted_path(
         cff_outline_path_hinted(glyph.font, glyph.glyph_id, self.size)
       }
       match path {
-        None => Err(GlyphNotFound(glyph.glyph_id))
-        Some(p) => Ok((AdjustedMetrics::default(), p))
+        None => raise GlyphNotFound(glyph.glyph_id)
+        Some(p) => (AdjustedMetrics::default(), p)
       }
     }
   }
@@ -745,7 +739,7 @@ fn AutoHintInstance::hinted_path(
   location : @moon_skrifa.LocationRef,
   path_style : PathStyle,
   target : Target,
-) -> Result[(AdjustedMetrics, Array[PathElement]), DrawError] {
+) -> (AdjustedMetrics, Array[PathElement]) raise DrawError {
   let ppem = match size.ppem() {
     None => 0.0
     Some(v) => v
@@ -754,16 +748,14 @@ fn AutoHintInstance::hinted_path(
     @moon_skrifa.Size::unscaled(),
     location,
   ).with_path_style(FreeType)
-  let unscaled_path = match glyph.path(unscaled_settings) {
-    Err(e) => return Err(e)
-    Ok(p) => p
-  }
+  let unscaled_path = glyph.path(unscaled_settings)
   let outline = match glyph.kind {
     Glyf => {
       let o = AutoHintOutline::from_path([])
-      match o.fill_glyf(glyph.font, glyph.glyph_id) {
-        Ok(_) => o
-        Err(_) => AutoHintOutline::from_path(unscaled_path)
+      try o.fill_glyf(glyph.font, glyph.glyph_id) catch {
+        _ => AutoHintOutline::from_path(unscaled_path)
+      } noraise {
+        _ => o
       }
     }
     _ => AutoHintOutline::from_path(unscaled_path)
@@ -946,7 +938,7 @@ fn AutoHintInstance::hinted_path(
     lsb: None,
     advance_width: Some(autohint_pix_round(advance).to_double() / 64.0),
   }
-  Ok((metrics, autohint_outline_to_path(outline, path_style)))
+  (metrics, autohint_outline_to_path(outline, path_style))
 }
 
 ///|
@@ -954,30 +946,26 @@ fn HintingInstance::hinted_glyf_path(
   self : HintingInstance,
   glyph : OutlineGlyph,
   is_pedantic : Bool,
-) -> Result[(AdjustedMetrics, Array[PathElement]), DrawError] {
+) -> (AdjustedMetrics, Array[PathElement]) raise DrawError {
   let tt = match self.kind {
     Glyf(tt) => tt
-    _ => return Err(NoSources)
+    _ => raise NoSources
   }
   let font = glyph.font
   let gid = glyph.glyph_id
   let scale_bits = tt.retained.scale
   let fpgm = font.table(TAG_FPGM_TT).unwrap_or(tt_empty_bytes_view())
   let prep = font.table(TAG_PREP_TT).unwrap_or(tt_empty_bytes_view())
-  let zone = match
-    tt_load_glyph_zone_for_hinting(
-      font,
-      gid,
-      self.coords[:],
-      scale_bits,
-      tt,
-      fpgm,
-      prep,
-      is_pedantic,
-    ) {
-    Err(e) => return Err(e)
-    Ok(z) => z
-  }
+  let zone = tt_load_glyph_zone_for_hinting(
+    font,
+    gid,
+    self.coords[:],
+    scale_bits,
+    tt,
+    fpgm,
+    prep,
+    is_pedantic,
+  )
   if zone.contours.length() == 0 {
     if zone.points.length() >= 4 {
       // Empty glyph: use phantom points to compute metrics, matching upstream.
@@ -990,15 +978,15 @@ fn HintingInstance::hinted_glyf_path(
         lsb: Some(lsb),
         advance_width: Some(advance),
       }
-      return Ok((metrics, []))
+      return (metrics, [])
     } else {
-      return Ok((AdjustedMetrics::default(), []))
+      return (AdjustedMetrics::default(), [])
     }
   }
   let last_end = zone.contours.at(zone.contours.length() - 1)
   let num_points = last_end + 1
   if num_points < 0 || zone.points.length() < num_points + 4 {
-    return Err(GlyphNotFound(gid))
+    raise GlyphNotFound(gid)
   }
   let phantom0 = zone.points.at(num_points)
   let phantom1 = zone.points.at(num_points + 1)
@@ -1025,5 +1013,5 @@ fn HintingInstance::hinted_glyf_path(
     lsb: Some(lsb),
     advance_width: Some(advance),
   }
-  Ok((metrics, tt_zone_to_path_freetype(zone)))
+  (metrics, tt_zone_to_path_freetype(zone))
 }

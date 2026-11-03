@@ -47,11 +47,11 @@ fn TtZonePointer::is_twilight(self : TtZonePointer) -> Bool {
 }
 
 ///|
-fn tt_zone_pointer_from_i32(value : Int32) -> Result[TtZonePointer, HintError] {
+fn tt_zone_pointer_from_i32(value : Int32) -> TtZonePointer raise HintError {
   match value {
-    0 => Ok(Twilight)
-    1 => Ok(Glyph)
-    _ => Err(InvalidZoneIndex(value))
+    0 => Twilight
+    1 => Glyph
+    _ => raise InvalidZoneIndex(value)
   }
 }
 
@@ -96,11 +96,11 @@ fn TtZone::default() -> TtZone {
 }
 
 ///|
-fn TtZone::point(self : TtZone, index : Int32) -> Result[TtPoint, HintError] {
+fn TtZone::point(self : TtZone, index : Int32) -> TtPoint raise HintError {
   if index < 0 || index >= self.points.length() {
-    Err(InvalidPointIndex(index))
+    raise InvalidPointIndex(index)
   } else {
-    Ok(self.points.at(index))
+    self.points.at(index)
   }
 }
 
@@ -109,12 +109,12 @@ fn TtZone::set_point(
   self : TtZone,
   index : Int32,
   p : TtPoint,
-) -> Result[Unit, HintError] {
+) -> Unit raise HintError {
   if index < 0 || index >= self.points.length() {
-    Err(InvalidPointIndex(index))
+    raise InvalidPointIndex(index)
   } else {
     self.points.set(index, p)
-    Ok(())
+    ()
   }
 }
 
@@ -122,11 +122,11 @@ fn TtZone::set_point(
 fn TtZone::original_point(
   self : TtZone,
   index : Int32,
-) -> Result[TtPoint, HintError] {
+) -> TtPoint raise HintError {
   if index < 0 || index >= self.original.length() {
-    Err(InvalidPointIndex(index))
+    raise InvalidPointIndex(index)
   } else {
-    Ok(self.original.at(index))
+    self.original.at(index)
   }
 }
 
@@ -135,12 +135,12 @@ fn TtZone::set_original_point(
   self : TtZone,
   index : Int32,
   p : TtPoint,
-) -> Result[Unit, HintError] {
+) -> Unit raise HintError {
   if index < 0 || index >= self.original.length() {
-    Err(InvalidPointIndex(index))
+    raise InvalidPointIndex(index)
   } else {
     self.original.set(index, p)
-    Ok(())
+    ()
   }
 }
 
@@ -155,14 +155,11 @@ fn TtZone::unscaled_point(self : TtZone, index : Int32) -> TtPoint {
 }
 
 ///|
-fn TtZone::contour_end(
-  self : TtZone,
-  index : Int32,
-) -> Result[Int32, HintError] {
+fn TtZone::contour_end(self : TtZone, index : Int32) -> Int32 raise HintError {
   if index < 0 || index >= self.contours.length() {
-    Err(InvalidStackValue(index))
+    raise InvalidStackValue(index)
   } else {
-    Ok(self.contours.at(index))
+    self.contours.at(index)
   }
 }
 
@@ -171,12 +168,12 @@ fn TtZone::touch(
   self : TtZone,
   index : Int32,
   axis : TtAxis,
-) -> Result[Unit, HintError] {
+) -> Unit raise HintError {
   if index < 0 || index >= self.flags.length() {
-    return Err(InvalidPointIndex(index))
+    raise InvalidPointIndex(index)
   }
   self.flags.set(index, self.flags.at(index) | axis.touched_mask())
-  Ok(())
+  ()
 }
 
 ///|
@@ -186,11 +183,11 @@ fn TtZone::is_touched(
   self : TtZone,
   index : Int32,
   axis : TtAxis,
-) -> Result[Bool, HintError] {
+) -> Bool raise HintError {
   if index < 0 || index >= self.flags.length() {
-    Err(InvalidPointIndex(index))
+    raise InvalidPointIndex(index)
   } else {
-    Ok((self.flags.at(index) & axis.touched_mask()) != 0)
+    (self.flags.at(index) & axis.touched_mask()) != 0
   }
 }
 
@@ -199,24 +196,21 @@ fn TtZone::untouch(
   self : TtZone,
   index : Int32,
   axis : TtAxis,
-) -> Result[Unit, HintError] {
+) -> Unit raise HintError {
   if index < 0 || index >= self.flags.length() {
-    return Err(InvalidPointIndex(index))
+    raise InvalidPointIndex(index)
   }
   self.flags.set(index, self.flags.at(index) & (axis.touched_mask() ^ -1))
-  Ok(())
+  ()
 }
 
 ///|
-fn TtZone::flip_on_curve(
-  self : TtZone,
-  index : Int32,
-) -> Result[Unit, HintError] {
+fn TtZone::flip_on_curve(self : TtZone, index : Int32) -> Unit raise HintError {
   if index < 0 || index >= self.flags.length() {
-    return Err(InvalidPointIndex(index))
+    raise InvalidPointIndex(index)
   }
   self.flags.set(index, self.flags.at(index) ^ TT_POINT_ON_CURVE)
-  Ok(())
+  ()
 }
 
 ///|
@@ -225,16 +219,16 @@ fn TtZone::set_on_curve(
   start : Int32,
   end_ : Int32,
   on : Bool,
-) -> Result[Unit, HintError] {
+) -> Unit raise HintError {
   if start < 0 || end_ < start || end_ > self.flags.length() {
-    return Err(InvalidPointRange(start, end_))
+    raise InvalidPointRange(start, end_)
   }
   let mask = TT_POINT_ON_CURVE
   for i in start..<end_ {
     let f = self.flags.at(i)
     self.flags.set(i, if on { f | mask } else { f & (mask ^ -1) })
   }
-  Ok(())
+  ()
 }
 
 ///|
@@ -243,21 +237,20 @@ fn TtZone::set_on_curve(
 
 ///|
 /// Interpolate untouched points (IUP).
-fn TtZone::iup(self : TtZone, axis : TtAxis) -> Result[Unit, HintError] {
+fn TtZone::iup(self : TtZone, axis : TtAxis) -> Unit raise HintError {
   let mut point = 0
   for i in 0..<self.contours.length() {
-    let mut end_point = match self.contour_end(i) {
-      Err(e) => return Err(e)
-      Ok(v) => v
-    }
+    let mut end_point = self.contour_end(i)
     let first_point = point
     if end_point >= self.points.length() {
       end_point = self.points.length() - 1
     }
     while point <= end_point {
-      match self.is_touched(point, axis) {
-        Err(e) => return Err(e)
-        Ok(touched) => if touched { break } else { point = point + 1 }
+      let touched = self.is_touched(point, axis)
+      if touched {
+        break
+      } else {
+        point = point + 1
       }
     }
     if point <= end_point {
@@ -265,60 +258,44 @@ fn TtZone::iup(self : TtZone, axis : TtAxis) -> Result[Unit, HintError] {
       let mut cur_touched = point
       point = point + 1
       while point <= end_point {
-        match self.is_touched(point, axis) {
-          Err(e) => return Err(e)
-          Ok(touched) =>
-            if touched {
-              match
-                self.iup_interpolate(
-                  axis,
-                  cur_touched + 1,
-                  point - 1,
-                  cur_touched,
-                  point,
-                ) {
-                Err(e) => return Err(e)
-                Ok(_) => ()
-              }
-              cur_touched = point
-            }
+        {
+          let touched = self.is_touched(point, axis)
+          if touched {
+            self.iup_interpolate(
+              axis,
+              cur_touched + 1,
+              point - 1,
+              cur_touched,
+              point,
+            )
+            cur_touched = point
+          }
         }
         point = point + 1
       }
       if cur_touched == first_touched {
-        match self.iup_shift(axis, first_point, end_point, cur_touched) {
-          Err(e) => return Err(e)
-          Ok(_) => ()
-        }
+        self.iup_shift(axis, first_point, end_point, cur_touched)
       } else {
-        match
+        self.iup_interpolate(
+          axis,
+          cur_touched + 1,
+          end_point,
+          cur_touched,
+          first_touched,
+        )
+        if first_touched > 0 {
           self.iup_interpolate(
             axis,
-            cur_touched + 1,
-            end_point,
+            first_point,
+            first_touched - 1,
             cur_touched,
             first_touched,
-          ) {
-          Err(e) => return Err(e)
-          Ok(_) => ()
-        }
-        if first_touched > 0 {
-          match
-            self.iup_interpolate(
-              axis,
-              first_point,
-              first_touched - 1,
-              cur_touched,
-              first_touched,
-            ) {
-            Err(e) => return Err(e)
-            Ok(_) => ()
-          }
+          )
         }
       }
     }
   }
-  Ok(())
+  ()
 }
 
 ///|
@@ -328,15 +305,12 @@ fn TtZone::iup_shift(
   p1 : Int32,
   p2 : Int32,
   p : Int32,
-) -> Result[Unit, HintError] {
+) -> Unit raise HintError {
   if p1 > p2 || p1 > p || p > p2 {
-    return Ok(())
+    return ()
   }
-  let (p_now, p_orig) = match (self.point(p), self.original_point(p)) {
-    (Ok(a), Ok(b)) => (a, b)
-    (Err(e), _) => return Err(e)
-    (_, Err(e)) => return Err(e)
-  }
+  let p_now = self.point(p)
+  let p_orig = self.original_point(p)
   let delta = match axis {
     X => p_now.x - p_orig.x
     Y => p_now.y - p_orig.y
@@ -346,21 +320,15 @@ fn TtZone::iup_shift(
       if i == p {
         continue
       }
-      let mut pt = match self.point(i) {
-        Err(e) => return Err(e)
-        Ok(v) => v
-      }
+      let mut pt = self.point(i)
       match axis {
         X => pt = { x: pt.x + delta, y: pt.y, }
         Y => pt = { x: pt.x, y: pt.y + delta, }
       }
-      match self.set_point(i, pt) {
-        Err(e) => return Err(e)
-        Ok(_) => ()
-      }
+      self.set_point(i, pt)
     }
   }
-  Ok(())
+  ()
 }
 
 ///|
@@ -387,15 +355,15 @@ fn TtZone::iup_interpolate(
   p2 : Int32,
   ref1_0 : Int32,
   ref2_0 : Int32,
-) -> Result[Unit, HintError] {
+) -> Unit raise HintError {
   if p1 > p2 {
-    return Ok(())
+    return ()
   }
   let mut ref1 = ref1_0
   let mut ref2 = ref2_0
   let max_points = self.points.length()
   if ref1 < 0 || ref2 < 0 || ref1 >= max_points || ref2 >= max_points {
-    return Ok(())
+    return ()
   }
   // Unscaled reference coordinates in font units.
   let mut orus1 = tt_zone_axis_coord(self.unscaled_point(ref1), axis)
@@ -409,34 +377,10 @@ fn TtZone::iup_interpolate(
     ref2 = tmpr
   }
   // Scaled reference coordinates.
-  let org1 = tt_zone_axis_coord(
-    match self.original_point(ref1) {
-      Err(e) => return Err(e)
-      Ok(v) => v
-    },
-    axis,
-  )
-  let org2 = tt_zone_axis_coord(
-    match self.original_point(ref2) {
-      Err(e) => return Err(e)
-      Ok(v) => v
-    },
-    axis,
-  )
-  let cur1 = tt_zone_axis_coord(
-    match self.point(ref1) {
-      Err(e) => return Err(e)
-      Ok(v) => v
-    },
-    axis,
-  )
-  let cur2 = tt_zone_axis_coord(
-    match self.point(ref2) {
-      Err(e) => return Err(e)
-      Ok(v) => v
-    },
-    axis,
-  )
+  let org1 = tt_zone_axis_coord(self.original_point(ref1), axis)
+  let org2 = tt_zone_axis_coord(self.original_point(ref2), axis)
+  let cur1 = tt_zone_axis_coord(self.point(ref1), axis)
+  let cur2 = tt_zone_axis_coord(self.point(ref2), axis)
   let delta1 = cur1 - org1
   let delta2 = cur2 - org2
   let use_simple = cur1 == cur2 || orus1 == orus2
@@ -446,17 +390,8 @@ fn TtZone::iup_interpolate(
     tt_hint_div_16_16(cur2 - cur1, orus2 - orus1)
   }
   for i in p1..<(p2 + 1) {
-    let org = tt_zone_axis_coord(
-      match self.original_point(i) {
-        Err(e) => return Err(e)
-        Ok(v) => v
-      },
-      axis,
-    )
-    let pt = match self.point(i) {
-      Err(e) => return Err(e)
-      Ok(v) => v
-    }
+    let org = tt_zone_axis_coord(self.original_point(i), axis)
+    let pt = self.point(i)
     let new_coord = if org <= org1 {
       org + delta1
     } else if org >= org2 {
@@ -467,10 +402,7 @@ fn TtZone::iup_interpolate(
       let unscaled = tt_zone_axis_coord(self.unscaled_point(i), axis)
       cur1 + tt_hint_mul_16_16(unscaled - orus1, scale)
     }
-    match self.set_point(i, tt_zone_set_axis_coord(pt, axis, new_coord)) {
-      Err(e) => return Err(e)
-      Ok(_) => ()
-    }
+    self.set_point(i, tt_zone_set_axis_coord(pt, axis, new_coord))
   }
-  Ok(())
+  ()
 }

@@ -177,9 +177,8 @@ test "autohint topo: segments notoserifhebrew gid=8 horizontal" {
   let font = golden_font(notoserifhebrew_autohint_metrics_b64())
   let gid = @moon_skrifa.GlyphId::GlyphId((8).to_uint16())
   let outline = AutoHintOutline::from_path([])
-  match outline._fill_unscaled(font, gid) {
-    Ok(_) => ()
-    Err(e) => {
+  try outline._fill_unscaled(font, gid) catch {
+    e => {
       let kind = match e {
         NoSources => "NoSources"
         GlyphNotFound(_) => "GlyphNotFound"
@@ -195,6 +194,8 @@ test "autohint topo: segments notoserifhebrew gid=8 horizontal" {
       }
       inspect(kind, content="Ok")
     }
+  } noraise {
+    _ => ()
   }
   let axis = AutoHintAxis::default()
   axis.reset(AUTOHINT_DIM_HORIZONTAL, outline.orientation)
@@ -237,9 +238,8 @@ test "autohint topo: segments notoserifhebrew gid=8 vertical" {
   let font = golden_font(notoserifhebrew_autohint_metrics_b64())
   let gid = @moon_skrifa.GlyphId::GlyphId((8).to_uint16())
   let outline = AutoHintOutline::from_path([])
-  match outline._fill_unscaled(font, gid) {
-    Ok(_) => ()
-    Err(e) => {
+  try outline._fill_unscaled(font, gid) catch {
+    e => {
       let kind = match e {
         NoSources => "NoSources"
         GlyphNotFound(_) => "GlyphNotFound"
@@ -255,6 +255,8 @@ test "autohint topo: segments notoserifhebrew gid=8 vertical" {
       }
       inspect(kind, content="Ok")
     }
+  } noraise {
+    _ => ()
   }
   let axis = AutoHintAxis::default()
   axis.reset(AUTOHINT_DIM_VERTICAL, outline.orientation)

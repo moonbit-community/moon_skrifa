@@ -42,45 +42,42 @@ fn TtValueStack::length(self : TtValueStack) -> Int32 {
 fn TtValueStack::push(
   self : TtValueStack,
   value : Int32,
-) -> Result[Unit, HintError] {
+) -> Unit raise HintError {
   if self.len >= self.buf.length() {
     if self.check {
-      Err(ValueStackOverflow)
+      raise ValueStackOverflow
     } else {
-      Ok(())
+      ()
     }
   } else {
     self.buf.set(self.len, value)
     self.len = self.len + 1
-    Ok(())
+    ()
   }
 }
 
 ///|
-fn TtValueStack::pop(self : TtValueStack) -> Result[Int32, HintError] {
+fn TtValueStack::pop(self : TtValueStack) -> Int32 raise HintError {
   if self.len <= 0 {
     if self.check {
-      Err(ValueStackUnderflow)
+      raise ValueStackUnderflow
     } else {
-      Ok(0)
+      0
     }
   } else {
     self.len = self.len - 1
-    Ok(self.buf.at(self.len))
+    self.buf.at(self.len)
   }
 }
 
 ///|
 /// Pops a stack value and validates it as a point index (>= 0).
-fn TtValueStack::pop_usize(self : TtValueStack) -> Result[Int32, HintError] {
-  let v = match self.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+fn TtValueStack::pop_usize(self : TtValueStack) -> Int32 raise HintError {
+  let v = self.pop()
   if v < 0 {
-    Err(InvalidStackValue(v))
+    raise InvalidStackValue(v)
   } else {
-    Ok(v)
+    v
   }
 }
 
@@ -88,16 +85,16 @@ fn TtValueStack::pop_usize(self : TtValueStack) -> Result[Int32, HintError] {
 fn TtValueStack::peek(
   self : TtValueStack,
   depth_from_top : Int32,
-) -> Result[Int32, HintError] {
+) -> Int32 raise HintError {
   // depth_from_top: 0 == top
   if depth_from_top < 0 {
-    return Err(InvalidStackValue(depth_from_top))
+    raise InvalidStackValue(depth_from_top)
   }
   let idx = self.len - 1 - depth_from_top
   if idx < 0 || idx >= self.len {
-    Err(ValueStackUnderflow)
+    raise ValueStackUnderflow
   } else {
-    Ok(self.buf.at(idx))
+    self.buf.at(idx)
   }
 }
 

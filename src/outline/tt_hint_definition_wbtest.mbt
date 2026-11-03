@@ -25,15 +25,27 @@ test "tt_hint: definition set too many + invalid range" {
   inspect(code.length() == 1, content="true")
   let defs = TtDefinitionSet(32)
   for i in 0..<32 {
-    inspect(defs.set_definition(i, code, 0, 0) is Ok(_), content="true")
+    defs.set_definition(i, code, 0, 0)
   }
   inspect(
-    defs.set_definition(33, code, 0, 0) is Err(TooManyDefinitions),
+    try {
+      defs.set_definition(33, code, 0, 0)
+      false
+    } catch {
+      TooManyDefinitions => true
+      _ => false
+    },
     content="true",
   )
   // Invalid byte range => InvalidDefinition
   inspect(
-    defs.set_definition(0, code, 0, 2) is Err(InvalidDefinition(0)),
+    try {
+      defs.set_definition(0, code, 0, 2)
+      false
+    } catch {
+      InvalidDefinition(0) => true
+      _ => false
+    },
     content="true",
   )
   // Missing definition returns None.
@@ -46,7 +58,7 @@ test "tt_hint: definition set allocate dense" {
   let code = code0[:]
   let defs = TtDefinitionSet(32)
   for i in 0..<32 {
-    inspect(defs.set_definition(i, code, 0, 0) is Ok(_), content="true")
+    defs.set_definition(i, code, 0, 0)
   }
   for i in 0..<32 {
     inspect(defs.get(i) is Some(_), content="true")
@@ -63,7 +75,7 @@ test "tt_hint: definition set allocate sparse" {
   let defs = TtDefinitionSet(3)
   let keys = [42, 88, 107]
   for k in keys {
-    inspect(defs.set_definition(k, code, 0, 0) is Ok(_), content="true")
+    defs.set_definition(k, code, 0, 0)
   }
   for k in keys {
     inspect(defs.get(k) is Some(_), content="true")
@@ -84,7 +96,7 @@ test "tt_hint: definition set allocate mixed" {
   let defs = TtDefinitionSet(10)
   let keys = [0, 1, 2, 3, 123456, -42, -5555, 5, 7]
   for k in keys {
-    inspect(defs.set_definition(k, code, 0, 0) is Ok(_), content="true")
+    defs.set_definition(k, code, 0, 0)
   }
 
   // Mirror fontations expected allocation pattern.

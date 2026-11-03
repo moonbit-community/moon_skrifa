@@ -57,12 +57,12 @@ test "tt_hint: fdef/call/loopcall basic flow" {
     64,
     64,
   )
-  engine.run_program(Font, false).unwrap() |> ignore
-  engine.value_stack.push(10).unwrap() |> ignore
-  engine.value_stack.push(1).unwrap() |> ignore
-  engine.op_call(0).unwrap() |> ignore
-  engine.run().unwrap() |> ignore
-  inspect(engine.value_stack.pop().unwrap(), content="-22")
+  engine.run_program(Font, false) |> ignore
+  engine.value_stack.push(10) |> ignore
+  engine.value_stack.push(1) |> ignore
+  engine.op_call(0) |> ignore
+  engine.run() |> ignore
+  inspect(engine.value_stack.pop(), content="-22")
 }
 
 ///|
@@ -93,10 +93,11 @@ test "tt_hint: fdef in glyph program errors" {
     64,
     64,
   )
-  match engine.run_program(Glyph, false) {
-    Err(DefinitionInGlyphProgram) => ()
-    Ok(_) => fail("expected DefinitionInGlyphProgram")
-    Err(_) => fail("expected DefinitionInGlyphProgram")
+  try engine.run_program(Glyph, false) catch {
+    DefinitionInGlyphProgram => ()
+    _ => fail("expected DefinitionInGlyphProgram")
+  } noraise {
+    _ => fail("expected DefinitionInGlyphProgram")
   }
 }
 
@@ -133,10 +134,11 @@ test "tt_hint: nested definitions error" {
     64,
     64,
   )
-  match engine.run_program(Font, false) {
-    Err(NestedDefinition) => ()
-    Ok(_) => fail("expected NestedDefinition")
-    Err(_) => fail("expected NestedDefinition")
+  try engine.run_program(Font, false) catch {
+    NestedDefinition => ()
+    _ => fail("expected NestedDefinition")
+  } noraise {
+    _ => fail("expected NestedDefinition")
   }
 }
 
@@ -168,9 +170,10 @@ test "tt_hint: TooManyDefinitions when max_function_defs=0" {
     0,
     64,
   )
-  match engine.run_program(Font, false) {
-    Err(TooManyDefinitions) => ()
-    Ok(_) => fail("expected TooManyDefinitions")
-    Err(_) => fail("expected TooManyDefinitions")
+  try engine.run_program(Font, false) catch {
+    TooManyDefinitions => ()
+    _ => fail("expected TooManyDefinitions")
+  } noraise {
+    _ => fail("expected TooManyDefinitions")
   }
 }

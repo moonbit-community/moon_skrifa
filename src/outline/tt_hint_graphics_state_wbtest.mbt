@@ -47,51 +47,51 @@ fn tt_make_mock_gs(fv_x : Int32, fv_y : Int32) -> TtGraphicsState {
 ///|
 test "tt_hint: graphics move_point x" {
   let gs = tt_make_mock_gs(100, 0)
-  let orig_x = gs.glyph.point(0).unwrap().x
+  let orig_x = gs.glyph.point(0).x
   let dx = 10
   // backward compatibility is on by default: x movement is blocked.
-  gs.move_point(Glyph, 0, dx).unwrap() |> ignore
-  inspect(gs.glyph.point(0).unwrap().x == orig_x, content="true")
+  gs.move_point(Glyph, 0, dx) |> ignore
+  inspect(gs.glyph.point(0).x == orig_x, content="true")
   // disable and retry
   gs.backward_compatibility = false
-  gs.move_point(Glyph, 0, dx).unwrap() |> ignore
-  inspect(gs.glyph.point(0).unwrap().x == orig_x + dx, content="true")
+  gs.move_point(Glyph, 0, dx) |> ignore
+  inspect(gs.glyph.point(0).x == orig_x + dx, content="true")
 }
 
 ///|
 test "tt_hint: graphics move_point y" {
   let gs = tt_make_mock_gs(0, 100)
-  let orig_y = gs.glyph.point(0).unwrap().y
+  let orig_y = gs.glyph.point(0).y
   let dy = 10
   // movement in y is prevented post-iup when backward compatibility is enabled
   gs.did_iup_x = true
   gs.did_iup_y = true
-  gs.move_point(Glyph, 0, dy).unwrap() |> ignore
-  inspect(gs.glyph.point(0).unwrap().y == orig_y, content="true")
+  gs.move_point(Glyph, 0, dy) |> ignore
+  inspect(gs.glyph.point(0).y == orig_y, content="true")
   // allow movement
   gs.did_iup_x = false
   gs.did_iup_y = false
-  gs.move_point(Glyph, 0, dy).unwrap() |> ignore
-  inspect(gs.glyph.point(0).unwrap().y == orig_y + dy, content="true")
+  gs.move_point(Glyph, 0, dy) |> ignore
+  inspect(gs.glyph.point(0).y == orig_y + dy, content="true")
 }
 
 ///|
 test "tt_hint: graphics move_point x and y" {
   let gs = tt_make_mock_gs(100, 50)
-  let orig = gs.glyph.point(0).unwrap()
+  let orig = gs.glyph.point(0)
   let dist = 10
   // prevent movement in x and y
   gs.did_iup_x = true
   gs.did_iup_y = true
-  gs.move_point(Glyph, 0, dist).unwrap() |> ignore
-  inspect(gs.glyph.point(0).unwrap().x == orig.x, content="true")
-  inspect(gs.glyph.point(0).unwrap().y == orig.y, content="true")
+  gs.move_point(Glyph, 0, dist) |> ignore
+  inspect(gs.glyph.point(0).x == orig.x, content="true")
+  inspect(gs.glyph.point(0).y == orig.y, content="true")
   // allow movement
   gs.backward_compatibility = false
   gs.did_iup_x = false
   gs.did_iup_y = false
-  gs.move_point(Glyph, 0, dist).unwrap() |> ignore
-  let p = gs.glyph.point(0).unwrap()
+  gs.move_point(Glyph, 0, dist) |> ignore
+  let p = gs.glyph.point(0)
   inspect(p.x == 4 && p.y == -16, content="true")
 }
 
@@ -100,21 +100,21 @@ test "tt_hint: graphics move_zp2_point" {
   let gs = tt_make_mock_gs(100, 50)
   gs.zp2 = Glyph
   let point_ix = 0
-  let orig = gs.glyph.point(point_ix).unwrap()
+  let orig = gs.glyph.point(point_ix)
   let dx = 10
   let dy = -10
   // prevent movement in x and y
   gs.did_iup_x = true
   gs.did_iup_y = true
-  gs.move_zp2_point(point_ix, dx, dy, false).unwrap() |> ignore
-  inspect(gs.glyph.point(point_ix).unwrap().x == orig.x, content="true")
-  inspect(gs.glyph.point(point_ix).unwrap().y == orig.y, content="true")
+  gs.move_zp2_point(point_ix, dx, dy, false) |> ignore
+  inspect(gs.glyph.point(point_ix).x == orig.x, content="true")
+  inspect(gs.glyph.point(point_ix).y == orig.y, content="true")
   // allow movement
   gs.backward_compatibility = false
   gs.did_iup_x = false
   gs.did_iup_y = false
-  gs.move_zp2_point(point_ix, dx, dy, false).unwrap() |> ignore
-  let p = gs.glyph.point(point_ix).unwrap()
+  gs.move_zp2_point(point_ix, dx, dy, false) |> ignore
+  let p = gs.glyph.point(point_ix)
   inspect(p.x == orig.x + dx && p.y == orig.y + dy, content="true")
 }
 
@@ -123,12 +123,12 @@ test "tt_hint: graphics point displacement" {
   let gs = tt_make_mock_gs(100, 50)
   gs.zp0 = Glyph
   gs.rp1 = 0
-  let d0 = gs.point_displacement(1).unwrap()
+  let d0 = gs.point_displacement(1)
   inspect(d0.zone is Glyph, content="true")
   inspect(d0.point_ix == 0, content="true")
   inspect(d0.dx == -12 && d0.dy == -6, content="true")
   gs.rp2 = 2
-  let d1 = gs.point_displacement(0).unwrap()
+  let d1 = gs.point_displacement(0)
   inspect(d1.zone is Glyph, content="true")
   inspect(d1.point_ix == 2, content="true")
   inspect(d1.dx == 25 && d1.dy == 13, content="true")

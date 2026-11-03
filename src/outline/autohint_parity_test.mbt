@@ -37,14 +37,14 @@ test "autohint: notoserif_autohint_shaping gid=1 size=16 ft" {
     Size(16.0),
     @moon_skrifa.LocationRef::default(),
     HintingOptions(Auto(None), @outline.Target::default()),
-  ).unwrap()
+  )
   let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(GlyphId((1).to_uint16())).unwrap()
   let settings = @outline.DrawSettings::hinted(h, false).with_path_style(
     FreeType,
   )
   let pen = @outline.SvgPen::with_precision(3)
-  glyph.draw(settings, pen).unwrap() |> ignore
+  glyph.draw(settings, pen) |> ignore
   inspect(
     pen.to_string(),
     content="M0.484,0.000 L0.484,0.703 L0.688,0.703 Q1.234,0.703 1.609,0.906 Q2.000,1.125 2.000,1.906 L2.000,10.156 Q2.000,10.891 1.609,11.094 Q1.219,11.297 0.688,11.297 L0.484,11.297 L0.484,12.000 L5.203,12.000 L5.203,11.297 L4.984,11.297 Q4.422,11.297 4.016,11.094 Q3.625,10.891 3.625,10.156 L3.625,6.922 L9.000,6.922 L9.000,10.156 Q9.000,10.891 8.594,11.094 Q8.203,11.297 7.641,11.297 L7.422,11.297 L7.422,12.000 L12.141,12.000 L12.141,11.297 L11.938,11.297 Q11.391,11.297 11.000,11.078 Q10.625,10.875 10.625,10.094 L10.625,1.828 Q10.625,1.094 11.016,0.891 Q11.406,0.703 11.938,0.703 L12.141,0.703 L12.141,0.000 L7.422,0.000 L7.422,0.703 L7.641,0.703 Q8.203,0.703 8.594,0.922 Q9.000,1.141 9.000,1.969 L9.000,6.078 L3.625,6.078 L3.625,1.969 Q3.625,1.141 4.016,0.922 Q4.422,0.703 4.984,0.703 L5.203,0.703 L5.203,0.000 Z",
@@ -62,14 +62,14 @@ test "autohint: notoserifhebrew_autohint_metrics gid=1 size=16 ft" {
     Size(16.0),
     @moon_skrifa.LocationRef::default(),
     HintingOptions(Auto(None), @outline.Target::default()),
-  ).unwrap()
+  )
   let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(GlyphId((1).to_uint16())).unwrap()
   let settings = @outline.DrawSettings::hinted(h, false).with_path_style(
     FreeType,
   )
   let pen = @outline.SvgPen::with_precision(3)
-  glyph.draw(settings, pen).unwrap() |> ignore
+  glyph.draw(settings, pen) |> ignore
   inspect(
     pen.to_string(),
     content="M0.375,0.000 L0.812,1.750 L5.875,1.750 Q5.969,1.984 6.016,2.172 Q6.078,2.359 6.078,2.578 Q6.078,2.812 6.078,3.219 L6.078,5.891 Q6.078,6.656 5.734,6.953 Q5.391,7.266 4.688,7.266 L1.406,7.266 Q1.031,7.266 0.828,7.516 Q0.625,7.781 0.625,8.406 Q0.625,8.594 0.641,8.766 Q0.656,8.953 0.703,9.219 Q0.766,9.484 0.859,9.891 L1.281,9.891 L1.281,9.828 Q1.281,9.453 1.500,9.219 Q1.719,9.000 2.125,9.000 L5.047,9.000 Q5.984,9.000 6.453,8.547 Q6.938,8.109 6.938,7.250 L6.938,3.750 Q6.938,3.250 6.938,2.891 Q6.938,2.531 6.859,2.250 Q6.797,1.984 6.703,1.750 L7.578,1.750 L7.578,0.000 Z",

@@ -84,14 +84,13 @@ test "tt_hint: delta DELTAP" {
     let packed_ppem = raw_ppem - engine.graphics.retained.delta_base
 
     // packed ppem + adjustment entry
-    engine.value_stack.push((packed_ppem << 4) | raw_adjustment).unwrap()
-    |> ignore
+    engine.value_stack.push((packed_ppem << 4) | raw_adjustment) |> ignore
     // point index
-    engine.value_stack.push(i).unwrap() |> ignore
+    engine.value_stack.push(i) |> ignore
     // exception count
-    engine.value_stack.push(1).unwrap() |> ignore
-    engine.op_deltap(opcode).unwrap() |> ignore
-    let p = engine.graphics.glyph.point(i).unwrap()
+    engine.value_stack.push(1) |> ignore
+    engine.op_deltap(opcode) |> ignore
+    let p = engine.graphics.glyph.point(i)
     inspect(p.x == -8 && p.y == 0, content="true")
   }
 }
@@ -119,13 +118,12 @@ test "tt_hint: delta DELTAC" {
     let packed_ppem = raw_ppem - engine.graphics.retained.delta_base
 
     // packed ppem + adjustment entry
-    engine.value_stack.push((packed_ppem << 4) | raw_adjustment).unwrap()
-    |> ignore
+    engine.value_stack.push((packed_ppem << 4) | raw_adjustment) |> ignore
     // cvt index
-    engine.value_stack.push(i).unwrap() |> ignore
+    engine.value_stack.push(i) |> ignore
     // exception count
-    engine.value_stack.push(1).unwrap() |> ignore
-    engine.op_deltac(opcode).unwrap() |> ignore
+    engine.value_stack.push(1) |> ignore
+    engine.op_deltac(opcode) |> ignore
     inspect(engine.cvt.at(i) == -8, content="true")
   }
 }
@@ -140,37 +138,41 @@ test "tt_hint: delta negative count does not hang (DELTAP/DELTAC)" {
   // Non-pedantic mode: n=-1 results in a no-op.
   let stack : FixedArray[Int32] = [0, 0, -1]
   for v in stack {
-    engine.value_stack.push(v).unwrap() |> ignore
+    engine.value_stack.push(v) |> ignore
   }
-  match engine.op_deltap(0x72) {
-    Ok(_) => ()
-    Err(_) => fail("expected Ok for deltap negative count in non-pedantic mode")
+  try engine.op_deltap(0x72) catch {
+    _ => fail("expected Ok for deltap negative count in non-pedantic mode")
+  } noraise {
+    _ => ()
   }
   for v in stack {
-    engine.value_stack.push(v).unwrap() |> ignore
+    engine.value_stack.push(v) |> ignore
   }
-  match engine.op_deltac(0x75) {
-    Ok(_) => ()
-    Err(_) => fail("expected Ok for deltac negative count in non-pedantic mode")
+  try engine.op_deltac(0x75) catch {
+    _ => fail("expected Ok for deltac negative count in non-pedantic mode")
+  } noraise {
+    _ => ()
   }
 
   // Pedantic mode: negative count is an error.
   engine.graphics.is_pedantic = true
   engine.value_stack.check = true
   for v in stack {
-    engine.value_stack.push(v).unwrap() |> ignore
+    engine.value_stack.push(v) |> ignore
   }
-  match engine.op_deltap(0x72) {
-    Err(InvalidStackValue(-1)) => ()
-    Ok(_) => fail("expected InvalidStackValue(-1)")
-    Err(_) => fail("expected InvalidStackValue(-1)")
+  try engine.op_deltap(0x72) catch {
+    InvalidStackValue(-1) => ()
+    _ => fail("expected InvalidStackValue(-1)")
+  } noraise {
+    _ => fail("expected InvalidStackValue(-1)")
   }
   for v in stack {
-    engine.value_stack.push(v).unwrap() |> ignore
+    engine.value_stack.push(v) |> ignore
   }
-  match engine.op_deltac(0x75) {
-    Err(InvalidStackValue(-1)) => ()
-    Ok(_) => fail("expected InvalidStackValue(-1)")
-    Err(_) => fail("expected InvalidStackValue(-1)")
+  try engine.op_deltac(0x75) catch {
+    InvalidStackValue(-1) => ()
+    _ => fail("expected InvalidStackValue(-1)")
+  } noraise {
+    _ => fail("expected InvalidStackValue(-1)")
   }
 }

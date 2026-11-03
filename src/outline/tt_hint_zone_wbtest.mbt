@@ -40,7 +40,7 @@ test "tt_hint: zone flip_on_curve point" {
     contours: [],
   }
   for i in 0..<4 {
-    zone.flip_on_curve(i).unwrap() |> ignore
+    zone.flip_on_curve(i) |> ignore
   }
   inspect(zone.flags.at(0) == off, content="true")
   inspect(zone.flags.at(1) == on, content="true")
@@ -59,8 +59,8 @@ test "tt_hint: zone set_on_curve regions" {
     flags: Array::from_fixed_array([on, off, off, on]),
     contours: [],
   }
-  zone.set_on_curve(0, 2, true).unwrap() |> ignore
-  zone.set_on_curve(2, 4, false).unwrap() |> ignore
+  zone.set_on_curve(0, 2, true) |> ignore
+  zone.set_on_curve(2, 4, false) |> ignore
   inspect(zone.flags.at(0) == on, content="true")
   inspect(zone.flags.at(1) == on, content="true")
   inspect(zone.flags.at(2) == off, content="true")
@@ -88,7 +88,7 @@ test "tt_hint: zone iup shift" {
     contours: Array::from_fixed_array([3]),
     flags: Array::from_fixed_array([touched, untouched, untouched]),
   }
-  zone.iup(X).unwrap() |> ignore
+  zone.iup(X) |> ignore
   inspect(
     tt_points_equal(zone, [
       { x: -5, y: -20, },
@@ -97,7 +97,7 @@ test "tt_hint: zone iup shift" {
     ]),
     content="true",
   )
-  zone.iup(Y).unwrap() |> ignore
+  zone.iup(Y) |> ignore
   inspect(
     tt_points_equal(zone, [
       { x: -5, y: -20, },
@@ -134,7 +134,7 @@ test "tt_hint: zone iup interpolate" {
     contours: Array::from_fixed_array([3]),
     flags: Array::from_fixed_array([touched, untouched, touched]),
   }
-  zone.iup(X).unwrap() |> ignore
+  zone.iup(X) |> ignore
   inspect(
     tt_points_equal(zone, [
       { x: -5, y: -20, },
@@ -143,7 +143,7 @@ test "tt_hint: zone iup interpolate" {
     ]),
     content="true",
   )
-  zone.iup(Y).unwrap() |> ignore
+  zone.iup(Y) |> ignore
   inspect(
     tt_points_equal(zone, [
       { x: -5, y: -20, },

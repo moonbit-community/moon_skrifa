@@ -66,16 +66,14 @@ test "hint: gvar deltas applied in hinted glyf load (avar2checker gid=0)" {
   let loc = @moon_skrifa.LocationRef::LocationRef(coords[:])
   let opts = @outline.Engine::Interpreter.into()
   let outlines0 = @outline.OutlineGlyphCollection::from_font(font)
-  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts).unwrap()
+  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts)
   let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(gid).unwrap()
   let pen = @outline.SvgPen::with_precision(3)
-  glyph
-  .draw(
+  glyph.draw(
     @outline.DrawSettings::hinted(hinter, false).with_path_style(FreeType),
     pen,
   )
-  .unwrap()
   |> ignore
   inspect(
     pen.to_string(),

@@ -38,14 +38,14 @@ fn tt_make_engine_for_cvt_storage() -> TtEngine {
 test "tt_hint: storage WS/RS write and read" {
   let engine = tt_make_engine_for_cvt_storage()
   for i in 0..<8 {
-    engine.value_stack.push(i).unwrap() |> ignore
-    engine.value_stack.push(i * 2).unwrap() |> ignore
-    engine.op_ws().unwrap() |> ignore
+    engine.value_stack.push(i) |> ignore
+    engine.value_stack.push(i * 2) |> ignore
+    engine.op_ws() |> ignore
   }
   for i in 0..<8 {
-    engine.value_stack.push(i).unwrap() |> ignore
-    engine.op_rs().unwrap() |> ignore
-    inspect(engine.value_stack.pop().unwrap() == i * 2, content="true")
+    engine.value_stack.push(i) |> ignore
+    engine.op_rs() |> ignore
+    inspect(engine.value_stack.pop() == i * 2, content="true")
   }
 }
 
@@ -56,27 +56,29 @@ test "tt_hint: storage pedantry (OOB read/write)" {
 
   // Non-pedantic: OOB writes are ignored, OOB reads push 0.
   engine.graphics.is_pedantic = false
-  engine.value_stack.push(oob_index).unwrap() |> ignore
-  engine.value_stack.push(0).unwrap() |> ignore
-  engine.op_ws().unwrap() |> ignore
-  engine.value_stack.push(oob_index).unwrap() |> ignore
-  engine.op_rs().unwrap() |> ignore
-  inspect(engine.value_stack.pop().unwrap() == 0, content="true")
+  engine.value_stack.push(oob_index) |> ignore
+  engine.value_stack.push(0) |> ignore
+  engine.op_ws() |> ignore
+  engine.value_stack.push(oob_index) |> ignore
+  engine.op_rs() |> ignore
+  inspect(engine.value_stack.pop() == 0, content="true")
 
   // Pedantic: OOB reads/writes error.
   engine.graphics.is_pedantic = true
-  engine.value_stack.push(oob_index).unwrap() |> ignore
-  engine.value_stack.push(0).unwrap() |> ignore
-  match engine.op_ws() {
-    Err(InvalidStorageIndex(i)) => inspect(i == oob_index, content="true")
-    Ok(_) => fail("expected InvalidStorageIndex")
-    Err(_) => fail("expected InvalidStorageIndex")
+  engine.value_stack.push(oob_index) |> ignore
+  engine.value_stack.push(0) |> ignore
+  try engine.op_ws() catch {
+    InvalidStorageIndex(i) => inspect(i == oob_index, content="true")
+    _ => fail("expected InvalidStorageIndex")
+  } noraise {
+    _ => fail("expected InvalidStorageIndex")
   }
-  engine.value_stack.push(oob_index).unwrap() |> ignore
-  match engine.op_rs() {
-    Err(InvalidStorageIndex(i)) => inspect(i == oob_index, content="true")
-    Ok(_) => fail("expected InvalidStorageIndex")
-    Err(_) => fail("expected InvalidStorageIndex")
+  engine.value_stack.push(oob_index) |> ignore
+  try engine.op_rs() catch {
+    InvalidStorageIndex(i) => inspect(i == oob_index, content="true")
+    _ => fail("expected InvalidStorageIndex")
+  } noraise {
+    _ => fail("expected InvalidStorageIndex")
   }
 }
 
@@ -84,14 +86,14 @@ test "tt_hint: storage pedantry (OOB read/write)" {
 test "tt_hint: CVT WCVTP/WCVTF/RCVT write and read" {
   let engine = tt_make_engine_for_cvt_storage()
   for i in 0..<8 {
-    engine.value_stack.push(i).unwrap() |> ignore
-    engine.value_stack.push(i * 2).unwrap() |> ignore
-    engine.op_wcvtp().unwrap() |> ignore
+    engine.value_stack.push(i) |> ignore
+    engine.value_stack.push(i * 2) |> ignore
+    engine.op_wcvtp() |> ignore
   }
   for i in 0..<8 {
-    engine.value_stack.push(i).unwrap() |> ignore
-    engine.op_rcvt().unwrap() |> ignore
-    inspect(engine.value_stack.pop().unwrap() == i * 2, content="true")
+    engine.value_stack.push(i) |> ignore
+    engine.op_rcvt() |> ignore
+    inspect(engine.value_stack.pop() == i * 2, content="true")
   }
 }
 
@@ -105,14 +107,14 @@ test "tt_hint: CVT WCVTF scaling uses 16.16 mul (fontations parity)" {
     engine.graphics.retained.target,
   )
   for i in 0..<8 {
-    engine.value_stack.push(i).unwrap() |> ignore
-    engine.value_stack.push(i * 2).unwrap() |> ignore
-    engine.op_wcvtf().unwrap() |> ignore
+    engine.value_stack.push(i) |> ignore
+    engine.value_stack.push(i * 2) |> ignore
+    engine.op_wcvtf() |> ignore
   }
   for i in 0..<8 {
-    engine.value_stack.push(i).unwrap() |> ignore
-    engine.op_rcvt().unwrap() |> ignore
-    let value = engine.value_stack.pop().unwrap()
+    engine.value_stack.push(i) |> ignore
+    engine.op_rcvt() |> ignore
+    let value = engine.value_stack.pop()
     inspect(value == tt_hint_mul_16_16(i * 2, scale), content="true")
   }
 }
@@ -124,36 +126,39 @@ test "tt_hint: CVT pedantry (OOB read/write)" {
 
   // Non-pedantic: OOB writes are ignored, OOB reads push 0.
   engine.graphics.is_pedantic = false
-  engine.value_stack.push(oob_index).unwrap() |> ignore
-  engine.value_stack.push(0).unwrap() |> ignore
-  engine.op_wcvtp().unwrap() |> ignore
-  engine.value_stack.push(oob_index).unwrap() |> ignore
-  engine.value_stack.push(0).unwrap() |> ignore
-  engine.op_wcvtf().unwrap() |> ignore
-  engine.value_stack.push(oob_index).unwrap() |> ignore
-  engine.op_rcvt().unwrap() |> ignore
-  inspect(engine.value_stack.pop().unwrap() == 0, content="true")
+  engine.value_stack.push(oob_index) |> ignore
+  engine.value_stack.push(0) |> ignore
+  engine.op_wcvtp() |> ignore
+  engine.value_stack.push(oob_index) |> ignore
+  engine.value_stack.push(0) |> ignore
+  engine.op_wcvtf() |> ignore
+  engine.value_stack.push(oob_index) |> ignore
+  engine.op_rcvt() |> ignore
+  inspect(engine.value_stack.pop() == 0, content="true")
 
   // Pedantic: OOB reads/writes error.
   engine.graphics.is_pedantic = true
-  engine.value_stack.push(oob_index).unwrap() |> ignore
-  engine.value_stack.push(0).unwrap() |> ignore
-  match engine.op_wcvtp() {
-    Err(InvalidCvtIndex(i)) => inspect(i == oob_index, content="true")
-    Ok(_) => fail("expected InvalidCvtIndex")
-    Err(_) => fail("expected InvalidCvtIndex")
+  engine.value_stack.push(oob_index) |> ignore
+  engine.value_stack.push(0) |> ignore
+  try engine.op_wcvtp() catch {
+    InvalidCvtIndex(i) => inspect(i == oob_index, content="true")
+    _ => fail("expected InvalidCvtIndex")
+  } noraise {
+    _ => fail("expected InvalidCvtIndex")
   }
-  engine.value_stack.push(oob_index).unwrap() |> ignore
-  engine.value_stack.push(0).unwrap() |> ignore
-  match engine.op_wcvtf() {
-    Err(InvalidCvtIndex(i)) => inspect(i == oob_index, content="true")
-    Ok(_) => fail("expected InvalidCvtIndex")
-    Err(_) => fail("expected InvalidCvtIndex")
+  engine.value_stack.push(oob_index) |> ignore
+  engine.value_stack.push(0) |> ignore
+  try engine.op_wcvtf() catch {
+    InvalidCvtIndex(i) => inspect(i == oob_index, content="true")
+    _ => fail("expected InvalidCvtIndex")
+  } noraise {
+    _ => fail("expected InvalidCvtIndex")
   }
-  engine.value_stack.push(oob_index).unwrap() |> ignore
-  match engine.op_rcvt() {
-    Err(InvalidCvtIndex(i)) => inspect(i == oob_index, content="true")
-    Ok(_) => fail("expected InvalidCvtIndex")
-    Err(_) => fail("expected InvalidCvtIndex")
+  engine.value_stack.push(oob_index) |> ignore
+  try engine.op_rcvt() catch {
+    InvalidCvtIndex(i) => inspect(i == oob_index, content="true")
+    _ => fail("expected InvalidCvtIndex")
+  } noraise {
+    _ => fail("expected InvalidCvtIndex")
   }
 }

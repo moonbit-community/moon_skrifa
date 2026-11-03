@@ -295,13 +295,13 @@ pub fn[P : OutlinePen] OutlineGlyph::draw(
   self : OutlineGlyph,
   settings : DrawSettings,
   pen : P,
-) -> Result[AdjustedMetrics, DrawError] {
+) -> AdjustedMetrics raise DrawError {
   if settings.hinting_instance() is Some(h) {
-    let (metrics, path) = match
-      h.hinted_path(self, settings.is_pedantic(), settings.path_style()) {
-      Err(e) => return Err(e)
-      Ok(v) => v
-    }
+    let (metrics, path) = h.hinted_path(
+      self,
+      settings.is_pedantic(),
+      settings.path_style(),
+    )
     for e in path.iter() {
       match e {
         MoveTo(x, y) => OutlinePen::move_to(pen, x, y)
@@ -312,7 +312,7 @@ pub fn[P : OutlinePen] OutlineGlyph::draw(
         Close => OutlinePen::close(pen)
       }
     }
-    return Ok(metrics)
+    return metrics
   }
   let metrics0 = match self.kind {
     Glyf => {
@@ -343,10 +343,7 @@ pub fn[P : OutlinePen] OutlineGlyph::draw(
     _ => AdjustedMetrics::default()
   }
   let metrics = metrics0
-  let path = match self.path(settings) {
-    Err(e) => return Err(e)
-    Ok(p) => p
-  }
+  let path = self.path(settings)
   for e in path.iter() {
     match e {
       MoveTo(x, y) => OutlinePen::move_to(pen, x, y)
@@ -357,7 +354,7 @@ pub fn[P : OutlinePen] OutlineGlyph::draw(
       Close => OutlinePen::close(pen)
     }
   }
-  Ok(metrics)
+  metrics
 }
 
 ///|
@@ -365,14 +362,14 @@ pub fn[P : OutlinePen] OutlineGlyph::draw(
 pub fn OutlineGlyph::path(
   self : OutlineGlyph,
   settings : DrawSettings,
-) -> Result[Array[PathElement], DrawError] {
+) -> Array[PathElement] raise DrawError {
   if settings.hinting_instance() is Some(h) {
-    let (_, path) = match
-      h.hinted_path(self, settings.is_pedantic(), settings.path_style()) {
-      Err(e) => return Err(e)
-      Ok(v) => v
-    }
-    Ok(path)
+    let (_, path) = h.hinted_path(
+      self,
+      settings.is_pedantic(),
+      settings.path_style(),
+    )
+    path
   } else {
     let upem = outline_units_per_em(self.font)
     let scale = settings.size().linear_scale(upem)
@@ -389,19 +386,19 @@ pub fn OutlineGlyph::path(
             settings.size(),
             false,
           ) {
-          None => Err(GlyphNotFound(self.glyph_id))
-          Some(p) => Ok(p)
+          None => raise GlyphNotFound(self.glyph_id)
+          Some(p) => p
         }
       Cff =>
         match cff_outline_path(self.font, self.glyph_id) {
-          None => Err(GlyphNotFound(self.glyph_id))
+          None => raise GlyphNotFound(self.glyph_id)
           // Upstream uses fixed-point rounding when scaling PostScript outlines.
-          Some(p) => Ok(outline_scale_path(p, scale))
+          Some(p) => outline_scale_path(p, scale)
         }
       Cff2 =>
         match cff2_outline_path(self.font, self.glyph_id, coords) {
-          None => Err(GlyphNotFound(self.glyph_id))
-          Some(p) => Ok(outline_scale_path(p, scale))
+          None => raise GlyphNotFound(self.glyph_id)
+          Some(p) => outline_scale_path(p, scale)
         }
     }
   }
@@ -666,9 +663,10 @@ pub fn OutlineGlyphCollection::path(
   match self.get(gid) {
     None => None
     Some(g) =>
-      match g.path(settings) {
-        Err(_) => None
-        Ok(p) => Some(p)
+      try g.path(settings) catch {
+        _ => None
+      } noraise {
+        p => Some(p)
       }
   }
 }
@@ -693,9 +691,10 @@ pub fn[P : OutlinePen] OutlineGlyphCollection::draw(
   match self.get(gid) {
     None => false
     Some(g) =>
-      match g.draw(settings, pen) {
-        Err(_) => false
-        Ok(_) => true
+      try g.draw(settings, pen) catch {
+        _ => false
+      } noraise {
+        _ => true
       }
   }
 }

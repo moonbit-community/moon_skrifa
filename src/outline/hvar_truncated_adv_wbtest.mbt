@@ -129,7 +129,7 @@ test "hvar truncated adv: hinter kind + empty advance" {
     size,
     loc,
     HintingOptions::default(),
-  ).unwrap()
+  )
   let kind_tag = match hinting.kind {
     None_ => "None"
     Glyf(_) => "Glyf"
@@ -140,8 +140,7 @@ test "hvar truncated adv: hinter kind + empty advance" {
   let outlines = OutlineGlyphCollection::from_font(font)
   let gid = font.charmap().glyph_id((32).reinterpret_as_uint()).unwrap()
   let glyph = outlines.get(gid).unwrap()
-  let metrics = glyph
-    .draw(DrawSettings::hinted(hinting, false), NullPen())
-    .unwrap()
+  let metrics = glyph.draw(DrawSettings::hinted(hinting, false), NullPen())
+
   debug_inspect(metrics.advance_width, content="Some(11)")
 }

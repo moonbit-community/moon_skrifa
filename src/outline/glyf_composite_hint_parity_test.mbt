@@ -44,16 +44,14 @@ test "hint: composite glyf nonuniform scale (glyf_components gid=3 size=16)" {
   let loc = @moon_skrifa.LocationRef::default()
   let opts = @outline.Engine::Interpreter.into()
   let outlines0 = @outline.OutlineGlyphCollection::from_font(font)
-  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts).unwrap()
+  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts)
   let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(gid).unwrap()
   let pen = @outline.SvgPen::SvgPen()
-  glyph
-  .draw(
+  glyph.draw(
     @outline.DrawSettings::hinted(hinter, false).with_path_style(FreeType),
     pen,
   )
-  .unwrap()
   |> ignore
   inspect(
     pen.to_string(),
@@ -69,16 +67,14 @@ test "hint: composite glyf scaled component offset (glyf_components gid=7 size=1
   let loc = @moon_skrifa.LocationRef::default()
   let opts = @outline.Engine::Interpreter.into()
   let outlines0 = @outline.OutlineGlyphCollection::from_font(font)
-  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts).unwrap()
+  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts)
   let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(gid).unwrap()
   let pen = @outline.SvgPen::SvgPen()
-  glyph
-  .draw(
+  glyph.draw(
     @outline.DrawSettings::hinted(hinter, false).with_path_style(FreeType),
     pen,
   )
-  .unwrap()
   |> ignore
   inspect(
     pen.to_string(),
@@ -94,16 +90,14 @@ test "hint: composite glyf unscaled component offset (glyf_components gid=8 size
   let loc = @moon_skrifa.LocationRef::default()
   let opts = @outline.Engine::Interpreter.into()
   let outlines0 = @outline.OutlineGlyphCollection::from_font(font)
-  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts).unwrap()
+  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts)
   let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(gid).unwrap()
   let pen = @outline.SvgPen::SvgPen()
-  glyph
-  .draw(
+  glyph.draw(
     @outline.DrawSettings::hinted(hinter, false).with_path_style(FreeType),
     pen,
   )
-  .unwrap()
   |> ignore
   inspect(
     pen.to_string(),

@@ -185,9 +185,9 @@ fn TtHintInstance::reconfigure(
   rounded_ppem : Int32,
   target : Target,
   coords : ArrayView[@moon_skrifa.NormalizedCoord],
-) -> Result[Unit, HintError] {
+) -> Unit raise HintError {
   let maxp = match font.table(TAG_MAXP_TT) {
-    None => return Err(Unsupported)
+    None => raise Unsupported
     Some(v) => v
   }
   let (
@@ -244,14 +244,8 @@ fn TtHintInstance::reconfigure(
   engine.graphics.twilight = tt_make_twilight_zone(max_twilight_points)
   engine.graphics.glyph = tt_make_empty_glyph_zone()
   // Run fpgm + prep.
-  match engine.run_program(Font, false) {
-    Err(e) => return Err(e)
-    Ok(_) => ()
-  }
-  match engine.run_program(ControlValue, false) {
-    Err(e) => return Err(e)
-    Ok(_) => ()
-  }
+  engine.run_program(Font, false)
+  engine.run_program(ControlValue, false)
   // Persist results.
   self.functions = engine.functions
   self.instructions = engine.instructions
@@ -262,7 +256,7 @@ fn TtHintInstance::reconfigure(
   self.twilight_points = engine.graphics.twilight.points
   self.twilight_original = engine.graphics.twilight.original
   self.twilight_flags = engine.graphics.twilight.flags
-  Ok(())
+  ()
 }
 
 ///|
@@ -276,7 +270,7 @@ fn TtHintInstance::hint_glyph(
   is_pedantic : Bool,
   axis_count : Int32,
   coords : ArrayView[@moon_skrifa.NormalizedCoord],
-) -> Result[TtZone, HintError] {
+) -> TtZone raise HintError {
   // Clone mutable state per glyph (matches upstream's copy-on-write behavior).
   let cvt = self.cvt.copy()
   let storage = self.storage.copy()
@@ -316,16 +310,12 @@ fn TtHintInstance::hint_glyph(
   engine.graphics.glyph = glyph_zone
   engine.graphics.is_composite = is_composite
   engine.program.set_glyph_code(glyph_code)
-  match engine.run_program(Glyph, is_pedantic) {
-    Err(e) =>
-      if is_pedantic {
-        return Err(e)
-      } else {
-        return Ok(engine.graphics.glyph)
-      }
-    Ok(_) => ()
+  try engine.run_program(Glyph, is_pedantic) catch {
+    e => if is_pedantic { raise e } else { return engine.graphics.glyph }
+  } noraise {
+    _ => ()
   }
-  Ok(engine.graphics.glyph)
+  engine.graphics.glyph
 }
 
 ///|
@@ -338,9 +328,7 @@ test "hint: scaled cvar cvt" {
   // From fontations-reference: ppem * 64 / upem (upem=1000).
   let scale_bits = 67109
   let ppem = 16
-  inst
-  .reconfigure(font, scale_bits, ppem, Target::default(), coords[:])
-  .unwrap()
+  inst.reconfigure(font, scale_bits, ppem, Target::default(), coords[:])
   |> ignore
   debug_inspect(
     inst.cvt,

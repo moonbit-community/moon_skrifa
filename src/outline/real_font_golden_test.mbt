@@ -171,7 +171,7 @@ test "golden: glyf Vazirmatn gid=2 size=16 ft coords=0" {
     LocationRef(coords[:]),
   ).with_path_style(FreeType)
   let pen = @outline.SvgPen::with_precision(3)
-  glyph.draw(settings, pen).unwrap() |> ignore
+  glyph.draw(settings, pen) |> ignore
   inspect(
     pen.to_string(),
     content="M5.531,10.375 L1.766,0.000 L0.234,0.000 L4.562,11.375 L5.562,11.375 Z M8.688,0.000 L4.922,10.375 L4.891,11.375 L5.891,11.375 L10.234,0.000 Z M8.500,4.219 L8.500,2.984 L2.109,2.984 L2.109,4.219 Z M4.578,14.438 L6.078,12.141 L4.844,12.141 L2.828,14.438 Z",
@@ -191,7 +191,7 @@ test "golden: glyf Vazirmatn gid=2 size=16 ft coords=0.5" {
     LocationRef(coords[:]),
   ).with_path_style(FreeType)
   let pen = @outline.SvgPen::with_precision(3)
-  glyph.draw(settings, pen).unwrap() |> ignore
+  glyph.draw(settings, pen) |> ignore
   inspect(
     pen.to_string(),
     content="M5.609,9.672 L2.344,0.000 L0.094,0.000 L4.359,11.375 L5.781,11.375 Z M8.344,0.000 L5.062,9.672 L4.875,11.375 L6.312,11.375 L10.594,0.000 Z M8.188,4.234 L8.188,2.547 L2.078,2.547 L2.078,4.234 Z M4.859,14.438 L6.391,12.062 L4.703,12.062 L2.594,14.438 Z",
@@ -209,7 +209,7 @@ test "golden: glyf Vazirmatn gid=2 size=16 hb coords=0 (16.16 fixed)" {
     LocationRef(coords[:]),
   ).with_path_style(HarfBuzz)
   let pen = @outline.SvgPen::with_precision(3)
-  glyph.draw(settings, pen).unwrap() |> ignore
+  glyph.draw(settings, pen) |> ignore
   inspect(
     pen.to_string(),
     content="M362496.000,679424.000 L115712.000,0.000 L14848.000,0.000 L299008.000,745472.000 L364032.000,745472.000 Z M569344.000,0.000 L322048.000,679424.000 L320512.000,745472.000 L385536.000,745472.000 L670720.000,0.000 Z M556544.000,275968.000 L556544.000,195072.000 L137728.000,195072.000 L137728.000,275968.000 Z M144175.000,786743.000 L242991.000,636215.000 L161583.000,636215.000 L29487.000,786743.000 Z",
@@ -229,7 +229,7 @@ test "golden: glyf Vazirmatn gid=2 size=16 hb coords=0.5 (16.16 fixed)" {
     LocationRef(coords[:]),
   ).with_path_style(HarfBuzz)
   let pen = @outline.SvgPen::with_precision(3)
-  glyph.draw(settings, pen).unwrap() |> ignore
+  glyph.draw(settings, pen) |> ignore
   inspect(
     pen.to_string(),
     content="M367616.000,634112.000 L153344.000,0.000 L6400.000,0.000 L285440.000,745472.000 L379136.000,745472.000 Z M546304.000,0.000 L331520.000,634112.000 L318976.000,745472.000 L413440.000,745472.000 L693760.000,0.000 Z M536320.000,276992.000 L536320.000,167168.000 L135680.000,167168.000 L135680.000,276992.000 Z M177428.000,786742.500 L277780.000,631094.500 L167188.000,631094.500 L28948.000,786742.500 Z",
@@ -246,7 +246,7 @@ test "golden: CFF2 NotoSansJP-VF gid=0 size=16" {
     @moon_skrifa.LocationRef::default(),
   ).with_path_style(FreeType)
   let pen = @outline.SvgPen::with_precision(3)
-  glyph.draw(settings, pen).unwrap() |> ignore
+  glyph.draw(settings, pen) |> ignore
   inspect(
     pen.to_string(),
     content="M1.594,-1.922 L14.406,-1.922 L14.406,14.078 L1.594,14.078 Z M8.000,6.734 L2.906,13.281 L13.094,13.281 Z M8.516,6.078 L13.594,12.625 L13.594,-0.469 Z M2.906,-1.125 L8.000,5.422 L13.094,-1.125 Z M2.406,12.625 L7.484,6.078 L2.406,-0.469 Z",

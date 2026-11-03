@@ -25,14 +25,11 @@ fn tt_scale_funits_to_26_6(value : Int32, scale_bits : Int32) -> Int32 {
 }
 
 ///|
-fn TtEngine::op_rs(self : TtEngine) -> Result[Unit, HintError] {
-  let loc = match self.value_stack.pop_usize() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+fn TtEngine::op_rs(self : TtEngine) -> Unit raise HintError {
+  let loc = self.value_stack.pop_usize()
   if loc < 0 || loc >= self.storage.length() {
     if self.graphics.is_pedantic {
-      Err(InvalidStorageIndex(loc))
+      raise InvalidStorageIndex(loc)
     } else {
       self.value_stack.push(0)
     }
@@ -42,64 +39,46 @@ fn TtEngine::op_rs(self : TtEngine) -> Result[Unit, HintError] {
 }
 
 ///|
-fn TtEngine::op_ws(self : TtEngine) -> Result[Unit, HintError] {
-  let value = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
-  let loc = match self.value_stack.pop_usize() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+fn TtEngine::op_ws(self : TtEngine) -> Unit raise HintError {
+  let value = self.value_stack.pop()
+  let loc = self.value_stack.pop_usize()
   if loc < 0 || loc >= self.storage.length() {
     if self.graphics.is_pedantic {
-      Err(InvalidStorageIndex(loc))
+      raise InvalidStorageIndex(loc)
     } else {
-      Ok(())
+      ()
     }
   } else {
     self.storage.set(loc, value)
-    Ok(())
+    ()
   }
 }
 
 ///|
-fn TtEngine::op_wcvtp(self : TtEngine) -> Result[Unit, HintError] {
-  let value = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
-  let loc = match self.value_stack.pop_usize() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+fn TtEngine::op_wcvtp(self : TtEngine) -> Unit raise HintError {
+  let value = self.value_stack.pop()
+  let loc = self.value_stack.pop_usize()
   if loc < 0 || loc >= self.cvt.length() {
     if self.graphics.is_pedantic {
-      Err(InvalidCvtIndex(loc))
+      raise InvalidCvtIndex(loc)
     } else {
-      Ok(())
+      ()
     }
   } else {
     self.cvt.set(loc, value)
-    Ok(())
+    ()
   }
 }
 
 ///|
-fn TtEngine::op_wcvtf(self : TtEngine) -> Result[Unit, HintError] {
-  let value_funits = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
-  let loc = match self.value_stack.pop_usize() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+fn TtEngine::op_wcvtf(self : TtEngine) -> Unit raise HintError {
+  let value_funits = self.value_stack.pop()
+  let loc = self.value_stack.pop_usize()
   if loc < 0 || loc >= self.cvt.length() {
     if self.graphics.is_pedantic {
-      Err(InvalidCvtIndex(loc))
+      raise InvalidCvtIndex(loc)
     } else {
-      Ok(())
+      ()
     }
   } else {
     let value = tt_scale_funits_to_26_6(
@@ -107,19 +86,16 @@ fn TtEngine::op_wcvtf(self : TtEngine) -> Result[Unit, HintError] {
       self.graphics.retained.scale,
     )
     self.cvt.set(loc, value)
-    Ok(())
+    ()
   }
 }
 
 ///|
-fn TtEngine::op_rcvt(self : TtEngine) -> Result[Unit, HintError] {
-  let loc = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+fn TtEngine::op_rcvt(self : TtEngine) -> Unit raise HintError {
+  let loc = self.value_stack.pop()
   if loc < 0 || loc >= self.cvt.length() {
     if self.graphics.is_pedantic {
-      Err(InvalidCvtIndex(loc))
+      raise InvalidCvtIndex(loc)
     } else {
       self.value_stack.push(0)
     }
@@ -139,21 +115,15 @@ fn tt_delta_adjust(gs : TtGraphicsState, b0 : Int32) -> Int32 {
 }
 
 ///|
-fn TtEngine::op_deltap(
-  self : TtEngine,
-  opcode : Int32,
-) -> Result[Unit, HintError] {
+fn TtEngine::op_deltap(self : TtEngine, opcode : Int32) -> Unit raise HintError {
   let ppem_u = self.graphics.retained.ppem.reinterpret_as_uint()
   let point_count = self.graphics.zp0_zone().points.length()
-  let n0 = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+  let n0 = self.value_stack.pop()
   if n0 < 0 {
     if self.graphics.is_pedantic {
-      return Err(InvalidStackValue(n0))
+      raise InvalidStackValue(n0)
     } else {
-      return Ok(())
+      return ()
     }
   }
   // Each entry consumes 2 stack values.
@@ -167,14 +137,8 @@ fn TtEngine::op_deltap(
   let back_compat = self.graphics.backward_compatibility
   let did_iup = self.graphics.did_iup_x && self.graphics.did_iup_y
   for _ in 0..<n {
-    let point_ix = match self.value_stack.pop_usize() {
-      Err(e) => return Err(e)
-      Ok(v) => v
-    }
-    let b0 = match self.value_stack.pop() {
-      Err(e) => return Err(e)
-      Ok(v) => v
-    }
+    let point_ix = self.value_stack.pop_usize()
+    let b0 = self.value_stack.pop()
     if point_ix < 0 || point_ix >= point_count {
       continue
     }
@@ -182,46 +146,31 @@ fn TtEngine::op_deltap(
     if ppem_u == c {
       let adj = tt_delta_adjust(self.graphics, b0)
       if back_compat {
-        let touched_y = match self.graphics.zp0_zone().is_touched(point_ix, Y) {
-          Err(e) => return Err(e)
-          Ok(v) => v
-        }
+        let touched_y = self.graphics.zp0_zone().is_touched(point_ix, Y)
         if !did_iup &&
           (
             (self.graphics.is_composite && self.graphics.freedom_vector.y != 0) ||
             touched_y
           ) {
-          match self.graphics.move_point(self.graphics.zp0, point_ix, adj) {
-            Err(e) => return Err(e)
-            Ok(_) => ()
-          }
+          self.graphics.move_point(self.graphics.zp0, point_ix, adj)
         }
       } else {
-        match self.graphics.move_point(self.graphics.zp0, point_ix, adj) {
-          Err(e) => return Err(e)
-          Ok(_) => ()
-        }
+        self.graphics.move_point(self.graphics.zp0, point_ix, adj)
       }
     }
   }
-  Ok(())
+  ()
 }
 
 ///|
-fn TtEngine::op_deltac(
-  self : TtEngine,
-  opcode : Int32,
-) -> Result[Unit, HintError] {
+fn TtEngine::op_deltac(self : TtEngine, opcode : Int32) -> Unit raise HintError {
   let ppem_u = self.graphics.retained.ppem.reinterpret_as_uint()
-  let n0 = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+  let n0 = self.value_stack.pop()
   if n0 < 0 {
     if self.graphics.is_pedantic {
-      return Err(InvalidStackValue(n0))
+      raise InvalidStackValue(n0)
     } else {
-      return Ok(())
+      return ()
     }
   }
   let n = n0.min(self.value_stack.length() / 2)
@@ -232,19 +181,13 @@ fn TtEngine::op_deltac(
   }).reinterpret_as_uint()
   let bias = bias0 + self.graphics.retained.delta_base.reinterpret_as_uint()
   for _ in 0..<n {
-    let cvt_ix = match self.value_stack.pop_usize() {
-      Err(e) => return Err(e)
-      Ok(v) => v
-    }
-    let b0 = match self.value_stack.pop() {
-      Err(e) => return Err(e)
-      Ok(v) => v
-    }
+    let cvt_ix = self.value_stack.pop_usize()
+    let b0 = self.value_stack.pop()
     let c : UInt32 = ((b0.reinterpret_as_uint() & 0xF0) >> 4) + bias
     if ppem_u == c {
       if cvt_ix < 0 || cvt_ix >= self.cvt.length() {
         if self.graphics.is_pedantic {
-          return Err(InvalidCvtIndex(cvt_ix))
+          raise InvalidCvtIndex(cvt_ix)
         } else {
           continue
         }
@@ -253,29 +196,23 @@ fn TtEngine::op_deltac(
       self.cvt.set(cvt_ix, self.cvt.at(cvt_ix) + adj)
     }
   }
-  Ok(())
+  ()
 }
 
 ///|
-fn TtEngine::op_sdb(self : TtEngine) -> Result[Unit, HintError] {
-  let b = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+fn TtEngine::op_sdb(self : TtEngine) -> Unit raise HintError {
+  let b = self.value_stack.pop()
   self.graphics.retained.delta_base = b
-  Ok(())
+  ()
 }
 
 ///|
-fn TtEngine::op_sds(self : TtEngine) -> Result[Unit, HintError] {
-  let s = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+fn TtEngine::op_sds(self : TtEngine) -> Unit raise HintError {
+  let s = self.value_stack.pop()
   // FreeType/fontations clamp delta_shift to [0, 6].
   if s < 0 || s > 6 {
-    return Err(InvalidStackValue(s))
+    raise InvalidStackValue(s)
   }
   self.graphics.retained.delta_shift = s
-  Ok(())
+  ()
 }

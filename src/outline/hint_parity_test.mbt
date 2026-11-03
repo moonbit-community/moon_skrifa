@@ -1042,15 +1042,14 @@ test "hint: ignore hdmx when back compat enabled" {
     Size(16.0),
     @moon_skrifa.LocationRef::default(),
     @outline.HintingOptions::default(),
-  ).unwrap()
+  )
   let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(gid).unwrap()
-  let metrics = glyph
-    .draw(
-      @outline.DrawSettings::hinted(hinter, false),
-      @outline.NullPen::NullPen(),
-    )
-    .unwrap()
+  let metrics = glyph.draw(
+    @outline.DrawSettings::hinted(hinter, false),
+    @outline.NullPen::NullPen(),
+  )
+
   let ok = (metrics.advance_width.unwrap() - 7.0).abs() <= 0.000001
   inspect(ok, content="true")
   inspect(
@@ -1069,15 +1068,14 @@ test "hint: use hdmx when back compat disabled" {
     Size(16.0),
     @moon_skrifa.LocationRef::default(),
     HintingOptions(Interpreter, Mono),
-  ).unwrap()
+  )
   let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(gid).unwrap()
-  let metrics = glyph
-    .draw(
-      @outline.DrawSettings::hinted(hinter, false),
-      @outline.NullPen::NullPen(),
-    )
-    .unwrap()
+  let metrics = glyph.draw(
+    @outline.DrawSettings::hinted(hinter, false),
+    @outline.NullPen::NullPen(),
+  )
+
   inspect(
     hint_parity_hdmx_width(font, 16, gid).unwrap_or(-1) == 5,
     content="true",
@@ -1139,22 +1137,20 @@ test "hint: round advance when prep disables hinting" {
     size,
     loc,
     @outline.HintingOptions::default(),
-  ).unwrap()
+  )
   let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(GlyphId((1).to_uint16())).unwrap()
-  let metrics = glyph
-    .draw(
-      @outline.DrawSettings::hinted(hinter, false),
-      @outline.NullPen::NullPen(),
-    )
-    .unwrap()
+  let metrics = glyph.draw(
+    @outline.DrawSettings::hinted(hinter, false),
+    @outline.NullPen::NullPen(),
+  )
+
   inspect(metrics.advance_width.unwrap() == 7.0, content="true")
-  let metrics = glyph
-    .draw(
-      @outline.DrawSettings::unhinted(size, loc),
-      @outline.NullPen::NullPen(),
-    )
-    .unwrap()
+  let metrics = glyph.draw(
+    @outline.DrawSettings::unhinted(size, loc),
+    @outline.NullPen::NullPen(),
+  )
+
   let ok = (metrics.advance_width.unwrap() - 6.53125).abs() <= 0.000001
   inspect(ok, content="true")
 }
@@ -1166,22 +1162,23 @@ test "hint: fractional font size rounds MPPEM" {
   let size = @moon_skrifa.Size::Size(24.8)
   let loc = @moon_skrifa.LocationRef::default()
   let outlines0 = @outline.OutlineGlyphCollection::from_font(font)
-  let hinter0 = @outline.HintingInstance::create(
-    outlines0,
-    size,
-    loc,
-    @outline.HintingOptions::default(),
-  )
-  match hinter0 {
-    Err(HintingFailed(e)) =>
+  try
+    @outline.HintingInstance::create(
+      outlines0,
+      size,
+      loc,
+      @outline.HintingOptions::default(),
+    )
+  catch {
+    HintingFailed(e) =>
       inspect("HintingFailed " + hint_parity_hint_error_tag(e), content="Ok")
-    Err(_) => inspect("Err", content="Ok")
-    Ok(hinter) => {
+    _ => inspect("Err", content="Ok")
+  } noraise {
+    hinter => {
       let outlines = @outline.OutlineGlyphCollection::from_font(font)
       let glyph = outlines.get(gid).unwrap()
       let pen = @outline.SvgPen::SvgPen()
-      glyph.draw(@outline.DrawSettings::hinted(hinter, false), pen).unwrap()
-      |> ignore
+      glyph.draw(@outline.DrawSettings::hinted(hinter, false), pen) |> ignore
       inspect(
         pen.to_string(),
         content="M12.65625,11.015625 Q11.296875,11.421875 10.078125,11.421875 Q8.140625,11.421875 6.9375,9.9375 Q5.734375,8.46875 5.734375,6.1875 L5.734375,0 L3.5625,0 L3.5625,8.421875 Q3.5625,9.328125 3.390625,10.5625 Q3.234375,11.8125 2.9375,13 L5,13 Q5.484375,11.34375 5.578125,10 L5.640625,10 Q6.25,11.25 6.828125,11.828125 Q7.40625,12.40625 8.203125,12.703125 Q9.015625,13 10.15625,13 Q11.421875,13 12.65625,13 Z",
@@ -1198,16 +1195,14 @@ test "hint golden: Tinos subset (\\\"\\\") hinted SVG matches fontations" {
   let size = @moon_skrifa.Size::Size(16.0)
   let loc = @moon_skrifa.LocationRef::default()
   let opts = @outline.Engine::Interpreter.into()
-  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts).unwrap()
+  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts)
   let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(gid).unwrap()
   let pen = @outline.SvgPen::with_precision(6)
-  glyph
-  .draw(
+  glyph.draw(
     @outline.DrawSettings::hinted(hinter, false).with_path_style(FreeType),
     pen,
   )
-  .unwrap()
   |> ignore
   inspect(
     pen.to_string(),
@@ -1223,12 +1218,11 @@ test "hint golden: Cousine hint subset (gid=1) hinted SVG matches fontations" {
   let size = @moon_skrifa.Size::Size(16.0)
   let loc = @moon_skrifa.LocationRef::default()
   let opts = @outline.Engine::Interpreter.into()
-  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts).unwrap()
+  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts)
   let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(gid).unwrap()
   let pen = @outline.SvgPen::with_precision(6)
-  glyph.draw(@outline.DrawSettings::hinted(hinter, false), pen).unwrap()
-  |> ignore
+  glyph.draw(@outline.DrawSettings::hinted(hinter, false), pen) |> ignore
   inspect(
     pen.to_string(),
     content="M8.171875,7.718750 Q7.296875,7.906250 6.515625,7.906250 Q5.250000,7.906250 4.468750,6.875000 Q3.703125,5.859375 3.703125,4.281250 L3.703125,0.000000 L2.296875,0.000000 L2.296875,5.828125 Q2.296875,6.468750 2.187500,7.312500 Q2.093750,8.171875 1.890625,9.000000 L3.234375,9.000000 Q3.546875,7.890625 3.609375,7.000000 L3.640625,7.000000 Q4.031250,7.828125 4.406250,8.218750 Q4.781250,8.609375 5.296875,8.796875 Q5.812500,9.000000 6.562500,9.000000 Q7.375000,9.000000 8.171875,9.031250 Z",
@@ -1243,16 +1237,14 @@ test "hint golden: Tinos subset (gid=3) hinted SVG matches fontations" {
   let size = @moon_skrifa.Size::Size(16.0)
   let loc = @moon_skrifa.LocationRef::default()
   let opts = @outline.Engine::Interpreter.into()
-  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts).unwrap()
+  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts)
   let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(gid).unwrap()
   let pen = @outline.SvgPen::with_precision(6)
-  glyph
-  .draw(
+  glyph.draw(
     @outline.DrawSettings::hinted(hinter, false).with_path_style(FreeType),
     pen,
   )
-  .unwrap()
   |> ignore
   inspect(
     pen.to_string(),
@@ -1268,16 +1260,14 @@ test "hint golden: Tinos subset (gid=4) hinted SVG matches fontations" {
   let size = @moon_skrifa.Size::Size(16.0)
   let loc = @moon_skrifa.LocationRef::default()
   let opts = @outline.Engine::Interpreter.into()
-  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts).unwrap()
+  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts)
   let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(gid).unwrap()
   let pen = @outline.SvgPen::with_precision(6)
-  glyph
-  .draw(
+  glyph.draw(
     @outline.DrawSettings::hinted(hinter, false).with_path_style(FreeType),
     pen,
   )
-  .unwrap()
   |> ignore
   inspect(
     pen.to_string(),
@@ -1293,16 +1283,14 @@ test "hint golden: Tinos subset (gid=5) hinted SVG matches fontations" {
   let size = @moon_skrifa.Size::Size(16.0)
   let loc = @moon_skrifa.LocationRef::default()
   let opts = @outline.Engine::Interpreter.into()
-  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts).unwrap()
+  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts)
   let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(gid).unwrap()
   let pen = @outline.SvgPen::with_precision(6)
-  glyph
-  .draw(
+  glyph.draw(
     @outline.DrawSettings::hinted(hinter, false).with_path_style(FreeType),
     pen,
   )
-  .unwrap()
   |> ignore
   inspect(
     pen.to_string(),
@@ -1318,16 +1306,14 @@ test "hint golden: Tinos subset (gid=6) hinted SVG matches fontations" {
   let size = @moon_skrifa.Size::Size(16.0)
   let loc = @moon_skrifa.LocationRef::default()
   let opts = @outline.Engine::Interpreter.into()
-  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts).unwrap()
+  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts)
   let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(gid).unwrap()
   let pen = @outline.SvgPen::with_precision(6)
-  glyph
-  .draw(
+  glyph.draw(
     @outline.DrawSettings::hinted(hinter, false).with_path_style(FreeType),
     pen,
   )
-  .unwrap()
   |> ignore
   inspect(
     pen.to_string(),
@@ -1344,16 +1330,14 @@ test "hint golden: Vazirmatn VF (gid=2 size=16 coords=0) hinted SVG matches font
   let loc = @moon_skrifa.LocationRef::LocationRef(coords[:])
   let opts = @outline.Engine::Interpreter.into()
   let outlines0 = @outline.OutlineGlyphCollection::from_font(font)
-  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts).unwrap()
+  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts)
   let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(gid).unwrap()
   let pen = @outline.SvgPen::with_precision(6)
-  glyph
-  .draw(
+  glyph.draw(
     @outline.DrawSettings::hinted(hinter, false).with_path_style(FreeType),
     pen,
   )
-  .unwrap()
   |> ignore
   inspect(
     pen.to_string(),
@@ -1372,16 +1356,14 @@ test "hint golden: Vazirmatn VF (gid=2 size=16 coords=0.5) hinted SVG matches fo
   let loc = @moon_skrifa.LocationRef::LocationRef(coords[:])
   let opts = @outline.Engine::Interpreter.into()
   let outlines0 = @outline.OutlineGlyphCollection::from_font(font)
-  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts).unwrap()
+  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts)
   let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(gid).unwrap()
   let pen = @outline.SvgPen::with_precision(6)
-  glyph
-  .draw(
+  glyph.draw(
     @outline.DrawSettings::hinted(hinter, false).with_path_style(FreeType),
     pen,
   )
-  .unwrap()
   |> ignore
   inspect(
     pen.to_string(),
@@ -1397,16 +1379,14 @@ test "hint golden: Material Symbols subset (gid=1 size=16) hinted SVG matches fo
   let loc = @moon_skrifa.LocationRef::default()
   let opts = @outline.Engine::Interpreter.into()
   let outlines0 = @outline.OutlineGlyphCollection::from_font(font)
-  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts).unwrap()
+  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts)
   let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(gid).unwrap()
   let pen = @outline.SvgPen::with_precision(6)
-  glyph
-  .draw(
+  glyph.draw(
     @outline.DrawSettings::hinted(hinter, false).with_path_style(FreeType),
     pen,
   )
-  .unwrap()
   |> ignore
   inspect(
     pen.to_string(),
@@ -1422,16 +1402,14 @@ test "hint golden: Material Symbols subset (gid=2 size=16) hinted SVG matches fo
   let loc = @moon_skrifa.LocationRef::default()
   let opts = @outline.Engine::Interpreter.into()
   let outlines0 = @outline.OutlineGlyphCollection::from_font(font)
-  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts).unwrap()
+  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts)
   let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(gid).unwrap()
   let pen = @outline.SvgPen::with_precision(6)
-  glyph
-  .draw(
+  glyph.draw(
     @outline.DrawSettings::hinted(hinter, false).with_path_style(FreeType),
     pen,
   )
-  .unwrap()
   |> ignore
   inspect(
     pen.to_string(),
@@ -1447,16 +1425,14 @@ test "hint golden: Material Symbols subset (gid=3 size=16) hinted SVG matches fo
   let loc = @moon_skrifa.LocationRef::default()
   let opts = @outline.Engine::Interpreter.into()
   let outlines0 = @outline.OutlineGlyphCollection::from_font(font)
-  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts).unwrap()
+  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts)
   let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(gid).unwrap()
   let pen = @outline.SvgPen::with_precision(6)
-  glyph
-  .draw(
+  glyph.draw(
     @outline.DrawSettings::hinted(hinter, false).with_path_style(FreeType),
     pen,
   )
-  .unwrap()
   |> ignore
   inspect(
     pen.to_string(),
@@ -1472,16 +1448,14 @@ test "hint golden: Material Symbols subset (gid=4 size=16) hinted SVG matches fo
   let loc = @moon_skrifa.LocationRef::default()
   let opts = @outline.Engine::Interpreter.into()
   let outlines0 = @outline.OutlineGlyphCollection::from_font(font)
-  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts).unwrap()
+  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts)
   let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(gid).unwrap()
   let pen = @outline.SvgPen::with_precision(6)
-  glyph
-  .draw(
+  glyph.draw(
     @outline.DrawSettings::hinted(hinter, false).with_path_style(FreeType),
     pen,
   )
-  .unwrap()
   |> ignore
   inspect(
     pen.to_string(),
@@ -1497,16 +1471,14 @@ test "hint golden: Material Symbols subset (gid=5 size=16) hinted SVG matches fo
   let loc = @moon_skrifa.LocationRef::default()
   let opts = @outline.Engine::Interpreter.into()
   let outlines0 = @outline.OutlineGlyphCollection::from_font(font)
-  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts).unwrap()
+  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts)
   let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(gid).unwrap()
   let pen = @outline.SvgPen::with_precision(6)
-  glyph
-  .draw(
+  glyph.draw(
     @outline.DrawSettings::hinted(hinter, false).with_path_style(FreeType),
     pen,
   )
-  .unwrap()
   |> ignore
   inspect(
     pen.to_string(),
@@ -1522,16 +1494,14 @@ test "hint golden: Material Symbols subset (gid=6 size=16) hinted SVG matches fo
   let loc = @moon_skrifa.LocationRef::default()
   let opts = @outline.Engine::Interpreter.into()
   let outlines0 = @outline.OutlineGlyphCollection::from_font(font)
-  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts).unwrap()
+  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts)
   let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(gid).unwrap()
   let pen = @outline.SvgPen::with_precision(6)
-  glyph
-  .draw(
+  glyph.draw(
     @outline.DrawSettings::hinted(hinter, false).with_path_style(FreeType),
     pen,
   )
-  .unwrap()
   |> ignore
   inspect(
     pen.to_string(),
@@ -1547,16 +1517,14 @@ test "hint golden: Material Symbols subset (gid=7 size=16) hinted SVG matches fo
   let loc = @moon_skrifa.LocationRef::default()
   let opts = @outline.Engine::Interpreter.into()
   let outlines0 = @outline.OutlineGlyphCollection::from_font(font)
-  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts).unwrap()
+  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts)
   let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(gid).unwrap()
   let pen = @outline.SvgPen::with_precision(6)
-  glyph
-  .draw(
+  glyph.draw(
     @outline.DrawSettings::hinted(hinter, false).with_path_style(FreeType),
     pen,
   )
-  .unwrap()
   |> ignore
   inspect(
     pen.to_string(),
@@ -1572,16 +1540,14 @@ test "hint golden: Material Symbols subset (gid=8 size=16) hinted SVG matches fo
   let loc = @moon_skrifa.LocationRef::default()
   let opts = @outline.Engine::Interpreter.into()
   let outlines0 = @outline.OutlineGlyphCollection::from_font(font)
-  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts).unwrap()
+  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts)
   let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(gid).unwrap()
   let pen = @outline.SvgPen::with_precision(6)
-  glyph
-  .draw(
+  glyph.draw(
     @outline.DrawSettings::hinted(hinter, false).with_path_style(FreeType),
     pen,
   )
-  .unwrap()
   |> ignore
   inspect(
     pen.to_string(),
@@ -1597,16 +1563,14 @@ test "hint golden: Material Symbols subset (gid=9 size=16) hinted SVG matches fo
   let loc = @moon_skrifa.LocationRef::default()
   let opts = @outline.Engine::Interpreter.into()
   let outlines0 = @outline.OutlineGlyphCollection::from_font(font)
-  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts).unwrap()
+  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts)
   let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(gid).unwrap()
   let pen = @outline.SvgPen::with_precision(6)
-  glyph
-  .draw(
+  glyph.draw(
     @outline.DrawSettings::hinted(hinter, false).with_path_style(FreeType),
     pen,
   )
-  .unwrap()
   |> ignore
   inspect(
     pen.to_string(),
@@ -1622,16 +1586,14 @@ test "hint golden: Material Symbols subset (gid=10 size=16) hinted SVG matches f
   let loc = @moon_skrifa.LocationRef::default()
   let opts = @outline.Engine::Interpreter.into()
   let outlines0 = @outline.OutlineGlyphCollection::from_font(font)
-  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts).unwrap()
+  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts)
   let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(gid).unwrap()
   let pen = @outline.SvgPen::with_precision(6)
-  glyph
-  .draw(
+  glyph.draw(
     @outline.DrawSettings::hinted(hinter, false).with_path_style(FreeType),
     pen,
   )
-  .unwrap()
   |> ignore
   inspect(
     pen.to_string(),
@@ -1647,16 +1609,14 @@ test "hint golden: Material Icons subset (gid=1 size=16) hinted SVG matches font
   let loc = @moon_skrifa.LocationRef::default()
   let opts = @outline.Engine::Interpreter.into()
   let outlines0 = @outline.OutlineGlyphCollection::from_font(font)
-  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts).unwrap()
+  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts)
   let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(gid).unwrap()
   let pen = @outline.SvgPen::with_precision(6)
-  glyph
-  .draw(
+  glyph.draw(
     @outline.DrawSettings::hinted(hinter, false).with_path_style(FreeType),
     pen,
   )
-  .unwrap()
   |> ignore
   inspect(
     pen.to_string(),
@@ -1672,16 +1632,14 @@ test "hint golden: Material Icons subset matrix (gid=1 size=16) hinted SVG match
   let loc = @moon_skrifa.LocationRef::default()
   let opts = @outline.Engine::Interpreter.into()
   let outlines0 = @outline.OutlineGlyphCollection::from_font(font)
-  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts).unwrap()
+  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts)
   let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(gid).unwrap()
   let pen = @outline.SvgPen::with_precision(6)
-  glyph
-  .draw(
+  glyph.draw(
     @outline.DrawSettings::hinted(hinter, false).with_path_style(FreeType),
     pen,
   )
-  .unwrap()
   |> ignore
   inspect(
     pen.to_string(),
@@ -1698,23 +1656,25 @@ test "hint: composite glyf instructions (vazirmatn gid=2)" {
   let loc = @moon_skrifa.LocationRef::LocationRef(coords[:])
   let opts = @outline.Engine::Interpreter.into()
   let outlines0 = @outline.OutlineGlyphCollection::from_font(font)
-  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts).unwrap()
+  let hinter = @outline.HintingInstance::create(outlines0, size, loc, opts)
   let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let glyph = outlines.get(gid).unwrap()
   let pen = @outline.SvgPen::SvgPen()
-  match
+  try
     glyph.draw(
       @outline.DrawSettings::hinted(hinter, false).with_path_style(FreeType),
       pen,
-    ) {
-    Err(HintingFailed(e)) =>
+    )
+  catch {
+    HintingFailed(e) =>
       inspect("HintingFailed " + hint_parity_hint_error_tag(e), content="Ok")
-    Err(GlyphNotFound(_)) => inspect("GlyphNotFound", content="Ok")
-    Err(NoSources) => inspect("NoSources", content="Ok")
-    Err(HarfBuzzHintingUnsupported) =>
+    GlyphNotFound(_) => inspect("GlyphNotFound", content="Ok")
+    NoSources => inspect("NoSources", content="Ok")
+    HarfBuzzHintingUnsupported =>
       inspect("HarfBuzzHintingUnsupported", content="Ok")
-    Err(_) => inspect("Err", content="Ok")
-    Ok(_) =>
+    _ => inspect("Err", content="Ok")
+  } noraise {
+    _ =>
       inspect(
         pen.to_string(),
         content="M5.53125,10.375 L1.765625,0 L0.234375,0 L4.5625,11.375 L5.5625,11.375 Z M8.6875,0 L4.921875,10.375 L4.890625,11.375 L5.890625,11.375 L10.234375,0 Z M8.5,4.21875 L8.5,2.984375 L2.109375,2.984375 L2.109375,4.21875 Z M4.578125,14 L6.078125,11.703125 L4.84375,11.703125 L2.828125,14 Z",
@@ -1778,12 +1738,11 @@ test "hint: empty glyph advance unhinted (hvar truncated adv index map)" {
   let loc = @moon_skrifa.LocationRef::LocationRef(coords[:])
   let gid = font.charmap().glyph_id((32).reinterpret_as_uint()).unwrap()
   let glyph = outlines.get(gid).unwrap()
-  let metrics = glyph
-    .draw(
-      @outline.DrawSettings::unhinted(Size(24.0), loc).with_path_style(FreeType),
-      @outline.NullPen::NullPen(),
-    )
-    .unwrap()
+  let metrics = glyph.draw(
+    @outline.DrawSettings::unhinted(Size(24.0), loc).with_path_style(FreeType),
+    @outline.NullPen::NullPen(),
+  )
+
   let ok = (metrics.advance_width.unwrap() - 10.796875).abs() <= 0.000001
   inspect(ok, content="true")
 }
@@ -1802,16 +1761,15 @@ test "hint: empty glyph advance hinted (hvar truncated adv index map)" {
     size,
     loc,
     @outline.HintingOptions::default(),
-  ).unwrap()
+  )
   let outlines = @outline.OutlineGlyphCollection::from_font(font)
   let gid = font.charmap().glyph_id((32).reinterpret_as_uint()).unwrap()
   let glyph = outlines.get(gid).unwrap()
-  let metrics = glyph
-    .draw(
-      @outline.DrawSettings::hinted(hinting, false),
-      @outline.NullPen::NullPen(),
-    )
-    .unwrap()
+  let metrics = glyph.draw(
+    @outline.DrawSettings::hinted(hinting, false),
+    @outline.NullPen::NullPen(),
+  )
+
   debug_inspect(metrics.advance_width, content="Some(11)")
 }
 
@@ -1827,13 +1785,11 @@ test "hint: tthint subset should not fail in pedantic mode" {
     size,
     loc,
     @outline.HintingOptions::default(),
-  ).unwrap()
+  )
   let glyph = outlines.get(GlyphId((1).to_uint16())).unwrap()
-  glyph
-  .draw(
+  glyph.draw(
     @outline.DrawSettings::hinted(hinting, true),
     @outline.NullPen::NullPen(),
   )
-  .unwrap()
   |> ignore
 }

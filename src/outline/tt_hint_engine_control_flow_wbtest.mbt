@@ -64,32 +64,32 @@ test "tt_hint: control flow IF/ELSE nesting skip" {
 
   // Outer IF (at pc=0, so body starts at pc=1).
   engine.program.decoder.pc = 1
-  engine.value_stack.push(1).unwrap() |> ignore
-  engine.op_if().unwrap() |> ignore
+  engine.value_stack.push(1) |> ignore
+  engine.op_if() |> ignore
   inspect(engine.program.decoder.pc == 1, content="true")
   engine.program.decoder.pc = 1
-  engine.value_stack.push(0).unwrap() |> ignore
-  engine.op_if().unwrap() |> ignore
+  engine.value_stack.push(0) |> ignore
+  engine.op_if() |> ignore
   // Jumped to the start of the outer ELSE body (pc after ELSE).
   inspect(engine.program.decoder.pc == 11, content="true")
 
   // Inner IF (at pc=3, so body starts at pc=4).
   engine.program.decoder.pc = 4
-  engine.value_stack.push(1).unwrap() |> ignore
-  engine.op_if().unwrap() |> ignore
+  engine.value_stack.push(1) |> ignore
+  engine.op_if() |> ignore
   inspect(engine.program.decoder.pc == 4, content="true")
   engine.program.decoder.pc = 4
-  engine.value_stack.push(0).unwrap() |> ignore
-  engine.op_if().unwrap() |> ignore
+  engine.value_stack.push(0) |> ignore
+  engine.op_if() |> ignore
   // Jumped to the start of the inner ELSE body (pc after ELSE).
   inspect(engine.program.decoder.pc == 7, content="true")
 
   // ELSE skipping: skip to matching EIF, ignoring nested IF/EIF.
   engine.program.decoder.pc = 11
-  engine.op_else(0).unwrap() |> ignore
+  engine.op_else(0) |> ignore
   inspect(engine.program.decoder.pc == 15, content="true")
   engine.program.decoder.pc = 7
-  engine.op_else(0).unwrap() |> ignore
+  engine.op_else(0) |> ignore
   inspect(engine.program.decoder.pc == 10, content="true")
 }
 
@@ -99,29 +99,29 @@ test "tt_hint: control flow JMPR/JROT/JROF pc math" {
 
   // Unconditional jump: pc += (offset - 1)
   engine.program.decoder.pc = 1000
-  engine.value_stack.push(100).unwrap() |> ignore
-  engine.op_jmpr(0).unwrap() |> ignore
+  engine.value_stack.push(100) |> ignore
+  engine.op_jmpr(0) |> ignore
   inspect(engine.program.decoder.pc == 1099, content="true")
 
   // Jump if true: stack is [offset, cond] (cond on top)
   engine.program.decoder.pc = 1000
-  engine.value_stack.push(100).unwrap() |> ignore
-  engine.value_stack.push(0).unwrap() |> ignore
-  engine.op_jrot(0).unwrap() |> ignore
+  engine.value_stack.push(100) |> ignore
+  engine.value_stack.push(0) |> ignore
+  engine.op_jrot(0) |> ignore
   inspect(engine.program.decoder.pc == 1000, content="true")
-  engine.value_stack.push(100).unwrap() |> ignore
-  engine.value_stack.push(1).unwrap() |> ignore
-  engine.op_jrot(0).unwrap() |> ignore
+  engine.value_stack.push(100) |> ignore
+  engine.value_stack.push(1) |> ignore
+  engine.op_jrot(0) |> ignore
   inspect(engine.program.decoder.pc == 1099, content="true")
 
   // Jump if false
   engine.program.decoder.pc = 1000
-  engine.value_stack.push(-100).unwrap() |> ignore
-  engine.value_stack.push(1).unwrap() |> ignore
-  engine.op_jrof(0).unwrap() |> ignore
+  engine.value_stack.push(-100) |> ignore
+  engine.value_stack.push(1) |> ignore
+  engine.op_jrof(0) |> ignore
   inspect(engine.program.decoder.pc == 1000, content="true")
-  engine.value_stack.push(-100).unwrap() |> ignore
-  engine.value_stack.push(0).unwrap() |> ignore
-  engine.op_jrof(0).unwrap() |> ignore
+  engine.value_stack.push(-100) |> ignore
+  engine.value_stack.push(0) |> ignore
+  engine.op_jrof(0) |> ignore
   inspect(engine.program.decoder.pc == 899, content="true")
 }

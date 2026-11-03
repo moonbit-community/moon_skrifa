@@ -40,51 +40,51 @@ test "tt_hint: logical compare ops" {
   for a in -10..<11 {
     for b in -10..<11 {
       engine.value_stack.clear()
-      engine.value_stack.push(a).unwrap() |> ignore
-      engine.value_stack.push(b).unwrap() |> ignore
-      engine.op_cmp_lt().unwrap() |> ignore
+      engine.value_stack.push(a) |> ignore
+      engine.value_stack.push(b) |> ignore
+      engine.op_cmp_lt() |> ignore
       inspect(
-        engine.value_stack.pop().unwrap() == (if a < b { 1 } else { 0 }),
+        engine.value_stack.pop() == (if a < b { 1 } else { 0 }),
         content="true",
       )
       engine.value_stack.clear()
-      engine.value_stack.push(a).unwrap() |> ignore
-      engine.value_stack.push(b).unwrap() |> ignore
-      engine.op_cmp_lteq().unwrap() |> ignore
+      engine.value_stack.push(a) |> ignore
+      engine.value_stack.push(b) |> ignore
+      engine.op_cmp_lteq() |> ignore
       inspect(
-        engine.value_stack.pop().unwrap() == (if a <= b { 1 } else { 0 }),
+        engine.value_stack.pop() == (if a <= b { 1 } else { 0 }),
         content="true",
       )
       engine.value_stack.clear()
-      engine.value_stack.push(a).unwrap() |> ignore
-      engine.value_stack.push(b).unwrap() |> ignore
-      engine.op_cmp_gt().unwrap() |> ignore
+      engine.value_stack.push(a) |> ignore
+      engine.value_stack.push(b) |> ignore
+      engine.op_cmp_gt() |> ignore
       inspect(
-        engine.value_stack.pop().unwrap() == (if a > b { 1 } else { 0 }),
+        engine.value_stack.pop() == (if a > b { 1 } else { 0 }),
         content="true",
       )
       engine.value_stack.clear()
-      engine.value_stack.push(a).unwrap() |> ignore
-      engine.value_stack.push(b).unwrap() |> ignore
-      engine.op_cmp_gteq().unwrap() |> ignore
+      engine.value_stack.push(a) |> ignore
+      engine.value_stack.push(b) |> ignore
+      engine.op_cmp_gteq() |> ignore
       inspect(
-        engine.value_stack.pop().unwrap() == (if a >= b { 1 } else { 0 }),
+        engine.value_stack.pop() == (if a >= b { 1 } else { 0 }),
         content="true",
       )
       engine.value_stack.clear()
-      engine.value_stack.push(a).unwrap() |> ignore
-      engine.value_stack.push(b).unwrap() |> ignore
-      engine.op_cmp_eq().unwrap() |> ignore
+      engine.value_stack.push(a) |> ignore
+      engine.value_stack.push(b) |> ignore
+      engine.op_cmp_eq() |> ignore
       inspect(
-        engine.value_stack.pop().unwrap() == (if a == b { 1 } else { 0 }),
+        engine.value_stack.pop() == (if a == b { 1 } else { 0 }),
         content="true",
       )
       engine.value_stack.clear()
-      engine.value_stack.push(a).unwrap() |> ignore
-      engine.value_stack.push(b).unwrap() |> ignore
-      engine.op_cmp_neq().unwrap() |> ignore
+      engine.value_stack.push(a) |> ignore
+      engine.value_stack.push(b) |> ignore
+      engine.op_cmp_neq() |> ignore
       inspect(
-        engine.value_stack.pop().unwrap() == (if a != b { 1 } else { 0 }),
+        engine.value_stack.pop() == (if a != b { 1 } else { 0 }),
         content="true",
       )
     }
@@ -107,20 +107,20 @@ test "tt_hint: logical parity ops (odd/even)" {
   for entry in cases.iter() {
     let (input, is_even) = entry
     engine.value_stack.clear()
-    engine.value_stack.push(input).unwrap() |> ignore
-    engine.op_even().unwrap() |> ignore
+    engine.value_stack.push(input) |> ignore
+    engine.op_even() |> ignore
     inspect(
-      engine.value_stack.pop().unwrap() == (if is_even { 1 } else { 0 }),
+      engine.value_stack.pop() == (if is_even { 1 } else { 0 }),
       content="true",
     )
   }
   for entry in cases.iter() {
     let (input, is_even) = entry
     engine.value_stack.clear()
-    engine.value_stack.push(input).unwrap() |> ignore
-    engine.op_odd().unwrap() |> ignore
+    engine.value_stack.push(input) |> ignore
+    engine.op_odd() |> ignore
     inspect(
-      engine.value_stack.pop().unwrap() == (if !is_even { 1 } else { 0 }),
+      engine.value_stack.pop() == (if !is_even { 1 } else { 0 }),
       content="true",
     )
   }
@@ -130,13 +130,13 @@ test "tt_hint: logical parity ops (odd/even)" {
 test "tt_hint: logical NOT" {
   let engine = tt_make_engine_for_logical()
   engine.value_stack.clear()
-  engine.value_stack.push(0).unwrap() |> ignore
-  engine.op_not().unwrap() |> ignore
-  inspect(engine.value_stack.pop().unwrap() == 1, content="true")
+  engine.value_stack.push(0) |> ignore
+  engine.op_not() |> ignore
+  inspect(engine.value_stack.pop() == 1, content="true")
   engine.value_stack.clear()
-  engine.value_stack.push(234234).unwrap() |> ignore
-  engine.op_not().unwrap() |> ignore
-  inspect(engine.value_stack.pop().unwrap() == 0, content="true")
+  engine.value_stack.push(234234) |> ignore
+  engine.op_not() |> ignore
+  inspect(engine.value_stack.pop() == 0, content="true")
 }
 
 ///|
@@ -147,19 +147,19 @@ test "tt_hint: logical AND/OR" {
       let a0 = a != 0
       let b0 = b != 0
       engine.value_stack.clear()
-      engine.value_stack.push(a).unwrap() |> ignore
-      engine.value_stack.push(b).unwrap() |> ignore
-      engine.op_and().unwrap() |> ignore
+      engine.value_stack.push(a) |> ignore
+      engine.value_stack.push(b) |> ignore
+      engine.op_and() |> ignore
       inspect(
-        engine.value_stack.pop().unwrap() == (if a0 && b0 { 1 } else { 0 }),
+        engine.value_stack.pop() == (if a0 && b0 { 1 } else { 0 }),
         content="true",
       )
       engine.value_stack.clear()
-      engine.value_stack.push(a).unwrap() |> ignore
-      engine.value_stack.push(b).unwrap() |> ignore
-      engine.op_or().unwrap() |> ignore
+      engine.value_stack.push(a) |> ignore
+      engine.value_stack.push(b) |> ignore
+      engine.op_or() |> ignore
       inspect(
-        engine.value_stack.pop().unwrap() == (if a0 || b0 { 1 } else { 0 }),
+        engine.value_stack.pop() == (if a0 || b0 { 1 } else { 0 }),
         content="true",
       )
     }

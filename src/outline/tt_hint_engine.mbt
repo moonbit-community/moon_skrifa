@@ -66,12 +66,12 @@ fn TtLoopBudget::reset(self : TtLoopBudget) -> Unit {
 ///|
 fn TtLoopBudget::doing_backward_jump(
   self : TtLoopBudget,
-) -> Result[Unit, HintError] {
+) -> Unit raise HintError {
   self.backward_jumps = self.backward_jumps + 1
   if self.backward_jumps > self.limit {
-    Err(ExceededExecutionBudget)
+    raise ExceededExecutionBudget
   } else {
-    Ok(())
+    ()
   }
 }
 
@@ -79,12 +79,12 @@ fn TtLoopBudget::doing_backward_jump(
 fn TtLoopBudget::doing_loop_call(
   self : TtLoopBudget,
   count : Int32,
-) -> Result[Unit, HintError] {
+) -> Unit raise HintError {
   self.loop_calls = self.loop_calls + count
   if self.loop_calls > self.limit {
-    Err(ExceededExecutionBudget)
+    raise ExceededExecutionBudget
   } else {
-    Ok(())
+    ()
   }
 }
 
@@ -187,34 +187,29 @@ fn TtEngine::run_program(
   self : TtEngine,
   program : TtProgram,
   is_pedantic : Bool,
-) -> Result[Unit, HintError] {
+) -> Unit raise HintError {
   self.reset(program, is_pedantic)
   self.run()
 }
 
 ///|
-fn TtEngine::run(self : TtEngine) -> Result[Unit, HintError] {
+fn TtEngine::run(self : TtEngine) -> Unit raise HintError {
   let mut count = 0
   while true {
     let ins0 = match self.program.decoder.decode() {
-      Err(e) => return Err(e)
-      Ok(None) =>
+      None =>
         if self.program.call_stack.is_empty() {
           break
         } else {
           // Implicit return at end-of-code.
-          match self.program.pop_frame() {
-            Err(e) => return Err(e)
-            Ok(_) => ()
-          }
+          self.program.pop_frame()
           continue
         }
-      Ok(Some(ins)) => ins
+      Some(ins) => ins
     }
-    match self.dispatch(ins0) {
-      Ok(_) => ()
-      Err(e) => {
-        if e is ValueStackUnderflow {
+    try self.dispatch(ins0) catch {
+      ValueStackUnderflow => {
+        {
           let tag = match self.program.current {
             Font => "fpgm"
             ControlValue => "prep"
@@ -231,15 +226,18 @@ fn TtEngine::run(self : TtEngine) -> Result[Unit, HintError] {
             self.value_stack.length().to_string(),
           )
         }
-        return Err(e)
+        raise ValueStackUnderflow
       }
+      e => raise e
+    } noraise {
+      _ => ()
     }
     count = count + 1
     if count > TT_MAX_RUN_INSTRUCTIONS {
-      return Err(ExceededExecutionBudget)
+      raise ExceededExecutionBudget
     }
   }
-  Ok(())
+  ()
 }
 
 ///|
@@ -247,12 +245,12 @@ fn TtEngine::op_unknown(
   self : TtEngine,
   op : Int32,
   pc : Int32,
-) -> Result[Unit, HintError] {
+) -> Unit raise HintError {
   match self.instructions.get(op) {
-    None => Err(UnhandledOpcode(op, pc))
+    None => raise UnhandledOpcode(op, pc)
     Some(d) =>
       match d.slice() {
-        None => Err(InvalidDefinition(op))
+        None => raise InvalidDefinition(op)
         Some(code) => {
           let return_pc = self.program.decoder.pc
           self.program.push_frame(code, 0, return_pc)
@@ -265,17 +263,14 @@ fn TtEngine::op_unknown(
 fn TtEngine::dispatch(
   self : TtEngine,
   ins : TtInstruction,
-) -> Result[Unit, HintError] {
+) -> Unit raise HintError {
   let op = ins.opcode
   // Push instructions.
   if (op >= 0xB0 && op <= 0xBF) || op == 0x40 || op == 0x41 {
     for v in ins.inline_operands.iter() {
-      match self.value_stack.push(v) {
-        Err(e) => return Err(e)
-        Ok(_) => ()
-      }
+      self.value_stack.push(v)
     }
-    return Ok(())
+    return ()
   }
   // MIRP/MDRP ranges (FreeType style).
   if op >= 0xE0 {
@@ -340,26 +335,20 @@ fn TtEngine::dispatch(
     0x20 => self.op_dup()
     // POP
     0x21 => {
-      match self.value_stack.pop() {
-        Err(e) => return Err(e)
-        Ok(_) => ()
-      }
-      Ok(())
+      ignore(self.value_stack.pop())
+      ()
     }
     // SWAP
     0x23 => self.op_swap()
     // CLEAR
     0x22 => {
       self.value_stack.clear()
-      Ok(())
+      ()
     }
     // DEPTH
     0x24 => {
-      match self.value_stack.push(self.value_stack.length()) {
-        Err(e) => return Err(e)
-        Ok(_) => ()
-      }
-      Ok(())
+      self.value_stack.push(self.value_stack.length())
+      ()
     }
     // CINDEX
     0x25 => self.op_cindex()
@@ -414,11 +403,7 @@ fn TtEngine::dispatch(
     0x4D => self.op_flipon()
     0x4E => self.op_flipoff()
     // DEBUG
-    0x4F =>
-      match self.value_stack.pop() {
-        Err(e) => Err(e)
-        Ok(_) => Ok(())
-      }
+    0x4F => ignore(self.value_stack.pop())
     // ROLL
     0x8A => self.op_roll()
     // ADD
@@ -440,10 +425,10 @@ fn TtEngine::dispatch(
     0x69 => self.op_round()
     0x6A => self.op_round()
     0x6B => self.op_round()
-    0x6C => Ok(())
-    0x6D => Ok(())
-    0x6E => Ok(())
-    0x6F => Ok(())
+    0x6C => ()
+    0x6D => ()
+    0x6E => ()
+    0x6F => ()
     // WCVTF
     0x70 => self.op_wcvtf()
     // DELTAP2/3
@@ -462,7 +447,7 @@ fn TtEngine::dispatch(
     0x7D => self.op_rdtg()
     // SANGW/AA/FLIP*
     0x7E => self.op_sangw()
-    0x7F => Ok(())
+    0x7F => ()
     0x80 => self.op_flippt()
     0x81 => self.op_fliprgon()
     0x82 => self.op_fliprgoff()
@@ -512,7 +497,7 @@ fn TtEngine::dispatch(
 }
 
 ///|
-fn TtEngine::op_mppem(self : TtEngine) -> Result[Unit, HintError] {
+fn TtEngine::op_mppem(self : TtEngine) -> Unit raise HintError {
   self.value_stack.push(self.graphics.retained.ppem)
 }
 
@@ -526,155 +511,111 @@ fn tt_bool_i32(v : Bool) -> Int32 {
 }
 
 ///|
-fn TtEngine::op_cmp_lt(self : TtEngine) -> Result[Unit, HintError] {
-  let e2 = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
-  let e1 = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+fn TtEngine::op_cmp_lt(self : TtEngine) -> Unit raise HintError {
+  let e2 = self.value_stack.pop()
+  let e1 = self.value_stack.pop()
   self.value_stack.push(tt_bool_i32(e1 < e2))
 }
 
 ///|
-fn TtEngine::op_cmp_lteq(self : TtEngine) -> Result[Unit, HintError] {
-  let e2 = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
-  let e1 = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+fn TtEngine::op_cmp_lteq(self : TtEngine) -> Unit raise HintError {
+  let e2 = self.value_stack.pop()
+  let e1 = self.value_stack.pop()
   self.value_stack.push(tt_bool_i32(e1 <= e2))
 }
 
 ///|
-fn TtEngine::op_cmp_gt(self : TtEngine) -> Result[Unit, HintError] {
-  let e2 = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
-  let e1 = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+fn TtEngine::op_cmp_gt(self : TtEngine) -> Unit raise HintError {
+  let e2 = self.value_stack.pop()
+  let e1 = self.value_stack.pop()
   self.value_stack.push(tt_bool_i32(e1 > e2))
 }
 
 ///|
-fn TtEngine::op_cmp_gteq(self : TtEngine) -> Result[Unit, HintError] {
-  let e2 = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
-  let e1 = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+fn TtEngine::op_cmp_gteq(self : TtEngine) -> Unit raise HintError {
+  let e2 = self.value_stack.pop()
+  let e1 = self.value_stack.pop()
   self.value_stack.push(tt_bool_i32(e1 >= e2))
 }
 
 ///|
-fn TtEngine::op_cmp_eq(self : TtEngine) -> Result[Unit, HintError] {
-  let e2 = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
-  let e1 = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+fn TtEngine::op_cmp_eq(self : TtEngine) -> Unit raise HintError {
+  let e2 = self.value_stack.pop()
+  let e1 = self.value_stack.pop()
   self.value_stack.push(tt_bool_i32(e1 == e2))
 }
 
 ///|
-fn TtEngine::op_cmp_neq(self : TtEngine) -> Result[Unit, HintError] {
-  let e2 = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
-  let e1 = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+fn TtEngine::op_cmp_neq(self : TtEngine) -> Unit raise HintError {
+  let e2 = self.value_stack.pop()
+  let e1 = self.value_stack.pop()
   self.value_stack.push(tt_bool_i32(e1 != e2))
 }
 
 ///|
-fn TtEngine::op_dup(self : TtEngine) -> Result[Unit, HintError] {
-  match self.value_stack.peek(0) {
-    Ok(v) => self.value_stack.push(v)
-    Err(ValueStackUnderflow) =>
+fn TtEngine::op_dup(self : TtEngine) -> Unit raise HintError {
+  try self.value_stack.peek(0) catch {
+    ValueStackUnderflow =>
       if self.value_stack.check {
-        Err(ValueStackUnderflow)
+        raise ValueStackUnderflow
       } else {
         self.value_stack.push(0)
       }
-    Err(e) => Err(e)
+    e => raise e
+  } noraise {
+    v => self.value_stack.push(v)
   }
 }
 
 ///|
-fn TtEngine::op_swap(self : TtEngine) -> Result[Unit, HintError] {
-  let a = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
-  let b = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
-  match self.value_stack.push(a) {
-    Err(e) => return Err(e)
-    Ok(_) => ()
-  }
+fn TtEngine::op_swap(self : TtEngine) -> Unit raise HintError {
+  let a = self.value_stack.pop()
+  let b = self.value_stack.pop()
+  self.value_stack.push(a)
   self.value_stack.push(b)
 }
 
 ///|
-fn TtEngine::op_cindex(self : TtEngine) -> Result[Unit, HintError] {
+fn TtEngine::op_cindex(self : TtEngine) -> Unit raise HintError {
   // Match fontations/FreeType: use the top element as an index without popping.
   // Index 0 is valid and is a no-op.
   let top = self.value_stack.length()
   if top <= 0 {
-    return Err(ValueStackUnderflow)
+    raise ValueStackUnderflow
   }
   let top_ix = top - 1
   let idx = self.value_stack.buf.at(top_ix)
   if idx < 0 {
-    return Err(ValueStackUnderflow)
+    raise ValueStackUnderflow
   }
   let element_ix = top_ix - idx
   if element_ix < 0 {
-    return Err(ValueStackUnderflow)
+    raise ValueStackUnderflow
   }
   self.value_stack.buf.set(top_ix, self.value_stack.buf.at(element_ix))
-  Ok(())
+  ()
 }
 
 ///|
-fn TtEngine::op_mindex(self : TtEngine) -> Result[Unit, HintError] {
+fn TtEngine::op_mindex(self : TtEngine) -> Unit raise HintError {
   // Match fontations/FreeType: use the top element as an index without popping.
   // Index 0 moves the top element to the new top, effectively dropping one slot.
   let top = self.value_stack.length()
   if top <= 0 {
-    return Err(ValueStackUnderflow)
+    raise ValueStackUnderflow
   }
   let top_ix = top - 1
   let idx = self.value_stack.buf.at(top_ix)
   if idx < 0 {
-    return Err(ValueStackUnderflow)
+    raise ValueStackUnderflow
   }
   let element_ix = top_ix - idx
   if element_ix < 0 {
-    return Err(ValueStackUnderflow)
+    raise ValueStackUnderflow
   }
   let new_top_ix = top_ix - 1
   if new_top_ix < 0 {
-    return Err(ValueStackUnderflow)
+    raise ValueStackUnderflow
   }
   let v = self.value_stack.buf.at(element_ix)
   // Remove the element by shifting values above it down (including the index slot).
@@ -683,128 +624,79 @@ fn TtEngine::op_mindex(self : TtEngine) -> Result[Unit, HintError] {
   }
   self.value_stack.buf.set(new_top_ix, v)
   self.value_stack.len = self.value_stack.len - 1
-  Ok(())
+  ()
 }
 
 ///|
-fn TtEngine::op_roll(self : TtEngine) -> Result[Unit, HintError] {
-  let a = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
-  let b = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
-  let c = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
-  match self.value_stack.push(b) {
-    Err(e) => return Err(e)
-    Ok(_) => ()
-  }
-  match self.value_stack.push(a) {
-    Err(e) => return Err(e)
-    Ok(_) => ()
-  }
+fn TtEngine::op_roll(self : TtEngine) -> Unit raise HintError {
+  let a = self.value_stack.pop()
+  let b = self.value_stack.pop()
+  let c = self.value_stack.pop()
+  self.value_stack.push(b)
+  self.value_stack.push(a)
   self.value_stack.push(c)
 }
 
 ///|
-fn TtEngine::op_add(self : TtEngine) -> Result[Unit, HintError] {
-  let b = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
-  let a = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+fn TtEngine::op_add(self : TtEngine) -> Unit raise HintError {
+  let b = self.value_stack.pop()
+  let a = self.value_stack.pop()
   self.value_stack.push(a + b)
 }
 
 ///|
-fn TtEngine::op_sub(self : TtEngine) -> Result[Unit, HintError] {
-  let b = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
-  let a = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+fn TtEngine::op_sub(self : TtEngine) -> Unit raise HintError {
+  let b = self.value_stack.pop()
+  let a = self.value_stack.pop()
   self.value_stack.push(a - b)
 }
 
 ///|
-fn TtEngine::op_mul(self : TtEngine) -> Result[Unit, HintError] {
+fn TtEngine::op_mul(self : TtEngine) -> Unit raise HintError {
   // 26.6 * 26.6 => 26.6 (matches fontations/FreeType).
-  let b = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
-  let a = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+  let b = self.value_stack.pop()
+  let a = self.value_stack.pop()
   self.value_stack.push(tt_hint_mul_div_16_16(a, b, 64))
 }
 
 ///|
-fn TtEngine::op_div(self : TtEngine) -> Result[Unit, HintError] {
-  let b = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
-  let a = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+fn TtEngine::op_div(self : TtEngine) -> Unit raise HintError {
+  let b = self.value_stack.pop()
+  let a = self.value_stack.pop()
   if b == 0 {
-    return Err(DivideByZero)
+    raise DivideByZero
   }
   // 26.6 / 26.6 => 26.6 (truncates rather than rounds).
   self.value_stack.push(tt_hint_mul_div_no_round(a, 64, b))
 }
 
 ///|
-fn TtEngine::op_neg(self : TtEngine) -> Result[Unit, HintError] {
-  let a = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+fn TtEngine::op_neg(self : TtEngine) -> Unit raise HintError {
+  let a = self.value_stack.pop()
   self.value_stack.push(-a)
 }
 
 ///|
-fn TtEngine::op_abs(self : TtEngine) -> Result[Unit, HintError] {
-  let a = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+fn TtEngine::op_abs(self : TtEngine) -> Unit raise HintError {
+  let a = self.value_stack.pop()
   self.value_stack.push(a.abs())
 }
 
 // Control flow: skip-based IF/ELSE/EIF, aligned with fontations/FreeType.
 
 ///|
-fn TtEngine::op_if(self : TtEngine) -> Result[Unit, HintError] {
-  let cond = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+fn TtEngine::op_if(self : TtEngine) -> Unit raise HintError {
+  let cond = self.value_stack.pop()
   if cond != 0 {
-    return Ok(())
+    return ()
   }
   // Condition is false: jump to next ELSE (same nesting) or EIF.
   let mut nest_depth = 1
   let mut done = false
   while !done {
     let ins = match self.program.decoder.decode() {
-      Err(e) => return Err(e)
-      Ok(None) => return Err(UnexpectedEndOfBytecode)
-      Ok(Some(i)) => i
+      None => raise UnexpectedEndOfBytecode
+      Some(i) => i
     }
     match ins.opcode {
       0x58 => nest_depth = nest_depth + 1 // IF
@@ -816,18 +708,17 @@ fn TtEngine::op_if(self : TtEngine) -> Result[Unit, HintError] {
       _ => ()
     }
   }
-  Ok(())
+  ()
 }
 
 ///|
-fn TtEngine::op_else(self : TtEngine, _pc : Int32) -> Result[Unit, HintError] {
+fn TtEngine::op_else(self : TtEngine, _pc : Int32) -> Unit raise HintError {
   // We executed the true-branch and hit ELSE: skip to matching EIF.
   let mut nest_depth = 1
   while nest_depth != 0 {
     let ins = match self.program.decoder.decode() {
-      Err(e) => return Err(e)
-      Ok(None) => return Err(UnexpectedEndOfBytecode)
-      Ok(Some(i)) => i
+      None => raise UnexpectedEndOfBytecode
+      Some(i) => i
     }
     match ins.opcode {
       0x58 => nest_depth = nest_depth + 1 // IF
@@ -835,94 +726,70 @@ fn TtEngine::op_else(self : TtEngine, _pc : Int32) -> Result[Unit, HintError] {
       _ => ()
     }
   }
-  Ok(())
+  ()
 }
 
 ///|
-fn TtEngine::op_eif(_self : TtEngine, _pc : Int32) -> Result[Unit, HintError] {
+fn TtEngine::op_eif(_self : TtEngine, _pc : Int32) -> Unit {
   // No-op: handled by skip logic.
-  Ok(())
+  ()
 }
 
 ///|
-fn TtEngine::op_jmpr(self : TtEngine, _pc : Int32) -> Result[Unit, HintError] {
-  let off = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+fn TtEngine::op_jmpr(self : TtEngine, _pc : Int32) -> Unit raise HintError {
+  let off = self.value_stack.pop()
   // Offset is relative to the JMPR instruction, but decoder.pc currently
   // points at the next instruction, so subtract one.
   let jump = off - 1
   if jump < 0 {
     if jump == -1 {
       // If the offset is -1, we'll loop in place forever.
-      return Err(InvalidJump)
+      raise InvalidJump
     }
-    match self.loop_budget.doing_backward_jump() {
-      Err(e) => return Err(e)
-      Ok(_) => ()
-    }
+    self.loop_budget.doing_backward_jump()
   }
   // Upstream uses wrapping pc arithmetic and does not bounds-check.
   self.program.decoder.pc = self.program.decoder.pc + jump
-  Ok(())
+  ()
 }
 
 ///|
-fn TtEngine::op_jrot(self : TtEngine, pc : Int32) -> Result[Unit, HintError] {
+fn TtEngine::op_jrot(self : TtEngine, pc : Int32) -> Unit raise HintError {
   pc |> ignore
-  let cond = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
-  let off = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+  let cond = self.value_stack.pop()
+  let off = self.value_stack.pop()
   if cond != 0 {
     let jump = off - 1
     if jump < 0 {
       if jump == -1 {
-        return Err(InvalidJump)
+        raise InvalidJump
       }
-      match self.loop_budget.doing_backward_jump() {
-        Err(e) => return Err(e)
-        Ok(_) => ()
-      }
+      self.loop_budget.doing_backward_jump()
     }
     self.program.decoder.pc = self.program.decoder.pc + jump
-    Ok(())
+    ()
   } else {
-    Ok(())
+    ()
   }
 }
 
 ///|
-fn TtEngine::op_jrof(self : TtEngine, pc : Int32) -> Result[Unit, HintError] {
+fn TtEngine::op_jrof(self : TtEngine, pc : Int32) -> Unit raise HintError {
   pc |> ignore
-  let cond = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
-  let off = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+  let cond = self.value_stack.pop()
+  let off = self.value_stack.pop()
   if cond == 0 {
     let jump = off - 1
     if jump < 0 {
       if jump == -1 {
-        return Err(InvalidJump)
+        raise InvalidJump
       }
-      match self.loop_budget.doing_backward_jump() {
-        Err(e) => return Err(e)
-        Ok(_) => ()
-      }
+      self.loop_budget.doing_backward_jump()
     }
     self.program.decoder.pc = self.program.decoder.pc + jump
-    Ok(())
+    ()
   } else {
-    Ok(())
+    ()
   }
 }
 
@@ -932,108 +799,79 @@ fn TtEngine::op_jrof(self : TtEngine, pc : Int32) -> Result[Unit, HintError] {
 fn tt_engine_find_endf(
   code : BytesView,
   start : Int32,
-) -> Result[Int32, HintError] {
+) -> Int32 raise HintError {
   let dec = TtDecoder::{ code, pc: start, }
   while true {
     let ins = match dec.decode() {
-      Err(e) => return Err(e)
-      Ok(None) => return Err(UnexpectedEndOfBytecode)
-      Ok(Some(i)) => i
+      None => raise UnexpectedEndOfBytecode
+      Some(i) => i
     }
     if ins.opcode == 0x2C || ins.opcode == 0x89 {
-      return Err(NestedDefinition)
+      raise NestedDefinition
     } else if ins.opcode == 0x2D {
       // Return the end offset (pc after ENDF).
-      return Ok(dec.pc)
+      return dec.pc
     }
   }
-  Err(UnexpectedEndOfBytecode)
+  raise UnexpectedEndOfBytecode
 }
 
 ///|
-fn TtEngine::op_fdef(self : TtEngine, pc : Int32) -> Result[Unit, HintError] {
+fn TtEngine::op_fdef(self : TtEngine, pc : Int32) -> Unit raise HintError {
   if self.program.current is Glyph {
-    return Err(DefinitionInGlyphProgram)
+    raise DefinitionInGlyphProgram
   }
-  let fn_id = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+  let fn_id = self.value_stack.pop()
   let start = self.program.decoder.pc
-  let end_pc = match tt_engine_find_endf(self.program.decoder.code, start) {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+  let end_pc = tt_engine_find_endf(self.program.decoder.code, start)
   if self.graphics.is_pedantic && end_pc - start > TT_MAX_DEFINITION_SIZE {
-    return Err(DefinitionTooLarge)
+    raise DefinitionTooLarge
   }
   // end_pc is pc after ENDF.
-  match
-    self.functions.set_definition(
-      fn_id,
-      self.program.decoder.code,
-      start,
-      end_pc,
-    ) {
-    Err(e) => return Err(e)
-    Ok(_) => ()
-  }
+  self.functions.set_definition(fn_id, self.program.decoder.code, start, end_pc)
   // Skip body + ENDF opcode byte.
   self.program.decoder.pc = end_pc
   pc |> ignore
-  Ok(())
+  ()
 }
 
 ///|
-fn TtEngine::op_idef(self : TtEngine, pc : Int32) -> Result[Unit, HintError] {
+fn TtEngine::op_idef(self : TtEngine, pc : Int32) -> Unit raise HintError {
   if self.program.current is Glyph {
-    return Err(DefinitionInGlyphProgram)
+    raise DefinitionInGlyphProgram
   }
-  let opcode = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+  let opcode = self.value_stack.pop()
   let start = self.program.decoder.pc
-  let end_pc = match tt_engine_find_endf(self.program.decoder.code, start) {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+  let end_pc = tt_engine_find_endf(self.program.decoder.code, start)
   if self.graphics.is_pedantic && end_pc - start > TT_MAX_DEFINITION_SIZE {
-    return Err(DefinitionTooLarge)
+    raise DefinitionTooLarge
   }
-  match
-    self.instructions.set_definition(
-      opcode,
-      self.program.decoder.code,
-      start,
-      end_pc,
-    ) {
-    Err(e) => return Err(e)
-    Ok(_) => ()
-  }
+  self.instructions.set_definition(
+    opcode,
+    self.program.decoder.code,
+    start,
+    end_pc,
+  )
   self.program.decoder.pc = end_pc
   pc |> ignore
-  Ok(())
+  ()
 }
 
 ///|
-fn TtEngine::op_endf(self : TtEngine, pc : Int32) -> Result[Unit, HintError] {
+fn TtEngine::op_endf(self : TtEngine, pc : Int32) -> Unit raise HintError {
   // Returning from a call: pop call frame.
   pc |> ignore
   self.program.pop_frame()
 }
 
 ///|
-fn TtEngine::op_call(self : TtEngine, _pc : Int32) -> Result[Unit, HintError] {
-  let fn_id = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+fn TtEngine::op_call(self : TtEngine, _pc : Int32) -> Unit raise HintError {
+  let fn_id = self.value_stack.pop()
   match self.functions.get(fn_id) {
-    None => Err(InvalidDefinition(fn_id))
+    None => raise InvalidDefinition(fn_id)
     Some(d) =>
       match d.slice() {
-        None => Err(InvalidDefinition(fn_id))
+        None => raise InvalidDefinition(fn_id)
         Some(code) => {
           let return_pc = self.program.decoder.pc
           self.program.push_frame(code, 0, return_pc)
@@ -1043,31 +881,19 @@ fn TtEngine::op_call(self : TtEngine, _pc : Int32) -> Result[Unit, HintError] {
 }
 
 ///|
-fn TtEngine::op_loopcall(
-  self : TtEngine,
-  _pc : Int32,
-) -> Result[Unit, HintError] {
+fn TtEngine::op_loopcall(self : TtEngine, _pc : Int32) -> Unit raise HintError {
   // Stack order: f (top), count (next).
-  let fn_id = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
-  let count = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+  let fn_id = self.value_stack.pop()
+  let count = self.value_stack.pop()
   if count <= 0 {
-    return Ok(())
+    return ()
   }
-  match self.loop_budget.doing_loop_call(count) {
-    Err(e) => return Err(e)
-    Ok(_) => ()
-  }
+  self.loop_budget.doing_loop_call(count)
   match self.functions.get(fn_id) {
-    None => Err(InvalidDefinition(fn_id))
+    None => raise InvalidDefinition(fn_id)
     Some(d) =>
       match d.slice() {
-        None => Err(InvalidDefinition(fn_id))
+        None => raise InvalidDefinition(fn_id)
         Some(code) => {
           let return_pc = self.program.decoder.pc
           // Execute the function `count` times; subsequent iterations are

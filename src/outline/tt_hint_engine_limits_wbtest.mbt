@@ -45,21 +45,22 @@ test "tt_hint: loop budget backward jumps" {
   let limit = engine.loop_budget.limit
 
   // Prime the counter so the last successful iteration aligns with upstream.
-  engine.value_stack.push(-1).unwrap() |> ignore
-  engine.op_jmpr(0).unwrap() |> ignore
+  engine.value_stack.push(-1) |> ignore
+  engine.op_jmpr(0) |> ignore
   for i in 0..<(limit + 10) {
-    engine.value_stack.push(-1).unwrap() |> ignore
-    let r = engine.op_jmpr(0)
+    engine.value_stack.push(-1) |> ignore
     if i < limit - 1 {
-      match r {
-        Ok(_) => ()
-        Err(_) => fail("expected Ok")
+      try engine.op_jmpr(0) catch {
+        _ => fail("expected Ok")
+      } noraise {
+        _ => ()
       }
     } else {
-      match r {
-        Err(ExceededExecutionBudget) => ()
-        Ok(_) => fail("expected ExceededExecutionBudget")
-        Err(_) => fail("expected ExceededExecutionBudget")
+      try engine.op_jmpr(0) catch {
+        ExceededExecutionBudget => ()
+        _ => fail("expected ExceededExecutionBudget")
+      } noraise {
+        _ => fail("expected ExceededExecutionBudget")
       }
     }
   }
@@ -106,11 +107,12 @@ test "tt_hint: loop budget loopcall" {
     64,
     64,
   )
-  engine.run_program(Font, false).unwrap() |> ignore
-  match engine.run_program(ControlValue, false) {
-    Err(ExceededExecutionBudget) => ()
-    Ok(_) => fail("expected ExceededExecutionBudget")
-    Err(_) => fail("expected ExceededExecutionBudget")
+  engine.run_program(Font, false) |> ignore
+  try engine.run_program(ControlValue, false) catch {
+    ExceededExecutionBudget => ()
+    _ => fail("expected ExceededExecutionBudget")
+  } noraise {
+    _ => fail("expected ExceededExecutionBudget")
   }
 }
 
@@ -136,8 +138,8 @@ test "tt_hint: jmpr does not bounds-check pc" {
     64,
   )
   engine.program.decoder.pc = 0
-  engine.value_stack.push(100).unwrap() |> ignore
-  engine.op_jmpr(0).unwrap() |> ignore
+  engine.value_stack.push(100) |> ignore
+  engine.op_jmpr(0) |> ignore
   inspect(engine.program.decoder.pc, content="99")
 }
 
@@ -171,9 +173,10 @@ test "tt_hint: DefinitionTooLarge in pedantic mode" {
     64,
     64,
   )
-  match engine.run_program(Font, true) {
-    Err(DefinitionTooLarge) => ()
-    Ok(_) => fail("expected DefinitionTooLarge")
-    Err(_) => fail("expected DefinitionTooLarge")
+  try engine.run_program(Font, true) catch {
+    DefinitionTooLarge => ()
+    _ => fail("expected DefinitionTooLarge")
+  } noraise {
+    _ => fail("expected DefinitionTooLarge")
   }
 }

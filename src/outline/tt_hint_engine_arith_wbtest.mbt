@@ -41,29 +41,29 @@ test "tt_hint: arith simple binops" {
   for a in -10..<12 {
     for b in -10..<12 {
       engine.value_stack.clear()
-      engine.value_stack.push(a).unwrap() |> ignore
-      engine.value_stack.push(b).unwrap() |> ignore
-      engine.op_add().unwrap() |> ignore
-      inspect(engine.value_stack.pop().unwrap() == a + b, content="true")
+      engine.value_stack.push(a) |> ignore
+      engine.value_stack.push(b) |> ignore
+      engine.op_add() |> ignore
+      inspect(engine.value_stack.pop() == a + b, content="true")
       engine.value_stack.clear()
-      engine.value_stack.push(a).unwrap() |> ignore
-      engine.value_stack.push(b).unwrap() |> ignore
-      engine.op_sub().unwrap() |> ignore
-      inspect(engine.value_stack.pop().unwrap() == a - b, content="true")
+      engine.value_stack.push(a) |> ignore
+      engine.value_stack.push(b) |> ignore
+      engine.op_sub() |> ignore
+      inspect(engine.value_stack.pop() == a - b, content="true")
       engine.value_stack.clear()
-      engine.value_stack.push(a).unwrap() |> ignore
-      engine.value_stack.push(b).unwrap() |> ignore
-      engine.op_max().unwrap() |> ignore
+      engine.value_stack.push(a) |> ignore
+      engine.value_stack.push(b) |> ignore
+      engine.op_max() |> ignore
       inspect(
-        engine.value_stack.pop().unwrap() == (if a > b { a } else { b }),
+        engine.value_stack.pop() == (if a > b { a } else { b }),
         content="true",
       )
       engine.value_stack.clear()
-      engine.value_stack.push(a).unwrap() |> ignore
-      engine.value_stack.push(b).unwrap() |> ignore
-      engine.op_min().unwrap() |> ignore
+      engine.value_stack.push(a) |> ignore
+      engine.value_stack.push(b) |> ignore
+      engine.op_min() |> ignore
       inspect(
-        engine.value_stack.pop().unwrap() == (if a < b { a } else { b }),
+        engine.value_stack.pop() == (if a < b { a } else { b }),
         content="true",
       )
     }
@@ -75,13 +75,13 @@ test "tt_hint: arith simple unops" {
   let engine = tt_make_engine_for_arith()
   for a in -10..<12 {
     engine.value_stack.clear()
-    engine.value_stack.push(a).unwrap() |> ignore
-    engine.op_neg().unwrap() |> ignore
-    inspect(engine.value_stack.pop().unwrap() == -a, content="true")
+    engine.value_stack.push(a) |> ignore
+    engine.op_neg() |> ignore
+    inspect(engine.value_stack.pop() == -a, content="true")
     engine.value_stack.clear()
-    engine.value_stack.push(a).unwrap() |> ignore
-    engine.op_abs().unwrap() |> ignore
-    inspect(engine.value_stack.pop().unwrap() == a.abs(), content="true")
+    engine.value_stack.push(a) |> ignore
+    engine.op_abs() |> ignore
+    inspect(engine.value_stack.pop() == a.abs(), content="true")
   }
 }
 
@@ -93,28 +93,28 @@ test "tt_hint: arith f26dot6 binops (mul/div)" {
       let a = a0 * 64 + 30
       let b = b0 * 64 - 30
       engine.value_stack.clear()
-      engine.value_stack.push(a).unwrap() |> ignore
-      engine.value_stack.push(b).unwrap() |> ignore
-      engine.op_mul().unwrap() |> ignore
+      engine.value_stack.push(a) |> ignore
+      engine.value_stack.push(b) |> ignore
+      engine.op_mul() |> ignore
       inspect(
-        engine.value_stack.pop().unwrap() == tt_hint_mul_div_16_16(a, b, 64),
+        engine.value_stack.pop() == tt_hint_mul_div_16_16(a, b, 64),
         content="true",
       )
       engine.value_stack.clear()
-      engine.value_stack.push(a).unwrap() |> ignore
-      engine.value_stack.push(b).unwrap() |> ignore
+      engine.value_stack.push(a) |> ignore
+      engine.value_stack.push(b) |> ignore
       if b != 0 {
-        engine.op_div().unwrap() |> ignore
+        engine.op_div() |> ignore
         inspect(
-          engine.value_stack.pop().unwrap() ==
-          tt_hint_mul_div_no_round(a, 64, b),
+          engine.value_stack.pop() == tt_hint_mul_div_no_round(a, 64, b),
           content="true",
         )
       } else {
-        match engine.op_div() {
-          Err(DivideByZero) => ()
-          Ok(_) => fail("expected DivideByZero")
-          Err(_) => fail("expected DivideByZero")
+        try engine.op_div() catch {
+          DivideByZero => ()
+          _ => fail("expected DivideByZero")
+        } noraise {
+          _ => fail("expected DivideByZero")
         }
       }
     }
@@ -128,19 +128,13 @@ test "tt_hint: arith f26dot6 unops (floor/ceil)" {
     for b in -10..<12 {
       let a = a0 * 64 + b
       engine.value_stack.clear()
-      engine.value_stack.push(a).unwrap() |> ignore
-      engine.op_floor().unwrap() |> ignore
-      inspect(
-        engine.value_stack.pop().unwrap() == tt_hint_floor_26(a),
-        content="true",
-      )
+      engine.value_stack.push(a) |> ignore
+      engine.op_floor() |> ignore
+      inspect(engine.value_stack.pop() == tt_hint_floor_26(a), content="true")
       engine.value_stack.clear()
-      engine.value_stack.push(a).unwrap() |> ignore
-      engine.op_ceiling().unwrap() |> ignore
-      inspect(
-        engine.value_stack.pop().unwrap() == tt_hint_ceil_26(a),
-        content="true",
-      )
+      engine.value_stack.push(a) |> ignore
+      engine.op_ceiling() |> ignore
+      inspect(engine.value_stack.pop() == tt_hint_ceil_26(a), content="true")
     }
   }
 }

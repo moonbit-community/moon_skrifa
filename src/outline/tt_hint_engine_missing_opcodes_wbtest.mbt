@@ -50,9 +50,9 @@ test "tt_hint: missing opcodes (getvariation/getdata/odd/even/mps/debug)" {
     64,
     64,
   )
-  engine0.run_program(Font, false).unwrap() |> ignore
-  engine0.run_program(ControlValue, false).unwrap() |> ignore
-  inspect(engine0.value_stack.pop().unwrap(), content="123")
+  engine0.run_program(Font, false) |> ignore
+  engine0.run_program(ControlValue, false) |> ignore
+  inspect(engine0.value_stack.pop(), content="123")
 
   // GETVARIATION pushes axis_count coords; pad with zeros if missing.
   let coords1 : Array[@moon_skrifa.NormalizedCoord] = Array::from_fixed_array([
@@ -74,9 +74,9 @@ test "tt_hint: missing opcodes (getvariation/getdata/odd/even/mps/debug)" {
     64,
     64,
   )
-  engine1.run_program(ControlValue, false).unwrap() |> ignore
-  inspect(engine1.value_stack.pop().unwrap(), content="0")
-  inspect(engine1.value_stack.pop().unwrap(), content="8192")
+  engine1.run_program(ControlValue, false) |> ignore
+  inspect(engine1.value_stack.pop(), content="0")
+  inspect(engine1.value_stack.pop(), content="8192")
 
   // GETDATA pushes 17 for variable fonts.
   let prep2 = tt_bytes([(0x92).to_byte()])
@@ -95,8 +95,8 @@ test "tt_hint: missing opcodes (getvariation/getdata/odd/even/mps/debug)" {
     64,
     64,
   )
-  engine2.run_program(ControlValue, false).unwrap() |> ignore
-  inspect(engine2.value_stack.pop().unwrap(), content="17")
+  engine2.run_program(ControlValue, false) |> ignore
+  inspect(engine2.value_stack.pop(), content="17")
 
   // ODD/EVEN.
   let prep3 = tt_bytes([
@@ -122,9 +122,9 @@ test "tt_hint: missing opcodes (getvariation/getdata/odd/even/mps/debug)" {
     64,
     64,
   )
-  engine3.run_program(ControlValue, false).unwrap() |> ignore
-  inspect(engine3.value_stack.pop().unwrap(), content="1")
-  inspect(engine3.value_stack.pop().unwrap(), content="1")
+  engine3.run_program(ControlValue, false) |> ignore
+  inspect(engine3.value_stack.pop(), content="1")
+  inspect(engine3.value_stack.pop(), content="1")
 
   // MPS: ppem * 64.
   let prep4 = tt_bytes([(0x4C).to_byte()])
@@ -143,8 +143,8 @@ test "tt_hint: missing opcodes (getvariation/getdata/odd/even/mps/debug)" {
     64,
     64,
   )
-  engine4.run_program(ControlValue, false).unwrap() |> ignore
-  inspect(engine4.value_stack.pop().unwrap(), content="1280")
+  engine4.run_program(ControlValue, false) |> ignore
+  inspect(engine4.value_stack.pop(), content="1280")
 
   // DEBUG: pops a value and leaves stack empty.
   let prep5 = tt_bytes([(0xB0).to_byte(), (1).to_byte(), (0x4F).to_byte()])
@@ -163,6 +163,6 @@ test "tt_hint: missing opcodes (getvariation/getdata/odd/even/mps/debug)" {
     64,
     64,
   )
-  engine5.run_program(ControlValue, false).unwrap() |> ignore
+  engine5.run_program(ControlValue, false) |> ignore
   inspect(engine5.value_stack.length(), content="0")
 }

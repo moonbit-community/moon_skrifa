@@ -16,109 +16,67 @@
 /// Misc instruction implementations (logical, rounding, min/max) for the TT engine.
 
 ///|
-fn TtEngine::op_and(self : TtEngine) -> Result[Unit, HintError] {
-  let b = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
-  let a = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+fn TtEngine::op_and(self : TtEngine) -> Unit raise HintError {
+  let b = self.value_stack.pop()
+  let a = self.value_stack.pop()
   self.value_stack.push(if a != 0 && b != 0 { 1 } else { 0 })
 }
 
 ///|
-fn TtEngine::op_or(self : TtEngine) -> Result[Unit, HintError] {
-  let b = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
-  let a = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+fn TtEngine::op_or(self : TtEngine) -> Unit raise HintError {
+  let b = self.value_stack.pop()
+  let a = self.value_stack.pop()
   self.value_stack.push(if a != 0 || b != 0 { 1 } else { 0 })
 }
 
 ///|
-fn TtEngine::op_not(self : TtEngine) -> Result[Unit, HintError] {
-  let a = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+fn TtEngine::op_not(self : TtEngine) -> Unit raise HintError {
+  let a = self.value_stack.pop()
   self.value_stack.push(if a == 0 { 1 } else { 0 })
 }
 
 ///|
-fn TtEngine::op_floor(self : TtEngine) -> Result[Unit, HintError] {
-  let a = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+fn TtEngine::op_floor(self : TtEngine) -> Unit raise HintError {
+  let a = self.value_stack.pop()
   self.value_stack.push(tt_hint_floor_26(a))
 }
 
 ///|
-fn TtEngine::op_ceiling(self : TtEngine) -> Result[Unit, HintError] {
-  let a = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+fn TtEngine::op_ceiling(self : TtEngine) -> Unit raise HintError {
+  let a = self.value_stack.pop()
   self.value_stack.push(tt_hint_ceil_26(a))
 }
 
 ///|
-fn TtEngine::op_round(self : TtEngine) -> Result[Unit, HintError] {
-  let a = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+fn TtEngine::op_round(self : TtEngine) -> Unit raise HintError {
+  let a = self.value_stack.pop()
   self.value_stack.push(self.graphics.round(a))
 }
 
 ///|
-fn TtEngine::op_max(self : TtEngine) -> Result[Unit, HintError] {
-  let b = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
-  let a = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+fn TtEngine::op_max(self : TtEngine) -> Unit raise HintError {
+  let b = self.value_stack.pop()
+  let a = self.value_stack.pop()
   self.value_stack.push(if a > b { a } else { b })
 }
 
 ///|
-fn TtEngine::op_min(self : TtEngine) -> Result[Unit, HintError] {
-  let b = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
-  let a = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+fn TtEngine::op_min(self : TtEngine) -> Unit raise HintError {
+  let b = self.value_stack.pop()
+  let a = self.value_stack.pop()
   self.value_stack.push(if a < b { a } else { b })
 }
 
 ///|
-fn TtEngine::op_odd(self : TtEngine) -> Result[Unit, HintError] {
-  let e1 = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+fn TtEngine::op_odd(self : TtEngine) -> Unit raise HintError {
+  let e1 = self.value_stack.pop()
   let r = self.graphics.round(e1)
   self.value_stack.push(if (r & 127) == 64 { 1 } else { 0 })
 }
 
 ///|
-fn TtEngine::op_even(self : TtEngine) -> Result[Unit, HintError] {
-  let e1 = match self.value_stack.pop() {
-    Err(e) => return Err(e)
-    Ok(v) => v
-  }
+fn TtEngine::op_even(self : TtEngine) -> Unit raise HintError {
+  let e1 = self.value_stack.pop()
   let r = self.graphics.round(e1)
   self.value_stack.push(if (r & 127) == 0 { 1 } else { 0 })
 }

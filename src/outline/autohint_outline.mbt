@@ -606,13 +606,13 @@ fn autohint_outline_apply_transform(
 fn autohint_outline_decode_simple_glyf(
   glyph : BytesView,
   number_of_contours : Int32,
-) -> Result[AutoHintOutlineData, DrawError] {
+) -> AutoHintOutlineData raise DrawError {
   let data = AutoHintOutlineData()
   let mut off = 10
   let end_pts : Array[Int32] = []
   for _ in 0..<number_of_contours {
     let v = match autohint_outline_read_u16_be(glyph, off) {
-      None => return Err(Read)
+      None => raise Read
       Some(u) => u
     }
     end_pts.push(v)
@@ -621,26 +621,26 @@ fn autohint_outline_decode_simple_glyf(
   let instruction_len = autohint_outline_read_u16_be(glyph, off).unwrap_or(-1)
   off = off + 2
   if instruction_len < 0 || off + instruction_len > glyph.length() {
-    return Err(Read)
+    raise Read
   }
   off = off + instruction_len
   let last_end = end_pts.at(end_pts.length() - 1)
   let num_points = last_end + 1
   if num_points <= 0 {
-    return Ok(data)
+    return data
   }
   // Flags stream.
   let flags : Array[Int32] = []
   while flags.length() < num_points {
     if off >= glyph.length() {
-      return Err(Read)
+      raise Read
     }
     let flag = glyph.at(off).to_int()
     off = off + 1
     flags.push(flag)
     if (flag & 0x08) != 0 {
       if off >= glyph.length() {
-        return Err(Read)
+        raise Read
       }
       let repeat = glyph.at(off).to_int()
       off = off + 1
@@ -657,7 +657,7 @@ fn autohint_outline_decode_simple_glyf(
     let same = (f & 0x10) != 0
     if short {
       if off >= glyph.length() {
-        return Err(Read)
+        raise Read
       }
       let b = glyph.at(off).to_int()
       off = off + 1
@@ -666,7 +666,7 @@ fn autohint_outline_decode_simple_glyf(
       dxs.push(0)
     } else {
       let d = match autohint_outline_read_i16_be(glyph, off) {
-        None => return Err(Read)
+        None => raise Read
         Some(v) => v
       }
       off = off + 2
@@ -680,7 +680,7 @@ fn autohint_outline_decode_simple_glyf(
     let same = (f & 0x20) != 0
     if short {
       if off >= glyph.length() {
-        return Err(Read)
+        raise Read
       }
       let b = glyph.at(off).to_int()
       off = off + 1
@@ -689,7 +689,7 @@ fn autohint_outline_decode_simple_glyf(
       dys.push(0)
     } else {
       let d = match autohint_outline_read_i16_be(glyph, off) {
-        None => return Err(Read)
+        None => raise Read
         Some(v) => v
       }
       off = off + 2
@@ -716,12 +716,12 @@ fn autohint_outline_decode_simple_glyf(
   for c in 0..<number_of_contours {
     let end = end_pts.at(c)
     if end < contour_start || end >= data.points.length() {
-      return Err(Read)
+      raise Read
     }
     data.contours.push({ first_ix: contour_start, last_ix: end, })
     contour_start = end + 1
   }
-  Ok(data)
+  data
 }
 
 ///|
@@ -750,23 +750,23 @@ fn autohint_outline_build_glyf_raw(
   font : @moon_skrifa.FontRef,
   gid : @moon_skrifa.GlyphId,
   depth : Int32,
-) -> Result[AutoHintOutlineData, DrawError] {
+) -> AutoHintOutlineData raise DrawError {
   if depth > 16 {
-    return Err(Read)
+    raise Read
   }
   let glyph = match autohint_outline_glyf_glyph_slice(font, gid) {
-    None => return Err(GlyphNotFound(gid))
+    None => raise GlyphNotFound(gid)
     Some(v) => v
   }
   if glyph.length() == 0 {
-    return Ok(AutoHintOutlineData())
+    return AutoHintOutlineData()
   }
   if glyph.length() < 10 {
-    return Err(Read)
+    raise Read
   }
   let number_of_contours = autohint_outline_read_i16_be(glyph, 0).unwrap_or(0)
   if number_of_contours == 0 {
-    return Ok(AutoHintOutlineData())
+    return AutoHintOutlineData()
   }
   if number_of_contours > 0 {
     return autohint_outline_decode_simple_glyf(glyph, number_of_contours)
@@ -781,7 +781,7 @@ fn autohint_outline_build_glyf_raw(
       -1,
     )
     if flags < 0 || comp_gid_u16 < 0 {
-      return Err(Read)
+      raise Read
     }
     last_flags = flags
     off = off + 4
@@ -819,20 +819,16 @@ fn autohint_outline_build_glyf_raw(
       off = off + 8
     }
     let comp_gid = @moon_skrifa.GlyphId::GlyphId(comp_gid_u16.to_uint16())
-    let comp = match
-      autohint_outline_build_glyf_raw(font, comp_gid, depth + 1) {
-      Ok(v) => v
-      Err(e) => return Err(e)
-    }
+    let comp = autohint_outline_build_glyf_raw(font, comp_gid, depth + 1)
     autohint_outline_apply_transform(comp.points, a, b, c, d, 0, 0)
     let (dx, dy) = if (flags & AUTOHINT_COMPOSITE_ARGS_ARE_XY_VALUES) != 0 {
       (arg1, arg2)
     } else {
       if arg2 < 0 || arg2 >= data.points.length() {
-        return Err(Read)
+        raise Read
       }
       if arg1 < 0 || arg1 >= comp.points.length() {
-        return Err(Read)
+        raise Read
       }
       let p_parent = data.points.at(arg2)
       let p_comp = comp.points.at(arg1)
@@ -858,10 +854,10 @@ fn autohint_outline_build_glyf_raw(
     let instr_len = autohint_outline_read_u16_be(glyph, off).unwrap_or(-1)
     off = off + 2
     if instr_len < 0 || off + instr_len > glyph.length() {
-      return Err(Read)
+      raise Read
     }
   }
-  Ok(data)
+  data
 }
 
 ///|
@@ -869,14 +865,11 @@ fn AutoHintOutline::fill_glyf(
   self : AutoHintOutline,
   font : @moon_skrifa.FontRef,
   gid : @moon_skrifa.GlyphId,
-) -> Result[Unit, DrawError] {
+) -> Unit raise DrawError {
   self.clear()
   self.units_per_em = autohint_outline_units_per_em(font).unwrap_or(0)
   let near_limit = 20 * self.units_per_em / 2048
-  let data = match autohint_outline_build_glyf_raw(font, gid, 0) {
-    Ok(v) => v
-    Err(e) => return Err(e)
-  }
+  let data = autohint_outline_build_glyf_raw(font, gid, 0)
   for p in data.points.iter() {
     self.points.push(p)
   }
@@ -889,7 +882,7 @@ fn AutoHintOutline::fill_glyf(
   self.simplify_topology()
   self.check_remaining_weak_points()
   self.compute_orientation()
-  Ok(())
+  ()
 }
 
 ///|
@@ -897,7 +890,7 @@ fn AutoHintOutline::_fill_unscaled(
   self : AutoHintOutline,
   font : @moon_skrifa.FontRef,
   gid : @moon_skrifa.GlyphId,
-) -> Result[Unit, DrawError] {
+) -> Unit raise DrawError {
   self.fill_glyf(font, gid)
 }
 

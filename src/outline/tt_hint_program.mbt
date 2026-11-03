@@ -90,15 +90,15 @@ fn TtProgramState::push_frame(
   callee : BytesView,
   start_pc : Int32,
   return_pc : Int32,
-) -> Result[Unit, HintError] {
+) -> Unit raise HintError {
   if self.call_stack.length() >= self.max_call_depth {
-    return Err(CallStackOverflow)
+    raise CallStackOverflow
   }
   // Save the caller decoder so we can resume there.
   self.call_stack.push({ decoder: self.decoder, return_pc, kind: ReturnOnly, })
   // Switch current decoder to callee.
   self.decoder = { code: callee, pc: start_pc, }
-  Ok(())
+  ()
 }
 
 ///|
@@ -108,9 +108,9 @@ fn TtProgramState::push_loopcall_frame(
   remaining : Int32,
   start_pc : Int32,
   return_pc : Int32,
-) -> Result[Unit, HintError] {
+) -> Unit raise HintError {
   if self.call_stack.length() >= self.max_call_depth {
-    return Err(CallStackOverflow)
+    raise CallStackOverflow
   }
   self.call_stack.push({
     decoder: self.decoder,
@@ -118,13 +118,13 @@ fn TtProgramState::push_loopcall_frame(
     kind: LoopCall(callee, remaining),
   })
   self.decoder = { code: callee, pc: start_pc, }
-  Ok(())
+  ()
 }
 
 ///|
-fn TtProgramState::pop_frame(self : TtProgramState) -> Result[Unit, HintError] {
+fn TtProgramState::pop_frame(self : TtProgramState) -> Unit raise HintError {
   if self.call_stack.is_empty() {
-    return Err(CallStackUnderflow)
+    raise CallStackUnderflow
   }
   let frame = self.call_stack.pop().unwrap()
   match frame.kind {
@@ -132,7 +132,7 @@ fn TtProgramState::pop_frame(self : TtProgramState) -> Result[Unit, HintError] {
       // Restore previous decoder and continue after return_pc.
       self.decoder = frame.decoder
       self.decoder.pc = frame.return_pc
-      Ok(())
+      ()
     }
     LoopCall(code, remaining) =>
       if remaining > 0 {
@@ -143,11 +143,11 @@ fn TtProgramState::pop_frame(self : TtProgramState) -> Result[Unit, HintError] {
           kind: LoopCall(code, remaining - 1),
         })
         self.decoder = { code, pc: 0, }
-        Ok(())
+        ()
       } else {
         self.decoder = frame.decoder
         self.decoder.pc = frame.return_pc
-        Ok(())
+        ()
       }
   }
 }
