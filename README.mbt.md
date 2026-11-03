@@ -141,6 +141,12 @@ path |> ignore
 
 ### Hinted Draw
 
+Since 0.2.0, `HintingInstance::create`, `HintingInstance::reconfigure`,
+`OutlineGlyph::path`, and `OutlineGlyph::draw` raise `DrawError` instead of
+returning `Result`. Call them directly in a raising function, or use
+`try ... catch` to handle drawing errors. Collection helpers retain their
+existing optional/boolean results.
+
 ```moonbit
 let hinter =
   @moon_skrifa_outline.HintingInstance::create(
@@ -148,7 +154,7 @@ let hinter =
     @moon_skrifa.Size::Size(16.0),
     @moon_skrifa.LocationRef::default(),
     @moon_skrifa_outline.HintingOptions::default(),
-  ).unwrap()
+  )
 
 let settings = @moon_skrifa_outline.DrawSettings::hinted(hinter, false)
 let svg = outlines.svg_path(gid, settings)
